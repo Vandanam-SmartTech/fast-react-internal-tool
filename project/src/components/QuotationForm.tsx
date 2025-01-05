@@ -12,13 +12,30 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost', 'effectiveCost'].includes(name)
-        ? parseFloat(value) || 0
-        : value
-    }));
+  
+    // Parse the value as a float if it's a number field, else keep it as a string
+    const parsedValue = ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
+      ? parseFloat(value) || 0  // Ensure it's a valid number, or 0 if invalid
+      : value;
+  
+    setFormData(prev => {
+      const updatedData = {
+        ...prev,
+        [name]: parsedValue
+      };
+  
+      // Auto-calculate effectiveCost whenever one of the relevant fields changes
+      if (
+        ['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)
+      ) {
+        updatedData.effectiveCost = (updatedData.solarCostSystem || 0) + (updatedData.fabricationCost || 0) - (updatedData.subsidy || 0);
+      }
+  
+      return updatedData;
+    });
   };
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +57,7 @@ export function QuotationForm() {
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="flex items-center space-x-4 mb-8">
         <FileText className="w-8 h-8 text-blue-600" />
-        <h1 className="text-3xl font-bold text-gray-800">Solar Quotation Generator</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Vandanam Solar Quotation Generator</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -54,6 +71,7 @@ export function QuotationForm() {
               value={formData.consumerNumber}
               onChange={handleChange}
               placeholder="CN001"
+              required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -65,6 +83,7 @@ export function QuotationForm() {
               value={formData.consumerName}
               onChange={handleChange}
               placeholder="John Doe"
+              required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -76,6 +95,7 @@ export function QuotationForm() {
               value={formData.consumerPhoneNumber}
               onChange={handleChange}
               placeholder="1234567890"
+              required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -127,18 +147,19 @@ export function QuotationForm() {
               <option value="Residential">Residential</option>
               <option value="Commercial">Commercial</option>
               <option value="Industrial">Industrial</option>
+              <option value="PWW">PWW</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phase</label>
+            <label className="block text-sm font-medium text-gray-700">Phase Type</label>
             <select
               name="phase"
               value={formData.phase}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="Single">Single</option>
-              <option value="Three">Three</option>
+              <option value="Single-Phase">Single-Phase</option>
+              <option value="Three-Phase">Three-Phase</option>
             </select>
           </div>
           <div>
@@ -160,7 +181,7 @@ export function QuotationForm() {
               name="monthlyAvgUnit"
               value={formData.monthlyAvgUnit}
               onChange={handleChange}
-              placeholder="500"
+              placeholder="ex. 120"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -171,7 +192,7 @@ export function QuotationForm() {
               name="kw"
               value={formData.kw}
               onChange={handleChange}
-              placeholder="5.5"
+              placeholder="Enter KW"
               step="0.1"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
@@ -181,6 +202,18 @@ export function QuotationForm() {
         <div className="space-y-6 md:col-span-2">
           <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+              <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
+              <input
+                type="number"
+                name="solarCostSystem"
+                value={formData.solarCostSystem}
+                onChange={handleChange}
+                placeholder="Enter Solar Cost System"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Subsidy</label>
               <input
@@ -188,21 +221,11 @@ export function QuotationForm() {
                 name="subsidy"
                 value={formData.subsidy}
                 onChange={handleChange}
-                placeholder="1000"
+                placeholder="Enter Subsidy"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
-              <input
-                type="number"
-                name="solarCostSystem"
-                value={formData.solarCostSystem}
-                onChange={handleChange}
-                placeholder="15000"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+           
             <div>
               <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
               <input
@@ -210,7 +233,7 @@ export function QuotationForm() {
                 name="fabricationCost"
                 value={formData.fabricationCost}
                 onChange={handleChange}
-                placeholder="2000"
+                placeholder="Enter Fabrication Cost"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
@@ -221,7 +244,7 @@ export function QuotationForm() {
                 name="effectiveCost"
                 value={formData.effectiveCost}
                 onChange={handleChange}
-                placeholder="13000"
+                placeholder="Enter Effective Cost"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
