@@ -18,7 +18,7 @@ export function QuotationForm() {
 
     const parsedValue =
       ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
-        ? parseFloat(value) || 0
+        ? parseFloat(value) || NaN
         : value;
 
     setFormData(prev => {
