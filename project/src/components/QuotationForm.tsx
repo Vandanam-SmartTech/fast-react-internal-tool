@@ -5,7 +5,7 @@ import { QuotationData } from '../types/quotation';
 import { generateQuotationPDF, fetchPanelWattages } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
-import { calculateCosts } from '../services/api';
+import {calculateKw, calculateCosts } from '../services/api';
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -89,6 +89,25 @@ export function QuotationForm() {
       fetchCostData();
     }
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
+
+
+  useEffect(() => {
+    if (formData.monthlyAvgUnit && formData.phase) {
+      const fetchKw = async () => {
+        const kw = await calculateKw(formData.phase, formData.monthlyAvgUnit);
+        if (kw !== null) {
+          setFormData((prev) => ({
+            ...prev,
+            kw,
+          }));
+        } else {
+          setError('Failed to calculate KW');
+        }
+      };
+  
+      fetchKw();
+    }
+  }, [formData.monthlyAvgUnit, formData.phase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

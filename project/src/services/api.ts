@@ -76,3 +76,31 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
 };
 
 
+//api for calculate kw using enrgy usage and phase type
+export const calculateKw = async (phase: string, energyUsage: number): Promise<number | null> => {
+  const url = 'http://localhost:7575/api/kw/calculate';
+  const requestPayload = {
+    phase,
+    energyUsage: energyUsage.toString(), // converting energyUsage to string as per backend requirements
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestPayload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch KW value');
+    }
+
+    const data = await response.json();
+    return data; // Assuming response contains the KW as a number
+  } catch (error) {
+    console.error('Error fetching KW:', error);
+    return null; // Return null in case of error
+  }
+};
