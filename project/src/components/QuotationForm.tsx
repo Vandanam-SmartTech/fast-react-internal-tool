@@ -1,21 +1,21 @@
-import React, { useState,useEffect } from 'react';
+// QuotationForm.tsx
+import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import { QuotationData } from '../types/quotation';
-import { generateQuotationPDF } from '../services/api';
+import { generateQuotationPDF, fetchPanelWattages } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import { calculateCosts } from '../services/api';
-
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [kwOptions, setKwOptions] = useState<number[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    // Parse the value as a float if it's a number field, else keep it as a string
     const parsedValue =
       ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
         ? parseFloat(value) || 0
@@ -27,7 +27,6 @@ export function QuotationForm() {
         [name]: parsedValue,
       };
 
-      // Auto-calculate effectiveCost whenever one of the relevant fields changes
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
           (updatedData.solarCostSystem || 0) +
@@ -39,9 +38,23 @@ export function QuotationForm() {
     });
   };
 
-  // useEffect to fetch the cost data when specific form values change
   useEffect(() => {
-    // Check if all required fields are filled
+    if (formData.phase) {
+      const fetchWattages = async () => {
+        try {
+          const wattages = await fetchPanelWattages(formData.phase);
+          setKwOptions(wattages);
+        } catch (err) {
+          console.error(err);
+          setError('Failed to fetch KW options');
+        }
+      };
+
+      fetchWattages();
+    }
+  }, [formData.phase]);
+
+  useEffect(() => {
     if (
       formData.connectionType &&
       formData.phase &&
@@ -50,7 +63,6 @@ export function QuotationForm() {
     ) {
       const fetchCostData = async () => {
         try {
-          // Call the API to fetch updated cost values
           const costData = await calculateCosts({
             connectionType: formData.connectionType,
             phase: formData.phase,
@@ -58,7 +70,6 @@ export function QuotationForm() {
             kw: formData.kw,
           });
 
-          // Update formData with new cost values from the API response
           setFormData(prev => ({
             ...prev,
             subsidy: costData.subsidy,
@@ -75,10 +86,9 @@ export function QuotationForm() {
         }
       };
 
-      // Call the function to fetch data
       fetchCostData();
     }
-  }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]); // Dependencies for useEffect
+  }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +211,7 @@ export function QuotationForm() {
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
+              <option value="">Select Phase</option>
               <option value="Single-Phase">Single-Phase</option>
               <option value="Three-Phase">Three-Phase</option>
             </select>
@@ -229,32 +240,26 @@ export function QuotationForm() {
             />
           </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700">KW</label>
-  <select
-    name="kw"
-    value={formData.kw}
-    onChange={handleChange}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  >
-    <option value="" >Select KW</option>
-    <option value={2.2}>2.2</option>
-    <option value={3.3}>3.3</option>
-    <option value={4.4}>4.4</option>
-    <option value={5.5}>5.5</option>
-    <option value={6.05}>6.05</option>
-    <option value={6.6}>6.6</option>
-  </select>
-</div>
-
-
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700">KW</label>
+            <select
+              name="kw"
+              value={formData.kw}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select KW</option>
+              {kwOptions.map((kw) => (
+                <option key={kw} value={kw}>{kw}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="space-y-6 md:col-span-2">
           <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
               <input
                 type="number"
