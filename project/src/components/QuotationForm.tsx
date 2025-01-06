@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import { QuotationData } from '../types/quotation';
 import { generateQuotationPDF } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
+import { calculateCosts } from '../services/api';
+
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -12,31 +14,71 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-  
+
     // Parse the value as a float if it's a number field, else keep it as a string
-    const parsedValue = ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
-      ? parseFloat(value) || 0  // Ensure it's a valid number, or 0 if invalid
-      : value;
-  
+    const parsedValue =
+      ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
+        ? parseFloat(value) || 0
+        : value;
+
     setFormData(prev => {
       const updatedData = {
         ...prev,
-        [name]: parsedValue
+        [name]: parsedValue,
       };
-  
+
       // Auto-calculate effectiveCost whenever one of the relevant fields changes
-      if (
-        ['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)
-      ) {
-        updatedData.effectiveCost = (updatedData.solarCostSystem || 0) + (updatedData.fabricationCost || 0) - (updatedData.subsidy || 0);
+      if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
+        updatedData.effectiveCost =
+          (updatedData.solarCostSystem || 0) +
+          (updatedData.fabricationCost || 0) - 
+          (updatedData.subsidy || 0);
       }
-  
+
       return updatedData;
     });
   };
 
+  // useEffect to fetch the cost data when specific form values change
+  useEffect(() => {
+    // Check if all required fields are filled
+    if (
+      formData.connectionType &&
+      formData.phase &&
+      formData.dcrNonDcr &&
+      formData.kw > 0
+    ) {
+      const fetchCostData = async () => {
+        try {
+          // Call the API to fetch updated cost values
+          const costData = await calculateCosts({
+            connectionType: formData.connectionType,
+            phase: formData.phase,
+            dcrNonDcr: formData.dcrNonDcr,
+            kw: formData.kw,
+          });
 
+          // Update formData with new cost values from the API response
+          setFormData(prev => ({
+            ...prev,
+            subsidy: costData.subsidy,
+            solarCostSystem: costData.solarSystemCost,
+            fabricationCost: costData.fabricationCost,
+            effectiveCost:
+              (costData.solarSystemCost || 0) +
+              (costData.fabricationCost || 0) - 
+              (costData.subsidy || 0),
+          }));
+        } catch (err) {
+          console.error('Error fetching cost data:', err);
+          setError('Failed to fetch cost data');
+        }
+      };
+
+      // Call the function to fetch data
+      fetchCostData();
+    }
+  }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]); // Dependencies for useEffect
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,18 +228,27 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">KW</label>
-            <input
-              type="number"
-              name="kw"
-              value={formData.kw}
-              onChange={handleChange}
-              placeholder="Enter KW"
-              step="0.1"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700">KW</label>
+  <select
+    name="kw"
+    value={formData.kw}
+    onChange={handleChange}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    <option value="" >Select KW</option>
+    <option value={2.2}>2.2</option>
+    <option value={3.3}>3.3</option>
+    <option value={4.4}>4.4</option>
+    <option value={5.5}>5.5</option>
+    <option value={6.05}>6.05</option>
+    <option value={6.6}>6.6</option>
+  </select>
+</div>
+
+
+
         </div>
 
         <div className="space-y-6 md:col-span-2">
