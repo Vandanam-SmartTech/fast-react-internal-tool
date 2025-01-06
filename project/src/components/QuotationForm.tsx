@@ -12,6 +12,7 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
   
     // Parse the value as a float if it's a number field, else keep it as a string
     const parsedValue = ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
@@ -82,7 +83,7 @@ export function QuotationForm() {
               name="consumerName"
               value={formData.consumerName}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Om Patil"
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
@@ -106,7 +107,7 @@ export function QuotationForm() {
               name="consumerEmail"
               value={formData.consumerEmail}
               onChange={handleChange}
-              placeholder="johndoe@example.com"
+              placeholder="prasad07@example.com"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
