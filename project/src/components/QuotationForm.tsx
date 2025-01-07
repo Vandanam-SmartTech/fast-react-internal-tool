@@ -12,6 +12,7 @@ export function QuotationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kwOptions, setKwOptions] = useState<number[]>([]);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -124,6 +125,31 @@ export function QuotationForm() {
       setIsLoading(false);
     }
   };
+
+  const handlePreview = async () => {
+    setIsPreviewLoading(true); // Start loading indicator for preview
+    try {
+      const pdfBlob = await generateQuotationPDF(formData);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+      // Create a new window for the PDF popup
+      const popupWindow = window.open('', '_blank', 'width=800,height=600');
+  
+      if (popupWindow) {
+        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
+        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
+        popupWindow.document.write('</body></html>');
+      } else {
+        setError('Popup blocked. Please allow popups and try again.');
+      }
+    } catch (err) {
+      setError('Failed to preview the quotation. Please try again.');
+      console.error('Error:', err);
+    } finally {
+      setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
+    }
+  };
+  
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
@@ -328,10 +354,22 @@ export function QuotationForm() {
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-end space-x-4">
         {error && (
           <p className="text-red-600 mr-4 self-center">{error}</p>
         )}
+
+        
+<button
+          type="button"
+          onClick={handlePreview}
+          className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          disabled={isPreviewLoading}
+        >
+          {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
+        </button>
+
+
         <button
           type="submit"
           disabled={isLoading}
@@ -339,6 +377,19 @@ export function QuotationForm() {
         >
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
+
+
+        {/* //preview button for laptop view only  */}
+        {/* <button
+          type="button"
+          onClick={handlePreview}
+          className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        >
+          Preview Quotation
+        </button> */}
+
+        {/* //preview button for mobile also  */}
+
       </div>
     </form>
   );
