@@ -149,6 +149,7 @@ export function QuotationForm() {
       setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
     }
   };
+
   
 
   return (
@@ -369,7 +370,7 @@ export function QuotationForm() {
           {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
         </button>
 
-
+      
         <button
           type="submit"
           disabled={isLoading}
@@ -377,19 +378,6 @@ export function QuotationForm() {
         >
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
-
-
-        {/* //preview button for laptop view only  */}
-        {/* <button
-          type="button"
-          onClick={handlePreview}
-          className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        >
-          Preview Quotation
-        </button> */}
-
-        {/* //preview button for mobile also  */}
-
       </div>
     </form>
   );
