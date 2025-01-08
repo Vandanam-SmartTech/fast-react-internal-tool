@@ -253,6 +253,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Phase Type</label>
             <select
               name="phase"
+              required
               value={formData.phase}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -361,7 +362,7 @@ export function QuotationForm() {
         )}
 
         
-<button
+        <button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
