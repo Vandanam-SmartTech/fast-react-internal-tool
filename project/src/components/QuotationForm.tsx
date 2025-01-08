@@ -5,7 +5,7 @@ import { QuotationData } from '../types/quotation';
 import { generateQuotationPDF, fetchPanelWattages } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
-import {calculateKw, calculateCosts } from '../services/api';
+import { calculateKw, calculateCosts } from '../services/api';
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -13,6 +13,11 @@ export function QuotationForm() {
   const [error, setError] = useState<string | null>(null);
   const [kwOptions, setKwOptions] = useState<number[]>([]);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  const [msebConnection, setMsebConnection] = useState<string | null>(null);
+  const [gridType, setGridType] = useState<string>('');
+  const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -22,7 +27,7 @@ export function QuotationForm() {
         ? parseFloat(value) || NaN
         : value;
 
-    setFormData(prev => {
+    setFormData((prev) => {
       const updatedData = {
         ...prev,
         [name]: parsedValue,
@@ -31,12 +36,27 @@ export function QuotationForm() {
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
           (updatedData.solarCostSystem || 0) +
-          (updatedData.fabricationCost || 0) - 
+          (updatedData.fabricationCost || 0) -
           (updatedData.subsidy || 0);
       }
 
       return updatedData;
     });
+  };
+
+  const handleMsebChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMsebConnection(value);
+    setGridType(''); // Reset grid type selection when MSEB changes
+    setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
+  };
+
+  const handleGridTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setGridType(value);
+
+    // Enable battery dropdown for Hybrid/With-Battery, disable otherwise
+    setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery');
   };
 
   useEffect(() => {
@@ -78,7 +98,7 @@ export function QuotationForm() {
             fabricationCost: costData.fabricationCost,
             effectiveCost:
               (costData.solarSystemCost || 0) +
-              (costData.fabricationCost || 0) - 
+              (costData.fabricationCost || 0) -
               (costData.subsidy || 0),
           }));
         } catch (err) {
@@ -105,7 +125,7 @@ export function QuotationForm() {
           setError('Failed to calculate KW');
         }
       };
-  
+
       fetchKw();
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
@@ -131,10 +151,10 @@ export function QuotationForm() {
     try {
       const pdfBlob = await generateQuotationPDF(formData);
       const pdfUrl = URL.createObjectURL(pdfBlob);
-  
+
       // Create a new window for the PDF popup
       const popupWindow = window.open('', '_blank', 'width=800,height=600');
-  
+
       if (popupWindow) {
         popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
         popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
@@ -150,7 +170,7 @@ export function QuotationForm() {
     }
   };
 
-  
+
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
@@ -159,7 +179,66 @@ export function QuotationForm() {
         <h1 className="text-3xl font-bold text-gray-800">Vandanam Solar Quotation Generator</h1>
       </div>
 
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-gray-700">Grid Details</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* MSEB Connection Radio Buttons */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Do you have MSEB connection?</label>
+            <div className="mt-2 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="msebConnection"
+                  value="Yes"
+                  onChange={handleMsebChange}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                />
+                <span className="text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="msebConnection"
+                  value="No"
+                  onChange={handleMsebChange}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                />
+                <span className="text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Grid Type Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Grid Type</label>
+            <select
+              name="gridType"
+              value={gridType}
+              onChange={handleGridTypeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select Grid Type</option>
+              {msebConnection === 'Yes' ? (
+                <>
+                  <option value="On-Grid">On-Grid</option>
+                  <option value="Hybrid">Hybrid</option>
+                </>
+              ) : (
+                <>
+                  <option value="With-Battery">With-Battery</option>
+                  <option value="Panel-Only">Panel-Only</option>
+                </>
+              )}
+            </select>
+          </div>
+        </div>
+      </div>
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
           <div>
@@ -170,7 +249,7 @@ export function QuotationForm() {
               value={formData.consumerNumber}
               onChange={handleChange}
               placeholder="CN001"
-              required
+              disabled={msebConnection === 'No'}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -301,7 +380,32 @@ export function QuotationForm() {
               ))}
             </select>
           </div>
+
+           {/* Battery Wattage Dropdown */}
+           <div>
+            <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
+            <select
+              name="batteryWattage"
+              value={formData.batteryWattage}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              disabled={!isBatteryDropdownEnabled}
+            >
+              <option value="">Select Battery Wattage</option>
+              {kwOptions.map((kwOption) => (
+                <option key={kwOption} value={kwOption}>
+                  {kwOption} kW
+                </option>
+              ))}
+            </select>
+          </div>
+
         </div>
+
+
+
+
+
 
         <div className="space-y-6 md:col-span-2">
           <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
@@ -329,7 +433,7 @@ export function QuotationForm() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-           
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
               <input
@@ -361,7 +465,7 @@ export function QuotationForm() {
           <p className="text-red-600 mr-4 self-center">{error}</p>
         )}
 
-        
+
         <button
           type="button"
           onClick={handlePreview}
@@ -371,7 +475,7 @@ export function QuotationForm() {
           {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
         </button>
 
-      
+
         <button
           type="submit"
           disabled={isLoading}

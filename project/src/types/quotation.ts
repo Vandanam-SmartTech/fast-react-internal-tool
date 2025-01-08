@@ -1,4 +1,6 @@
 export interface QuotationData {
+  msebConnection: string;
+  gridType:string;
   consumerNumber: string;
   consumerName: string;
   consumerPhoneNumber: string;
@@ -14,4 +16,5 @@ export interface QuotationData {
   solarCostSystem: number;
   fabricationCost: number;
   effectiveCost: number;
+  batteryWattage: number; 
 }
