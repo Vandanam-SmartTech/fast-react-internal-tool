@@ -16,4 +16,5 @@ export const initialFormData: QuotationData = {
   solarCostSystem: NaN,
   fabricationCost: NaN,
   effectiveCost: NaN,
+  batteryCapacity:NaN,
 };

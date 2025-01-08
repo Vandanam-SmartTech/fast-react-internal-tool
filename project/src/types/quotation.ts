@@ -14,4 +14,5 @@ export interface QuotationData {
   solarCostSystem: number;
   fabricationCost: number;
   effectiveCost: number;
+  batteryCapacity: number;
 }
