@@ -17,4 +17,27 @@ export interface QuotationData {
   fabricationCost: number;
   effectiveCost: number;
   batteryWattage: number; 
+  pincode:number;
 }
+
+export type District = {
+  code: number;
+  nameEnglish: string;
+  nameMarathi: string | null;
+  stateCode: number;
+};
+
+export type Taluka = {
+  code: number;
+  nameEnglish: string;
+  nameMarathi: string | null;
+  districtCode: number;
+};
+
+export type Village = {
+  code: number;
+  nameEnglish: string;
+  nameMarathi: string | null;
+  talukaCode: number;
+  pincode: number;
+};

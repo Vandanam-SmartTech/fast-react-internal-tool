@@ -19,4 +19,5 @@ export const initialFormData: QuotationData = {
   solarCostSystem: 0,
   fabricationCost: 0,
   effectiveCost: 0,
+  pincode:0,
 };
