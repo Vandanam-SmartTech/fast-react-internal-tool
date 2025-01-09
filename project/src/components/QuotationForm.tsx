@@ -197,7 +197,8 @@ export function QuotationForm() {
     }
   };
 
-
+  // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
+  const batteryKwOptions =Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(2));
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
@@ -412,21 +413,19 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
             <select
-              name="batteryWattage"
-              value={formData.batteryWattage}
-              disabled={!isBatteryDropdownEnabled}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-
-
-            >
-              <option value="">Select Battery Wattage</option>
-              {kwOptions.map((kwOption) => (
-                <option key={kwOption} value={kwOption}>
-                  {kwOption} kW
-                </option>
-              ))}
-            </select>
+        name="batteryWattage"
+        value={formData.batteryWattage}
+        disabled={!isBatteryDropdownEnabled}
+        onChange={handleChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      >
+        <option value="">Select Battery Wattage</option>
+        {batteryKwOptions.map((batteryKwOptions, index) => (
+          <option key={index} value={batteryKwOptions}>
+            {batteryKwOptions} KW
+          </option>
+        ))}
+      </select>
           </div>
 
         </div>

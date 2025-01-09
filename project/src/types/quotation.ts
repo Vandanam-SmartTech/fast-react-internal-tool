@@ -1,5 +1,5 @@
 export interface QuotationData {
-  msebConnection: string;
+  isMsebConnection: string;
   gridType:string;
   consumerNumber: string;
   consumerName: string;
