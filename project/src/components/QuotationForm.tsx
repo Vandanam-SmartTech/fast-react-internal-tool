@@ -6,39 +6,39 @@ import { generateQuotationPDF, fetchPanelWattages } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import {calculateKw, calculateCosts } from '../services/api';
-
+ 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kwOptions, setKwOptions] = useState<number[]>([]);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-
+ 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
+ 
     const parsedValue =
       ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
         ? parseFloat(value) || NaN
         : value;
-
+ 
     setFormData(prev => {
       const updatedData = {
         ...prev,
         [name]: parsedValue,
       };
-
+ 
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
           (updatedData.solarCostSystem || 0) +
-          (updatedData.fabricationCost || 0) - 
+          (updatedData.fabricationCost || 0) -
           (updatedData.subsidy || 0);
       }
-
+ 
       return updatedData;
     });
   };
-
+ 
   useEffect(() => {
     if (formData.phase) {
       const fetchWattages = async () => {
@@ -50,11 +50,11 @@ export function QuotationForm() {
           setError('Failed to fetch KW options');
         }
       };
-
+ 
       fetchWattages();
     }
   }, [formData.phase]);
-
+ 
   useEffect(() => {
     if (
       formData.connectionType &&
@@ -70,7 +70,7 @@ export function QuotationForm() {
             dcrNonDcr: formData.dcrNonDcr,
             kw: formData.kw,
           });
-
+ 
           setFormData(prev => ({
             ...prev,
             subsidy: costData.subsidy,
@@ -78,7 +78,7 @@ export function QuotationForm() {
             fabricationCost: costData.fabricationCost,
             effectiveCost:
               (costData.solarSystemCost || 0) +
-              (costData.fabricationCost || 0) - 
+              (costData.fabricationCost || 0) -
               (costData.subsidy || 0),
           }));
         } catch (err) {
@@ -86,12 +86,12 @@ export function QuotationForm() {
           setError('Failed to fetch cost data');
         }
       };
-
+ 
       fetchCostData();
     }
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
-
-
+ 
+ 
   useEffect(() => {
     if (formData.monthlyAvgUnit && formData.phase) {
       const fetchKw = async () => {
@@ -105,16 +105,16 @@ export function QuotationForm() {
           setError('Failed to calculate KW');
         }
       };
-  
+ 
       fetchKw();
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
+ 
     try {
       const pdfBlob = await generateQuotationPDF(formData);
       downloadBlob(pdfBlob, `quotation-${formData.consumerNumber}.pdf`);
@@ -125,16 +125,16 @@ export function QuotationForm() {
       setIsLoading(false);
     }
   };
-
+ 
   const handlePreview = async () => {
     setIsPreviewLoading(true); // Start loading indicator for preview
     try {
       const pdfBlob = await generateQuotationPDF(formData);
       const pdfUrl = URL.createObjectURL(pdfBlob);
-  
+ 
       // Create a new window for the PDF popup
       const popupWindow = window.open('', '_blank', 'width=800,height=600');
-  
+ 
       if (popupWindow) {
         popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
         popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
@@ -149,16 +149,16 @@ export function QuotationForm() {
       setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
     }
   };
-
-  
-
+ 
+ 
+ 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="flex items-center space-x-4 mb-8">
         <FileText className="w-8 h-8 text-blue-600" />
         <h1 className="text-3xl font-bold text-gray-800">Vandanam Solar Quotation Generator</h1>
       </div>
-
+ 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
@@ -232,7 +232,7 @@ export function QuotationForm() {
             />
           </div>
         </div>
-
+ 
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
           <div>
@@ -253,6 +253,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Phase Type</label>
             <select
               name="phase"
+              required
               value={formData.phase}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -285,7 +286,7 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
+ 
           <div>
             <label className="block text-sm font-medium text-gray-700">KW</label>
             <select
@@ -301,7 +302,7 @@ export function QuotationForm() {
             </select>
           </div>
         </div>
-
+ 
         <div className="space-y-6 md:col-span-2">
           <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -316,7 +317,7 @@ export function QuotationForm() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-
+ 
             <div>
               <label className="block text-sm font-medium text-gray-700">Subsidy</label>
               <input
@@ -354,14 +355,14 @@ export function QuotationForm() {
           </div>
         </div>
       </div>
-
+ 
       <div className="mt-8 flex justify-end space-x-4">
         {error && (
           <p className="text-red-600 mr-4 self-center">{error}</p>
         )}
-
-        
-<button
+ 
+       
+        <button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -369,8 +370,8 @@ export function QuotationForm() {
         >
           {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
         </button>
-
-      
+ 
+     
         <button
           type="submit"
           disabled={isLoading}
@@ -382,3 +383,5 @@ export function QuotationForm() {
     </form>
   );
 }
+ 
+ 
