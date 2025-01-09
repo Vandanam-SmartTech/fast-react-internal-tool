@@ -14,7 +14,7 @@ export function QuotationForm() {
   const [kwOptions, setKwOptions] = useState<number[]>([]);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
-  const [msebConnection, setMsebConnection] = useState<string | null>(null);
+  const [isMsebConnection, setIsMsebConnection] = useState("Yes");
   const [gridType, setGridType] = useState<string>('');
   const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
 
@@ -44,20 +44,47 @@ export function QuotationForm() {
     });
   };
 
+
+
   const handleMsebChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setMsebConnection(value);
+    setIsMsebConnection(value);
+    setFormData((prev) => ({
+      ...prev,
+      consumerNumber: '',
+      isMsebConnection: value,
+      gridType: '', // Reset grid type when MSEB connection changes
+      batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
+    }));
     setGridType(''); // Reset grid type selection when MSEB changes
     setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
   };
 
+
   const handleGridTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setGridType(value);
+    setFormData((prev) => ({
+      ...prev,
+      gridType: value,
+      batteryWattage: value === 'Hybrid' || value === 'With-Battery' ? prev.batteryWattage : NaN, // Reset battery wattage if not applicable
+    }));
+    setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery'); // Enable battery dropdown for specific grid types
 
-    // Enable battery dropdown for Hybrid/With-Battery, disable otherwise
-    setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery');
   };
+
+
+  useEffect(() => {
+    // Create a fake event that matches the expected event type
+    const fakeEvent = {
+      target: {
+        value: isMsebConnection === 'Yes' ? 'On-Grid' : 'With-Battery',
+      },
+    } as React.ChangeEvent<HTMLSelectElement>; // Type assertion to ensure it matches ChangeEvent
+
+    handleGridTypeChange(fakeEvent); // Trigger the onChange handler programmatically
+  }, [isMsebConnection]);
+
 
   useEffect(() => {
     if (formData.phase) {
@@ -185,7 +212,7 @@ export function QuotationForm() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* MSEB Connection Radio Buttons */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Do you have MSEB connection?</label>
+            <label className="block text-sm font-medium text-gray-700">Do you have grid connection ?</label>
             <div className="mt-2 flex items-center space-x-4">
               <label className="flex items-center space-x-2">
                 <input
@@ -212,15 +239,14 @@ export function QuotationForm() {
 
           {/* Grid Type Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Grid Type</label>
+            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
             <select
               name="gridType"
               value={gridType}
               onChange={handleGridTypeChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="">Select Grid Type</option>
-              {msebConnection === 'Yes' ? (
+              {isMsebConnection === 'Yes' ?  (
                 <>
                   <option value="On-Grid">On-Grid</option>
                   <option value="Hybrid">Hybrid</option>
@@ -230,7 +256,8 @@ export function QuotationForm() {
                   <option value="With-Battery">With-Battery</option>
                   <option value="Panel-Only">Panel-Only</option>
                 </>
-              )}
+              )
+              }
             </select>
           </div>
         </div>
@@ -249,7 +276,7 @@ export function QuotationForm() {
               value={formData.consumerNumber}
               onChange={handleChange}
               placeholder="CN001"
-              disabled={msebConnection === 'No'}
+              disabled={isMsebConnection === 'No'}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -381,15 +408,17 @@ export function QuotationForm() {
             </select>
           </div>
 
-           {/* Battery Wattage Dropdown */}
-           <div>
+          {/* Battery Wattage Dropdown */}
+          <div>
             <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
             <select
               name="batteryWattage"
               value={formData.batteryWattage}
+              disabled={!isBatteryDropdownEnabled}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              disabled={!isBatteryDropdownEnabled}
+
+
             >
               <option value="">Select Battery Wattage</option>
               {kwOptions.map((kwOption) => (
