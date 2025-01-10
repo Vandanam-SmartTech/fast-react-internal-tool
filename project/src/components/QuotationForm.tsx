@@ -324,10 +324,10 @@ export function QuotationForm() {
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-700">Grid Details</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-0 gap-6">
           {/* MSEB Connection Radio Buttons */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Do you have grid connection ?</label>
+            <label className="block text-sm font-medium text-gray-700"> Does the customer currently have an active grid connection with the local electricity provider.(e.g., MSEB or BESCOM)?</label>
             <div className="mt-2 flex items-center space-x-4">
               <label className="flex items-center space-x-2">
                 <input
@@ -352,29 +352,7 @@ export function QuotationForm() {
             </div>
           </div>
 
-          {/* Grid Type Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
-            <select
-              name="gridType"
-              value={gridType}
-              onChange={handleGridTypeChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              {isMsebConnection === 'Yes' ? (
-                <>
-                  <option value="On-Grid">On-Grid</option>
-                  <option value="Hybrid">Hybrid</option>
-                </>
-              ) : (
-                <>
-                  <option value="With-Battery">With-Battery</option>
-                  <option value="Panel-Only">Panel-Only</option>
-                </>
-              )
-              }
-            </select>
-          </div>
+         
         </div>
       </div>
 
@@ -488,6 +466,18 @@ export function QuotationForm() {
 
             <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+              <input
+                type="text"
+                name="consumerAddress1"
+                value={formData.consumerAddress1}
+                onChange={handleChange}
+                placeholder="123 Main St"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
             {/* //dist,vill,tal,pincode/////// */}
 
             {/* District Dropdown */}
@@ -556,17 +546,7 @@ export function QuotationForm() {
             </div>
 
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-              <input
-                type="text"
-                name="consumerAddress1"
-                value={formData.consumerAddress1}
-                onChange={handleChange}
-                placeholder="123 Main St"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+          
           </div>
 
 
@@ -601,6 +581,32 @@ export function QuotationForm() {
               <option value="Non-DCR">Non-DCR</option>
             </select>
           </div>
+
+
+           {/* Grid Type Dropdown */}
+           <div>
+            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
+            <select
+              name="gridType"
+              value={gridType}
+              onChange={handleGridTypeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {isMsebConnection === 'Yes' ? (
+                <>
+                  <option value="On-Grid">On-Grid</option>
+                  <option value="Hybrid">Hybrid</option>
+                </>
+              ) : (
+                <>
+                  <option value="With-Battery">With-Battery</option>
+                  <option value="Panel-Only">Panel-Only</option>
+                </>
+              )
+              }
+            </select>
+          </div>
+
 
           {/* Battery Wattage Dropdown */}
           <div>

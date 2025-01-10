@@ -13,7 +13,7 @@ export const initialFormData: QuotationData = {
   phase: 'Single',
   dcrNonDcr: 'DCR',
   batteryWattage: 0, 
-  monthlyAvgUnit: 0,
+  monthlyAvgUnit: NaN,
   kw: 0,
   subsidy: 0,
   solarCostSystem: 0,
