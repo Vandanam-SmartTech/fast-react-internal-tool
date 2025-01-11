@@ -52,7 +52,35 @@ export function QuotationForm() {
   };
 
 
+  /////////////////////////////////////////
+  useEffect(() => {
+    const initializePhaseAndKw = async () => {
+      const defaultPhase = 'Single-Phase';
+      setFormData((prev) => ({ ...prev, phase: defaultPhase })); // Set the initial phase value
+      try {
+        const wattages = await fetchPanelWattages(defaultPhase);
+        const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+        setKwOptions(sortedWattages);
+        // Call handleChange logic for updating formData.kw
+        if (sortedWattages.length > 0) {
+          const firstKwOption = sortedWattages[0];
+          setFormData((prev) => ({ ...prev, kw: firstKwOption }));
+        }
+      } catch (err) {
+        console.error('Error fetching panel wattages for default phase:', err);
+      }
+    };
+  
+    initializePhaseAndKw();
+  }, []);
+  
+
+  ///////////////////////////
+
   ////////////////////////////////////handle the dist,tal,vill,pin
+  
+  
+
   useEffect(() => {
     const fetchDistrictsData = async () => {
       try {
@@ -117,24 +145,7 @@ export function QuotationForm() {
     setVillageCode(0);
   };
 
-  // Fetch Village and Pincode
-  //  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //    const value = parseInt(e.target.value, 10);
-  //    setVillageCode(value);
-  //    setFormData((prev) => ({ ...prev, villageCode: value }));
-  //  };
 
-  // const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const value = parseInt(e.target.value, 10);
-  //   const selectedVillage = villages.find((village) => village.code === value);
-
-  //   setVillageCode(value);
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     villageCode: value,
-  //     pincode: selectedVillage ? selectedVillage.pincode : 0, // Set the pincode when village is selected
-  //   }));
-  // };
 
   const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -206,16 +217,22 @@ export function QuotationForm() {
       const fetchWattages = async () => {
         try {
           const wattages = await fetchPanelWattages(formData.phase);
-          setKwOptions(wattages);
+          const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+          setKwOptions(sortedWattages);
+          // Automatically set KW to the first available option, if any
+          if (sortedWattages.length > 0) {
+            setFormData((prev) => ({ ...prev, kw: sortedWattages[0] }));
+          }
         } catch (err) {
-          console.error(err);
+          console.error('Error fetching panel wattages:', err);
           setError('Failed to fetch KW options');
         }
       };
-
+  
       fetchWattages();
     }
   }, [formData.phase]);
+  
 
   useEffect(() => {
     if (
@@ -438,7 +455,7 @@ export function QuotationForm() {
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="">Select Phase</option>
+              {/* <option value="">Select Phase</option> */}
               <option value="Single-Phase">Single-Phase</option>
               <option value="Three-Phase">Three-Phase</option>
             </select>
@@ -467,7 +484,7 @@ export function QuotationForm() {
             <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+              <label className="block text-sm font-medium text-gray-700">Street Address</label>
               <input
                 type="text"
                 name="consumerAddress1"
@@ -555,14 +572,14 @@ export function QuotationForm() {
 
         <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700">KW</label>
+            <label className="block text-sm font-medium text-gray-700">Panel Wattage</label>
             <select
               name="kw"
               value={formData.kw}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="">Select KW</option>
+              
               {kwOptions.map((kw) => (
                 <option key={kw} value={kw}>{kw}</option>
               ))}
