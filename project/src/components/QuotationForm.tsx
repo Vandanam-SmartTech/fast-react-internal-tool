@@ -52,7 +52,35 @@ export function QuotationForm() {
   };
 
 
+  /////////////////////////////////////////
+  useEffect(() => {
+    const initializePhaseAndKw = async () => {
+      const defaultPhase = 'Single-Phase';
+      setFormData((prev) => ({ ...prev, phase: defaultPhase })); // Set the initial phase value
+      try {
+        const wattages = await fetchPanelWattages(defaultPhase);
+        const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+        setKwOptions(sortedWattages);
+        // Call handleChange logic for updating formData.kw
+        if (sortedWattages.length > 0) {
+          const firstKwOption = sortedWattages[0];
+          setFormData((prev) => ({ ...prev, kw: firstKwOption }));
+        }
+      } catch (err) {
+        console.error('Error fetching panel wattages for default phase:', err);
+      }
+    };
+
+    initializePhaseAndKw();
+  }, []);
+
+
+  ///////////////////////////
+
   ////////////////////////////////////handle the dist,tal,vill,pin
+
+
+
   useEffect(() => {
     const fetchDistrictsData = async () => {
       try {
@@ -117,24 +145,7 @@ export function QuotationForm() {
     setVillageCode(0);
   };
 
-  // Fetch Village and Pincode
-  //  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //    const value = parseInt(e.target.value, 10);
-  //    setVillageCode(value);
-  //    setFormData((prev) => ({ ...prev, villageCode: value }));
-  //  };
 
-  // const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const value = parseInt(e.target.value, 10);
-  //   const selectedVillage = villages.find((village) => village.code === value);
-
-  //   setVillageCode(value);
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     villageCode: value,
-  //     pincode: selectedVillage ? selectedVillage.pincode : 0, // Set the pincode when village is selected
-  //   }));
-  // };
 
   const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -206,9 +217,14 @@ export function QuotationForm() {
       const fetchWattages = async () => {
         try {
           const wattages = await fetchPanelWattages(formData.phase);
-          setKwOptions(wattages);
+          const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+          setKwOptions(sortedWattages);
+          // Automatically set KW to the first available option, if any
+          if (sortedWattages.length > 0) {
+            setFormData((prev) => ({ ...prev, kw: sortedWattages[0] }));
+          }
         } catch (err) {
-          console.error(err);
+          console.error('Error fetching panel wattages:', err);
           setError('Failed to fetch KW options');
         }
       };
@@ -216,7 +232,8 @@ export function QuotationForm() {
       fetchWattages();
     }
   }, [formData.phase]);
- 
+
+
   useEffect(() => {
     if (
       formData.connectionType &&
@@ -312,6 +329,8 @@ export function QuotationForm() {
     }
   };
 
+  // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
+  const batteryKwOptions = Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(1));
 
 
   return (
@@ -324,10 +343,10 @@ export function QuotationForm() {
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-700">Grid Details</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-0 gap-6">
           {/* MSEB Connection Radio Buttons */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Do you have grid connection ?</label>
+            <label className="block text-sm font-medium text-gray-700"> Does the customer currently have an active grid connection with the local electricity provider.(e.g., MSEB or BESCOM)?</label>
             <div className="mt-2 flex items-center space-x-4">
               <label className="flex items-center space-x-2">
                 <input
@@ -352,29 +371,7 @@ export function QuotationForm() {
             </div>
           </div>
 
-          {/* Grid Type Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
-            <select
-              name="gridType"
-              value={gridType}
-              onChange={handleGridTypeChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              {isMsebConnection === 'Yes' ? (
-                <>
-                  <option value="On-Grid">On-Grid</option>
-                  <option value="Hybrid">Hybrid</option>
-                </>
-              ) : (
-                <>
-                  <option value="With-Battery">With-Battery</option>
-                  <option value="Panel-Only">Panel-Only</option>
-                </>
-              )
-              }
-            </select>
-          </div>
+
         </div>
       </div>
 
@@ -432,7 +429,7 @@ export function QuotationForm() {
           </div>
 
 
-         
+
         </div>
  
         <div className="space-y-6">
@@ -460,7 +457,7 @@ export function QuotationForm() {
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="">Select Phase</option>
+              {/* <option value="">Select Phase</option> */}
               <option value="Single-Phase">Single-Phase</option>
               <option value="Three-Phase">Three-Phase</option>
             </select>
@@ -478,111 +475,113 @@ export function QuotationForm() {
             />
           </div>
 
-         
+
 
         </div>
 
         {/* ///////////////////adding alignment//////////////// */}
 
-          <div className="space-y-6">
+        <div className="space-y-6">
 
-            <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
+          <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
-            {/* //dist,vill,tal,pincode/////// */}
-
-            {/* District Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">District</label>
-              <select
-                name="districtCode"
-                value={districtCode}
-                onChange={handleDistrictChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select District</option>
-                {districts.map((district) => (
-                  <option key={district.nameEnglish} value={district.code}>
-                    {district.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Taluka Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Taluka</label>
-              <select
-                name="talukaCode"
-                value={talukaCode}
-                onChange={handleTalukaChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select Taluka</option>
-                {talukas.map((taluka) => (
-                  <option key={taluka.nameEnglish} value={taluka.code}>
-                    {taluka.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Village Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Village</label>
-              <select
-                name="villageCode"
-                value={villageCode}
-                onChange={handleVillageChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select Village</option>
-                {villages.map((village) => (
-                  <option key={village.code} value={village.code}>
-                    {village.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Pincode</label>
-              <input
-                type="text"
-                name="pincode"
-                value={formData.pincode || ''}  // Ensure it uses formData.pincode
-                onChange={handlePincodeChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-              <input
-                type="text"
-                name="consumerAddress1"
-                value={formData.consumerAddress1}
-                onChange={handleChange}
-                placeholder="123 Main St"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <input
+              type="text"
+              name="consumerAddress1"
+              value={formData.consumerAddress1}
+              onChange={handleChange}
+              placeholder="123 Main St"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
           </div>
+
+          {/* //dist,vill,tal,pincode/////// */}
+
+          {/* District Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">District</label>
+            <select
+              name="districtCode"
+              value={districtCode}
+              onChange={handleDistrictChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select District</option>
+              {districts.map((district) => (
+                <option key={district.nameEnglish} value={district.code}>
+                  {district.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Taluka Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Taluka</label>
+            <select
+              name="talukaCode"
+              value={talukaCode}
+              onChange={handleTalukaChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select Taluka</option>
+              {talukas.map((taluka) => (
+                <option key={taluka.nameEnglish} value={taluka.code}>
+                  {taluka.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Village Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Village</label>
+            <select
+              name="villageCode"
+              value={villageCode}
+              onChange={handleVillageChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select Village</option>
+              {villages.map((village) => (
+                <option key={village.code} value={village.code}>
+                  {village.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Pincode</label>
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode || ''}  // Ensure it uses formData.pincode
+              onChange={handlePincodeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+
+
+        </div>
 
 
 
         <div className="space-y-6">
 
-        <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
+          <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700">KW</label>
+            <label className="block text-sm font-medium text-gray-700">Panel Wattage</label>
             <select
               name="kw"
               value={formData.kw}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="">Select KW</option>
+
               {kwOptions.map((kw) => (
                 <option key={kw} value={kw}>{kw}</option>
               ))}
@@ -602,6 +601,32 @@ export function QuotationForm() {
             </select>
           </div>
 
+
+          {/* Grid Type Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
+            <select
+              name="gridType"
+              value={gridType}
+              onChange={handleGridTypeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {isMsebConnection === 'Yes' ? (
+                <>
+                  <option value="On-Grid">On-Grid</option>
+                  <option value="Hybrid">Hybrid</option>
+                </>
+              ) : (
+                <>
+                  <option value="With-Battery">With-Battery</option>
+                  <option value="Panel-Only">Panel-Only</option>
+                </>
+              )
+              }
+            </select>
+          </div>
+
+
           {/* Battery Wattage Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
@@ -611,13 +636,11 @@ export function QuotationForm() {
               disabled={!isBatteryDropdownEnabled}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-
-
             >
               <option value="">Select Battery Wattage</option>
-              {kwOptions.map((kwOption) => (
-                <option key={kwOption} value={kwOption}>
-                  {kwOption} kW
+              {batteryKwOptions.map((batteryKwOption, index) => (
+                <option key={index} value={batteryKwOption}>
+                  {batteryKwOption} KW
                 </option>
               ))}
             </select>
