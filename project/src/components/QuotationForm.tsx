@@ -24,7 +24,7 @@ export function QuotationForm() {
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
   const [villageCode, setVillageCode] = useState<number>(0);
-  // const [pincode, setPincode] = useState<number>(0);
+  const [pincode, setPincode] = useState<number>(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
