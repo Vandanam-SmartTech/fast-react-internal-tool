@@ -70,16 +70,16 @@ export function QuotationForm() {
         console.error('Error fetching panel wattages for default phase:', err);
       }
     };
-  
+
     initializePhaseAndKw();
   }, []);
-  
+
 
   ///////////////////////////
 
   ////////////////////////////////////handle the dist,tal,vill,pin
-  
-  
+
+
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -228,11 +228,11 @@ export function QuotationForm() {
           setError('Failed to fetch KW options');
         }
       };
-  
+
       fetchWattages();
     }
   }, [formData.phase]);
-  
+
 
   useEffect(() => {
     if (
@@ -329,6 +329,8 @@ export function QuotationForm() {
     }
   };
 
+  // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
+  const batteryKwOptions = Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(1));
 
 
   return (
@@ -369,7 +371,7 @@ export function QuotationForm() {
             </div>
           </div>
 
-         
+
         </div>
       </div>
 
@@ -427,7 +429,7 @@ export function QuotationForm() {
           </div>
 
 
-         
+
         </div>
 
         <div className="space-y-6">
@@ -473,104 +475,104 @@ export function QuotationForm() {
             />
           </div>
 
-         
+
 
         </div>
 
         {/* ///////////////////adding alignment//////////////// */}
 
-          <div className="space-y-6">
+        <div className="space-y-6">
 
-            <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
+          <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Street Address</label>
-              <input
-                type="text"
-                name="consumerAddress1"
-                value={formData.consumerAddress1}
-                onChange={handleChange}
-                placeholder="123 Main St"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* //dist,vill,tal,pincode/////// */}
-
-            {/* District Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">District</label>
-              <select
-                name="districtCode"
-                value={districtCode}
-                onChange={handleDistrictChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select District</option>
-                {districts.map((district) => (
-                  <option key={district.nameEnglish} value={district.code}>
-                    {district.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Taluka Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Taluka</label>
-              <select
-                name="talukaCode"
-                value={talukaCode}
-                onChange={handleTalukaChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select Taluka</option>
-                {talukas.map((taluka) => (
-                  <option key={taluka.nameEnglish} value={taluka.code}>
-                    {taluka.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Village Dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Village</label>
-              <select
-                name="villageCode"
-                value={villageCode}
-                onChange={handleVillageChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={0}>Select Village</option>
-                {villages.map((village) => (
-                  <option key={village.code} value={village.code}>
-                    {village.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Pincode</label>
-              <input
-                type="text"
-                name="pincode"
-                value={formData.pincode || ''}  // Ensure it uses formData.pincode
-                onChange={handlePincodeChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-
-          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <input
+              type="text"
+              name="consumerAddress1"
+              value={formData.consumerAddress1}
+              onChange={handleChange}
+              placeholder="123 Main St"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
           </div>
+
+          {/* //dist,vill,tal,pincode/////// */}
+
+          {/* District Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">District</label>
+            <select
+              name="districtCode"
+              value={districtCode}
+              onChange={handleDistrictChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select District</option>
+              {districts.map((district) => (
+                <option key={district.nameEnglish} value={district.code}>
+                  {district.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Taluka Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Taluka</label>
+            <select
+              name="talukaCode"
+              value={talukaCode}
+              onChange={handleTalukaChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select Taluka</option>
+              {talukas.map((taluka) => (
+                <option key={taluka.nameEnglish} value={taluka.code}>
+                  {taluka.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Village Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Village</label>
+            <select
+              name="villageCode"
+              value={villageCode}
+              onChange={handleVillageChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value={0}>Select Village</option>
+              {villages.map((village) => (
+                <option key={village.code} value={village.code}>
+                  {village.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Pincode</label>
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode || ''}  // Ensure it uses formData.pincode
+              onChange={handlePincodeChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+
+
+        </div>
 
 
 
         <div className="space-y-6">
 
-        <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
+          <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700">Panel Wattage</label>
             <select
@@ -579,7 +581,7 @@ export function QuotationForm() {
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              
+
               {kwOptions.map((kw) => (
                 <option key={kw} value={kw}>{kw}</option>
               ))}
@@ -600,8 +602,8 @@ export function QuotationForm() {
           </div>
 
 
-           {/* Grid Type Dropdown */}
-           <div>
+          {/* Grid Type Dropdown */}
+          <div>
             <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
             <select
               name="gridType"
@@ -634,13 +636,11 @@ export function QuotationForm() {
               disabled={!isBatteryDropdownEnabled}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-
-
             >
               <option value="">Select Battery Wattage</option>
-              {kwOptions.map((kwOption) => (
-                <option key={kwOption} value={kwOption}>
-                  {kwOption} kW
+              {batteryKwOptions.map((batteryKwOption, index) => (
+                <option key={index} value={batteryKwOption}>
+                  {batteryKwOption} KW
                 </option>
               ))}
             </select>
