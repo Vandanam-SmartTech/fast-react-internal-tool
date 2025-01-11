@@ -1,7 +1,7 @@
 import { QuotationData } from '../types/quotation';
 
 export const initialFormData: QuotationData = {
-  gridType:'',
+  inversionType:'',
   isMsebConnection: '',
   consumerNumber: '',
   consumerName: '',
@@ -12,7 +12,7 @@ export const initialFormData: QuotationData = {
   connectionType: 'Residential',
   phase: 'Single',
   dcrNonDcr: 'DCR',
-  batteryWattage: 0, 
+  batteryWattage: NaN, 
   monthlyAvgUnit: NaN,
   kw: 0,
   subsidy: NaN,
@@ -20,4 +20,7 @@ export const initialFormData: QuotationData = {
   fabricationCost: NaN,
   effectiveCost: NaN,
   pincode:NaN,
+  districtCode:NaN,
+  talukaCode:NaN,
+  villageCode:NaN,
 };

@@ -1,6 +1,6 @@
 export interface QuotationData {
   isMsebConnection: string;
-  gridType:string;
+  inversionType:string;
   consumerNumber: string;
   consumerName: string;
   consumerPhoneNumber: string;
@@ -18,6 +18,9 @@ export interface QuotationData {
   effectiveCost: number;
   batteryWattage: number; 
   pincode:number;
+  districtCode:number;
+  talukaCode:number;
+  villageCode:number;
 }
 
 export type District = {

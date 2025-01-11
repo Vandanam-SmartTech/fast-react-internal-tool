@@ -15,7 +15,7 @@ export function QuotationForm() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const [isMsebConnection, setIsMsebConnection] = useState("Yes");
-  const [gridType, setGridType] = useState<string>('');
+  const [inversionType, setInversionType] = useState<string>('');
   const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
 
   const [districts, setDistricts] = useState<District[]>([]);
@@ -137,6 +137,7 @@ export function QuotationForm() {
     setVillageCode(0);
   };
 
+
   const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
@@ -179,20 +180,20 @@ export function QuotationForm() {
       ...prev,
       consumerNumber: '',
       isMsebConnection: value,
-      gridType: '', // Reset grid type when MSEB connection changes
+      inversionType: '', // Reset grid type when MSEB connection changes
       batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
     }));
-    setGridType(''); // Reset grid type selection when MSEB changes
+    setInversionType(''); // Reset grid type selection when MSEB changes
     setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
   };
 
 
-  const handleGridTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setGridType(value);
+    setInversionType(value);
     setFormData((prev) => ({
       ...prev,
-      gridType: value,
+      inversionType: value,
       batteryWattage: value === 'Hybrid' || value === 'With-Battery' ? prev.batteryWattage : NaN, // Reset battery wattage if not applicable
     }));
     setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery'); // Enable battery dropdown for specific grid types
@@ -208,7 +209,7 @@ export function QuotationForm() {
       },
     } as React.ChangeEvent<HTMLSelectElement>; // Type assertion to ensure it matches ChangeEvent
 
-    handleGridTypeChange(fakeEvent); // Trigger the onChange handler programmatically
+    handleInversionTypeChange(fakeEvent); // Trigger the onChange handler programmatically
   }, [isMsebConnection]);
 
 
@@ -503,7 +504,7 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">District</label>
             <select
-              name="districtCode"
+              name="distrct"
               value={districtCode}
               onChange={handleDistrictChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -606,9 +607,9 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
             <select
-              name="gridType"
-              value={gridType}
-              onChange={handleGridTypeChange}
+              name="inversionType"
+              value={inversionType}
+              onChange={handleInversionTypeChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {isMsebConnection === 'Yes' ? (
@@ -629,7 +630,7 @@ export function QuotationForm() {
 
           {/* Battery Wattage Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
+            <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
             <select
               name="batteryWattage"
               value={formData.batteryWattage}
