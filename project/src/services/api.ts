@@ -1,7 +1,7 @@
-import { QuotationData } from '../types/quotation';
+import { QuotationData,District,Taluka,Village } from '../types/quotation';
 
 
-const API_BASE_URL = 'http://localhost:7575/api';
+const API_BASE_URL = 'http://192.168.1.5:7575/api';
 
 export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> => {
   try {
@@ -78,7 +78,7 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
 
 //api for calculate kw using enrgy usage and phase type
 export const calculateKw = async (phase: string, energyUsage: number): Promise<number | null> => {
-  const url = 'http://localhost:7575/api/kw/calculate';
+  const url = 'http://192.168.1.5:7575/api/kw/calculate';
   const requestPayload = {
     phase,
     energyUsage: energyUsage.toString(), // converting energyUsage to string as per backend requirements
@@ -103,4 +103,25 @@ export const calculateKw = async (phase: string, energyUsage: number): Promise<n
     console.error('Error fetching KW:', error);
     return null; // Return null in case of error
   }
+};
+
+
+
+// Typing the return value of the fetch functions as arrays of the respective types
+export const fetchDistricts = async (): Promise<District[]> => {
+  const response = await fetch('http://localhost:8585/masters/district/27');
+  const data = await response.json();
+  return data;
+};
+
+export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+  const response = await fetch(`http://localhost:8585/masters/taluka/${districtCode}`);
+  const data = await response.json();
+  return data;
+};
+
+export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+  const response = await fetch(`http://localhost:8585/masters/village/${talukaCode}`);
+  const data = await response.json();
+  return data;
 };
