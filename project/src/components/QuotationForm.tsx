@@ -394,17 +394,21 @@ export function QuotationForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
-            <input
-              type="text"
-              name="consumerName"
-              value={formData.consumerName}
-              onChange={handleChange}
-              placeholder="Om Patil"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+  <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
+  <input
+    type="text"
+    name="consumerName"
+    value={formData.consumerName}
+    onChange={handleChange}
+    placeholder="Enter first and last name (max 21 characters)"
+    maxLength={21} // This ensures no more than 21 characters can be entered
+    required
+    pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
+    title="Please enter only your first and last name (e.g., John Doe)"
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+</div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
