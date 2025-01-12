@@ -293,6 +293,29 @@ export function QuotationForm() {
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
 
+  const handlePreview = async () => {
+    setIsPreviewLoading(true);
+    try {
+      const pdfBlob = await generateQuotationPDF(formData);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      // Create a new window for the PDF popup
+      const popupWindow = window.open('', '_blank', 'width=800,height=600');
+      if (popupWindow) {
+        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
+        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
+        popupWindow.document.write('</body></html>');
+      } else {
+        setError('Popup blocked. Please allow popups and try again.');
+      }
+    } catch (err) {
+      setError('Failed to preview the quotation. Please try again.');
+      console.error('Error:', err);
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -309,29 +332,14 @@ export function QuotationForm() {
     }
   };
 
-  const handlePreview = async () => {
-    setIsPreviewLoading(true); // Start loading indicator for preview
-    try {
-      const pdfBlob = await generateQuotationPDF(formData);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Create a new window for the PDF popup
-      const popupWindow = window.open('', '_blank', 'width=800,height=600');
-
-      if (popupWindow) {
-        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
-        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
-        popupWindow.document.write('</body></html>');
-      } else {
-        setError('Popup blocked. Please allow popups and try again.');
-      }
-    } catch (err) {
-      setError('Failed to preview the quotation. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null); // Automatically dismiss error after 5 seconds
+      }, 5000);
+      return () => clearTimeout(timer); // Cleanup the timer when error is cleared
     }
-  };
+  }, [error]);
 
   // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
   const batteryKwOptions = Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(1));
@@ -717,12 +725,21 @@ export function QuotationForm() {
       </div>
 
       <div className="mt-8 flex justify-end space-x-4">
+        {/* Error Toast Notification */}
         {error && (
-          <p className="text-red-600 mr-4 self-center">{error}</p>
+          <div className="fixed bottom-5 right-5 p-4 bg-red-600 text-white rounded-lg shadow-lg transition-all duration-300 transform translate-y-8 opacity-0 show-toast">
+            <p>{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="ml-4 text-lg font-semibold focus:outline-none"
+            >
+              ×
+            </button>
+          </div>
         )}
 
 
-        <button
+<button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -731,7 +748,6 @@ export function QuotationForm() {
           {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
         </button>
 
-
         <button
           type="submit"
           disabled={isLoading}
@@ -739,7 +755,17 @@ export function QuotationForm() {
         >
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
+      
       </div>
+      <style>
+        {`
+          .show-toast {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.3s ease-in-out;
+          }
+        `}
+      </style>
     </form>
   );
 }
