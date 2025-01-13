@@ -15,7 +15,7 @@ export function QuotationForm() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const [isMsebConnection, setIsMsebConnection] = useState("Yes");
-  const [gridType, setGridType] = useState<string>('');
+  const [inversionType, setInversionType] = useState<string>('');
   const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
 
   const [districts, setDistricts] = useState<District[]>([]);
@@ -50,6 +50,7 @@ export function QuotationForm() {
       return updatedData;
     });
   };
+
 
 
   /////////////////////////////////////////
@@ -137,6 +138,7 @@ export function QuotationForm() {
     setVillageCode(0);
   };
 
+
   const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
@@ -179,20 +181,20 @@ export function QuotationForm() {
       ...prev,
       consumerNumber: '',
       isMsebConnection: value,
-      gridType: '', // Reset grid type when MSEB connection changes
+      inversionType: '', // Reset grid type when MSEB connection changes
       batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
     }));
-    setGridType(''); // Reset grid type selection when MSEB changes
+    setInversionType(''); // Reset grid type selection when MSEB changes
     setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
   };
 
 
-  const handleGridTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setGridType(value);
+    setInversionType(value);
     setFormData((prev) => ({
       ...prev,
-      gridType: value,
+      inversionType: value,
       batteryWattage: value === 'Hybrid' || value === 'With-Battery' ? prev.batteryWattage : NaN, // Reset battery wattage if not applicable
     }));
     setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery'); // Enable battery dropdown for specific grid types
@@ -208,7 +210,7 @@ export function QuotationForm() {
       },
     } as React.ChangeEvent<HTMLSelectElement>; // Type assertion to ensure it matches ChangeEvent
 
-    handleGridTypeChange(fakeEvent); // Trigger the onChange handler programmatically
+    handleInversionTypeChange(fakeEvent); // Trigger the onChange handler programmatically
   }, [isMsebConnection]);
 
 
@@ -269,8 +271,15 @@ export function QuotationForm() {
       fetchCostData();
     }
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
+<<<<<<< HEAD
  
  
+=======
+
+
+  
+  
+>>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
   useEffect(() => {
     if (formData.monthlyAvgUnit && formData.phase) {
       const fetchKw = async () => {
@@ -288,7 +297,34 @@ export function QuotationForm() {
       fetchKw();
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
+<<<<<<< HEAD
  
+=======
+
+  const handlePreview = async () => {
+    setIsPreviewLoading(true);
+    try {
+      const pdfBlob = await generateQuotationPDF(formData);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      // Create a new window for the PDF popup
+      const popupWindow = window.open('', '_blank', 'width=800,height=600');
+      if (popupWindow) {
+        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
+        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
+        popupWindow.document.write('</body></html>');
+      } else {
+        setError('Popup blocked. Please allow popups and try again.');
+      }
+    } catch (err) {
+      setError('Failed to preview the quotation. Please try again.');
+      console.error('Error:', err);
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
+>>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -304,6 +340,7 @@ export function QuotationForm() {
       setIsLoading(false);
     }
   };
+<<<<<<< HEAD
  
   const handlePreview = async () => {
     setIsPreviewLoading(true); // Start loading indicator for preview
@@ -326,8 +363,17 @@ export function QuotationForm() {
       console.error('Error:', err);
     } finally {
       setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
+=======
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null); // Automatically dismiss error after 5 seconds
+      }, 5000);
+      return () => clearTimeout(timer); // Cleanup the timer when error is cleared
+>>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
     }
-  };
+  }, [error]);
 
   // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
   const batteryKwOptions = Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(1));
@@ -399,12 +445,16 @@ export function QuotationForm() {
               name="consumerName"
               value={formData.consumerName}
               onChange={handleChange}
-              placeholder="Om Patil"
+              placeholder="Enter first and last name (e.g., Prasad Sutar)"
+              maxLength={21} // This ensures no more than 21 characters can be entered
               required
+              pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
+              title="Please enter only your first and last name (e.g., John Doe)"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          <div>
+
+           <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
               type="tel"
@@ -412,16 +462,22 @@ export function QuotationForm() {
               value={formData.consumerPhoneNumber}
               onChange={handleChange}
               placeholder="1234567890"
+              maxLength={10}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
-          </div>
+          </div>  
+
+        
+
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               name="consumerEmail"
               value={formData.consumerEmail}
+              maxLength={35}
               onChange={handleChange}
               placeholder="prasad07@example.com"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -491,6 +547,7 @@ export function QuotationForm() {
               type="text"
               name="consumerAddress1"
               value={formData.consumerAddress1}
+              maxLength={60}
               onChange={handleChange}
               placeholder="123 Main St"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -503,7 +560,7 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">District</label>
             <select
-              name="districtCode"
+              name="distrct"
               value={districtCode}
               onChange={handleDistrictChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -606,9 +663,9 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
             <select
-              name="gridType"
-              value={gridType}
-              onChange={handleGridTypeChange}
+              name="inversionType"
+              value={inversionType}
+              onChange={handleInversionTypeChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {isMsebConnection === 'Yes' ? (
@@ -629,7 +686,7 @@ export function QuotationForm() {
 
           {/* Battery Wattage Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Select Battery Capacity</label>
+            <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
             <select
               name="batteryWattage"
               value={formData.batteryWattage}
@@ -702,12 +759,21 @@ export function QuotationForm() {
       </div>
  
       <div className="mt-8 flex justify-end space-x-4">
+        {/* Error Toast Notification */}
         {error && (
-          <p className="text-red-600 mr-4 self-center">{error}</p>
+          <div className="fixed bottom-5 right-5 p-4 bg-red-600 text-white rounded-lg shadow-lg transition-all duration-300 transform translate-y-8 opacity-0 show-toast">
+            <p>{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="ml-4 text-lg font-semibold focus:outline-none"
+            >
+              ×
+            </button>
+          </div>
         )}
 
 
-        <button
+<button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -716,7 +782,6 @@ export function QuotationForm() {
           {isPreviewLoading ? 'Previewing...' : 'Preview Quotation'}
         </button>
 
-
         <button
           type="submit"
           disabled={isLoading}
@@ -724,7 +789,17 @@ export function QuotationForm() {
         >
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
+      
       </div>
+      <style>
+        {`
+          .show-toast {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.3s ease-in-out;
+          }
+        `}
+      </style>
     </form>
   );
 }
