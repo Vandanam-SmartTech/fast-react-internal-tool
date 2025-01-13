@@ -398,6 +398,7 @@ export function QuotationForm() {
               type="text"
               name="consumerNumber"
               value={formData.consumerNumber}
+              maxLength={12}
               onChange={handleChange}
               placeholder="CN001"
               disabled={isMsebConnection === 'No'}
@@ -508,7 +509,7 @@ export function QuotationForm() {
           <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <label className="block text-sm font-medium text-gray-700">Address</label>
             <input
               type="text"
               name="consumerAddress1"
