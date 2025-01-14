@@ -1,11 +1,7 @@
 import { QuotationData,District,Taluka,Village } from '../types/quotation';
 
 
-<<<<<<< HEAD
-const API_BASE_URL = 'http://localhost:8080/api';
-=======
 const API_BASE_URL = 'http://localhost:7575/api';
->>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
 
 export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> => {
   try {
@@ -82,11 +78,7 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
 
 //api for calculate kw using enrgy usage and phase type
 export const calculateKw = async (phase: string, energyUsage: number): Promise<number | null> => {
-<<<<<<< HEAD
-  const url = 'http://localhost:8080/api/kw/calculate';
-=======
   const url = 'http://localhost:7575/api/kw/calculate';
->>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
   const requestPayload = {
     phase,
     energyUsage: energyUsage.toString(), // converting energyUsage to string as per backend requirements

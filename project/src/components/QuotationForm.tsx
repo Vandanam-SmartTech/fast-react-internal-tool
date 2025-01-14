@@ -271,15 +271,10 @@ export function QuotationForm() {
       fetchCostData();
     }
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
-<<<<<<< HEAD
- 
- 
-=======
 
 
   
   
->>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
   useEffect(() => {
     if (formData.monthlyAvgUnit && formData.phase) {
       const fetchKw = async () => {
@@ -297,9 +292,6 @@ export function QuotationForm() {
       fetchKw();
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
-<<<<<<< HEAD
- 
-=======
 
   const handlePreview = async () => {
     setIsPreviewLoading(true);
@@ -324,7 +316,6 @@ export function QuotationForm() {
     }
   };
 
->>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -340,30 +331,6 @@ export function QuotationForm() {
       setIsLoading(false);
     }
   };
-<<<<<<< HEAD
- 
-  const handlePreview = async () => {
-    setIsPreviewLoading(true); // Start loading indicator for preview
-    try {
-      const pdfBlob = await generateQuotationPDF(formData);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Create a new window for the PDF popup
-      const popupWindow = window.open('', '_blank', 'width=800,height=600');
-
-      if (popupWindow) {
-        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
-        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
-        popupWindow.document.write('</body></html>');
-      } else {
-        setError('Popup blocked. Please allow popups and try again.');
-      }
-    } catch (err) {
-      setError('Failed to preview the quotation. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setIsPreviewLoading(false); // Reset the loading indicator after the preview is complete
-=======
 
   useEffect(() => {
     if (error) {
@@ -371,7 +338,6 @@ export function QuotationForm() {
         setError(null); // Automatically dismiss error after 5 seconds
       }, 5000);
       return () => clearTimeout(timer); // Cleanup the timer when error is cleared
->>>>>>> 26fdd8fa2d1e5674abec4acd4aa943a88f7b5291
     }
   }, [error]);
 
@@ -453,7 +419,37 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+          {/* Billed To */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Billed To</label>
+    <input
+      type="text"
+      name="billedTo"
+      value={formData.billedTo}
+      onChange={handleChange}
+      placeholder="Enter the name of the billed person or company"
+      maxLength={50} // Adjust based on your requirements
+      required
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
 
+  {/* GST Number */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">GST Number</label>
+    <input
+      type="text"
+      name="gstNo"
+      value={formData.gstNo}
+      onChange={handleChange}
+      placeholder="22AAAAA0000A1Z5" // Example GST number format
+      maxLength={15} // GST numbers typically have 15 characters
+      required
+      pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[0-9A-Z]{1}$" // Valid GST format
+      title="Enter a valid GST number (e.g., 22AAAAA0000A1Z5)"
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
            <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
@@ -479,7 +475,7 @@ export function QuotationForm() {
               value={formData.consumerEmail}
               maxLength={35}
               onChange={handleChange}
-              placeholder="prasad07@example.com"
+              placeholder="devompatil@example.com"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
