@@ -2,7 +2,7 @@ import { QuotationData } from '../types/quotation';
 
 export const initialFormData: QuotationData = {
   inversionType:'',
-  isMsebConnection: '',
+  isMsebConnection: 'Yes',
   consumerNumber: '',
   consumerName: '',
   consumerPhoneNumber: '',

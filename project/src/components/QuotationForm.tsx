@@ -76,6 +76,12 @@ export function QuotationForm() {
   }, []);
 
 
+  useEffect(() => {
+    if (kwOptions.length > 1) {
+      setFormData((prev) => ({ ...prev, kw: kwOptions[1] }));
+    }
+  }, [kwOptions]);
+
   ///////////////////////////
 
   ////////////////////////////////////handle the dist,tal,vill,pin
@@ -187,6 +193,8 @@ export function QuotationForm() {
     setInversionType(''); // Reset grid type selection when MSEB changes
     setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
   };
+
+  //////////////////////////////////////////////////////////////////////////////
 
 
   const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -367,6 +375,7 @@ export function QuotationForm() {
                   value="Yes"
                   onChange={handleMsebChange}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isMsebConnection === "Yes"} // Bind to formData state
                 />
                 <span className="text-sm text-gray-700">Yes</span>
               </label>
@@ -377,6 +386,7 @@ export function QuotationForm() {
                   value="No"
                   onChange={handleMsebChange}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isMsebConnection === "No"} // Bind to formData state
                 />
                 <span className="text-sm text-gray-700">No</span>
               </label>
