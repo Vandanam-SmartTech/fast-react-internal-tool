@@ -28,7 +28,7 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
+ 
     const parsedValue =
       ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
         ? parseFloat(value) || NaN
@@ -39,14 +39,14 @@ export function QuotationForm() {
         ...prev,
         [name]: parsedValue,
       };
-
+ 
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
           (updatedData.solarCostSystem || 0) +
           (updatedData.fabricationCost || 0) -
           (updatedData.subsidy || 0);
       }
-
+ 
       return updatedData;
     });
   };
@@ -75,6 +75,12 @@ export function QuotationForm() {
     initializePhaseAndKw();
   }, []);
 
+
+  useEffect(() => {
+    if (kwOptions.length > 1) {
+      setFormData((prev) => ({ ...prev, kw: kwOptions[1] }));
+    }
+  }, [kwOptions]);
 
   ///////////////////////////
 
@@ -188,6 +194,8 @@ export function QuotationForm() {
     setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
   };
 
+  //////////////////////////////////////////////////////////////////////////////
+
 
   const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -230,7 +238,7 @@ export function QuotationForm() {
           setError('Failed to fetch KW options');
         }
       };
-
+ 
       fetchWattages();
     }
   }, [formData.phase]);
@@ -251,7 +259,7 @@ export function QuotationForm() {
             dcrNonDcr: formData.dcrNonDcr,
             kw: formData.kw,
           });
-
+ 
           setFormData(prev => ({
             ...prev,
             subsidy: costData.subsidy,
@@ -267,7 +275,7 @@ export function QuotationForm() {
           setError('Failed to fetch cost data');
         }
       };
-
+ 
       fetchCostData();
     }
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
@@ -320,7 +328,7 @@ export function QuotationForm() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
+ 
     try {
       const pdfBlob = await generateQuotationPDF(formData);
       downloadBlob(pdfBlob, `quotation-${formData.consumerNumber}.pdf`);
@@ -367,6 +375,7 @@ export function QuotationForm() {
                   value="Yes"
                   onChange={handleMsebChange}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isMsebConnection === "Yes"} // Bind to formData state
                 />
                 <span className="text-sm text-gray-700">Yes</span>
               </label>
@@ -377,6 +386,7 @@ export function QuotationForm() {
                   value="No"
                   onChange={handleMsebChange}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isMsebConnection === "No"} // Bind to formData state
                 />
                 <span className="text-sm text-gray-700">No</span>
               </label>
@@ -420,7 +430,37 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+          {/* Billed To */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Billed To</label>
+    <input
+      type="text"
+      name="billedTo"
+      value={formData.billedTo}
+      onChange={handleChange}
+      placeholder="Enter the name of the billed person or company"
+      maxLength={50} // Adjust based on your requirements
+      required
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
 
+  {/* GST Number */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">GST Number</label>
+    <input
+      type="text"
+      name="gstNo"
+      value={formData.gstNo}
+      onChange={handleChange}
+      placeholder="22AAAAA0000A1Z5" // Example GST number format
+      maxLength={15} // GST numbers typically have 15 characters
+      required
+      pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[0-9A-Z]{1}$" // Valid GST format
+      title="Enter a valid GST number (e.g., 22AAAAA0000A1Z5)"
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
            <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
@@ -446,7 +486,7 @@ export function QuotationForm() {
               value={formData.consumerEmail}
               maxLength={35}
               onChange={handleChange}
-              placeholder="prasad07@example.com"
+              placeholder="devompatil@example.com"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -454,7 +494,7 @@ export function QuotationForm() {
 
 
         </div>
-
+ 
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
           <div>
@@ -686,7 +726,7 @@ export function QuotationForm() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-
+ 
             <div>
               <label className="block text-sm font-medium text-gray-700">Subsidy</label>
               <input
@@ -724,7 +764,7 @@ export function QuotationForm() {
           </div>
         </div>
       </div>
-
+ 
       <div className="mt-8 flex justify-end space-x-4">
         {/* Error Toast Notification */}
         {error && (

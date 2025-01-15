@@ -3,6 +3,8 @@ export interface QuotationData {
   inversionType:string;
   consumerNumber: string;
   consumerName: string;
+  billedTo: string;
+  gstNo: string;
   consumerPhoneNumber: string;
   consumerEmail: string;
   consumerAddress1: string;

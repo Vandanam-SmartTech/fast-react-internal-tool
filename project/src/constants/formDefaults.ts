@@ -2,7 +2,7 @@ import { QuotationData } from '../types/quotation';
 
 export const initialFormData: QuotationData = {
   inversionType:'',
-  isMsebConnection: '',
+  isMsebConnection: 'Yes',
   consumerNumber: '',
   consumerName: '',
   consumerPhoneNumber: '',
@@ -23,4 +23,6 @@ export const initialFormData: QuotationData = {
   districtCode:0,
   talukaCode:0,
   villageCode:0,
+  billedTo:'',
+  gstNo:''
 };
