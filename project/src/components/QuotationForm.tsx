@@ -408,6 +408,7 @@ export function QuotationForm() {
               type="text"
               name="consumerNumber"
               value={formData.consumerNumber}
+              maxLength={12}
               onChange={handleChange}
               placeholder="CN001"
               disabled={isMsebConnection === 'No'}
@@ -422,7 +423,7 @@ export function QuotationForm() {
               value={formData.consumerName}
               onChange={handleChange}
               placeholder="Enter first and last name (e.g., Prasad Sutar)"
-              maxLength={21} // This ensures no more than 21 characters can be entered
+              // maxLength={21} // This ensures no more than 21 characters can be entered
               required
               pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
               title="Please enter only your first and last name (e.g., John Doe)"
@@ -548,12 +549,12 @@ export function QuotationForm() {
           <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <label className="block text-sm font-medium text-gray-700">Address</label>
             <input
               type="text"
               name="consumerAddress1"
               value={formData.consumerAddress1}
-              maxLength={60}
+              // maxLength={60}
               onChange={handleChange}
               placeholder="123 Main St"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
