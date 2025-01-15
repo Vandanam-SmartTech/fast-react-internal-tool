@@ -187,6 +187,7 @@ export function QuotationForm() {
       ...prev,
       consumerNumber: '',
       isMsebConnection: value,
+      isNameCorrection: value,
       inversionType: '', // Reset grid type when MSEB connection changes
       batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
     }));
@@ -392,6 +393,35 @@ export function QuotationForm() {
               </label>
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Does the connection require a name correction?</label>
+            <div className="mt-2 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="nameCorrection"
+                  value="Yes"
+                  onChange={handleMsebChange}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isNameCorrection === "Yes"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="nameCorrection"
+                  value="No"
+                  onChange={handleMsebChange}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isNameCorrection=== "No"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+
 
 
         </div>
