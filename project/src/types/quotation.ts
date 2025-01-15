@@ -1,5 +1,6 @@
 export interface QuotationData {
   isMsebConnection: string;
+  isNameCorrection: string;
   inversionType:string;
   consumerNumber: string;
   consumerName: string;
