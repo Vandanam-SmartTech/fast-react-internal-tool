@@ -1,5 +1,6 @@
 // QuotationForm.tsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
@@ -27,6 +28,14 @@ export function QuotationForm() {
   const [villageCode, setVillageCode] = useState<number>(0);
   const [pincode, setPincode] = useState<number>(0);
 
+  //logout functinality
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken'); // Clear JWT
+    navigate('/login'); // Redirect to login
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
  
@@ -52,7 +61,7 @@ export function QuotationForm() {
     });
   };
 
-
+ 
 
   /////////////////////////////////////////
   useEffect(() => {
@@ -644,9 +653,7 @@ export function QuotationForm() {
           </div>
 
 
-
         </div>
-
 
 
         <div className="space-y-6">
@@ -794,8 +801,14 @@ export function QuotationForm() {
           </div>
         )}
 
+        <button
+        onClick={handleLogout}
+        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+      >
+        Logout
+      </button>
 
-<button
+        <button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -812,6 +825,7 @@ export function QuotationForm() {
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
       
+        
       </div>
       <style>
         {`

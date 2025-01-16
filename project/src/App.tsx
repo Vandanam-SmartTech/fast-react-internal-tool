@@ -1,7 +1,7 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import  Login  from './components/Login';
 import { QuotationForm } from './components/QuotationForm';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -10,7 +10,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/quotation-form" element={<QuotationForm />} />
+          <Route
+            path="/quotationform"
+            element={
+              <PrivateRoute>
+                <QuotationForm />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </div>
     </Router>
