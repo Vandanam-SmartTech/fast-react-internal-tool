@@ -1,13 +1,13 @@
 // QuotationForm.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import { calculateKw, calculateCosts } from '../services/api';
-import ConsumerNumberInput from '../components/ConsumerDetails/ConsumerNumberInput';
+import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar/ResponsiveNavbar';
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -61,7 +61,7 @@ export function QuotationForm() {
     });
   };
 
- 
+
 
   /////////////////////////////////////////
   useEffect(() => {
@@ -180,6 +180,7 @@ export function QuotationForm() {
     }
   };
 
+
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     setPincode(value);
@@ -196,7 +197,6 @@ export function QuotationForm() {
       ...prev,
       consumerNumber: '',
       isMsebConnection: value,
-      isNameCorrection: value,
       inversionType: '', // Reset grid type when MSEB connection changes
       batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
     }));
@@ -206,6 +206,22 @@ export function QuotationForm() {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  
+  const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setIsMsebConnection(value);
+    setFormData((prev) => ({
+      ...prev,
+      consumerNumber: '',
+      isNameCorrection: value,
+      inversionType: '', // Reset grid type when MSEB connection changes
+      batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
+    }));
+    setInversionType(''); // Reset grid type selection when MSEB changes
+    setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
 
   const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -291,6 +307,8 @@ export function QuotationForm() {
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
 
 
+  
+  
   useEffect(() => {
     if (formData.monthlyAvgUnit && formData.phase) {
       const fetchKw = async () => {
@@ -362,6 +380,7 @@ export function QuotationForm() {
 
 
   return (
+
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="flex items-center space-x-4 mb-8">
         <FileText className="w-8 h-8 text-blue-600" />
@@ -409,7 +428,7 @@ export function QuotationForm() {
                   type="radio"
                   name="nameCorrection"
                   value="Yes"
-                  onChange={handleMsebChange}
+                  onChange={handleNameCorrection}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
                   checked={formData.isNameCorrection === "Yes"} // Bind to formData state
                 />
@@ -420,7 +439,7 @@ export function QuotationForm() {
                   type="radio"
                   name="nameCorrection"
                   value="No"
-                  onChange={handleMsebChange}
+                  onChange={handleNameCorrection}
                   className="focus:ring-blue-500 text-blue-600 border-gray-300"
                   checked={formData.isNameCorrection=== "No"} // Bind to formData state
                 />
@@ -437,14 +456,20 @@ export function QuotationForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-  <div className="space-y-6">
+        <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
-
-        <ConsumerNumberInput
-        consumerNumber={formData.consumerNumber}
-        handleChange={handleChange}
-        isMsebConnection={formData.isMsebConnection}
-        />
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
+            <input
+              type="text"
+              name="consumerNumber"
+              value={formData.consumerNumber}
+              onChange={handleChange}
+              placeholder="CN001"
+              disabled={isMsebConnection === 'No'}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
             <input
@@ -453,7 +478,7 @@ export function QuotationForm() {
               value={formData.consumerName}
               onChange={handleChange}
               placeholder="Enter first and last name (e.g., Prasad Sutar)"
-              // maxLength={21} // This ensures no more than 21 characters can be entered
+              maxLength={21} // This ensures no more than 21 characters can be entered
               required
               pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
               title="Please enter only your first and last name (e.g., John Doe)"
@@ -461,7 +486,7 @@ export function QuotationForm() {
             />
           </div>
           {/* Billed To */}
-      <div>
+  <div>
     <label className="block text-sm font-medium text-gray-700">Billed To</label>
     <input
       type="text"
@@ -473,7 +498,7 @@ export function QuotationForm() {
       required
       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
     />
-      </div>
+  </div>
 
   {/* GST Number */}
   <div>
@@ -505,6 +530,9 @@ export function QuotationForm() {
             />
           </div>  
 
+        
+
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -517,7 +545,10 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-    </div>
+
+
+
+        </div>
  
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
@@ -573,12 +604,12 @@ export function QuotationForm() {
           <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Address</label>
+            <label className="block text-sm font-medium text-gray-700">Street Address</label>
             <input
               type="text"
               name="consumerAddress1"
               value={formData.consumerAddress1}
-              // maxLength={60}
+              maxLength={60}
               onChange={handleChange}
               placeholder="123 Main St"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -653,7 +684,9 @@ export function QuotationForm() {
           </div>
 
 
+
         </div>
+
 
 
         <div className="space-y-6">
@@ -801,14 +834,8 @@ export function QuotationForm() {
           </div>
         )}
 
-        <button
-        onClick={handleLogout}
-        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-      >
-        Logout
-      </button>
 
-        <button
+      <button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -825,7 +852,6 @@ export function QuotationForm() {
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
         </button>
       
-        
       </div>
       <style>
         {`

@@ -1,7 +1,7 @@
 import { QuotationData,District,Taluka,Village } from '../types/quotation';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:7575/api';
 
 const API = axios.create({
   baseURL: 'http://localhost:9090',
@@ -94,7 +94,7 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
 
 //api for calculate kw using enrgy usage and phase type
 export const calculateKw = async (phase: string, energyUsage: number): Promise<number | null> => {
-  const url = 'http://localhost:8080/api/kw/calculate';
+  const url = 'http://localhost:7575/api/kw/calculate';
   const requestPayload = {
     phase,
     energyUsage: energyUsage.toString(), // converting energyUsage to string as per backend requirements
