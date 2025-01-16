@@ -6,6 +6,7 @@ import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas,
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import { calculateKw, calculateCosts } from '../services/api';
+import ConsumerNumberInput from '../components/ConsumerDetails/ConsumerNumberInput';
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -170,7 +171,6 @@ export function QuotationForm() {
     }
   };
 
-
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     setPincode(value);
@@ -282,8 +282,6 @@ export function QuotationForm() {
   }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
 
 
-  
-  
   useEffect(() => {
     if (formData.monthlyAvgUnit && formData.phase) {
       const fetchKw = async () => {
@@ -430,21 +428,14 @@ export function QuotationForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div className="space-y-6">
+  <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
-            <input
-              type="text"
-              name="consumerNumber"
-              value={formData.consumerNumber}
-              maxLength={12}
-              onChange={handleChange}
-              placeholder="CN001"
-              disabled={isMsebConnection === 'No'}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+
+        <ConsumerNumberInput
+        consumerNumber={formData.consumerNumber}
+        handleChange={handleChange}
+        isMsebConnection={formData.isMsebConnection}
+        />
           <div>
             <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
             <input
@@ -461,7 +452,7 @@ export function QuotationForm() {
             />
           </div>
           {/* Billed To */}
-  <div>
+      <div>
     <label className="block text-sm font-medium text-gray-700">Billed To</label>
     <input
       type="text"
@@ -473,7 +464,7 @@ export function QuotationForm() {
       required
       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
     />
-  </div>
+      </div>
 
   {/* GST Number */}
   <div>
@@ -505,9 +496,6 @@ export function QuotationForm() {
             />
           </div>  
 
-        
-
-
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -520,10 +508,7 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
-
-
-        </div>
+    </div>
  
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
