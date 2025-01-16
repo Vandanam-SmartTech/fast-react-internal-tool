@@ -477,8 +477,7 @@ export function QuotationForm() {
               name="consumerName"
               value={formData.consumerName}
               onChange={handleChange}
-              placeholder="Enter first and last name (e.g., Prasad Sutar)"
-              maxLength={21} // This ensures no more than 21 characters can be entered
+              placeholder="Name As per Gov Id"
               required
               pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
               title="Please enter only your first and last name (e.g., John Doe)"
