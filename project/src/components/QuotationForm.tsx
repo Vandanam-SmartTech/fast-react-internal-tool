@@ -223,6 +223,13 @@ export function QuotationForm() {
     setIsBatteryDropdownEnabled(false); 
   };
 
+  const handleCorrectionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      correctionType: value,
+    }));
+  };
   ////////////////////////////////////////////////////////////////////////////////
 
   const handleEmailCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -453,32 +460,53 @@ export function QuotationForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Does the connection require a name correction?</label>
-            <div className="mt-2 flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="nameCorrection"
-                  value="Yes"
-                  onChange={handleNameCorrection}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isNameCorrection === "Yes"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">Yes</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="nameCorrection"
-                  value="No"
-                  onChange={handleNameCorrection}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isNameCorrection=== "No"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">No</span>
-              </label>
-            </div>
-          </div>
+      <label className="block text-sm font-medium text-gray-700">
+        Does the connection require a name correction?
+      </label>
+      <div className="mt-2 flex items-center space-x-4">
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            name="nameCorrection"
+            value="Yes"
+            onChange={handleNameCorrection}
+            className="focus:ring-blue-500 text-blue-600 border-gray-300"
+            checked={formData.isNameCorrection === "Yes"}
+          />
+          <span className="text-sm text-gray-700">Yes</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            name="nameCorrection"
+            value="No"
+            onChange={handleNameCorrection}
+            className="focus:ring-blue-500 text-blue-600 border-gray-300"
+            checked={formData.isNameCorrection === "No"}
+          />
+          <span className="text-sm text-gray-700">No</span>
+        </label>
+      </div>
+
+      {formData.isNameCorrection === "Yes" && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700">
+            Select Correction Type
+          </label>
+          <select
+            value={formData.correctionType}
+            onChange={handleCorrectionTypeChange}
+            className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            <option value="" disabled>
+              Select an option
+            </option>
+            <option value="Spell Correction">Spell Correction</option>
+            <option value="Transfer Ownership">Transfer Ownership</option>
+          </select>
+        </div>
+      )}
+    </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Does the mseb email is updated on grid connection?</label>

@@ -6,6 +6,7 @@ export const initialFormData: QuotationData = {
   isNameCorrection:'No',
   isEmailCorrection: 'Yes',
   isLoanRequired:'No',
+  correctionType: '',
   consumerNumber: '',
   consumerName: '',
   consumerPhoneNumber: '',
