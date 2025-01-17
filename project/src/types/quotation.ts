@@ -1,6 +1,8 @@
 export interface QuotationData {
   isMsebConnection: string;
   isNameCorrection: string;
+  isEmailCorrection: string,
+  isLoanRequired: string,
   inversionType:string;
   consumerNumber: string;
   consumerName: string;

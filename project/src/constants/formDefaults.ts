@@ -4,6 +4,8 @@ export const initialFormData: QuotationData = {
   inversionType:'',
   isMsebConnection: 'Yes',
   isNameCorrection:'No',
+  isEmailCorrection: 'Yes',
+  isLoanRequired:'No',
   consumerNumber: '',
   consumerName: '',
   consumerPhoneNumber: '',

@@ -17,6 +17,9 @@ export function QuotationForm() {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const [isMsebConnection, setIsMsebConnection] = useState("Yes");
+  const [isNameCorrecction, setIsNameCorrection] = useState("No");
+  const [isEmailCorrection, setIsEmailCorrection] = useState("Yes");
+  const [isLoanRequired, setIsLoanRequired] = useState("No");
   const [inversionType, setInversionType] = useState<string>('');
   const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
 
@@ -209,19 +212,48 @@ export function QuotationForm() {
   
   const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setIsMsebConnection(value);
+    setIsNameCorrection(value);
     setFormData((prev) => ({
       ...prev,
-      consumerNumber: '',
       isNameCorrection: value,
-      inversionType: '', // Reset grid type when MSEB connection changes
-      batteryWattage: NaN, // Reset battery wattage with NaN (valid number type)
+      inversionType: '', 
+      batteryWattage: NaN, 
     }));
-    setInversionType(''); // Reset grid type selection when MSEB changes
-    setIsBatteryDropdownEnabled(false); // Reset battery dropdown when MSEB changes
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
   };
 
   ////////////////////////////////////////////////////////////////////////////////
+
+  const handleEmailCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setIsEmailCorrection(value);
+    setFormData((prev) => ({
+      ...prev,
+      isEmailCorrection: value,
+      inversionType: '', 
+      batteryWattage: NaN, 
+    }));
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
+  };
+
+  ///////////////////////////////////////////////////////////////////////////////
+
+  const handleIsLoanRequired = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setIsLoanRequired(value);
+    setFormData((prev) => ({
+      ...prev,
+      isLoanRequired: value,
+      inversionType: '', 
+      batteryWattage: NaN, 
+    }));
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
+  };
+
+  //////////////////////////////////////////////////////////////////////////////////
 
   const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -448,7 +480,61 @@ export function QuotationForm() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Does the mseb email is updated on grid connection?</label>
+            <div className="mt-2 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="emailCorrection"
+                  value="Yes"
+                  onChange={handleEmailCorrection}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isEmailCorrection === "Yes"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="emailCorrection"
+                  value="No"
+                  onChange={handleEmailCorrection}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isEmailCorrection === "No"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Does the customer require a loan?</label>
+            <div className="mt-2 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="loanRequirement"
+                  value="Yes"
+                  onChange={handleIsLoanRequired}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isLoanRequired === "Yes"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="loanRequirement"
+                  value="No"
+                  onChange={handleIsLoanRequired}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isLoanRequired=== "No"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
 
         </div>
       </div>
