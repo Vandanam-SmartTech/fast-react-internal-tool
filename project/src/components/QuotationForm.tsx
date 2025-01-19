@@ -494,6 +494,7 @@ export function QuotationForm() {
             Select Correction Type
           </label>
           <select
+            name="correctionType"
             value={formData.correctionType}
             onChange={handleCorrectionTypeChange}
             className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
