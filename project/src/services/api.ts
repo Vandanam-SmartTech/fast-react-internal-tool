@@ -19,12 +19,13 @@ export const setAuthToken = (token) => {
 };
 
 
-export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> => {
+export const generateQuotationPDF = async (data: QuotationData, token: string): Promise<Blob> => {
   try {
     const response = await fetch(`${API_BASE_URL}/quotations/generate-pdf`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Add Authorization header
       },
       body: JSON.stringify(data),
     });
@@ -41,18 +42,23 @@ export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> =
 };
 
 
+
 // Function to fetch cost values based on the provided parameters
-export const calculateCosts = async (data: {
-  connectionType: string;
-  phase: string;
-  dcrNonDcr: string;
-  kw: number;
-}) => {
+export const calculateCosts = async (
+  data: {
+    connectionType: string;
+    phase: string;
+    dcrNonDcr: string;
+    kw: number;
+  },
+  token: string // Add token as a parameter
+) => {
   try {
     const response = await fetch(`${API_BASE_URL}/prices/calculate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Include Authorization header
       },
       body: JSON.stringify(data),
     });
@@ -69,13 +75,18 @@ export const calculateCosts = async (data: {
 };
 
 
+
 // Function to fetch panel wattages based on phase type
-export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
+export const fetchPanelWattages = async (
+  phase: string,
+  token: string // Add token as a parameter
+): Promise<number[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/panelWattages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Include Authorization header
       },
       body: JSON.stringify({ phase }),
     });
@@ -92,12 +103,17 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
 };
 
 
+
 //api for calculate kw using enrgy usage and phase type
-export const calculateKw = async (phase: string, energyUsage: number): Promise<number | null> => {
+export const calculateKw = async (
+  phase: string,
+  energyUsage: number,
+  token: string // Add token as a parameter
+): Promise<number | null> => {
   const url = 'http://localhost:7575/api/kw/calculate';
   const requestPayload = {
     phase,
-    energyUsage: energyUsage.toString(), // converting energyUsage to string as per backend requirements
+    energyUsage: energyUsage.toString(), // Converting energyUsage to string as per backend requirements
   };
 
   try {
@@ -105,6 +121,7 @@ export const calculateKw = async (phase: string, energyUsage: number): Promise<n
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Include Authorization header
       },
       body: JSON.stringify(requestPayload),
     });
@@ -114,12 +131,13 @@ export const calculateKw = async (phase: string, energyUsage: number): Promise<n
     }
 
     const data = await response.json();
-    return data; // Assuming response contains the KW as a number
+    return data; // Assuming the response contains the KW value as a number
   } catch (error) {
     console.error('Error fetching KW:', error);
     return null; // Return null in case of error
   }
 };
+
 
 
 
