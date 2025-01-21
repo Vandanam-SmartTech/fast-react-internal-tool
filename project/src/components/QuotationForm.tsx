@@ -216,11 +216,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isNameCorrection: value,
-      inversionType: '',
-      batteryWattage: NaN,
+      inversionType: '', 
+      batteryWattage: NaN, 
     }));
-    setInversionType('');
-    setIsBatteryDropdownEnabled(false);
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
   };
 
   const handleCorrectionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -238,11 +238,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isEmailCorrection: value,
-      inversionType: '',
-      batteryWattage: NaN,
+      inversionType: '', 
+      batteryWattage: NaN, 
     }));
-    setInversionType('');
-    setIsBatteryDropdownEnabled(false);
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
   };
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -253,11 +253,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isLoanRequired: value,
-      inversionType: '',
-      batteryWattage: NaN,
+      inversionType: '', 
+      batteryWattage: NaN, 
     }));
-    setInversionType('');
-    setIsBatteryDropdownEnabled(false);
+    setInversionType(''); 
+    setIsBatteryDropdownEnabled(false); 
   };
 
   //////////////////////////////////////////////////////////////////////////////////
@@ -459,7 +459,7 @@ export function QuotationForm() {
             </div>
           </div>
 
-          
+         
 
         </div>
       </div>
