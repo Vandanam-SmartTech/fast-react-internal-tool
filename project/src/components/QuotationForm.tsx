@@ -459,120 +459,18 @@ export function QuotationForm() {
             </div>
           </div>
 
-          <div>
-      <label className="block text-sm font-medium text-gray-700">
-        Does the connection require a name correction?
-      </label>
-      <div className="mt-2 flex items-center space-x-4">
-        <label className="flex items-center space-x-2">
-          <input
-            type="radio"
-            name="nameCorrection"
-            value="Yes"
-            onChange={handleNameCorrection}
-            className="focus:ring-blue-500 text-blue-600 border-gray-300"
-            checked={formData.isNameCorrection === "Yes"}
-          />
-          <span className="text-sm text-gray-700">Yes</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input
-            type="radio"
-            name="nameCorrection"
-            value="No"
-            onChange={handleNameCorrection}
-            className="focus:ring-blue-500 text-blue-600 border-gray-300"
-            checked={formData.isNameCorrection === "No"}
-          />
-          <span className="text-sm text-gray-700">No</span>
-        </label>
-      </div>
-
-      {formData.isNameCorrection === "Yes" && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Select Correction Type
-          </label>
-          <select
-            name="correctionType"
-            value={formData.correctionType}
-            onChange={handleCorrectionTypeChange}
-            className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          >
-            <option value="" disabled>
-              Select an option
-            </option>
-            <option value="Spell Correction">Spell Correction</option>
-            <option value="Transfer Ownership">Transfer Ownership</option>
-          </select>
-        </div>
-      )}
-    </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Does the mseb email is updated on grid connection?</label>
-            <div className="mt-2 flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="emailCorrection"
-                  value="Yes"
-                  onChange={handleEmailCorrection}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isEmailCorrection === "Yes"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">Yes</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="emailCorrection"
-                  value="No"
-                  onChange={handleEmailCorrection}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isEmailCorrection === "No"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">No</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Does the customer require a loan?</label>
-            <div className="mt-2 flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="loanRequirement"
-                  value="Yes"
-                  onChange={handleIsLoanRequired}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isLoanRequired === "Yes"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">Yes</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="loanRequirement"
-                  value="No"
-                  onChange={handleIsLoanRequired}
-                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                  checked={formData.isLoanRequired=== "No"} // Bind to formData state
-                />
-                <span className="text-sm text-gray-700">No</span>
-              </label>
-            </div>
-          </div>
+         
 
         </div>
       </div>
 
+
+      <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
             <input
@@ -613,7 +511,9 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+        </div>
 
+        <div className="space-y-6">
           {/* GST Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700">GST Number</label>
@@ -644,9 +544,6 @@ export function QuotationForm() {
             />
           </div>
 
-
-
-
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -659,15 +556,90 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Does the connection require a name correction?
+          </label>
+          <div className="mt-2 flex items-center space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nameCorrection"
+                value="Yes"
+                onChange={handleNameCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isNameCorrection === "Yes"}
+              />
+              <span className="text-sm text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nameCorrection"
+                value="No"
+                onChange={handleNameCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isNameCorrection === "No"}
+              />
+              <span className="text-sm text-gray-700">No</span>
+            </label>
+          </div>
 
-
-
+          {formData.isNameCorrection === "Yes" && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Select Correction Type
+              </label>
+              <select
+                name="correctionType"
+                value={formData.correctionType}
+                onChange={handleCorrectionTypeChange}
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="" disabled>
+                  Select an option
+                </option>
+                <option value="Spell Correction">Spell Correction</option>
+                <option value="Transfer Ownership">Transfer Ownership</option>
+              </select>
+            </div>
+          )}
         </div>
 
-        
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Does the mseb email is updated on grid connection?</label>
+          <div className="mt-2 flex items-center space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="emailCorrection"
+                value="Yes"
+                onChange={handleEmailCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isEmailCorrection === "Yes"} // Bind to formData state
+              />
+              <span className="text-sm text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="emailCorrection"
+                value="No"
+                onChange={handleEmailCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isEmailCorrection === "No"} // Bind to formData state
+              />
+              <span className="text-sm text-gray-700">No</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
+
+      <div className="space-y-6 md:col-span-2">
+        <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Connection Type</label>
             <select
@@ -708,29 +680,16 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
-
-
         </div>
+      </div>
 
-        {/* ///////////////////adding alignment//////////////// */}
 
+      {/* ///////////////////adding alignment//////////////// */}
+
+      <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
-
-          <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Street Address</label>
-            <input
-              type="text"
-              name="consumerAddress1"
-              value={formData.consumerAddress1}
-              maxLength={60}
-              onChange={handleChange}
-              placeholder="123 Main St"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
 
           {/* //dist,vill,tal,pincode/////// */}
 
@@ -751,6 +710,8 @@ export function QuotationForm() {
               ))}
             </select>
           </div>
+
+
 
           {/* Taluka Dropdown */}
           <div>
@@ -788,6 +749,24 @@ export function QuotationForm() {
             </select>
           </div>
 
+
+
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <input
+              type="text"
+              name="consumerAddress1"
+              value={formData.consumerAddress1}
+              maxLength={60}
+              onChange={handleChange}
+              placeholder="123 Main St"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Pincode</label>
             <input
@@ -799,15 +778,16 @@ export function QuotationForm() {
             />
           </div>
 
-
-
         </div>
 
 
 
-        <div className="space-y-6">
+      </div>
 
-          <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
+      <div className="space-y-6 md:col-span-2">
+
+        <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Panel Wattage</label>
             <select
@@ -881,60 +861,99 @@ export function QuotationForm() {
             </select>
           </div>
         </div>
+      </div>
 
 
-        <div className="space-y-6 md:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
-              <input
-                type="number"
-                name="solarCostSystem"
-                value={formData.solarCostSystem}
-                onChange={handleChange}
-                placeholder="Enter Solar Cost System"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Subsidy</label>
-              <input
-                type="number"
-                name="subsidy"
-                value={formData.subsidy}
-                onChange={handleChange}
-                placeholder="Enter Subsidy"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+      <div className="space-y-6 md:col-span-2">
+        <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
+            <input
+              type="number"
+              name="solarCostSystem"
+              value={formData.solarCostSystem}
+              onChange={handleChange}
+              placeholder="Enter Solar Cost System"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
-              <input
-                type="number"
-                name="fabricationCost"
-                value={formData.fabricationCost}
-                onChange={handleChange}
-                placeholder="Enter Fabrication Cost"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Effective Cost</label>
-              <input
-                type="number"
-                name="effectiveCost"
-                value={formData.effectiveCost}
-                onChange={handleChange}
-                placeholder="Enter Effective Cost"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Subsidy</label>
+            <input
+              type="number"
+              name="subsidy"
+              value={formData.subsidy}
+              onChange={handleChange}
+              placeholder="Enter Subsidy"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
+            <input
+              type="number"
+              name="fabricationCost"
+              value={formData.fabricationCost}
+              onChange={handleChange}
+              placeholder="Enter Fabrication Cost"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Effective Cost</label>
+            <input
+              type="number"
+              name="effectiveCost"
+              value={formData.effectiveCost}
+              onChange={handleChange}
+              placeholder="Enter Effective Cost"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-semibold text-gray-700">Finance Details</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="space-y-6">
+        <div>
+            <label className="block text-sm font-medium text-gray-700">Does the customer require a loan?</label>
+            <div className="mt-2 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="loanRequirement"
+                  value="Yes"
+                  onChange={handleIsLoanRequired}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isLoanRequired === "Yes"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="loanRequirement"
+                  value="No"
+                  onChange={handleIsLoanRequired}
+                  className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                  checked={formData.isLoanRequired === "No"} // Bind to formData state
+                />
+                <span className="text-sm text-gray-700">No</span>
+              </label>
             </div>
           </div>
         </div>
       </div>
+
+
+
 
       <div className="mt-8 flex justify-end space-x-4">
         {/* Error Toast Notification */}
