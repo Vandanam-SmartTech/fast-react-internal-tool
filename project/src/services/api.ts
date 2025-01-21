@@ -1,4 +1,4 @@
-import { QuotationData,District,Taluka,Village } from '../types/quotation';
+import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:7575/api';
@@ -8,24 +8,39 @@ const API = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Automatically set the Authorization header if jwtToken exists in localStorage
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jwtToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const login = async (credentials) => {
   const response = await API.post('/auth/login', credentials);
   return response.data;
 };
 
 export const setAuthToken = (token) => {
-  if (token) API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  else delete API.defaults.headers.common['Authorization'];
+  if (token) {
+    localStorage.setItem('jwtToken', token);
+    API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    localStorage.removeItem('jwtToken');
+    delete API.defaults.headers.common['Authorization'];
+  }
 };
 
+const getAuthToken = () => localStorage.getItem('jwtToken');
 
-export const generateQuotationPDF = async (data: QuotationData, token: string): Promise<Blob> => {
+export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> => {
   try {
     const response = await fetch(`${API_BASE_URL}/quotations/generate-pdf`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Add Authorization header
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
@@ -41,24 +56,18 @@ export const generateQuotationPDF = async (data: QuotationData, token: string): 
   }
 };
 
-
-
-// Function to fetch cost values based on the provided parameters
-export const calculateCosts = async (
-  data: {
-    connectionType: string;
-    phase: string;
-    dcrNonDcr: string;
-    kw: number;
-  },
-  token: string // Add token as a parameter
-) => {
+export const calculateCosts = async (data: {
+  connectionType: string;
+  phase: string;
+  dcrNonDcr: string;
+  kw: number;
+}): Promise<any> => {
   try {
     const response = await fetch(`${API_BASE_URL}/prices/calculate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Include Authorization header
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
@@ -67,26 +76,20 @@ export const calculateCosts = async (
       throw new Error('Failed to fetch cost data');
     }
 
-    return await response.json(); // Assuming the response is in JSON format
+    return await response.json();
   } catch (error) {
     console.error('API Error:', error);
     throw new Error('Failed to fetch cost data');
   }
 };
 
-
-
-// Function to fetch panel wattages based on phase type
-export const fetchPanelWattages = async (
-  phase: string,
-  token: string // Add token as a parameter
-): Promise<number[]> => {
+export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/panelWattages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Include Authorization header
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({ phase }),
     });
@@ -95,25 +98,21 @@ export const fetchPanelWattages = async (
       throw new Error('Failed to fetch panel wattages');
     }
 
-    return await response.json(); // Assuming the response is a JSON array of numbers
+    return await response.json();
   } catch (error) {
     console.error('API Error:', error);
     throw new Error('Failed to fetch panel wattages from server');
   }
 };
 
-
-
-//api for calculate kw using enrgy usage and phase type
 export const calculateKw = async (
   phase: string,
-  energyUsage: number,
-  token: string // Add token as a parameter
+  energyUsage: number
 ): Promise<number | null> => {
-  const url = 'http://localhost:7575/api/kw/calculate';
+  const url = `${API_BASE_URL}/kw/calculate`;
   const requestPayload = {
     phase,
-    energyUsage: energyUsage.toString(), // Converting energyUsage to string as per backend requirements
+    energyUsage: energyUsage.toString(),
   };
 
   try {
@@ -121,7 +120,7 @@ export const calculateKw = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Include Authorization header
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(requestPayload),
     });
@@ -131,31 +130,54 @@ export const calculateKw = async (
     }
 
     const data = await response.json();
-    return data; // Assuming the response contains the KW value as a number
+    return data;
   } catch (error) {
     console.error('Error fetching KW:', error);
-    return null; // Return null in case of error
+    return null;
   }
 };
 
-
-
-
-// Typing the return value of the fetch functions as arrays of the respective types
 export const fetchDistricts = async (): Promise<District[]> => {
-  const response = await fetch('http://localhost:8585/masters/district/27');
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch('http://localhost:8585/masters/district/27', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching districts:', error);
+    throw new Error('Failed to fetch districts');
+  }
 };
 
 export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
-  const response = await fetch(`http://localhost:8585/masters/taluka/${districtCode}`);
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(`http://localhost:8585/masters/taluka/${districtCode}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching talukas:', error);
+    throw new Error('Failed to fetch talukas');
+  }
 };
 
 export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
-  const response = await fetch(`http://localhost:8585/masters/village/${talukaCode}`);
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(`http://localhost:8585/masters/village/${talukaCode}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching villages:', error);
+    throw new Error('Failed to fetch villages');
+  }
 };
