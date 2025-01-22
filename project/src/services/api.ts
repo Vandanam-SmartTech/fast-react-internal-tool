@@ -56,6 +56,25 @@ export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> =
   }
 };
 
+export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/internal-tool/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`, // Ensure getAuthToken() returns a valid JWT
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Log or handle successful save
+    console.log('Data saved successfully:', await response.json());
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to save data to the server');
+  }
+};
+
 export const calculateCosts = async (data: {
   connectionType: string;
   phase: string;

@@ -1,11 +1,11 @@
 import { QuotationData } from '../types/quotation';
 
 export const initialFormData: QuotationData = {
-  inversionType:'',
+  inversionType: '',
   isMsebConnection: 'Yes',
-  isNameCorrection:'No',
+  isNameCorrection: 'No',
   isEmailCorrection: 'Yes',
-  isLoanRequired:'No',
+  isLoanRequired: 'No',
   correctionType: '',
   consumerNumber: '',
   consumerName: '',
@@ -16,17 +16,17 @@ export const initialFormData: QuotationData = {
   connectionType: 'Residential',
   phase: 'Single',
   dcrNonDcr: 'DCR',
-  batteryWattage: 0, 
+  batteryWattage: 0,
   monthlyAvgUnit: 0,
   kw: 0,
   subsidy: 0,
-  solarCostSystem: 0,
+  solarCostSystem: BigInt(0), // Using BigInt for accurate representation
   fabricationCost: 0,
-  effectiveCost: 0,
-  pincode:NaN,
-  districtCode:0,
-  talukaCode:0,
-  villageCode:0,
-  billedTo:'',
-  gstNo:''
+  effectiveCost: BigInt(0), // Using BigInt for accurate representation
+  pincode: '',
+  districtCode: 0,
+  talukaCode: 0,
+  villageCode: 0,
+  billedTo: '',
+  gstNo: ''
 };
