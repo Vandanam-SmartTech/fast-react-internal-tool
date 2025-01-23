@@ -67,13 +67,12 @@ export const saveDataToServer = async (data: Record<string, any>): Promise<void>
       body: JSON.stringify(data),
     });
 
-    // Log or handle successful save
-    console.log('Data saved successfully:', await response.json());
+    alert('Data saved successfully!');
   } catch (error) {
-    console.error('API Error:', error);
     throw new Error('Failed to save data to the server');
   }
 };
+
 
 export const calculateCosts = async (data: {
   connectionType: string;

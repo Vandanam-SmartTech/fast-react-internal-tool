@@ -372,14 +372,19 @@ export function QuotationForm() {
   }, [formData.monthlyAvgUnit, formData.phase]);
 
 
+  // const handleSave = async () => {
+  //   try {
+  //     await saveDataToServer(formData); // Call the API
+  //     alert('Data saved successfully!');
+  //   } catch (error) {
+  //     alert('Failed to save data.');
+  //   }
+  // };
   const handleSave = async () => {
-    try {
       await saveDataToServer(formData); // Call the API
       alert('Data saved successfully!');
-    } catch (error) {
-      alert('Failed to save data.');
-    }
   };
+  
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
