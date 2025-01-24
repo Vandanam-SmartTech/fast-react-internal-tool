@@ -382,7 +382,6 @@ export function QuotationForm() {
   // };
   const handleSave = async () => {
       await saveDataToServer(formData); // Call the API
-      alert('Data saved successfully!');
   };
   
   const handlePreview = async () => {
