@@ -56,6 +56,59 @@ export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> =
   }
 };
 
+// export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
+//   try {
+//     const response = await fetch('http://localhost:8585/api/internal-tool/save', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         Authorization: `Bearer ${getAuthToken()}`, // Ensure getAuthToken() returns a valid JWT
+//       },
+//       body: JSON.stringify(data),
+//     });
+
+//   } catch (error) {
+//     throw new Error('Failed to save data to the server');
+//   }
+// };
+export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/internal-tool/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`, // Ensure getAuthToken() returns a valid JWT
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+
+    // Check for success or failure based on the API's response
+    if (response.ok && responseData.success) {
+      alert(responseData.message || 'Data saved successfully!');
+    } else {
+      alert(responseData.message || 'Failed to save data.');
+    }
+  } catch (error: any) {
+    // Improved error handling
+    if (error.response) {
+      alert(
+        `Error: ${error.response.data.message || 'An error occurred on the server.'}`
+      );
+    } else if (error.request) {
+      alert('Error: No response from the server. Please check your network connection.');
+    } else {
+      alert('Error: ' + error.message);
+    }
+    console.error('Error details:', error);
+  }
+};
+
+
+
+
 export const calculateCosts = async (data: {
   connectionType: string;
   phase: string;

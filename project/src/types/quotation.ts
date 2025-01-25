@@ -1,9 +1,9 @@
 export interface QuotationData {
   isMsebConnection: string;
   isNameCorrection: string;
-  isEmailCorrection: string,
-  isLoanRequired: string,
-  inversionType:string;
+  isEmailCorrection: string;
+  isLoanRequired: string;
+  inversionType: string;
   consumerNumber: string;
   consumerName: string;
   correctionType: string;
@@ -19,34 +19,12 @@ export interface QuotationData {
   monthlyAvgUnit: number;
   kw: number;
   subsidy: number;
-  solarCostSystem: number;
+  solarCostSystem: bigint; // Using bigint for large numbers
   fabricationCost: number;
-  effectiveCost: number;
-  batteryWattage: number; 
-  pincode:number;
-  districtCode:number;
-  talukaCode:number;
-  villageCode:number;
-}
-
-export type District = {
-  code: number;
-  nameEnglish: string;
-  nameMarathi: string | null;
-  stateCode: number;
-};
-
-export type Taluka = {
-  code: number;
-  nameEnglish: string;
-  nameMarathi: string | null;
+  effectiveCost: bigint; // Using bigint for large numbers
+  batteryWattage: number;
+  pincode: string; // String because it may contain leading zeros
   districtCode: number;
-};
-
-export type Village = {
-  code: number;
-  nameEnglish: string;
-  nameMarathi: string | null;
   talukaCode: number;
-  pincode: number;
-};
+  villageCode: number;
+}

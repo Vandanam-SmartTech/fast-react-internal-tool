@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
-import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
+import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages, saveDataToServer } from '../services/api';
 import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import { calculateKw, calculateCosts } from '../services/api';
@@ -15,6 +15,8 @@ export function QuotationForm() {
   const [error, setError] = useState<string | null>(null);
   const [kwOptions, setKwOptions] = useState<number[]>([]);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
 
   const [isMsebConnection, setIsMsebConnection] = useState("Yes");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
@@ -31,6 +33,7 @@ export function QuotationForm() {
   const [villageCode, setVillageCode] = useState<number>(0);
   const [pincode, setPincode] = useState<number>(0);
 
+  
   //logout functinality
   const navigate = useNavigate();
 
@@ -189,6 +192,8 @@ export function QuotationForm() {
     setPincode(value);
     setFormData((prev) => ({ ...prev, pincode: value }));
   };
+ 
+  
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -216,11 +221,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isNameCorrection: value,
-      inversionType: '', 
-      batteryWattage: NaN, 
+      inversionType: '',
+      batteryWattage: NaN,
     }));
-    setInversionType(''); 
-    setIsBatteryDropdownEnabled(false); 
+    setInversionType('');
+    setIsBatteryDropdownEnabled(false);
   };
 
   const handleCorrectionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -238,11 +243,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isEmailCorrection: value,
-      inversionType: '', 
-      batteryWattage: NaN, 
+      inversionType: '',
+      batteryWattage: NaN,
     }));
-    setInversionType(''); 
-    setIsBatteryDropdownEnabled(false); 
+    setInversionType('');
+    setIsBatteryDropdownEnabled(false);
   };
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -253,11 +258,11 @@ export function QuotationForm() {
     setFormData((prev) => ({
       ...prev,
       isLoanRequired: value,
-      inversionType: '', 
-      batteryWattage: NaN, 
+      inversionType: '',
+      batteryWattage: NaN,
     }));
-    setInversionType(''); 
-    setIsBatteryDropdownEnabled(false); 
+    setInversionType('');
+    setIsBatteryDropdownEnabled(false);
   };
 
   //////////////////////////////////////////////////////////////////////////////////
@@ -366,6 +371,19 @@ export function QuotationForm() {
     }
   }, [formData.monthlyAvgUnit, formData.phase]);
 
+
+  // const handleSave = async () => {
+  //   try {
+  //     await saveDataToServer(formData); // Call the API
+  //     alert('Data saved successfully!');
+  //   } catch (error) {
+  //     alert('Failed to save data.');
+  //   }
+  // };
+  const handleSave = async () => {
+      await saveDataToServer(formData); // Call the API
+  };
+  
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
@@ -459,7 +477,7 @@ export function QuotationForm() {
             </div>
           </div>
 
-         
+
 
         </div>
       </div>
@@ -593,7 +611,7 @@ export function QuotationForm() {
               </label>
               <select
                 name="correctionType"
-                value={formData.correctionType}
+                value={formData.correctionType || ''}
                 onChange={handleCorrectionTypeChange}
                 className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
@@ -922,7 +940,7 @@ export function QuotationForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <div className="space-y-6">
-        <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700">Does the customer require a loan?</label>
             <div className="mt-2 flex items-center space-x-4">
               <label className="flex items-center space-x-2">
@@ -969,6 +987,13 @@ export function QuotationForm() {
           </div>
         )}
 
+        <button
+          type="button"
+          className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          onClick={handleSave}
+        >
+          Save
+        </button>
 
         <button
           type="button"
