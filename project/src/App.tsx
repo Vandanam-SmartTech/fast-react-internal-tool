@@ -9,6 +9,7 @@ const AppContent: React.FC = () => {
 
   // Show Navbar only on specific routes
   const showNavbar = location.pathname !== '/login';
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
