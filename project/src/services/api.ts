@@ -181,3 +181,15 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
     throw new Error('Failed to fetch villages');
   }
 };
+
+export const fetchConsumers = async () => {
+  try {
+    const response = await API.get("http://localhost:8585/api/customers/by-representative");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching consumers:", error);
+    throw new Error("Failed to fetch consumers.");
+  }
+};
+
+
