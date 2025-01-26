@@ -107,8 +107,6 @@ export const saveDataToServer = async (data: Record<string, any>): Promise<void>
 };
 
 
-
-
 export const calculateCosts = async (data: {
   connectionType: string;
   phase: string;
