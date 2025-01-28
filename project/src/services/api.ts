@@ -186,14 +186,14 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
 export const fetchConsumers = async (page = 0) => {
   try {
     const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
-      params: { page }, // Only pass the page parameter, omit size
+      params: { page },
     });
 
     return {
-      content: response.data.content, // Consumer data
-      totalPages: response.data.totalPages, // Total number of pages
-      totalElements: response.data.totalElements, // Total number of elements
-      currentPage: response.data.number, // Current page number
+      content: response.data.content, 
+      totalPages: response.data.totalPages, 
+      totalElements: response.data.totalElements, 
+      currentPage: response.data.number, 
     };
   } catch (error) {
     console.error("Error fetching consumers:", error);

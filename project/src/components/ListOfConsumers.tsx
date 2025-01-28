@@ -4,9 +4,10 @@ import { fetchConsumers } from "../services/api";
 
 interface Consumer {
   consumerId: number;
-  govIdName: string;
-  mobileNumber: number;
   connectionType: string;
+  govIdName: string;
+  emailAddress: string;
+  mobileNumber: string;
 }
 
 const ListOfConsumers: React.FC = () => {
@@ -117,16 +118,20 @@ const ListOfConsumers: React.FC = () => {
                       {consumer.consumerId}
                     </p>
                     <p className="break-words">
+                      <span className="font-medium">Connection Type:</span>{" "}
+                      {consumer.connectionType}
+                    </p>
+                    <p className="break-words">
                       <span className="font-medium">Consumer Name:</span>{" "}
                       {consumer.govIdName}
                     </p>
-                    <p className="break-words">
-                      <span className="font-medium">Phone:</span>{" "}
-                      {consumer.mobileNumber}
+                    <p className="truncate">
+                      <span className="font-medium">Email Address:</span>{" "}
+                      {consumer.emailAddress}
                     </p>
                     <p className="truncate">
-                      <span className="font-medium">Connection Type:</span>{" "}
-                      {consumer.connectionType}
+                      <span className="font-medium">Mobile Number:</span>{" "}
+                      {consumer.mobileNumber}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
