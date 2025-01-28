@@ -1,3 +1,4 @@
+
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
@@ -182,10 +183,18 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   }
 };
 
-export const fetchConsumers = async () => {
+export const fetchConsumers = async (page = 0) => {
   try {
-    const response = await API.get("http://localhost:8585/api/customers/by-representative");
-    return response.data;
+    const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
+      params: { page }, // Only pass the page parameter, omit size
+    });
+
+    return {
+      content: response.data.content, // Consumer data
+      totalPages: response.data.totalPages, // Total number of pages
+      totalElements: response.data.totalElements, // Total number of elements
+      currentPage: response.data.number, // Current page number
+    };
   } catch (error) {
     console.error("Error fetching consumers:", error);
     throw new Error("Failed to fetch consumers.");
