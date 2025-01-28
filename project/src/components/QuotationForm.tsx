@@ -45,6 +45,11 @@ export function QuotationForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
+     // Prevent negative values
+  if (name === 'monthlyAvgUnit' && parseFloat(value) < 0) {
+    return; // Stop execution if the value is negative
+  }
+  
     const parsedValue =
       ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
         ? parseFloat(value) || NaN
@@ -58,9 +63,7 @@ export function QuotationForm() {
 
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
-          (updatedData.solarCostSystem || 0) +
-          (updatedData.fabricationCost || 0) -
-          (updatedData.subsidy || 0);
+          (updatedData.solarCostSystem || 0) +(updatedData.fabricationCost || 0) -(updatedData.subsidy || 0);
       }
 
       return updatedData;
@@ -692,12 +695,14 @@ export function QuotationForm() {
             <input
               type="number"
               name="monthlyAvgUnit"
-              value={formData.monthlyAvgUnit}
+              value={formData.monthlyAvgUnit || ""}
               onChange={handleChange}
               placeholder="ex. 120"
+               min="0"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+
         </div>
       </div>
 
