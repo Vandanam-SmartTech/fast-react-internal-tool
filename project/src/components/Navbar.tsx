@@ -19,7 +19,12 @@ const Navbar: React.FC = () => {
   };
 
   // Show search bar only on listOfConsumers page
-  const isSearchVisible = location.pathname === "/listOfConsumers";
+  const isSearchVisible = location.pathname === "/list-of-consumers";
+
+  // Navigate to List of Consumers page
+  const goToListOfConsumers = () => {
+    navigate("/list-of-consumers");
+  };
 
   return (
     <nav className="bg-blue-100 text-blue-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between shadow-md">
@@ -29,13 +34,24 @@ const Navbar: React.FC = () => {
       {/* Search Bar (only visible on listOfConsumers page) */}
       {isSearchVisible && <SearchBar onSearch={handleSearch} />}
 
-      {/* Logout Button */}
-      <button
-        onClick={handleLogout}
-        className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
-      >
-        Logout
-      </button>
+      {/* Buttons */}
+      <div className="flex items-center space-x-4">
+        {/* List of Consumers Button */}
+        <button
+          onClick={goToListOfConsumers}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+          List of Consumers
+        </button>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+          Logout
+        </button>
+      </div>
     </nav>
   );
 };

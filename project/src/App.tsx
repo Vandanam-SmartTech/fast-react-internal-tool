@@ -3,6 +3,7 @@ import Login from './components/Login';
 import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
+import ListOfConsumers from './components/ListOfConsumers';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -30,6 +31,16 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <QuotationForm />
+              </PrivateRoute>
+            }
+          />
+          
+          {/* Protected List of Consumers */}
+          <Route
+            path="/list-of-consumers"
+            element={
+              <PrivateRoute>
+                <ListOfConsumers />
               </PrivateRoute>
             }
           />

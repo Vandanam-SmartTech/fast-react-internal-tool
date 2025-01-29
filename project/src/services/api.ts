@@ -1,3 +1,4 @@
+
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
@@ -232,3 +233,23 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
     throw new Error('Failed to fetch villages');
   }
 };
+
+export const fetchConsumers = async (page = 0) => {
+  try {
+    const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
+      params: { page },
+    });
+
+    return {
+      content: response.data.content, 
+      totalPages: response.data.totalPages, 
+      totalElements: response.data.totalElements, 
+      currentPage: response.data.number, 
+    };
+  } catch (error) {
+    console.error("Error fetching consumers:", error);
+    throw new Error("Failed to fetch consumers.");
+  }
+};
+
+
