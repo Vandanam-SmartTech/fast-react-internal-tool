@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { fetchConsumers } from "../services/api";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Consumer {
   consumerId: number;
@@ -135,7 +135,9 @@ const ListOfConsumers: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
+                    <button 
+                    onClick={() => navigate(`/quotationform`)}
+                    className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
                       Modify
                     </button>
                     <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
