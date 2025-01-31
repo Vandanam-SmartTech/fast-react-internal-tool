@@ -45,16 +45,17 @@ export function QuotationForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    const parsedValue =
-      ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
-        ? parseFloat(value) || NaN
-        : value;
+    const parsedValue = parseFloat(value);
+  if (name === 'monthlyAvgUnit' && parsedValue < 0) {
+    return; // Stops execution if value is negative
+  }
 
-    setFormData((prev) => {
-      const updatedData = {
-        ...prev,
-        [name]: parsedValue,
-      };
+  const finalValue = ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
+  ? isNaN(parsedValue) ? "" : parsedValue // Handles empty input properly
+  : value;
+
+  setFormData((prev) => {
+    const updatedData = { ...prev, [name]: finalValue };
 
       if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
         updatedData.effectiveCost =
@@ -690,9 +691,9 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Monthly Average Unit</label>
             <input
-              type="number"
+              type="text"
               name="monthlyAvgUnit"
-              value={formData.monthlyAvgUnit}
+              value={formData.monthlyAvgUnit ?? ""}
               onChange={handleChange}
               placeholder="ex. 120"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -970,9 +971,6 @@ export function QuotationForm() {
         </div>
       </div>
 
-
-
-
       <div className="mt-8 flex justify-end space-x-4">
         {/* Error Toast Notification */}
         {error && (
@@ -987,13 +985,13 @@ export function QuotationForm() {
           </div>
         )}
 
-        {/* <button
+        <button
           type="button"
           className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           onClick={handleSave}
         >
           Save
-        </button> */}
+        </button>
 
         <button
           type="button"

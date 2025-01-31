@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
   };
 
   // Show search bar only on listOfConsumers page
-  const isSearchVisible = location.pathname === "/listOfConsumers";
+  const isSearchVisible = location.pathname === "/list-of-consumers";
 
   // Navigate to List of Consumers page
   const goToListOfConsumers = () => {
