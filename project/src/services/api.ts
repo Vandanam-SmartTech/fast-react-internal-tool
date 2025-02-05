@@ -57,21 +57,6 @@ export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> =
   }
 };
 
-// export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
-//   try {
-//     const response = await fetch('http://localhost:8585/api/internal-tool/save', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         Authorization: `Bearer ${getAuthToken()}`, // Ensure getAuthToken() returns a valid JWT
-//       },
-//       body: JSON.stringify(data),
-//     });
-
-//   } catch (error) {
-//     throw new Error('Failed to save data to the server');
-//   }
-// };
 export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
   try {
     const response = await fetch('http://localhost:8585/api/internal-tool/save', {
@@ -252,4 +237,88 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
+export const updateConsumerPersonalDetails = async (customerId: number, updatedData: any) => {
+  try {
 
+    console.log("Sending request to update consumer:", updatedData);
+
+    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update consumer: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating consumer details:", error);
+    throw error;
+  }
+};
+
+export const updateConsumerConnectionDetails = async (id: number, updatedData: any) => {
+  try {
+
+    console.log("Sending request to update consumer:", updatedData);
+
+    const response = await fetch(`http://localhost:8585/api/connections/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update consumer: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating consumer details:", error);
+    throw error;
+  }
+};
+
+
+
+
+
+// Update **connection details** (District, Taluka, Village, etc.)
+// export const updateConsumerConnectionDetails = async (
+//   id: number,
+//   updatedData: { 
+//     connectionType?: string;
+//     districtCode?: string;
+//     talukaCode?: string;
+//     villageCode?: string;
+//     pincode?: string;
+//     monthlyAvgUnit?: number;
+//   }
+// ) => {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}/connections/${id}`, {
+//       method: "PUT",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(updatedData),
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to update consumer connection details");
+//     }
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error updating connection details:", error);
+//     throw error;
+//   }
+// };

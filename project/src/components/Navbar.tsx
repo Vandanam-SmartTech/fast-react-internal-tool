@@ -26,6 +26,10 @@ const Navbar: React.FC = () => {
     navigate("/list-of-consumers");
   };
 
+  // const goToModifyConsumerForm = () =>{
+  //   navigate("/modify-consumer-form");
+  // }
+
   return (
     <nav className="bg-blue-100 text-blue-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between shadow-md">
       {/* Logo */}
@@ -43,6 +47,13 @@ const Navbar: React.FC = () => {
         >
           List of Consumers
         </button>
+
+        {/* <button
+          onClick={goToModifyConsumerForm}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+          Sample Form
+        </button> */}
 
         {/* Logout Button */}
         <button

@@ -1,4 +1,6 @@
 export interface QuotationData {
+  id: number;
+  customerId: number;
   isMsebConnection: string;
   isNameCorrection: string;
   isEmailCorrection: string;

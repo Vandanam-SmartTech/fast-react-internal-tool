@@ -8,6 +8,8 @@ import { initialFormData } from '../constants/formDefaults';
 import { calculateKw, calculateCosts } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import { useLocation } from "react-router-dom";
+import { updateConsumerPersonalDetails, updateConsumerConnectionDetails } from "../services/api";
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -32,6 +34,11 @@ export function QuotationForm() {
   const [talukaCode, setTalukaCode] = useState<number>(0);
   const [villageCode, setVillageCode] = useState<number>(0);
   const [pincode, setPincode] = useState<number>(0);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const location = useLocation();
+  const consumer = location.state?.consumer as QuotationData; 
+  
 
   
   //logout functinality
@@ -67,6 +74,90 @@ export function QuotationForm() {
     });
   };
 
+  const handleSave = async () => {
+    try {
+      await saveDataToServer(formData); // Call the API
+
+      navigate("/quotationform"); // Redirect after save
+    } catch (error) {
+      alert("Failed to save consumer data");
+    }
+  };
+
+  useEffect(() => {
+      if (consumer) {
+        setIsEditing(true);
+        setFormData({
+          customerId: consumer.customerId,
+          id: consumer.id,
+          consumerNumber: consumer.consumerNumber || "",
+          connectionType: consumer.connectionType || "",
+          consumerName: consumer.consumerName || "",
+          consumerEmail: consumer.consumerEmail || "",
+          consumerPhoneNumber: consumer.consumerPhoneNumber || "",
+          pincode: consumer.pincode || "",
+          monthlyAvgUnit: consumer.monthlyAvgUnit || "",
+          districtCode:consumer.district || "",
+          talukaCode:consumer.taluka || "",
+          villageCode:consumer.village || "",
+          billedTo:consumer.billedTo || "",
+          isMsebConnection: consumer.isMsebConnection ? "Yes" : "No",
+        });
+
+        setDistrictCode(consumer.district || 0);
+        setTalukaCode(consumer.taluka || 0);
+        setVillageCode(consumer.village || 0);
+      }
+    }, [consumer]);
+
+    const handleSaveOrUpdate = async (e: React.FormEvent) => {
+      e.preventDefault();
+    
+      try {
+        if (isEditing) {
+          if (!formData.customerId) {
+            alert("Error: Customer ID is missing.");
+            return;
+          }
+    
+          const backendCustomerData = {
+            govIdName: formData.consumerName, 
+            mobileNumber: formData.consumerPhoneNumber, 
+            emailAddress: formData.consumerEmail, 
+          };
+    
+          console.log("Final data before update:", backendCustomerData); // Log data
+    
+          await updateConsumerPersonalDetails(formData.customerId, backendCustomerData);
+
+          const backendConnectionData = {
+            consumerId: formData.consumerNumber,
+            connectionType: formData.connectionType,
+            monthlyAvgConsumptionUnits:formData.monthlyAvgUnit,
+            district: formData.districtCode,
+            taluka: formData.talukaCode,
+            village: formData.villageCode,
+            postalCode: formData.pincode,
+            billedTo: formData.billedTo,
+            isMsebConnection: formData.isMsebConnection === "Yes",
+
+          }
+
+          console.log("Final data before update:", backendConnectionData);
+
+          await updateConsumerConnectionDetails(formData.id, backendConnectionData);
+
+          alert("Consumer-Connection details updated successfully!");
+        } else {
+          await handleSave();
+        }
+      } catch (error) {
+        console.error("Error in update process:", error);
+        alert("Failed to process the request");
+      }
+    };
+    
+    
 
 
   /////////////////////////////////////////
@@ -380,9 +471,7 @@ export function QuotationForm() {
   //     alert('Failed to save data.');
   //   }
   // };
-  const handleSave = async () => {
-      await saveDataToServer(formData); // Call the API
-  };
+
   
   const handlePreview = async () => {
     setIsPreviewLoading(true);
@@ -493,6 +582,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
             <input
               type="text"
+              id="consumerNumber"
               name="consumerNumber"
               value={formData.consumerNumber}
               onChange={handleChange}
@@ -505,6 +595,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
             <input
               type="text"
+              id="consumerName"
               name="consumerName"
               value={formData.consumerName}
               onChange={handleChange}
@@ -662,6 +753,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Connection Type</label>
             <select
               name="connectionType"
+              id="connectionType"
               value={formData.connectionType}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -691,6 +783,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Monthly Average Unit</label>
             <input
               type="number"
+              id="monthlyAvgUnit"
               name="monthlyAvgUnit"
               value={formData.monthlyAvgUnit}
               onChange={handleChange}
@@ -716,6 +809,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">District</label>
             <select
               name="distrct"
+              id="district"
               value={districtCode}
               onChange={handleDistrictChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -736,6 +830,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Taluka</label>
             <select
               name="talukaCode"
+              id="taluka"
               value={talukaCode}
               onChange={handleTalukaChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -754,6 +849,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Village</label>
             <select
               name="villageCode"
+              id="village"
               value={villageCode}
               onChange={handleVillageChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -789,6 +885,7 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Pincode</label>
             <input
               type="text"
+              id="pincode"
               name="pincode"
               value={formData.pincode || ''}  // Ensure it uses formData.pincode
               onChange={handlePincodeChange}
@@ -987,13 +1084,14 @@ export function QuotationForm() {
           </div>
         )}
 
-        {/* <button
-          type="button"
-          className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-          onClick={handleSave}
-        >
-          Save
-        </button> */}
+<button
+  type="button"
+  onClick={handleSaveOrUpdate}
+  className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+>
+  {isEditing ? "Update" : "Save"}
+</button>
+
 
         <button
           type="button"

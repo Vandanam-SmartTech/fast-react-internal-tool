@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { fetchConsumers } from "../services/api";
-import { useNavigate, useLocation } from "react-router-dom";
-
-interface Consumer {
-  consumerId: number;
-  connectionType: string;
-  govIdName: string;
-  emailAddress: string;
-  mobileNumber: string;
-}
+import { useNavigate } from "react-router-dom";
+import { QuotationData } from "../types/quotation"; 
 
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
-  const [consumers, setConsumers] = useState<Consumer[]>([]);
+  const [consumers, setConsumers] = useState<QuotationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
+
+  const handleModifyConsumer = (consumer: QuotationData) => {
+    navigate(`/quotationform/${consumer.id}`, { state: { consumer } });
+  };
+
+  const goToQuotationForm = () => {
+    navigate("/quotationform"); 
+  };
 
   const loadConsumers = async (page: number) => {
     try {
       setLoading(true);
       const data = await fetchConsumers(page);
-      setConsumers(data.content);
+      
+      setConsumers(data.content); // Directly use the response without extra mapping
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching consumers:", error);
@@ -34,10 +36,6 @@ const ListOfConsumers: React.FC = () => {
     loadConsumers(currentPage);
   }, [currentPage]);
 
-  const goBack = () => {
-    navigate("/");
-  };
-
   const goToPage = (page: number) => {
     if (page >= 0 && page < totalPages) setCurrentPage(page);
   };
@@ -45,46 +43,28 @@ const ListOfConsumers: React.FC = () => {
   const renderPagination = () => {
     const pages = [];
 
-    // Add the first page
     if (currentPage > 2) {
       pages.push(
-        <button
-          key="first"
-          onClick={() => goToPage(0)}
-          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          1
-        </button>
+        <button key="first" onClick={() => goToPage(0)}
+          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">1</button>
       );
       if (currentPage > 3) pages.push(<span key="dots1">...</span>);
     }
 
-    // Add the previous two, current, and next two pages
     for (let i = Math.max(0, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
       pages.push(
-        <button
-          key={i}
-          onClick={() => goToPage(i)}
-          className={`px-3 py-1 rounded ${
-            i === currentPage
-              ? "bg-blue-600 text-white"
-              : "bg-gray-300 hover:bg-gray-400"
-          }`}
-        >
+        <button key={i} onClick={() => goToPage(i)}
+          className={`px-3 py-1 rounded ${i === currentPage ? "bg-blue-600 text-white" : "bg-gray-300 hover:bg-gray-400"}`}>
           {i + 1}
         </button>
       );
     }
 
-    // Add the last page
     if (currentPage < totalPages - 3) {
       if (currentPage < totalPages - 4) pages.push(<span key="dots2">...</span>);
       pages.push(
-        <button
-          key="last"
-          onClick={() => goToPage(totalPages - 1)}
-          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
+        <button key="last" onClick={() => goToPage(totalPages - 1)}
+          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
           {totalPages}
         </button>
       );
@@ -108,36 +88,17 @@ const ListOfConsumers: React.FC = () => {
               <p>No consumers found.</p>
             ) : (
               consumers.map((consumer) => (
-                <div
-                  key={consumer.consumerId}
-                  className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg"
-                >
+                <div key={consumer.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg">
                   <div className="mb-4">
-                    <p className="truncate">
-                      <span className="font-medium">Consumer Number:</span>{" "}
-                      {consumer.consumerId}
-                    </p>
-                    <p className="break-words">
-                      <span className="font-medium">Connection Type:</span>{" "}
-                      {consumer.connectionType}
-                    </p>
-                    <p className="break-words">
-                      <span className="font-medium">Consumer Name:</span>{" "}
-                      {consumer.govIdName}
-                    </p>
-                    <p className="truncate">
-                      <span className="font-medium">Email Address:</span>{" "}
-                      {consumer.emailAddress}
-                    </p>
-                    <p className="truncate">
-                      <span className="font-medium">Mobile Number:</span>{" "}
-                      {consumer.mobileNumber}
-                    </p>
+                    <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerNumber}</p>
+                    <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
+                    <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.consumerName}</p>
+                    <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.consumerEmail}</p>
+                    <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.consumerPhoneNumber}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button 
-                    onClick={() => navigate(`/quotationform`)}
-                    className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
+                    <button onClick={() => handleModifyConsumer(consumer)}
+                      className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
                       Modify
                     </button>
                     <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
@@ -155,10 +116,8 @@ const ListOfConsumers: React.FC = () => {
         </div>
       )}
 
-      <button
-        onClick={goBack}
-        className="mt-6 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
-      >
+      <button onClick={goToQuotationForm}
+        className="mt-6 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
         Back to Home
       </button>
     </div>
