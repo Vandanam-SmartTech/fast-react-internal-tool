@@ -84,31 +84,41 @@ export function QuotationForm() {
     }
   };
 
-  useEffect(() => {
-      if (consumer) {
-        setIsEditing(true);
-        setFormData({
-          customerId: consumer.customerId,
-          id: consumer.id,
-          consumerNumber: consumer.consumerNumber || "",
-          connectionType: consumer.connectionType || "",
-          consumerName: consumer.consumerName || "",
-          consumerEmail: consumer.consumerEmail || "",
-          consumerPhoneNumber: consumer.consumerPhoneNumber || "",
-          pincode: consumer.pincode || "",
-          monthlyAvgUnit: consumer.monthlyAvgUnit || "",
-          districtCode:consumer.district || "",
-          talukaCode:consumer.taluka || "",
-          villageCode:consumer.village || "",
-          billedTo:consumer.billedTo || "",
-          isMsebConnection: consumer.isMsebConnection ? "Yes" : "No",
-        });
+  // useEffect(() => {
+  //     if (consumer) {
+  //       setIsEditing(true);
+  //       const hasCorrection = !!consumer.correctionTypeId;
 
-        setDistrictCode(consumer.district || 0);
-        setTalukaCode(consumer.taluka || 0);
-        setVillageCode(consumer.village || 0);
-      }
-    }, [consumer]);
+  //       setFormData({
+
+
+  //         customerId: consumer.customerId,
+  //         id: consumer.id,
+  //         consumerNumber: consumer.consumerNumber || "",
+  //         connectionType: consumer.connectionType || "",
+  //         consumerName: consumer.consumerName || "",
+  //         consumerEmail: consumer.consumerEmail || "",
+  //         consumerPhoneNumber: consumer.consumerPhoneNumber || "",
+  //         pincode: consumer.pincode || "",
+  //         monthlyAvgUnit: consumer.monthlyAvgUnit || "",
+  //         districtCode:consumer.district || "",
+  //         talukaCode:consumer.taluka || "",
+  //         villageCode:consumer.village || "",
+  //         billedTo:consumer.billedTo || "",
+  //         isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
+  //         isNameCorrection: hasCorrection ? "Yes" : "No", 
+  //         phase: consumer.phaseTypeId === 1 ? "Single-Phase" : consumer.phaseTypeId === 2 ? "Three-Phase" : "",
+  //         correctionType: hasCorrection 
+  //       ? (consumer.correctionTypeId === 11 ? "spell_correction" : 
+  //          (consumer.correctionTypeId === 12 ? "transfer_ownership" : ""))
+  //       : "", 
+  //       });
+
+  //       setDistrictCode(consumer.district || 0);
+  //       setTalukaCode(consumer.taluka || 0);
+  //       setVillageCode(consumer.village || 0);
+  //     }
+  //   }, [consumer]);
 
     const handleSaveOrUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -140,7 +150,9 @@ export function QuotationForm() {
             postalCode: formData.pincode,
             billedTo: formData.billedTo,
             isMsebConnection: formData.isMsebConnection === "Yes",
-
+            isNameCorrection: formData.isNameCorrection === "Yes", 
+            phaseTypeId: formData.phase === "Single-Phase" ? 1 : formData.phase === "Three-Phase" ? 2 : null,
+            correctionTypeId: formData.isNameCorrection === "Yes" ? (formData.correctionType === "spell_correction"   ? 11   : (formData.correctionType === "transfer_ownership"  ? 12   : null) ) : null
           }
 
           console.log("Final data before update:", backendConnectionData);
@@ -182,6 +194,42 @@ export function QuotationForm() {
     initializePhaseAndKw();
   }, []);
 
+
+  useEffect(() => {
+    if (consumer) {
+      setIsEditing(true);
+      const hasCorrection = !!consumer.correctionTypeId;
+
+      setFormData({
+
+
+        customerId: consumer.customerId,
+        id: consumer.id,
+        consumerNumber: consumer.consumerNumber || "",
+        connectionType: consumer.connectionType || "",
+        consumerName: consumer.consumerName || "",
+        consumerEmail: consumer.consumerEmail || "",
+        consumerPhoneNumber: consumer.consumerPhoneNumber || "",
+        pincode: consumer.pincode || "",
+        monthlyAvgUnit: consumer.monthlyAvgUnit || "",
+        districtCode:consumer.district || "",
+        talukaCode:consumer.taluka || "",
+        villageCode:consumer.village || "",
+        billedTo:consumer.billedTo || "",
+        isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
+        phase: consumer.phaseTypeName || "",
+        isNameCorrection: hasCorrection ? "Yes" : "No", 
+        correctionType: hasCorrection ? consumer.correctionName : "",
+      });
+
+      setDistrictCode(consumer.district || 0);
+      setTalukaCode(consumer.taluka || 0);
+      setVillageCode(consumer.village || 0);
+    }
+  }, [consumer]);
+
+
+  
 
   useEffect(() => {
     if (kwOptions.length > 1) {
@@ -524,6 +572,8 @@ export function QuotationForm() {
   // Generate options for battery wattage in multiples of 2.4, up to 2.4 * 50
   const batteryKwOptions = Array.from({ length: 50 }, (_, index) => ((index + 1) * 2.4).toFixed(1));
 
+  
+
 
   return (
 
@@ -709,8 +759,8 @@ export function QuotationForm() {
                 <option value="" disabled>
                   Select an option
                 </option>
-                <option value="Spell Correction">Spell Correction</option>
-                <option value="Transfer Ownership">Transfer Ownership</option>
+                <option value="spell_correction">Spell Correction</option>
+                <option value="transfer_ownership">Transfer Ownership</option>
               </select>
             </div>
           )}
@@ -768,12 +818,12 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Phase Type</label>
             <select
               name="phase"
-              required
+              id="phase"
+              // required
               value={formData.phase}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              {/* <option value="">Select Phase</option> */}
               <option value="Single-Phase">Single-Phase</option>
               <option value="Three-Phase">Three-Phase</option>
             </select>

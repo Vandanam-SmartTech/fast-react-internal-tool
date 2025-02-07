@@ -14,7 +14,7 @@ export const initialFormData: QuotationData = {
   consumerAddress1: '',
   consumerAddress2: '',
   connectionType: 'Residential',
-  phase: 'Single',
+  phase: '',
   dcrNonDcr: 'DCR',
   batteryWattage: 0,
   monthlyAvgUnit: 0,
