@@ -84,42 +84,6 @@ export function QuotationForm() {
     }
   };
 
-  // useEffect(() => {
-  //     if (consumer) {
-  //       setIsEditing(true);
-  //       const hasCorrection = !!consumer.correctionTypeId;
-
-  //       setFormData({
-
-
-  //         customerId: consumer.customerId,
-  //         id: consumer.id,
-  //         consumerNumber: consumer.consumerNumber || "",
-  //         connectionType: consumer.connectionType || "",
-  //         consumerName: consumer.consumerName || "",
-  //         consumerEmail: consumer.consumerEmail || "",
-  //         consumerPhoneNumber: consumer.consumerPhoneNumber || "",
-  //         pincode: consumer.pincode || "",
-  //         monthlyAvgUnit: consumer.monthlyAvgUnit || "",
-  //         districtCode:consumer.district || "",
-  //         talukaCode:consumer.taluka || "",
-  //         villageCode:consumer.village || "",
-  //         billedTo:consumer.billedTo || "",
-  //         isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
-  //         isNameCorrection: hasCorrection ? "Yes" : "No", 
-  //         phase: consumer.phaseTypeId === 1 ? "Single-Phase" : consumer.phaseTypeId === 2 ? "Three-Phase" : "",
-  //         correctionType: hasCorrection 
-  //       ? (consumer.correctionTypeId === 11 ? "spell_correction" : 
-  //          (consumer.correctionTypeId === 12 ? "transfer_ownership" : ""))
-  //       : "", 
-  //       });
-
-  //       setDistrictCode(consumer.district || 0);
-  //       setTalukaCode(consumer.taluka || 0);
-  //       setVillageCode(consumer.village || 0);
-  //     }
-  //   }, [consumer]);
-
     const handleSaveOrUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
     
@@ -151,8 +115,8 @@ export function QuotationForm() {
             billedTo: formData.billedTo,
             isMsebConnection: formData.isMsebConnection === "Yes",
             isNameCorrection: formData.isNameCorrection === "Yes", 
-            phaseTypeId: formData.phase === "Single-Phase" ? 1 : formData.phase === "Three-Phase" ? 2 : null,
-            correctionTypeId: formData.isNameCorrection === "Yes" ? (formData.correctionType === "spell_correction"   ? 11   : (formData.correctionType === "transfer_ownership"  ? 12   : null) ) : null
+            phaseTypeId: formData.phase === "Three-Phase" ? 2 : 1,
+            correctionTypeId: formData.isNameCorrection === "Yes" ? (formData.correctionType === "Spell Correction"   ? 11   : (formData.correctionType === "Transfer Ownership"  ? 12   : null) ) : null
           }
 
           console.log("Final data before update:", backendConnectionData);
@@ -217,10 +181,12 @@ export function QuotationForm() {
         villageCode:consumer.village || "",
         billedTo:consumer.billedTo || "",
         isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
+        //phase: consumer.phaseTypeId === 1   ? "Single-Phase"  : consumer.phaseTypeId === 2   ? "Three-Phase"  : "",
         phase: consumer.phaseTypeName || "",
         isNameCorrection: hasCorrection ? "Yes" : "No", 
+        //correctionType: hasCorrection   ? consumer.correctionTypeId === 11     ? "Spell Correction"   : consumer.correctionTypeId === 12     ? "Transfer Ownership"     : null  : null,
         correctionType: hasCorrection ? consumer.correctionName : "",
-      });
+  });
 
       setDistrictCode(consumer.district || 0);
       setTalukaCode(consumer.taluka || 0);
@@ -759,8 +725,8 @@ export function QuotationForm() {
                 <option value="" disabled>
                   Select an option
                 </option>
-                <option value="spell_correction">Spell Correction</option>
-                <option value="transfer_ownership">Transfer Ownership</option>
+                <option value="Spell Correction">Spell Correction</option>
+                <option value="Transfer Ownership">Transfer Ownership</option>
               </select>
             </div>
           )}
@@ -819,7 +785,7 @@ export function QuotationForm() {
             <select
               name="phase"
               id="phase"
-              // required
+              required
               value={formData.phase}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

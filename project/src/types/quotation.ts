@@ -7,18 +7,18 @@ export interface QuotationData {
   isLoanRequired: string;
   inversionType: string;
   consumerNumber: string;
-  consumerName: string;
+  consumerName: string;//
   correctionType: string;
   billedTo: string;
   gstNo: string;
-  consumerPhoneNumber: string;
-  consumerEmail: string;
+  consumerPhoneNumber: string;//
+  consumerEmail: string;//
   consumerAddress1: string;
   consumerAddress2: string;
   connectionType: string;
   phase: string;
   dcrNonDcr: string;
-  monthlyAvgUnit: number;
+  monthlyAvgUnit: number;//
   kw: number;
   subsidy: number;
   solarCostSystem: bigint; // Using bigint for large numbers

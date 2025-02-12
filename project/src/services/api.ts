@@ -288,37 +288,3 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
     throw error;
   }
 };
-
-
-
-
-
-// Update **connection details** (District, Taluka, Village, etc.)
-// export const updateConsumerConnectionDetails = async (
-//   id: number,
-//   updatedData: { 
-//     connectionType?: string;
-//     districtCode?: string;
-//     talukaCode?: string;
-//     villageCode?: string;
-//     pincode?: string;
-//     monthlyAvgUnit?: number;
-//   }
-// ) => {
-//   try {
-//     const response = await fetch(`${API_BASE_URL}/connections/${id}`, {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(updatedData),
-//     });
-
-//     if (!response.ok) {
-//       throw new Error("Failed to update consumer connection details");
-//     }
-
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Error updating connection details:", error);
-//     throw error;
-//   }
-// };
