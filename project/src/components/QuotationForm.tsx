@@ -181,11 +181,11 @@ export function QuotationForm() {
         villageCode:consumer.village || "",
         billedTo:consumer.billedTo || "",
         isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
-        //phase: consumer.phaseTypeId === 1   ? "Single-Phase"  : consumer.phaseTypeId === 2   ? "Three-Phase"  : "",
-        phase: consumer.phaseTypeName || "",
+        phase: consumer.phaseTypeId === 1   ? "Single-Phase"  : consumer.phaseTypeId === 2   ? "Three-Phase"  : "",
+        //phase: consumer.phaseTypeName || "",
         isNameCorrection: hasCorrection ? "Yes" : "No", 
-        //correctionType: hasCorrection   ? consumer.correctionTypeId === 11     ? "Spell Correction"   : consumer.correctionTypeId === 12     ? "Transfer Ownership"     : null  : null,
-        correctionType: hasCorrection ? consumer.correctionName : "",
+        correctionType: hasCorrection   ? consumer.correctionTypeId === 11     ? "Spell Correction"   : consumer.correctionTypeId === 12     ? "Transfer Ownership"     : null  : null,
+        //correctionType: hasCorrection ? consumer.correctionName : "",
   });
 
       setDistrictCode(consumer.district || 0);
