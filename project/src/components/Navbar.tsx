@@ -26,9 +26,6 @@ const Navbar: React.FC = () => {
     navigate("/list-of-consumers");
   };
 
-  // const goToModifyConsumerForm = () =>{
-  //   navigate("/modify-consumer-form");
-  // }
 
   return (
     <nav className="bg-blue-100 text-blue-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between shadow-md">

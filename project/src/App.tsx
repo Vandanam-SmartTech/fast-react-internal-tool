@@ -4,9 +4,7 @@ import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import ListOfConsumers from './components/ListOfConsumers';
-//import MyConsumerDetails from "./components/MyConsumerDetails";
-import ModifyConsumerForm from "./components/ModifyConsumerForm";
-import MyConsumerDetails from './components/MyConsumerDetails';
+
 
 
 const AppContent: React.FC = () => {

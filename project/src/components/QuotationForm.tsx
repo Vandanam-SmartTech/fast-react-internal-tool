@@ -10,6 +10,12 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import { useLocation } from "react-router-dom";
 import { updateConsumerPersonalDetails, updateConsumerConnectionDetails } from "../services/api";
+import { saveCustomer } from '../services/api'; 
+import { saveConnection } from '../services/api'; 
+import { saveInstallation } from '../services/api'; 
+import { fetchRecommendedDetails } from '../services/api';
+import { getPriceDetails } from '../services/api';
+
 
 export function QuotationForm() {
   const [formData, setFormData] = useState<QuotationData>(initialFormData);
@@ -33,8 +39,34 @@ export function QuotationForm() {
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
   const [villageCode, setVillageCode] = useState<number>(0);
-  const [pincode, setPincode] = useState<number>(0);
+  const [pincode, setpincode] = useState<number>(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [connectionId, setConnectionId] = useState<number | null>(null);
+  const [installationId, setInstallationId] = useState<number | null>(null);
+  const [showConnectionDetails, setShowConnectionDetails] = useState(false);
+  const [showInstallationDetails, setShowInstallationDetails] = useState(false);
+  const [recommendedInstallationSpaceType, setRecommendedInstallationSpaceType] = useState<string>("");
+  const [savedInstallations, setSavedInstallations] = useState([]);
+  const [recommendedInstallationStructureType, setRecommendedInstallationStructureType] = useState<string>("");
+  const [solarSystemCost, setSolarSystemCost] = useState(0);
+  const [fabricationCost, setFabricationCost] = useState(0);
+  const [subsidy, setSubsidy] = useState(0);
+  const [effectiveCost, setEffectiveCost] = useState(0);
+  
+  const [recommendedKW, setRecommendedKW] = useState<number>(0);
+  const [dcrNonDcr, setDcrNonDcr] = useState<string>("");
+  const [panelBrand, setPanelBrand] = useState<string>("");
+  const [phase, setPhase] = useState<string>("");
+  const [connectionType, setConnectionType] = useState<string>("");
+
+
+
+  const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
+  const [showCostDetails, setShowCostDetails] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  
 
   const location = useLocation();
   const consumer = location.state?.consumer as QuotationData; 
@@ -295,9 +327,14 @@ export function QuotationForm() {
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
-    setPincode(value);
+    setpincode(value);
     setFormData((prev) => ({ ...prev, pincode: value }));
   };
+  
+  
+
+  
+  
  
   
 
@@ -373,109 +410,109 @@ export function QuotationForm() {
 
   //////////////////////////////////////////////////////////////////////////////////
 
-  const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setInversionType(value);
-    setFormData((prev) => ({
-      ...prev,
-      inversionType: value,
-      batteryWattage: value === 'Hybrid' || value === 'With-Battery' ? prev.batteryWattage : NaN, // Reset battery wattage if not applicable
-    }));
-    setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery'); // Enable battery dropdown for specific grid types
+  // const handleInversionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const value = e.target.value;
+  //   setInversionType(value);
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     inversionType: value,
+  //     batteryWattage: value === 'Hybrid' || value === 'With-Battery' ? prev.batteryWattage : NaN, // Reset battery wattage if not applicable
+  //   }));
+  //   setIsBatteryDropdownEnabled(value === 'Hybrid' || value === 'With-Battery'); // Enable battery dropdown for specific grid types
 
-  };
-
-
-  useEffect(() => {
-    // Create a fake event that matches the expected event type
-    const fakeEvent = {
-      target: {
-        value: isMsebConnection === 'Yes' ? 'On-Grid' : 'With-Battery',
-      },
-    } as React.ChangeEvent<HTMLSelectElement>; // Type assertion to ensure it matches ChangeEvent
-
-    handleInversionTypeChange(fakeEvent); // Trigger the onChange handler programmatically
-  }, [isMsebConnection]);
+  // };
 
 
-  useEffect(() => {
-    if (formData.phase) {
-      const fetchWattages = async () => {
-        try {
-          const wattages = await fetchPanelWattages(formData.phase);
-          const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
-          setKwOptions(sortedWattages);
-          // Automatically set KW to the first available option, if any
-          if (sortedWattages.length > 0) {
-            setFormData((prev) => ({ ...prev, kw: sortedWattages[0] }));
-          }
-        } catch (err) {
-          console.error('Error fetching panel wattages:', err);
-          setError('Failed to fetch KW options');
-        }
-      };
+  // useEffect(() => {
+  //   // Create a fake event that matches the expected event type
+  //   const fakeEvent = {
+  //     target: {
+  //       value: isMsebConnection === 'Yes' ? 'On-Grid' : 'With-Battery',
+  //     },
+  //   } as React.ChangeEvent<HTMLSelectElement>; // Type assertion to ensure it matches ChangeEvent
 
-      fetchWattages();
-    }
-  }, [formData.phase]);
+  //   handleInversionTypeChange(fakeEvent); // Trigger the onChange handler programmatically
+  // }, [isMsebConnection]);
 
 
-  useEffect(() => {
-    if (
-      formData.connectionType &&
-      formData.phase &&
-      formData.dcrNonDcr &&
-      formData.kw > 0
-    ) {
-      const fetchCostData = async () => {
-        try {
-          const costData = await calculateCosts({
-            connectionType: formData.connectionType,
-            phase: formData.phase,
-            dcrNonDcr: formData.dcrNonDcr,
-            kw: formData.kw,
-          });
+  // useEffect(() => {
+  //   if (formData.phase) {
+  //     const fetchWattages = async () => {
+  //       try {
+  //         const wattages = await fetchPanelWattages(formData.phase);
+  //         const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+  //         setKwOptions(sortedWattages);
+  //         // Automatically set KW to the first available option, if any
+  //         if (sortedWattages.length > 0) {
+  //           setFormData((prev) => ({ ...prev, kw: sortedWattages[0] }));
+  //         }
+  //       } catch (err) {
+  //         console.error('Error fetching panel wattages:', err);
+  //         setError('Failed to fetch KW options');
+  //       }
+  //     };
 
-          setFormData(prev => ({
-            ...prev,
-            subsidy: costData.subsidy,
-            solarCostSystem: costData.solarSystemCost,
-            fabricationCost: costData.fabricationCost,
-            effectiveCost:
-              (costData.solarSystemCost || 0) +
-              (costData.fabricationCost || 0) -
-              (costData.subsidy || 0),
-          }));
-        } catch (err) {
-          console.error('Error fetching cost data:', err);
-          setError('Failed to fetch cost data');
-        }
-      };
-
-      fetchCostData();
-    }
-  }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
+  //     fetchWattages();
+  //   }
+  // }, [formData.phase]);
 
 
+  // useEffect(() => {
+  //   if (
+  //     formData.connectionType &&
+  //     formData.phase &&
+  //     formData.dcrNonDcr &&
+  //     formData.kw > 0
+  //   ) {
+  //     const fetchCostData = async () => {
+  //       try {
+  //         const costData = await calculateCosts({
+  //           connectionType: formData.connectionType,
+  //           phase: formData.phase,
+  //           dcrNonDcr: formData.dcrNonDcr,
+  //           kw: formData.kw,
+  //         });
+
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           subsidy: costData.subsidy,
+  //           solarCostSystem: costData.solarSystemCost,
+  //           fabricationCost: costData.fabricationCost,
+  //           effectiveCost:
+  //             (costData.solarSystemCost || 0) +
+  //             (costData.fabricationCost || 0) -
+  //             (costData.subsidy || 0),
+  //         }));
+  //       } catch (err) {
+  //         console.error('Error fetching cost data:', err);
+  //         setError('Failed to fetch cost data');
+  //       }
+  //     };
+
+  //     fetchCostData();
+  //   }
+  // }, [formData.connectionType, formData.phase, formData.dcrNonDcr, formData.kw]);
 
 
-  useEffect(() => {
-    if (formData.monthlyAvgUnit && formData.phase) {
-      const fetchKw = async () => {
-        const kw = await calculateKw(formData.phase, formData.monthlyAvgUnit);
-        if (kw !== null) {
-          setFormData((prev) => ({
-            ...prev,
-            kw,
-          }));
-        } else {
-          setError('Failed to calculate KW');
-        }
-      };
 
-      fetchKw();
-    }
-  }, [formData.monthlyAvgUnit, formData.phase]);
+
+  // useEffect(() => {
+  //   if (formData.monthlyAvgUnit && formData.phase) {
+  //     const fetchKw = async () => {
+  //       const kw = await calculateKw(formData.phase, formData.monthlyAvgUnit);
+  //       if (kw !== null) {
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           kw,
+  //         }));
+  //       } else {
+  //         setError('Failed to calculate KW');
+  //       }
+  //     };
+
+  //     fetchKw();
+  //   }
+  // }, [formData.monthlyAvgUnit, formData.phase]);
 
 
   // const handleSave = async () => {
@@ -527,6 +564,228 @@ export function QuotationForm() {
     }
   };
 
+  const handleOutOfStation = (event) => {
+    const value = event.target.value;
+    setFormData((prevData) => ({
+      ...prevData,
+      isOutOfStation: value,
+      // Clear distance when "No" is selected
+      distance: value === "Yes" ? prevData.distance : ''
+    }));
+  };
+  
+  const handleDistanceChange = (event) => {
+    const { value } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      distance: value,
+    }));
+  };
+  
+  
+  const handleSaveCustomer = async () => {
+    setIsButtonDisabled(true); // Disable button when clicked
+  
+    const customerData = {
+      govIdName: formData.govIdName,
+      mobileNumber: formData.mobileNumber,
+      emailAddress: formData.emailAddress,
+    };
+  
+    try {
+      const id = await saveCustomer(customerData);
+      console.log("Returned customer id:", id); // Should log a valid number if successful
+  
+      if (id) {
+        setCustomerId(id);
+        setShowConnectionDetails(true);
+      } else {
+        console.error("No valid customer id returned");
+        setIsButtonDisabled(false); // Re-enable button if no ID is returned
+      }
+    } catch (error) {
+      console.error("Error saving customer:", error);
+      setIsButtonDisabled(false); // Re-enable button on error
+    }
+  };
+  
+  
+  const phaseTypeMapping = {
+    'Single-Phase': 1,
+    'Three-Phase': 2
+  };
+
+  const connectionTypeMapping = {
+    'Residential': 1,
+    'Commercial': 2,
+    'Industrial': 3,
+    'PWW': 4
+  };
+
+  const addressTypeMapping = {
+    'Home': 1,
+    'Hotel': 2,
+    'Office': 3,
+    'Charitable': 4,
+    'Non_Commercial_Education': 5,
+    'Street_Light': 6,
+    'Construction': 7,
+    'Public_Water_Works': 8
+  };
+
+  const correctionTypeMapping = {
+    'Spell Correction': 1,
+    'Transfer Ownership': 2,
+  };
+
+
+
+  
+
+  const handleSaveConnection = async () => {
+    // Convert "Yes" / "No" to boolean
+    const isMsebConnection = formData.isMsebConnection === "Yes";
+    const isNameCorrectionRequired = formData.isNameCorrection === "Yes"
+  ? correctionTypeMapping[formData.correctionType]  // 1 or 2 when "Yes"
+  : false;
+
+
+
+  
+    const connectionData = {
+      //...formData,
+      customerId, // Assuming customerId is in state
+      consumerId: formData.consumerId,
+      isMsebConnection, // Now a boolean
+      isNameCorrectionRequired,
+      phaseTypeId: phaseTypeMapping[formData.phase],
+      addressTypeId: addressTypeMapping[formData.addressType],
+      connectionTypeId: connectionTypeMapping[formData.connectionType],
+      correctionTypeId: formData.isNameCorrection === "Yes"
+    ? correctionTypeMapping[formData.correctionType] 
+    : null,
+      monthlyAvgConsumptionUnits: formData.monthlyAvgUnit,
+      districtCode:formData.districtCode,
+      talukaCode:formData.talukaCode,
+      villageCode:formData.villageCode,
+      postalCode:formData.pincode,
+      gstIn:formData.gstIn,
+      latitude:formData.latitude,
+      longitude:formData.longitude,
+      sectionId:formData.sectionId,
+      billedTo:formData.billedTo,
+      addressLine1:formData.addressLine1,
+      addressLine2:formData.addressLine2,
+    };
+  
+    const id = await saveConnection(connectionData);
+    console.log("Returned connection id:", id); 
+    if (id) {
+      setConnectionId(id);
+      setShowInstallationDetails(true);
+    } else {
+      console.error("No valid connection id returned");
+    }
+  };
+
+
+  const installationSpaceMapping = {
+    'Slab': 1,
+    'Clay Tiles': 2,
+    'Metal Sheets': 3,
+    'Plastic Sheets': 4,
+    'Bathroom Slab': 5,
+    'Cement Sheets': 6,
+    'On Ground': 7,
+  };
+  
+
+  const handleSaveInstallation = async () => {
+    const installationData = {
+      //...formData,
+      connectionId,
+      installationSpaceTypeId: installationSpaceMapping[formData.spaceType], // Convert space type string to id
+      availableEastWestLengthFt: formData.availableEastWestLengthFt,
+      availableSouthNorthLengthFt:formData.availableSouthNorthLengthFt,
+      acWireLengthFt:formData.acWireLengthFt,
+      dcWireLengthFt:formData.dcWireLengthFt,
+      earthingWireLengthFt:formData.earthingWireLengthFt,
+      descriptionOfInstallation:formData.descriptionOfInstallation,
+      numberOfGpPipes:formData.numberOfGpPipes,
+      
+    };
+  
+    const id = await saveInstallation(installationData);
+    console.log("Returned installation id:", id);
+  
+    if (id) {
+      // Add new installation to the list
+      setSavedInstallations((prev) => [...prev, installationData]);
+  
+      const addAnother = window.confirm("Installation saved! Do you want to add another installation?");
+      
+      if (addAnother) {
+
+      } else {
+        try {
+    
+          const recommendation = await fetchRecommendedDetails(connectionId);
+          
+          setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
+          setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
+          setRecommendedKW(recommendation.recommendedKW || "");
+          setDcrNonDcr(recommendation.dcrNonDcr || "");
+          setPanelBrand(recommendation.panelBrand || "");
+          setPhase(recommendation.phase || "");
+          setConnectionType(recommendation.connectionType || "");
+          setShowSystemSpecificationDetails(true);
+        } catch (error) {
+          console.error("Failed to fetch recommended details:", error);
+        }
+      }
+    } else {
+      console.error("No valid installation id returned");
+    }
+  };
+  
+  
+
+  const handleSaveSystemSpecification = () => {
+    // You can include any save logic here
+    setShowCostDetails(true); // Show the additional div when button is clicked
+  };
+
+  const handleGetPrice = async () => {
+    try {
+      const requestData = {
+        customerSelectedInstallationStructureType: recommendedInstallationStructureType,
+        customerSelectedKW: recommendedKW,
+        customerSelectedBrand: panelBrand,
+        phase: phase,
+        dcrNonDcr: dcrNonDcr,
+        connectionType: connectionType,
+      };
+
+      console.log("Request Data:", requestData); // Debugging
+  
+      const priceDetails = await getPriceDetails(requestData);
+  
+      if (priceDetails) {
+        console.log("Hello");
+        setSolarSystemCost(priceDetails.solarSystemCost || 0);
+        setFabricationCost(priceDetails.fabricationCost || 0);
+        setSubsidy(priceDetails.subsidy || 0);
+        setEffectiveCost(priceDetails.effectiveCost || 0);
+        setShowCostDetails(true);
+      }
+    } catch (error) {
+      console.error("Error fetching price details:", error);
+    }
+  };
+  
+  
+  
+
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -550,12 +809,97 @@ export function QuotationForm() {
         <h1 className="text-3xl font-bold text-gray-800">Vandanam Solar Quotation Generator</h1>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-700">Grid Details</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-0 gap-6">
-          {/* MSEB Connection Radio Buttons */}
+      <h2 className="text-xl font-semibold text-gray-700">Customer Details</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="space-y-6">
+
           <div>
+            <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+            <input
+              type="text"
+              id="govIdName"
+              name="govIdName"
+              value={formData.govIdName}
+              onChange={handleChange}
+              placeholder="Name As per Gov Id"
+              required
+              pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
+              title="Please enter only your first and last name (e.g., John Doe)"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Customer Mobile Number</label>
+            <input
+              type="text"
+              id="mobileNumber"
+              name="mobileNumber"
+              value={formData.mobileNumber}
+              onChange={handleChange}
+              placeholder="123456789"
+              maxLength={10}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+
+        </div>
+        
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Preferred Name(optional)</label>
+            <input
+              type="text"
+              name="preferredName"
+              value={formData.preferredName}
+              onChange={handleChange}
+              placeholder="Enter the preferred name"
+              maxLength={50} 
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="emailAddress"
+              name="emailAddress"
+              value={formData.emailAddress}
+              maxLength={35}
+              onChange={handleChange}
+              placeholder="johndeo@example.com"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+        </div>
+
+        <div className="col-span-full">
+    <button
+      type="button"
+      onClick={handleSaveCustomer}
+      disabled={isButtonDisabled} // Disable button when clicked
+      className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+        isButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+      }`}
+    >
+      {isButtonDisabled ? "Save Customer" : "Save Customer"}
+    </button>
+  </div>
+
+
+</div>
+
+
+      {showConnectionDetails &&(<div className="space-y-6 md:col-span-2">
+        <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
+        <div>
             <label className="block text-sm font-medium text-gray-700"> Does the customer currently have an active grid connection with the local electricity provider.(e.g., MSEB or BESCOM)?</label>
             <div className="mt-2 flex items-center space-x-4">
               <label className="flex items-center space-x-2">
@@ -583,48 +927,41 @@ export function QuotationForm() {
             </div>
           </div>
 
-
-
-        </div>
-      </div>
-
-
-      <h2 className="text-xl font-semibold text-gray-700">Consumer Details</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <div className="space-y-6">
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* MSEB Connection Radio Buttons */}
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
             <input
               type="text"
-              id="consumerNumber"
-              name="consumerNumber"
-              value={formData.consumerNumber}
+              id="consumerId"
+              name="consumerId"
+              value={formData.consumerId}
               onChange={handleChange}
               placeholder="CN001"
               disabled={isMsebConnection === 'No'}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Consumer Name</label>
-            <input
-              type="text"
-              id="consumerName"
-              name="consumerName"
-              value={formData.consumerName}
-              onChange={handleChange}
-              placeholder="Name As per Gov Id"
-              required
-              pattern="^[A-Za-z]+\s[A-Za-z]+$" // Ensures it contains only first and last name
-              title="Please enter only your first and last name (e.g., John Doe)"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+              <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
+              <input
+                type="text"
+                id="gstIn"
+                name="gstIn"
+                value={formData.gstIn}
+                onChange={handleChange}
+                placeholder="Enter your GSTIN (e.g., 27AAPFU0939F1ZV)"
+                required
+                pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$"
+                title="Please enter a valid GSTIN. It should be a 15-character code with a valid format (e.g., 27AAPFU0939F1ZV)"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 uppercase"
+              />
           </div>
-          {/* Billed To */}
-          <div>
+
+            {/* Billed To */}
+            <div>
             <label className="block text-sm font-medium text-gray-700">Billed To</label>
             <input
               type="text"
@@ -637,187 +974,34 @@ export function QuotationForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="space-y-6">
-          {/* GST Number */}
+        
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">GST Number</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
             <input
               type="text"
-              name="gstNo"
-              value={formData.gstNo}
+              name="addressLine1"
+              value={formData.addressLine1}
+              maxLength={60}
               onChange={handleChange}
-              placeholder="22AAAAA0000A1Z5" // Example GST number format
-              maxLength={15} // GST numbers typically have 15 characters
-              required
-              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[0-9A-Z]{1}$" // Valid GST format
-              title="Enter a valid GST number (e.g., 22AAAAA0000A1Z5)"
+              placeholder="123 Main St"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
             <input
-              type="tel"
-              name="consumerPhoneNumber"
-              value={formData.consumerPhoneNumber}
+              type="text"
+              name="addressLine2"
+              value={formData.addressLine2}
+              maxLength={60}
               onChange={handleChange}
-              placeholder="1234567890"
-              maxLength={10}
-              required
+              placeholder="123 Main St"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              name="consumerEmail"
-              value={formData.consumerEmail}
-              maxLength={35}
-              onChange={handleChange}
-              placeholder="devompatil@example.com"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Does the connection require a name correction?
-          </label>
-          <div className="mt-2 flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="nameCorrection"
-                value="Yes"
-                onChange={handleNameCorrection}
-                className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                checked={formData.isNameCorrection === "Yes"}
-              />
-              <span className="text-sm text-gray-700">Yes</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="nameCorrection"
-                value="No"
-                onChange={handleNameCorrection}
-                className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                checked={formData.isNameCorrection === "No"}
-              />
-              <span className="text-sm text-gray-700">No</span>
-            </label>
-          </div>
-
-          {formData.isNameCorrection === "Yes" && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Select Correction Type
-              </label>
-              <select
-                name="correctionType"
-                value={formData.correctionType || ''}
-                onChange={handleCorrectionTypeChange}
-                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              >
-                <option value="" disabled>
-                  Select an option
-                </option>
-                <option value="Spell Correction">Spell Correction</option>
-                <option value="Transfer Ownership">Transfer Ownership</option>
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Does the mseb email is updated on grid connection?</label>
-          <div className="mt-2 flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="emailCorrection"
-                value="Yes"
-                onChange={handleEmailCorrection}
-                className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                checked={formData.isEmailCorrection === "Yes"} // Bind to formData state
-              />
-              <span className="text-sm text-gray-700">Yes</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="emailCorrection"
-                value="No"
-                onChange={handleEmailCorrection}
-                className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                checked={formData.isEmailCorrection === "No"} // Bind to formData state
-              />
-              <span className="text-sm text-gray-700">No</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-
-      <div className="space-y-6 md:col-span-2">
-        <h2 className="text-xl font-semibold text-gray-700">Connection Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-            <select
-              name="connectionType"
-              id="connectionType"
-              value={formData.connectionType}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="Residential">Residential</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Industrial">Industrial</option>
-              <option value="PWW">PWW</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Phase Type</label>
-            <select
-              name="phase"
-              id="phase"
-              required
-              value={formData.phase}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="Single-Phase">Single-Phase</option>
-              <option value="Three-Phase">Three-Phase</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Monthly Average Unit</label>
-            <input
-              type="number"
-              id="monthlyAvgUnit"
-              name="monthlyAvgUnit"
-              value={formData.monthlyAvgUnit ?? ""}
-              onChange={handleChange}
-              placeholder="ex. 120"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-
-
-      {/* ///////////////////adding alignment//////////////// */}
-
-      <h2 className="text-xl font-semibold text-gray-700">Address Details</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
 
           {/* //dist,vill,tal,pincode/////// */}
 
@@ -881,23 +1065,6 @@ export function QuotationForm() {
           </div>
 
 
-
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Street Address</label>
-            <input
-              type="text"
-              name="consumerAddress1"
-              value={formData.consumerAddress1}
-              maxLength={60}
-              onChange={handleChange}
-              placeholder="123 Main St"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">Pincode</label>
             <input
@@ -910,17 +1077,472 @@ export function QuotationForm() {
             />
           </div>
 
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Phase Type</label>
+            <select
+              name="phase"
+              id="phase"
+              required
+              value={formData.phase}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="Single-Phase">Single-Phase</option>
+              <option value="Three-Phase">Three-Phase</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
+            <select
+              name="connectionType"
+              id="connectionType"
+              value={formData.connectionType}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="Residential">Residential</option>
+              <option value="Commercial">Commercial</option>
+              <option value="Industrial">Industrial</option>
+              <option value="PWW">PWW</option>
+            </select>
+          </div>
+
+
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Address Type</label>
+            <select
+              name="addressType"
+              id="addressType"
+              value={formData.addressType}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="Home">Home</option>
+              <option value="Office">Office</option>
+              <option value="Hotel">Hotel</option>
+              <option value="Charitable">Charitable</option>
+              <option value="Non_Commercial_Education">Non-Commercial-Education</option>
+              <option value="Street_Light">Street Light</option>
+              <option value="Construction">Construction</option>
+              <option value="Public_Water_Works">Public Water Works</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Monthly Average Unit</label>
+            <input
+              type="number"
+              id="monthlyAvgUnit"
+              name="monthlyAvgUnit"
+              value={formData.monthlyAvgUnit ?? ""}
+              onChange={handleChange}
+              placeholder="ex. 120"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Section Id</label>
+            <input
+              type="text"
+              id="sectionId"
+              name="sectionId"
+              value={formData.sectionId}
+              onChange={handleChange}
+              placeholder="1234"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Latitude</label>
+            <input
+              type="text"
+              id="latitude"
+              name="latitude"
+              value={formData.latitude}
+              onChange={handleChange}
+              placeholder="45.90876"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Longitude</label>
+            <input
+              type="text"
+              id="longitude"
+              name="longitude"
+              value={formData.longitude}
+              onChange={handleChange}
+              placeholder="45.90876"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Does the connection require a name correction?
+          </label>
+          <div className="mt-2 flex items-center space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nameCorrection"
+                value="Yes"
+                onChange={handleNameCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isNameCorrection === "Yes"}
+              />
+              <span className="text-sm text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nameCorrection"
+                value="No"
+                onChange={handleNameCorrection}
+                className="focus:ring-blue-500 text-blue-600 border-gray-300"
+                checked={formData.isNameCorrection === "No"}
+              />
+              <span className="text-sm text-gray-700">No</span>
+            </label>
+          </div>
+
+          {formData.isNameCorrection === "Yes" && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Select Correction Type
+              </label>
+              <select
+                name="correctionType"
+                value={formData.correctionType || ''}
+                onChange={handleCorrectionTypeChange}
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="" disabled>
+                  Select an option
+                </option>
+                <option value="Spell Correction">Spell Correction</option>
+                <option value="Transfer Ownership">Transfer Ownership</option>
+              </select>
+            </div>
+
+            
+          )}
         </div>
 
+        <div>
+  <label className="block text-sm font-medium text-gray-700">
+    Is Out of Station?
+  </label>
+  <div className="mt-2 flex items-center space-x-4">
+    <label className="flex items-center space-x-2">
+      <input
+        type="radio"
+        name="isOutOfStation"
+        value="Yes"
+        onChange={handleOutOfStation}
+        className="focus:ring-blue-500 text-blue-600 border-gray-300"
+        checked={formData.isOutOfStation === "Yes"}
+      />
+      <span className="text-sm text-gray-700">Yes</span>
+    </label>
+    <label className="flex items-center space-x-2">
+      <input
+        type="radio"
+        name="isOutOfStation"
+        value="No"
+        onChange={handleOutOfStation}
+        className="focus:ring-blue-500 text-blue-600 border-gray-300"
+        checked={formData.isOutOfStation === "No"}
+      />
+      <span className="text-sm text-gray-700">No</span>
+    </label>
+  </div>
+
+  {formData.isOutOfStation === "Yes" && (
+    <div className="mt-4">
+      <label className="block text-sm font-medium text-gray-700">
+        Enter Distance (in kms)
+      </label>
+      <input
+        type="number"
+        name="distance"
+        value={formData.distance || ''}
+        onChange={handleDistanceChange}
+        className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        placeholder="Enter distance"
+      />
+    </div>
+  )}
+</div>
 
 
+        </div>
+        <div className="col-span-full">
+        <button
+          type="button"
+          onClick={handleSaveConnection}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Save Connection
+        </button>
       </div>
+   </div>)}
 
-      <div className="space-y-6 md:col-span-2">
+   {showInstallationDetails && (<div className="space-y-6 md:col-span-2">
+
+      <h2 className="text-xl font-semibold text-gray-700">Installation Details</h2>
+
+      {savedInstallations.length > 0 && (
+      <div className="border p-4 rounded-md bg-gray-100">
+        <h3 className="text-lg font-semibold">Previously Saved Installations:</h3>
+        <ul className="list-disc pl-5">
+          {savedInstallations.map((installation, index) => (
+            <li key={index} className="border p-2 my-2 rounded-md bg-white shadow">
+              <p><strong>Space Type:</strong> {installation.spaceType}</p>
+              <p><strong>East-West Length:</strong> {installation.availableEastWestLengthFt} ft</p>
+              <p><strong>South-North Length:</strong> {installation.availableSouthNorthLengthFt} ft</p>
+              <p><strong>AC Wire Length:</strong> {installation.acWireLengthFt} ft</p>
+              <p><strong>DC Wire Length:</strong> {installation.dcWireLengthFt} ft</p>
+              <p><strong>Earthing Length:</strong> {installation.earthingWireLengthFt} ft</p>
+              <p><strong>No. Of GP Pipes:</strong> {installation.numberOfGpPipes} </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+            <label className="block text-sm font-medium text-gray-700">Space Type</label>
+            <select
+              name="spaceType"
+              id="spaceType"
+              value={formData.spaceType}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="Slab">Slab</option>
+              <option value="Clay Tiles">Clay Tiles</option>
+              <option value="Metal Sheets">Metal Sheets</option>
+              <option value="Plastic Sheets">Plastic Sheets</option>
+              <option value="Bathroom Slab">Bathroom Slab</option>
+              <option value="Cement Sheets">Cement Sheets</option>
+              <option value="On Ground">On Ground</option>
+            </select>
+          </div>
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
+            <input
+              type="number"
+              id="availableEastWestLengthFt"
+              name="availableEastWestLengthFt"
+              value={formData.availableEastWestLengthFt}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)</label>
+            <input
+              type="number"
+              id="availableSouthNorthengthFt"
+              name="availableSouthNorthLengthFt"
+              value={formData.availableSouthNorthLengthFt}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">AC Wire Length (Feet)</label>
+            <input
+              type="number"
+              id="acWireLengthFt"
+              name="acWireLengthFt"
+              value={formData.acWireLengthFt}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">DC Wire Length (Feet)</label>
+            <input
+              type="number"
+              id="dcWireLengthFt"
+              name="dcWireLengthFt"
+              value={formData.dcWireLengthFt}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Earthing Wire Length (Feet)</label>
+            <input
+              type="number"
+              id="earthingWireLengthFt"
+              name="earthingWireLengthFt"
+              value={formData.earthingWireLengthFt}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">No. of GP Pipes</label>
+            <input
+              type="number"
+              id="numberOfGpPipes"
+              name="numberOfGpPipes"
+              value={formData.numberOfGpPipes}
+              placeholder='eg.10'
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
+            <input
+              type="text"
+              id="descriptionOfInstallation"
+              name="descriptionOfInstallation"
+              value={formData.descriptionOfInstallation}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="col-span-full">
+        <button
+          type="button"
+          onClick={handleSaveInstallation}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Save Installation
+        </button>
+      </div>
+        
+      </div>
+      </div>)}
+            
+            
+            {showSystemSpecificationDetails &&(
+            <div>
+          <div className="space-y-6 md:col-span-2">
 
         <h2 className="text-xl font-semibold text-gray-700">System Specifications</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div>
+            <label className="block text-sm font-medium text-gray-700">Recommended Installation Space Type</label>
+            <select
+              //type="text"
+              id="recommendedInstallationSpaceType"
+              name="recommendedInstallationSpaceType"
+              value={recommendedInstallationSpaceType}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="Slab">Slab</option>
+                <option value="Clay Tiles">Clay Tiles</option>
+                <option value="Metal Sheets">Metal Sheets</option>
+                <option value="Plastic Sheets">Plastic Sheets</option>
+                <option value="Bathroom Slab">Bathroom Slab</option>
+                <option value="Cement Sheets">Cement Sheets</option>
+                <option value="On Ground">On Ground</option>
+                </select>
+          </div>
+
           <div>
+            <label className="block text-sm font-medium text-gray-700">Recommended Installation Structure Type</label>
+            <select
+              //type="text"
+              id="recommendedInstallationStructureType"
+              name="recommendedInstallationStructureType"
+              value={formData.recommendedInstallationStructureType}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="Static">Static</option>
+              <option value="Dynamic">Dynamic</option>
+              </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
+            <select
+              id="recommendedKW"
+              name="recommendedKW"
+              value={recommendedKW}
+              onChange={(e) => setRecommendedKW(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="2.2">2.2</option>
+                <option value="3.3">3.3</option>
+                <option value="4.4">4.4</option>
+                <option value="5.5">5.5</option>
+                <option value="5.9">5.9</option>
+                <option value="6.49">6.49</option>
+                <option value="6.05">6.05</option>
+                <option value="6.6">6.6</option>
+                </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
+            <select
+                id="dcrNonDcr"
+                name="dcrNonDcr"
+                value={dcrNonDcr} // Set from backend data
+                onChange={(e) => setDcrNonDcr(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="DCR">DCR</option>
+              <option value="Non-DCR">Non-DCR</option>
+            </select>
+          </div>
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
+            <select
+                id="panelBrand"
+                name="panelBrand"
+                value={panelBrand}
+                onChange={(e) => setPanelBrand(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="Sova">Sova</option>
+              <option value="En-Icon">En-Icon</option>
+            </select>
+          </div>
+
+
+          <div className="col-span-full">
+        <button
+          type="button"
+          onClick={handleGetPrice}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Get Price
+        </button>
+      </div>
+
+
+          {/*<div>
             <label className="block text-sm font-medium text-gray-700">Panel Wattage</label>
             <select
               name="kw"
@@ -933,9 +1555,9 @@ export function QuotationForm() {
                 <option key={kw} value={kw}>{kw}</option>
               ))}
             </select>
-          </div>
+          </div>*/}
 
-          <div>
+          {/*<div>
             <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
             <select
               name="dcrNonDcr"
@@ -946,11 +1568,11 @@ export function QuotationForm() {
               <option value="DCR">DCR</option>
               <option value="Non-DCR">Non-DCR</option>
             </select>
-          </div>
+          </div>*/}
 
 
           {/* Grid Type Dropdown */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
             <select
               name="inversionType"
@@ -971,11 +1593,11 @@ export function QuotationForm() {
               )
               }
             </select>
-          </div>
+          </div> */}
 
 
           {/* Battery Wattage Dropdown */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
             <select
               name="batteryWattage"
@@ -991,12 +1613,15 @@ export function QuotationForm() {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
+
+
         </div>
       </div>
+      </div>)}
 
 
-
+{showCostDetails &&(
       <div className="space-y-6 md:col-span-2">
         <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1004,8 +1629,9 @@ export function QuotationForm() {
             <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
             <input
               type="number"
-              name="solarCostSystem"
-              value={formData.solarCostSystem}
+              id="solarSystemCost"
+              name="solarSystemCost"
+              value={solarSystemCost}
               onChange={handleChange}
               placeholder="Enter Solar Cost System"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -1017,7 +1643,8 @@ export function QuotationForm() {
             <input
               type="number"
               name="subsidy"
-              value={formData.subsidy}
+              id="subsidy"
+              value={subsidy}
               onChange={handleChange}
               placeholder="Enter Subsidy"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -1029,25 +1656,28 @@ export function QuotationForm() {
             <input
               type="number"
               name="fabricationCost"
-              value={formData.fabricationCost}
+              id="fabricationCost"
+              value={fabricationCost}
               onChange={handleChange}
               placeholder="Enter Fabrication Cost"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Effective Cost</label>
             <input
               type="number"
               name="effectiveCost"
-              value={formData.effectiveCost}
+              id="effectiveCost"
+              value={effectiveCost}
               onChange={handleChange}
               placeholder="Enter Effective Cost"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </div>
-      </div>
+      
 
       <h2 className="text-xl font-semibold text-gray-700">Finance Details</h2>
 
@@ -1084,6 +1714,10 @@ export function QuotationForm() {
         </div>
       </div>
 
+      </div>)}
+      
+      
+
       <div className="mt-8 flex justify-end space-x-4">
         {/* Error Toast Notification */}
         {error && (
@@ -1098,15 +1732,15 @@ export function QuotationForm() {
           </div>
         )}
 
-<button
+{/*<button
   type="button"
   onClick={handleSaveOrUpdate}
   className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
 >
   {isEditing ? "Update" : "Save"}
-</button>
+</button>*/}
 
-        <button
+        {/*<button
           type="button"
           onClick={handlePreview}
           className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -1121,7 +1755,7 @@ export function QuotationForm() {
           className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Generating...' : 'Generate Quotation PDF'}
-        </button>
+        </button>*/}
 
       </div>
       <style>

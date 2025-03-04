@@ -92,7 +92,6 @@ const ListOfConsumers: React.FC = () => {
                   <div className="mb-4">
                     <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerNumber}</p>
                     <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
-                    <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.correctionType}</p>
                     <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.consumerName}</p>
                     <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.consumerEmail}</p>
                     <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.consumerPhoneNumber}</p>

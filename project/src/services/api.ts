@@ -1,5 +1,5 @@
 
-import { QuotationData, District, Taluka, Village } from '../types/quotation';
+import { QuotationData, District, Taluka, Village, ConnectionType } from '../types/quotation';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:7575/api';
@@ -91,6 +91,101 @@ export const saveDataToServer = async (data: Record<string, any>): Promise<void>
     console.error('Error details:', error);
   }
 };
+
+export const saveCustomer = async (data: Record<string, any>): Promise<number | null> => {
+  try {
+
+
+    const response = await fetch('http://localhost:8585/api/customers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+    console.log('API response data:', responseData); // Debug: check the full response
+
+    // Check if the response is OK and the id exists
+    if (response.ok && responseData.id) {
+      alert('Customer data saved successfully!');
+      return responseData.id; // Return the id from CustomerDTO
+    } else {
+      alert(responseData.message || 'Failed to save customer data.');
+      return null;
+    }
+  } catch (error: any) {
+    alert('An error occurred while saving customer data.');
+    console.error('Error details:', error);
+    return null;
+  }
+};
+
+export const saveConnection = async (data: Record<string, any>): Promise<number | null> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/connections', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+    console.log('API response data:', responseData); // Debug: check the full response
+
+    // Check if the response is OK and the id exists
+    if (response.ok && responseData.id) {
+      alert('Connection data saved successfully!');
+      return responseData.id; // Return the id from CustomerDTO
+    } else {
+      alert(responseData.message || 'Failed to save connection data.');
+      return null;
+    }
+  } catch (error: any) {
+    alert('An error occurred while saving connection data.');
+    console.error('Error details:', error);
+    return null;
+  }
+};
+
+export const saveInstallation = async (data: Record<string, any>): Promise<number | null> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/installations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+    console.log('API response data:', responseData); // Debug: check the full response
+
+    // Check if the response is OK and the id exists
+    if (response.ok && responseData.id) {
+      alert('Installation data saved successfully!');
+      return responseData.id; // Return the id from CustomerDTO
+    } else {
+      alert(responseData.message || 'Failed to save installation data.');
+      return null;
+    }
+  } catch (error: any) {
+    alert('An error occurred while saving installation data.');
+    console.error('Error details:', error);
+    return null;
+  }
+};
+
+
+
 
 
 export const calculateCosts = async (data: {
@@ -288,3 +383,74 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
     throw error;
   }
 };
+
+export const fetchRecommendedDetails = async (connectionId: number) => {
+  try {
+    console.log(`Fetching recommendation for connectionId: ${connectionId}`);
+
+    const response = await fetch(`http://localhost:8080/api/v2/recommendation/getAndSave/${connectionId}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch recommendation. Status: ${response.status}, Message: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching recommended details:", error);
+    alert("Failed to fetch recommended details. Please try again.");
+    return null; // Prevent app crash
+  }
+};
+
+export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
+  try {
+    const response = await fetch('http://localhost:8080/api/v3/getPrice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+    console.log('API response data:', responseData); // Debugging: log the response
+
+    if (response.ok) {
+      return responseData; // Return the price details
+    } else {
+      alert(responseData.message || 'Failed to fetch price details.');
+      return null;
+    }
+  } catch (error: any) {
+    alert('An error occurred while fetching price details.');
+    console.error('Error details:', error);
+    return null;
+  }
+};
+
+export const fetchConnectionTypes = async (): Promise<ConnectionType[]> => {
+  try {
+    const response = await fetch("http://localhost:8585/api/connectionType", {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching connection types:", error);
+    throw new Error("Failed to fetch connection types");
+  }
+};
+
+
+
+
+
