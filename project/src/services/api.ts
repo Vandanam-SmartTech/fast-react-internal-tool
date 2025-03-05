@@ -1,5 +1,5 @@
 
-import { QuotationData, District, Taluka, Village, ConnectionType } from '../types/quotation';
+import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:7575/api';
@@ -217,7 +217,8 @@ export const calculateCosts = async (data: {
 
 export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/panelWattages`, {
+    console.log('Hello');
+    const response = await fetch('http://localhost:8080/api/panelWattages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -432,21 +433,6 @@ export const getPriceDetails = async (data: Record<string, any>): Promise<Record
     alert('An error occurred while fetching price details.');
     console.error('Error details:', error);
     return null;
-  }
-};
-
-export const fetchConnectionTypes = async (): Promise<ConnectionType[]> => {
-  try {
-    const response = await fetch("http://localhost:8585/api/connectionType", {
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching connection types:", error);
-    throw new Error("Failed to fetch connection types");
   }
 };
 

@@ -59,12 +59,15 @@ export function QuotationForm() {
   const [panelBrand, setPanelBrand] = useState<string>("");
   const [phase, setPhase] = useState<string>("");
   const [connectionType, setConnectionType] = useState<string>("");
+  const [panelWattages, setPanelWattages] = useState<number[]>([]);
 
 
 
   const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
   const [showCostDetails, setShowCostDetails] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [isSaveCustomerButtonDisabled, setIsSaveCustomerButtonDisabled] = useState(false);
+  const [isSaveConnectionButtonDisabled, setIsSaveConnectionButtonDisabled] = useState(false);
+  const [isSaveInstallationButtonDisabled, setIsSaveInstallationButtonDisabled] = useState(false);
 
   
 
@@ -83,26 +86,27 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
+  
     const parsedValue = parseFloat(value);
-  if (name === 'monthlyAvgUnit' && parsedValue < 0) {
-    return; // Stops execution if value is negative
-  }
-
-  const finalValue = ['monthlyAvgUnit', 'kw', 'subsidy', 'solarCostSystem', 'fabricationCost'].includes(name)
-  ? isNaN(parsedValue) ? "" : parsedValue // Handles empty input properly
-  : value;
-
-  setFormData((prev) => {
-    const updatedData = { ...prev, [name]: finalValue };
-
-      if (['solarCostSystem', 'fabricationCost', 'subsidy'].includes(name)) {
-        updatedData.effectiveCost =
-          (updatedData.solarCostSystem || 0) +
-          (updatedData.fabricationCost || 0) -
-          (updatedData.subsidy || 0);
+    if (name === 'monthlyAvgUnit' && parsedValue < 0) {
+      return; // Stops execution if value is negative
+    }
+  
+    setFormData((prev) => {
+      const updatedData = { 
+        ...prev, 
+        [name]: isNaN(parsedValue) ? value : parsedValue 
+      };
+  
+      if (name === "govIdName") {
+        updatedData.billedTo = value; // Copy value to "billedTo"
       }
-
+  
+      updatedData.effectiveCost =
+        (updatedData.solarSystemCost || 0) +
+        (updatedData.fabricationCost || 0) -
+        (updatedData.subsidy || 0);
+  
       return updatedData;
     });
   };
@@ -170,26 +174,26 @@ export function QuotationForm() {
 
 
   /////////////////////////////////////////
-  useEffect(() => {
-    const initializePhaseAndKw = async () => {
-      const defaultPhase = 'Single-Phase';
-      setFormData((prev) => ({ ...prev, phase: defaultPhase })); // Set the initial phase value
-      try {
-        const wattages = await fetchPanelWattages(defaultPhase);
-        const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
-        setKwOptions(sortedWattages);
-        // Call handleChange logic for updating formData.kw
-        if (sortedWattages.length > 0) {
-          const firstKwOption = sortedWattages[0];
-          setFormData((prev) => ({ ...prev, kw: firstKwOption }));
-        }
-      } catch (err) {
-        console.error('Error fetching panel wattages for default phase:', err);
-      }
-    };
+  // useEffect(() => {
+  //   const initializePhaseAndKw = async () => {
+  //     const defaultPhase = 'Single-Phase';
+  //     setFormData((prev) => ({ ...prev, phase: defaultPhase })); // Set the initial phase value
+  //     try {
+  //       const wattages = await fetchPanelWattages(defaultPhase);
+  //       const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
+  //       setKwOptions(sortedWattages);
+  //       // Call handleChange logic for updating formData.kw
+  //       if (sortedWattages.length > 0) {
+  //         const firstKwOption = sortedWattages[0];
+  //         setFormData((prev) => ({ ...prev, kw: firstKwOption }));
+  //       }
+  //     } catch (err) {
+  //       console.error('Error fetching panel wattages for default phase:', err);
+  //     }
+  //   };
 
-    initializePhaseAndKw();
-  }, []);
+  //   initializePhaseAndKw();
+  // }, []);
 
 
   useEffect(() => {
@@ -230,11 +234,11 @@ export function QuotationForm() {
 
   
 
-  useEffect(() => {
-    if (kwOptions.length > 1) {
-      setFormData((prev) => ({ ...prev, kw: kwOptions[1] }));
-    }
-  }, [kwOptions]);
+  // useEffect(() => {
+  //   if (kwOptions.length > 1) {
+  //     setFormData((prev) => ({ ...prev, kw: kwOptions[1] }));
+  //   }
+  // }, [kwOptions]);
 
   ///////////////////////////
 
@@ -584,7 +588,7 @@ export function QuotationForm() {
   
   
   const handleSaveCustomer = async () => {
-    setIsButtonDisabled(true); // Disable button when clicked
+    //setIsSaveCustomerButtonDisabled(true); // Disable button when clicked
   
     const customerData = {
       govIdName: formData.govIdName,
@@ -599,13 +603,14 @@ export function QuotationForm() {
       if (id) {
         setCustomerId(id);
         setShowConnectionDetails(true);
+        setIsSaveCustomerButtonDisabled(true);
       } else {
         console.error("No valid customer id returned");
-        setIsButtonDisabled(false); // Re-enable button if no ID is returned
+        //setIsSaveCustomerButtonDisabled(false); // Re-enable button if no ID is returned
       }
     } catch (error) {
       console.error("Error saving customer:", error);
-      setIsButtonDisabled(false); // Re-enable button on error
+      //setIsSaveCustomerButtonDisabled(false); // Re-enable button on error
     }
   };
   
@@ -643,17 +648,15 @@ export function QuotationForm() {
   
 
   const handleSaveConnection = async () => {
+    //setIsSaveConnectionButtonDisabled(true); // Disable button at the start
+
     // Convert "Yes" / "No" to boolean
     const isMsebConnection = formData.isMsebConnection === "Yes";
     const isNameCorrectionRequired = formData.isNameCorrection === "Yes"
-  ? correctionTypeMapping[formData.correctionType]  // 1 or 2 when "Yes"
-  : false;
+      ? correctionTypeMapping[formData.correctionType] // 1 or 2 when "Yes"
+      : false;
 
-
-
-  
     const connectionData = {
-      //...formData,
       customerId, // Assuming customerId is in state
       consumerId: formData.consumerId,
       isMsebConnection, // Now a boolean
@@ -662,31 +665,40 @@ export function QuotationForm() {
       addressTypeId: addressTypeMapping[formData.addressType],
       connectionTypeId: connectionTypeMapping[formData.connectionType],
       correctionTypeId: formData.isNameCorrection === "Yes"
-    ? correctionTypeMapping[formData.correctionType] 
-    : null,
+        ? correctionTypeMapping[formData.correctionType]
+        : null,
       monthlyAvgConsumptionUnits: formData.monthlyAvgUnit,
-      districtCode:formData.districtCode,
-      talukaCode:formData.talukaCode,
-      villageCode:formData.villageCode,
-      postalCode:formData.pincode,
-      gstIn:formData.gstIn,
-      latitude:formData.latitude,
-      longitude:formData.longitude,
-      sectionId:formData.sectionId,
-      billedTo:formData.billedTo,
-      addressLine1:formData.addressLine1,
-      addressLine2:formData.addressLine2,
+      districtCode: formData.districtCode,
+      talukaCode: formData.talukaCode,
+      villageCode: formData.villageCode,
+      postalCode: formData.pincode,
+      gstIn: formData.gstIn,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      sectionId: formData.sectionId,
+      billedTo: formData.billedTo,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2,
     };
-  
-    const id = await saveConnection(connectionData);
-    console.log("Returned connection id:", id); 
-    if (id) {
-      setConnectionId(id);
-      setShowInstallationDetails(true);
-    } else {
-      console.error("No valid connection id returned");
+
+    try {
+        const id = await saveConnection(connectionData);
+        console.log("Returned connection id:", id);
+        
+        if (id) {
+            setConnectionId(id);
+            setShowInstallationDetails(true);
+            setIsSaveConnectionButtonDisabled(true);
+        } else {
+            console.error("No valid connection id returned");
+            //setIsSaveConnectionButtonDisabled(false); // Re-enable button if saving failed
+        }
+    } catch (error) {
+        console.error("Error saving connection:", error);
+        //setIsSaveConnectionButtonDisabled(false); // Re-enable button on error
     }
-  };
+};
+
 
 
   const installationSpaceMapping = {
@@ -701,52 +713,110 @@ export function QuotationForm() {
   
 
   const handleSaveInstallation = async () => {
-    const installationData = {
-      //...formData,
-      connectionId,
-      installationSpaceTypeId: installationSpaceMapping[formData.spaceType], // Convert space type string to id
-      availableEastWestLengthFt: formData.availableEastWestLengthFt,
-      availableSouthNorthLengthFt:formData.availableSouthNorthLengthFt,
-      acWireLengthFt:formData.acWireLengthFt,
-      dcWireLengthFt:formData.dcWireLengthFt,
-      earthingWireLengthFt:formData.earthingWireLengthFt,
-      descriptionOfInstallation:formData.descriptionOfInstallation,
-      numberOfGpPipes:formData.numberOfGpPipes,
-      
-    };
-  
-    const id = await saveInstallation(installationData);
-    console.log("Returned installation id:", id);
-  
-    if (id) {
-      // Add new installation to the list
-      setSavedInstallations((prev) => [...prev, installationData]);
-  
-      const addAnother = window.confirm("Installation saved! Do you want to add another installation?");
-      
-      if (addAnother) {
+    //setIsSaveInstallationButtonDisabled(true); // Disable when saving starts
 
-      } else {
-        try {
-    
-          const recommendation = await fetchRecommendedDetails(connectionId);
-          
-          setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
-          setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
-          setRecommendedKW(recommendation.recommendedKW || "");
-          setDcrNonDcr(recommendation.dcrNonDcr || "");
-          setPanelBrand(recommendation.panelBrand || "");
-          setPhase(recommendation.phase || "");
-          setConnectionType(recommendation.connectionType || "");
-          setShowSystemSpecificationDetails(true);
-        } catch (error) {
-          console.error("Failed to fetch recommended details:", error);
+    const installationData = {
+        connectionId,
+        installationSpaceTypeId: installationSpaceMapping[formData.spaceType],
+        availableEastWestLengthFt: formData.availableEastWestLengthFt,
+        availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
+        acWireLengthFt: formData.acWireLengthFt,
+        dcWireLengthFt: formData.dcWireLengthFt,
+        earthingWireLengthFt: formData.earthingWireLengthFt,
+        descriptionOfInstallation: formData.descriptionOfInstallation,
+        numberOfGpPipes: formData.numberOfGpPipes,
+    };
+
+    try {
+        const id = await saveInstallation(installationData);
+        console.log("Returned installation id:", id);
+
+        if (id) {
+            // Add new installation to the list
+            setSavedInstallations((prev) => [...prev, installationData]);
+
+            const addAnother = window.confirm("Installation saved! Do you want to add another installation?");
+            
+            if (addAnother) {
+                setIsSaveInstallationButtonDisabled(false); // Enable button for another installation
+                return; // Exit function early
+            }
+
+            // If user selects "Cancel", fetch recommended details and disable button
+            const recommendation = await fetchRecommendedDetails(connectionId);
+            setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
+            setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
+            setRecommendedKW(recommendation.recommendedKW || "");
+            setDcrNonDcr(recommendation.dcrNonDcr || "");
+            setPanelBrand(recommendation.panelBrand || "");
+            setPhase(recommendation.phase || "");
+            setConnectionType(recommendation.connectionType || "");
+            setShowSystemSpecificationDetails(true);
+
+            if (recommendation.phase) {
+                const wattages = await fetchPanelWattages(recommendation.phase);
+                setPanelWattages(wattages);
+            }
+
+            setIsSaveInstallationButtonDisabled(true); // Disable button after exiting "add another" loop
+        } else {
+            console.error("No valid installation id returned");
+            //setIsSaveInstallationButtonDisabled(false);
         }
-      }
-    } else {
-      console.error("No valid installation id returned");
+    } catch (error) {
+        console.error("Error saving installation:", error);
+        //setIsSaveInstallationButtonDisabled(false);
     }
-  };
+};
+
+
+  // const handleSaveInstallation = async () => {
+  //   const installationData = {
+  //     //...formData,
+  //     connectionId,
+  //     installationSpaceTypeId: installationSpaceMapping[formData.spaceType], // Convert space type string to id
+  //     availableEastWestLengthFt: formData.availableEastWestLengthFt,
+  //     availableSouthNorthLengthFt:formData.availableSouthNorthLengthFt,
+  //     acWireLengthFt:formData.acWireLengthFt,
+  //     dcWireLengthFt:formData.dcWireLengthFt,
+  //     earthingWireLengthFt:formData.earthingWireLengthFt,
+  //     descriptionOfInstallation:formData.descriptionOfInstallation,
+  //     numberOfGpPipes:formData.numberOfGpPipes,
+      
+  //   };
+  
+  //   const id = await saveInstallation(installationData);
+  //   console.log("Returned installation id:", id);
+  
+  //   if (id) {
+  //     // Add new installation to the list
+  //     setSavedInstallations((prev) => [...prev, installationData]);
+  
+  //     const addAnother = window.confirm("Installation saved! Do you want to add another installation?");
+      
+  //     if (addAnother) {
+
+  //     } else {
+  //       try {
+    
+  //         const recommendation = await fetchRecommendedDetails(connectionId);
+          
+  //         setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
+  //         setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
+  //         setRecommendedKW(recommendation.recommendedKW || "");
+  //         setDcrNonDcr(recommendation.dcrNonDcr || "");
+  //         setPanelBrand(recommendation.panelBrand || "");
+  //         setPhase(recommendation.phase || "");
+  //         setConnectionType(recommendation.connectionType || "");
+  //         setShowSystemSpecificationDetails(true);
+  //       } catch (error) {
+  //         console.error("Failed to fetch recommended details:", error);
+  //       }
+  //     }
+  //   } else {
+  //     console.error("No valid installation id returned");
+  //   }
+  // };
   
   
 
@@ -771,11 +841,17 @@ export function QuotationForm() {
       const priceDetails = await getPriceDetails(requestData);
   
       if (priceDetails) {
-        console.log("Hello");
-        setSolarSystemCost(priceDetails.solarSystemCost || 0);
-        setFabricationCost(priceDetails.fabricationCost || 0);
-        setSubsidy(priceDetails.subsidy || 0);
-        setEffectiveCost(priceDetails.effectiveCost || 0);
+        setFormData((prev) => ({
+          ...prev,
+          solarSystemCost: priceDetails.solarSystemCost || 0,
+          fabricationCost: priceDetails.fabricationCost || 0,
+          subsidy: priceDetails.subsidy || 0,
+          effectiveCost:
+            (priceDetails.solarSystemCost || 0) +
+            (priceDetails.fabricationCost || 0) -
+            (priceDetails.subsidy || 0),
+        }));
+  
         setShowCostDetails(true);
       }
     } catch (error) {
@@ -884,12 +960,12 @@ export function QuotationForm() {
     <button
       type="button"
       onClick={handleSaveCustomer}
-      disabled={isButtonDisabled} // Disable button when clicked
+      disabled={isSaveCustomerButtonDisabled} // Disable button when clicked
       className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-        isButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+        isSaveCustomerButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
       }`}
     >
-      {isButtonDisabled ? "Save Customer" : "Save Customer"}
+      {isSaveCustomerButtonDisabled ? "Save Customer" : "Save Customer"}
     </button>
   </div>
 
@@ -1286,14 +1362,17 @@ export function QuotationForm() {
 
         </div>
         <div className="col-span-full">
-        <button
-          type="button"
-          onClick={handleSaveConnection}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Save Connection
-        </button>
-      </div>
+    <button
+      type="button"
+      onClick={handleSaveConnection}
+      disabled={isSaveConnectionButtonDisabled} // Disable button when clicked
+      className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+        isSaveConnectionButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+      }`}
+    >
+      {isSaveConnectionButtonDisabled ? "Save Connection" : "Save Connection"}
+    </button>
+  </div>
    </div>)}
 
    {showInstallationDetails && (<div className="space-y-6 md:col-span-2">
@@ -1431,14 +1510,17 @@ export function QuotationForm() {
           </div>
 
           <div className="col-span-full">
-        <button
-          type="button"
-          onClick={handleSaveInstallation}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Save Installation
-        </button>
-      </div>
+    <button
+      type="button"
+      onClick={handleSaveInstallation}
+      disabled={isSaveInstallationButtonDisabled} // Disable button when clicked
+      className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+        isSaveInstallationButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+      }`}
+    >
+      {isSaveInstallationButtonDisabled ? "Save Installation" : "Save Installation"}
+    </button>
+  </div>
         
       </div>
       </div>)}
@@ -1487,6 +1569,22 @@ export function QuotationForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
             <select
+                id="recommendedKW"
+                name="recommendedKW"
+                value={recommendedKW}
+                onChange={(e) => setRecommendedKW(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                {panelWattages.map((wattage) => (
+                    <option key={wattage} value={wattage}>
+                    {wattage}
+                      </option>
+                   ))}
+              </select>
+            </div>
+
+            {/* <div>
+            <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
+            <select
               id="recommendedKW"
               name="recommendedKW"
               value={recommendedKW}
@@ -1501,7 +1599,7 @@ export function QuotationForm() {
                 <option value="6.05">6.05</option>
                 <option value="6.6">6.6</option>
                 </select>
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
@@ -1631,7 +1729,7 @@ export function QuotationForm() {
               type="number"
               id="solarSystemCost"
               name="solarSystemCost"
-              value={solarSystemCost}
+              value={formData.solarSystemCost}
               onChange={handleChange}
               placeholder="Enter Solar Cost System"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -1644,7 +1742,7 @@ export function QuotationForm() {
               type="number"
               name="subsidy"
               id="subsidy"
-              value={subsidy}
+              value={formData.subsidy}
               onChange={handleChange}
               placeholder="Enter Subsidy"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -1657,7 +1755,7 @@ export function QuotationForm() {
               type="number"
               name="fabricationCost"
               id="fabricationCost"
-              value={fabricationCost}
+              value={formData.fabricationCost}
               onChange={handleChange}
               placeholder="Enter Fabrication Cost"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -1670,7 +1768,7 @@ export function QuotationForm() {
               type="number"
               name="effectiveCost"
               id="effectiveCost"
-              value={effectiveCost}
+              value={formData.effectiveCost}
               onChange={handleChange}
               placeholder="Enter Effective Cost"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
