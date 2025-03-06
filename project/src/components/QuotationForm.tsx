@@ -1,9 +1,10 @@
 // QuotationForm.tsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { FileText } from 'lucide-react';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
-import { generateQuotationPDF, fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages, saveDataToServer } from '../services/api';
-import { downloadBlob } from '../utils/downloadHelper';
+import { fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages, saveDataToServer } from '../services/api';
+//import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
 import { calculateKw, calculateCosts } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +16,7 @@ import { saveConnection } from '../services/api';
 import { saveInstallation } from '../services/api'; 
 import { fetchRecommendedDetails } from '../services/api';
 import { getPriceDetails } from '../services/api';
+import { generateQuotationPDF } from '../services/api';
 
 
 export function QuotationForm() {
@@ -30,6 +32,7 @@ export function QuotationForm() {
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const [isEmailCorrection, setIsEmailCorrection] = useState("Yes");
   const [isLoanRequired, setIsLoanRequired] = useState("No");
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [inversionType, setInversionType] = useState<string>('');
   const [isBatteryDropdownEnabled, setIsBatteryDropdownEnabled] = useState(false);
 
@@ -169,31 +172,6 @@ export function QuotationForm() {
         alert("Failed to process the request");
       }
     };
-    
-    
-
-
-  /////////////////////////////////////////
-  // useEffect(() => {
-  //   const initializePhaseAndKw = async () => {
-  //     const defaultPhase = 'Single-Phase';
-  //     setFormData((prev) => ({ ...prev, phase: defaultPhase })); // Set the initial phase value
-  //     try {
-  //       const wattages = await fetchPanelWattages(defaultPhase);
-  //       const sortedWattages = wattages.sort((a, b) => a - b); // Sort KW options in ascending order
-  //       setKwOptions(sortedWattages);
-  //       // Call handleChange logic for updating formData.kw
-  //       if (sortedWattages.length > 0) {
-  //         const firstKwOption = sortedWattages[0];
-  //         setFormData((prev) => ({ ...prev, kw: firstKwOption }));
-  //       }
-  //     } catch (err) {
-  //       console.error('Error fetching panel wattages for default phase:', err);
-  //     }
-  //   };
-
-  //   initializePhaseAndKw();
-  // }, []);
 
 
   useEffect(() => {
@@ -231,18 +209,6 @@ export function QuotationForm() {
     }
   }, [consumer]);
 
-
-  
-
-  // useEffect(() => {
-  //   if (kwOptions.length > 1) {
-  //     setFormData((prev) => ({ ...prev, kw: kwOptions[1] }));
-  //   }
-  // }, [kwOptions]);
-
-  ///////////////////////////
-
-  ////////////////////////////////////handle the dist,tal,vill,pin
 
 
 
@@ -334,13 +300,6 @@ export function QuotationForm() {
     setpincode(value);
     setFormData((prev) => ({ ...prev, pincode: value }));
   };
-  
-  
-
-  
-  
- 
-  
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -529,44 +488,33 @@ export function QuotationForm() {
   // };
 
   
-  const handlePreview = async () => {
-    setIsPreviewLoading(true);
-    try {
-      const pdfBlob = await generateQuotationPDF(formData);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+  // const handlePreview = async () => {
+  //   setIsPreviewLoading(true);
+  //   try {
+  //     const pdfBlob = await generateQuotationPDF(formData);
+  //     const pdfUrl = URL.createObjectURL(pdfBlob);
 
-      // Create a new window for the PDF popup
-      const popupWindow = window.open('', '_blank', 'width=800,height=600');
-      if (popupWindow) {
-        popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
-        popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
-        popupWindow.document.write('</body></html>');
-      } else {
-        setError('Popup blocked. Please allow popups and try again.');
-      }
-    } catch (err) {
-      setError('Failed to preview the quotation. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  };
+  //     // Create a new window for the PDF popup
+  //     const popupWindow = window.open('', '_blank', 'width=800,height=600');
+  //     if (popupWindow) {
+  //       popupWindow.document.write('<html><head><title>Quotation Preview</title></head><body>');
+  //       popupWindow.document.write('<embed src="' + pdfUrl + '" type="application/pdf" width="100%" height="100%" />');
+  //       popupWindow.document.write('</body></html>');
+  //     } else {
+  //       setError('Popup blocked. Please allow popups and try again.');
+  //     }
+  //   } catch (err) {
+  //     setError('Failed to preview the quotation. Please try again.');
+  //     console.error('Error:', err);
+  //   } finally {
+  //     setIsPreviewLoading(false);
+  //   }
+  // };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const pdfBlob = await generateQuotationPDF(formData);
-      downloadBlob(pdfBlob, `quotation-${formData.consumerNumber}.pdf`);
-    } catch (err) {
-      setError('Failed to generate quotation. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setIsLoading(false);
-    }
   };
+  
 
   const handleOutOfStation = (event) => {
     const value = event.target.value;
@@ -588,7 +536,7 @@ export function QuotationForm() {
   
   
   const handleSaveCustomer = async () => {
-    //setIsSaveCustomerButtonDisabled(true); // Disable button when clicked
+    
   
     const customerData = {
       govIdName: formData.govIdName,
@@ -606,11 +554,11 @@ export function QuotationForm() {
         setIsSaveCustomerButtonDisabled(true);
       } else {
         console.error("No valid customer id returned");
-        //setIsSaveCustomerButtonDisabled(false); // Re-enable button if no ID is returned
+        
       }
     } catch (error) {
       console.error("Error saving customer:", error);
-      //setIsSaveCustomerButtonDisabled(false); // Re-enable button on error
+      
     }
   };
   
@@ -648,7 +596,7 @@ export function QuotationForm() {
   
 
   const handleSaveConnection = async () => {
-    //setIsSaveConnectionButtonDisabled(true); // Disable button at the start
+  
 
     // Convert "Yes" / "No" to boolean
     const isMsebConnection = formData.isMsebConnection === "Yes";
@@ -691,11 +639,11 @@ export function QuotationForm() {
             setIsSaveConnectionButtonDisabled(true);
         } else {
             console.error("No valid connection id returned");
-            //setIsSaveConnectionButtonDisabled(false); // Re-enable button if saving failed
+           
         }
     } catch (error) {
         console.error("Error saving connection:", error);
-        //setIsSaveConnectionButtonDisabled(false); // Re-enable button on error
+        
     }
 };
 
@@ -713,8 +661,6 @@ export function QuotationForm() {
   
 
   const handleSaveInstallation = async () => {
-    //setIsSaveInstallationButtonDisabled(true); // Disable when saving starts
-
     const installationData = {
         connectionId,
         installationSpaceTypeId: installationSpaceMapping[formData.spaceType],
@@ -753,70 +699,23 @@ export function QuotationForm() {
             setConnectionType(recommendation.connectionType || "");
             setShowSystemSpecificationDetails(true);
 
-            if (recommendation.phase) {
-                const wattages = await fetchPanelWattages(recommendation.phase);
+            if (recommendation.phase && recommendation.dcrNonDcr && recommendation.panelBrand) {
+                const wattages = await fetchPanelWattages(connectionId, recommendation.phase, recommendation.dcrNonDcr, recommendation.panelBrand);
                 setPanelWattages(wattages);
             }
 
             setIsSaveInstallationButtonDisabled(true); // Disable button after exiting "add another" loop
         } else {
             console.error("No valid installation id returned");
-            //setIsSaveInstallationButtonDisabled(false);
         }
     } catch (error) {
         console.error("Error saving installation:", error);
-        //setIsSaveInstallationButtonDisabled(false);
     }
 };
 
 
-  // const handleSaveInstallation = async () => {
-  //   const installationData = {
-  //     //...formData,
-  //     connectionId,
-  //     installationSpaceTypeId: installationSpaceMapping[formData.spaceType], // Convert space type string to id
-  //     availableEastWestLengthFt: formData.availableEastWestLengthFt,
-  //     availableSouthNorthLengthFt:formData.availableSouthNorthLengthFt,
-  //     acWireLengthFt:formData.acWireLengthFt,
-  //     dcWireLengthFt:formData.dcWireLengthFt,
-  //     earthingWireLengthFt:formData.earthingWireLengthFt,
-  //     descriptionOfInstallation:formData.descriptionOfInstallation,
-  //     numberOfGpPipes:formData.numberOfGpPipes,
-      
-  //   };
-  
-  //   const id = await saveInstallation(installationData);
-  //   console.log("Returned installation id:", id);
-  
-  //   if (id) {
-  //     // Add new installation to the list
-  //     setSavedInstallations((prev) => [...prev, installationData]);
-  
-  //     const addAnother = window.confirm("Installation saved! Do you want to add another installation?");
-      
-  //     if (addAnother) {
 
-  //     } else {
-  //       try {
-    
-  //         const recommendation = await fetchRecommendedDetails(connectionId);
-          
-  //         setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
-  //         setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
-  //         setRecommendedKW(recommendation.recommendedKW || "");
-  //         setDcrNonDcr(recommendation.dcrNonDcr || "");
-  //         setPanelBrand(recommendation.panelBrand || "");
-  //         setPhase(recommendation.phase || "");
-  //         setConnectionType(recommendation.connectionType || "");
-  //         setShowSystemSpecificationDetails(true);
-  //       } catch (error) {
-  //         console.error("Failed to fetch recommended details:", error);
-  //       }
-  //     }
-  //   } else {
-  //     console.error("No valid installation id returned");
-  //   }
-  // };
+
   
   
 
@@ -828,6 +727,7 @@ export function QuotationForm() {
   const handleGetPrice = async () => {
     try {
       const requestData = {
+        customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
         customerSelectedInstallationStructureType: recommendedInstallationStructureType,
         customerSelectedKW: recommendedKW,
         customerSelectedBrand: panelBrand,
@@ -858,7 +758,92 @@ export function QuotationForm() {
       console.error("Error fetching price details:", error);
     }
   };
-  
+
+  const handleGenerateQuotation = async () => {
+    try {
+        if (!connectionId) {
+            console.error("Connection ID is missing");
+            return;
+        }
+
+        setIsLoading(true);
+
+        const requestData = {
+            customerSelectedInstallationStructureType: recommendedInstallationStructureType,
+            customerSelectedKW: recommendedKW,
+            customerSelectedBrand: panelBrand,
+            customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
+            dcrNonDcr: dcrNonDcr,
+            phase: phase,
+            connectionType: connectionType,
+            inversionType: "On-Grid",
+        };
+
+        const pdfBlob = await generateQuotationPDF(connectionId, requestData);
+
+        // Trigger download
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = pdfUrl;
+        link.download = `quotation_${connectionId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(pdfUrl);
+        
+        console.log("Quotation PDF downloaded successfully");
+    } catch (error) {
+        console.error("Error generating quotation:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+const handlePreview = async () => {
+  setIsPreviewLoading(true);
+  try {
+    if (!connectionId) {
+      console.error("Connection ID is missing");
+      return;
+    }
+
+    const requestData = {
+      customerSelectedInstallationStructureType: recommendedInstallationStructureType,
+      customerSelectedKW: recommendedKW,
+      customerSelectedBrand: panelBrand,
+      customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
+      dcrNonDcr: dcrNonDcr,
+      phase: phase,
+      connectionType: connectionType,
+      inversionType: "On-Grid",
+    };
+
+    const pdfBlob = await generateQuotationPDF(connectionId, requestData);
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    // Open the PDF in a new window
+    const popupWindow = window.open("", "_blank", "width=800,height=600");
+    if (popupWindow) {
+      popupWindow.document.write(`
+        <html>
+          <head>
+            <title>Quotation Preview</title>
+          </head>
+          <body>
+            <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" />
+          </body>
+        </html>
+      `);
+    } else {
+      console.error("Popup blocked. Please allow popups and try again.");
+    }
+  } catch (err) {
+    console.error("Failed to preview the quotation:", err);
+  } finally {
+    setIsPreviewLoading(false);
+  }
+};
+
   
   
 
@@ -1539,7 +1524,7 @@ export function QuotationForm() {
               //type="text"
               id="recommendedInstallationSpaceType"
               name="recommendedInstallationSpaceType"
-              value={recommendedInstallationSpaceType}
+              value={formData.recommendedInstallationSpaceType}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 <option value="Slab">Slab</option>
@@ -1566,22 +1551,6 @@ export function QuotationForm() {
               </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
-            <select
-                id="recommendedKW"
-                name="recommendedKW"
-                value={recommendedKW}
-                onChange={(e) => setRecommendedKW(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {panelWattages.map((wattage) => (
-                    <option key={wattage} value={wattage}>
-                    {wattage}
-                      </option>
-                   ))}
-              </select>
-            </div>
-
             {/* <div>
             <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
             <select
@@ -1602,6 +1571,19 @@ export function QuotationForm() {
           </div> */}
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
+            <select
+                id="panelBrand"
+                name="panelBrand"
+                value={panelBrand}
+                onChange={(e) => setPanelBrand(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="Sova">Sova</option>
+              <option value="En-Icon">En-Icon</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
             <select
                 id="dcrNonDcr"
@@ -1616,17 +1598,20 @@ export function QuotationForm() {
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
+            <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
             <select
-                id="panelBrand"
-                name="panelBrand"
-                value={panelBrand}
-                onChange={(e) => setPanelBrand(e.target.value)}
+                id="recommendedKW"
+                name="recommendedKW"
+                value={recommendedKW}
+                onChange={(e) => setRecommendedKW(e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-              <option value="Sova">Sova</option>
-              <option value="En-Icon">En-Icon</option>
-            </select>
-          </div>
+                {panelWattages.map((wattage) => (
+                    <option key={wattage} value={wattage}>
+                    {wattage}
+                      </option>
+                   ))}
+              </select>
+            </div>
 
 
           <div className="col-span-full">
@@ -1811,8 +1796,29 @@ export function QuotationForm() {
           </div>
         </div>
       </div>
+      <div className="flex space-x-4">
+  <button
+    type="button"
+    onClick={handlePreview}
+    className="hidden md:block px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+    disabled={isPreviewLoading}
+  >
+    {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
+  </button>
 
-      </div>)}
+  <button
+    type="submit"
+    onClick={handleGenerateQuotation}
+    disabled={isLoading}
+    className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    {isLoading ? "Generating..." : "Generate Quotation"}
+  </button>
+</div>
+
+
+      </div>
+    )}
       
       
 

@@ -35,27 +35,29 @@ export const setAuthToken = (token) => {
 
 const getAuthToken = () => localStorage.getItem('jwtToken');
 
-export const generateQuotationPDF = async (data: QuotationData): Promise<Blob> => {
+export const generateQuotationPDF = async (connectionId: number, requestData: object): Promise<Blob> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/quotations/generate-pdf`, {
-      method: 'POST',
+    const response = await fetch(`http://localhost:8080/api/v2/quotation/customerSelected/pdf/${connectionId}`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(requestData),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate PDF');
+      throw new Error("Failed to generate PDF");
     }
 
     return await response.blob();
   } catch (error) {
-    console.error('API Error:', error);
-    throw new Error('Failed to generate PDF from server');
+    console.error("API Error:", error);
+    throw new Error("Failed to generate PDF from server");
   }
 };
+
+
 
 export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
   try {
@@ -215,16 +217,21 @@ export const calculateCosts = async (data: {
   }
 };
 
-export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
+export const fetchPanelWattages = async (
+  connectionId: string,
+  phase: string,
+  dcrNonDcr: string,
+  brand: string
+): Promise<number[]> => {
   try {
-    console.log('Hello');
-    const response = await fetch('http://localhost:8080/api/panelWattages', {
+    console.log('Fetching panel wattages...');
+    const response = await fetch(`http://localhost:8080/api/panelWattages/${connectionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getAuthToken()}`,
       },
-      body: JSON.stringify({ phase }),
+      body: JSON.stringify({ phase, dcrNonDcr, customerSelectedBrand: brand }),
     });
 
     if (!response.ok) {
@@ -237,6 +244,7 @@ export const fetchPanelWattages = async (phase: string): Promise<number[]> => {
     throw new Error('Failed to fetch panel wattages from server');
   }
 };
+
 
 export const calculateKw = async (
   phase: string,
