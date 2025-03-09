@@ -107,8 +107,7 @@ export function QuotationForm() {
   
       updatedData.effectiveCost =
         (updatedData.solarSystemCost || 0) +
-        (updatedData.fabricationCost || 0) -
-        (updatedData.subsidy || 0);
+        (updatedData.fabricationCost || 0) ;
   
       return updatedData;
     });
@@ -124,90 +123,163 @@ export function QuotationForm() {
     }
   };
 
-    const handleSaveOrUpdate = async (e: React.FormEvent) => {
-      e.preventDefault();
+  //   const handleSaveOrUpdate = async (e: React.FormEvent) => {
+  //     e.preventDefault();
     
-      try {
-        if (isEditing) {
-          if (!formData.customerId) {
-            alert("Error: Customer ID is missing.");
-            return;
-          }
+  //     try {
+  //       if (isEditing) {
+  //         if (!formData.customerId) {
+  //           alert("Error: Customer ID is missing.");
+  //           return;
+  //         }
     
-          const backendCustomerData = {
-            govIdName: formData.consumerName, 
-            mobileNumber: formData.consumerPhoneNumber, 
-            emailAddress: formData.consumerEmail, 
-          };
+  //         const backendCustomerData = {
+  //           govIdName: formData.consumerName, 
+  //           mobileNumber: formData.consumerPhoneNumber, 
+  //           emailAddress: formData.consumerEmail, 
+  //         };
     
-          console.log("Final data before update:", backendCustomerData); // Log data
+  //         console.log("Final data before update:", backendCustomerData); // Log data
     
-          await updateConsumerPersonalDetails(formData.customerId, backendCustomerData);
+  //         await updateConsumerPersonalDetails(formData.customerId, backendCustomerData);
 
-          const backendConnectionData = {
-            consumerId: formData.consumerNumber,
-            connectionType: formData.connectionType,
-            monthlyAvgConsumptionUnits:formData.monthlyAvgUnit,
-            district: formData.districtCode,
-            taluka: formData.talukaCode,
-            village: formData.villageCode,
-            postalCode: formData.pincode,
-            billedTo: formData.billedTo,
-            isMsebConnection: formData.isMsebConnection === "Yes",
-            isNameCorrection: formData.isNameCorrection === "Yes", 
-            phaseTypeId: formData.phase === "Three-Phase" ? 2 : 1,
-            correctionTypeId: formData.isNameCorrection === "Yes" ? (formData.correctionType === "Spell Correction"   ? 11   : (formData.correctionType === "Transfer Ownership"  ? 12   : null) ) : null
-          }
+  //         const backendConnectionData = {
+  //           consumerId: formData.consumerNumber,
+  //           connectionType: formData.connectionType,
+  //           monthlyAvgConsumptionUnits:formData.monthlyAvgUnit,
+  //           district: formData.districtCode,
+  //           taluka: formData.talukaCode,
+  //           village: formData.villageCode,
+  //           postalCode: formData.pincode,
+  //           billedTo: formData.billedTo,
+  //           isMsebConnection: formData.isMsebConnection === "Yes",
+  //           isNameCorrection: formData.isNameCorrection === "Yes", 
+  //           phaseTypeId: formData.phase === "Three-Phase" ? 2 : 1,
+  //           correctionTypeId: formData.isNameCorrection === "Yes" ? (formData.correctionType === "Spell Correction"   ? 11   : (formData.correctionType === "Transfer Ownership"  ? 12   : null) ) : null
+  //         }
 
-          console.log("Final data before update:", backendConnectionData);
+  //         console.log("Final data before update:", backendConnectionData);
 
-          await updateConsumerConnectionDetails(formData.id, backendConnectionData);
+  //         await updateConsumerConnectionDetails(formData.id, backendConnectionData);
 
-          alert("Consumer-Connection details updated successfully!");
-        } else {
-          await handleSave();
-        }
-      } catch (error) {
-        console.error("Error in update process:", error);
-        alert("Failed to process the request");
-      }
-    };
-
-
-  useEffect(() => {
-    if (consumer) {
-      setIsEditing(true);
-      const hasCorrection = !!consumer.correctionTypeId;
-
-      setFormData({
+  //         alert("Consumer-Connection details updated successfully!");
+  //       } else {
+  //         await handleSave();
+  //       }
+  //     } catch (error) {
+  //       console.error("Error in update process:", error);
+  //       alert("Failed to process the request");
+  //     }
+  //   };
 
 
-        customerId: consumer.customerId,
-        id: consumer.id,
-        consumerNumber: consumer.consumerNumber || "",
-        connectionType: consumer.connectionType || "",
-        consumerName: consumer.consumerName || "",
-        consumerEmail: consumer.consumerEmail || "",
-        consumerPhoneNumber: consumer.consumerPhoneNumber || "",
-        pincode: consumer.pincode || "",
-        monthlyAvgUnit: consumer.monthlyAvgUnit || "",
-        districtCode:consumer.district || "",
-        talukaCode:consumer.taluka || "",
-        villageCode:consumer.village || "",
-        billedTo:consumer.billedTo || "",
-        isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
-        phase: consumer.phaseTypeId === 1   ? "Single-Phase"  : consumer.phaseTypeId === 2   ? "Three-Phase"  : "",
-        //phase: consumer.phaseTypeName || "",
-        isNameCorrection: hasCorrection ? "Yes" : "No", 
-        correctionType: hasCorrection   ? consumer.correctionTypeId === 11     ? "Spell Correction"   : consumer.correctionTypeId === 12     ? "Transfer Ownership"     : null  : null,
-        //correctionType: hasCorrection ? consumer.correctionName : "",
-  });
+  // useEffect(() => {
+  //   if (consumer) {
+  //     setIsEditing(true);
+  //     const hasCorrection = !!consumer.correctionTypeId;
 
-      setDistrictCode(consumer.district || 0);
-      setTalukaCode(consumer.taluka || 0);
-      setVillageCode(consumer.village || 0);
+  //     setFormData({
+
+
+  //       customerId: consumer.customerId,
+  //       id: consumer.id,
+  //       consumerNumber: consumer.consumerNumber || "",
+  //       connectionType: consumer.connectionType || "",
+  //       consumerName: consumer.consumerName || "",
+  //       consumerEmail: consumer.consumerEmail || "",
+  //       consumerPhoneNumber: consumer.consumerPhoneNumber || "",
+  //       pincode: consumer.pincode || "",
+  //       monthlyAvgUnit: consumer.monthlyAvgUnit || "",
+  //       districtCode:consumer.district || "",
+  //       talukaCode:consumer.taluka || "",
+  //       villageCode:consumer.village || "",
+  //       billedTo:consumer.billedTo || "",
+  //       isMsebConnection: consumer.isMsebConnection === null ? "" : consumer.isMsebConnection ? "Yes" : "No",
+  //       phase: consumer.phaseTypeId === 1   ? "Single-Phase"  : consumer.phaseTypeId === 2   ? "Three-Phase"  : "",
+  //       //phase: consumer.phaseTypeName || "",
+  //       isNameCorrection: hasCorrection ? "Yes" : "No", 
+  //       correctionType: hasCorrection   ? consumer.correctionTypeId === 11     ? "Spell Correction"   : consumer.correctionTypeId === 12     ? "Transfer Ownership"     : null  : null,
+  //       //correctionType: hasCorrection ? consumer.correctionName : "",
+  // });
+
+  //     setDistrictCode(consumer.district || 0);
+  //     setTalukaCode(consumer.taluka || 0);
+  //     setVillageCode(consumer.village || 0);
+  //   }
+  // }, [consumer]);
+
+  const handleUpdateCustomer = async () => {
+    if (!customerId) {
+      console.error("Customer ID is missing!");
+      alert("Customer ID is missing!"); // Show alert if customerId is missing
+      return;
     }
-  }, [consumer]);
+  
+    const updatedCustomerData = {
+      govIdName: formData.govIdName,
+      mobileNumber: formData.mobileNumber,
+      emailAddress: formData.emailAddress,
+    };
+  
+    try {
+      const response = await updateConsumerPersonalDetails(customerId, updatedCustomerData);
+      console.log("Customer details updated successfully:", response);
+  
+      alert("Customer details updated successfully!"); // Success alert
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      alert("Failed to update customer."); // Error alert
+    }
+  };
+
+  const handleUpdateConnection = async () => {
+    if (!connectionId) {
+      console.error("Connection ID is missing!");
+      alert("Connection ID is missing!"); // Show alert if connectionId is missing
+      return;
+    }
+  
+    const updatedConnectionData = {
+      consumerId: formData.consumerId,
+      isMsebConnection: formData.isMsebConnection === "Yes",
+      isNameCorrectionRequired:
+        formData.isNameCorrection === "Yes"
+          ? correctionTypeMapping[formData.correctionType]
+          : false,
+      phaseTypeId: phaseTypeMapping[formData.phase],
+      addressTypeId: addressTypeMapping[formData.addressType],
+      connectionTypeId: connectionTypeMapping[formData.connectionType],
+      correctionTypeId:
+        formData.isNameCorrection === "Yes"
+          ? correctionTypeMapping[formData.correctionType]
+          : null,
+      monthlyAvgConsumptionUnits: formData.monthlyAvgUnit,
+      districtCode: formData.districtCode,
+      talukaCode: formData.talukaCode,
+      villageCode: formData.villageCode,
+      postalCode: formData.pincode,
+      gstIn: formData.gstIn,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      sectionId: formData.sectionId,
+      billedTo: formData.billedTo,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2,
+    };
+  
+    try {
+      await updateConsumerConnectionDetails(connectionId, updatedConnectionData);
+      console.log("Connection details updated successfully!");
+      
+      alert("Connection details updated successfully!"); // Success alert
+    } catch (error) {
+      console.error("Error updating connection details:", error);
+      alert("Failed to update connection."); // Error alert
+    }
+  };
+  
+  
+  
 
 
 
@@ -745,11 +817,10 @@ export function QuotationForm() {
           ...prev,
           solarSystemCost: priceDetails.solarSystemCost || 0,
           fabricationCost: priceDetails.fabricationCost || 0,
-          subsidy: priceDetails.subsidy || 0,
+          //subsidy: priceDetails.subsidy || 0,
           effectiveCost:
             (priceDetails.solarSystemCost || 0) +
-            (priceDetails.fabricationCost || 0) -
-            (priceDetails.subsidy || 0),
+            (priceDetails.fabricationCost || 0),
         }));
   
         setShowCostDetails(true);
@@ -777,6 +848,9 @@ export function QuotationForm() {
             phase: phase,
             connectionType: connectionType,
             inversionType: "On-Grid",
+            solarSystemCost: formData.solarSystemCost,  // Added
+            fabricationCost: formData.fabricationCost,  // Added
+            effectiveCost: formData.effectiveCost,
         };
 
         const pdfBlob = await generateQuotationPDF(connectionId, requestData);
@@ -816,6 +890,9 @@ const handlePreview = async () => {
       phase: phase,
       connectionType: connectionType,
       inversionType: "On-Grid",
+      solarSystemCost: formData.solarSystemCost,  // Added
+      fabricationCost: formData.fabricationCost,  // Added
+      effectiveCost: formData.effectiveCost,
     };
 
     const pdfBlob = await generateQuotationPDF(connectionId, requestData);
@@ -942,17 +1019,28 @@ const handlePreview = async () => {
         </div>
 
         <div className="col-span-full">
+  {!customerId ? (
     <button
       type="button"
       onClick={handleSaveCustomer}
-      disabled={isSaveCustomerButtonDisabled} // Disable button when clicked
+      disabled={isSaveCustomerButtonDisabled}
       className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
         isSaveCustomerButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
       }`}
     >
-      {isSaveCustomerButtonDisabled ? "Save Customer" : "Save Customer"}
+      Save Customer
     </button>
-  </div>
+  ) : (
+    <button
+      type="button"
+      onClick={handleUpdateCustomer}
+      className="px-4 py-2 rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+    >
+      Update Customer
+    </button>
+  )}
+</div>
+
 
 
 </div>
@@ -999,7 +1087,7 @@ const handlePreview = async () => {
               name="consumerId"
               value={formData.consumerId}
               onChange={handleChange}
-              placeholder="CN001"
+              placeholder="000000000000"
               disabled={isMsebConnection === 'No'}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
@@ -1013,7 +1101,7 @@ const handlePreview = async () => {
                 name="gstIn"
                 value={formData.gstIn}
                 onChange={handleChange}
-                placeholder="Enter your GSTIN (e.g., 27AAPFU0939F1ZV)"
+                placeholder="22AAAAA0000A1Z5"
                 required
                 pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$"
                 title="Please enter a valid GSTIN. It should be a 15-character code with a valid format (e.g., 27AAPFU0939F1ZV)"
@@ -1347,18 +1435,31 @@ const handlePreview = async () => {
 
         </div>
         <div className="col-span-full">
+  {!isSaveConnectionButtonDisabled ? (
     <button
       type="button"
       onClick={handleSaveConnection}
-      disabled={isSaveConnectionButtonDisabled} // Disable button when clicked
+      disabled={isSaveConnectionButtonDisabled}
       className={`px-4 py-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
         isSaveConnectionButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
       }`}
     >
-      {isSaveConnectionButtonDisabled ? "Save Connection" : "Save Connection"}
+      Save Connection
     </button>
-  </div>
-   </div>)}
+  ) : (
+    <button
+      type="button"
+      onClick={handleUpdateConnection}
+      className="px-4 py-2 rounded text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+    >
+      Update Connection
+    </button>
+  )}
+</div>
+
+   </div>
+  
+  )}
 
    {showInstallationDetails && (<div className="space-y-6 md:col-span-2">
 
@@ -1368,17 +1469,25 @@ const handlePreview = async () => {
       <div className="border p-4 rounded-md bg-gray-100">
         <h3 className="text-lg font-semibold">Previously Saved Installations:</h3>
         <ul className="list-disc pl-5">
-          {savedInstallations.map((installation, index) => (
-            <li key={index} className="border p-2 my-2 rounded-md bg-white shadow">
-              <p><strong>Space Type:</strong> {installation.spaceType}</p>
-              <p><strong>East-West Length:</strong> {installation.availableEastWestLengthFt} ft</p>
-              <p><strong>South-North Length:</strong> {installation.availableSouthNorthLengthFt} ft</p>
-              <p><strong>AC Wire Length:</strong> {installation.acWireLengthFt} ft</p>
-              <p><strong>DC Wire Length:</strong> {installation.dcWireLengthFt} ft</p>
-              <p><strong>Earthing Length:</strong> {installation.earthingWireLengthFt} ft</p>
-              <p><strong>No. Of GP Pipes:</strong> {installation.numberOfGpPipes} </p>
-            </li>
-          ))}
+        {savedInstallations.map((installation, index) => {
+        // Reverse mapping: Find the space type name from the ID
+        const spaceTypeName = Object.keys(installationSpaceMapping).find(
+          key => installationSpaceMapping[key] === installation.installationSpaceTypeId
+        ) || "Unknown";
+
+        return (
+          <li key={index} className="border p-2 my-2 rounded-md bg-white shadow">
+            <p><strong>Space Type:</strong> {spaceTypeName}</p>
+            <p><strong>East-West Length:</strong> {installation.availableEastWestLengthFt} ft</p>
+            <p><strong>South-North Length:</strong> {installation.availableSouthNorthLengthFt} ft</p>
+            <p><strong>AC Wire Length:</strong> {installation.acWireLengthFt} ft</p>
+            <p><strong>DC Wire Length:</strong> {installation.dcWireLengthFt} ft</p>
+            <p><strong>Earthing Length:</strong> {installation.earthingWireLengthFt} ft</p>
+            <p><strong>No. Of GP Pipes:</strong> {installation.numberOfGpPipes} </p>
+            <p><strong>Description:</strong> {installation.descriptionOfInstallation} </p>
+          </li>
+        );
+      })}
         </ul>
       </div>
     )}
@@ -1721,7 +1830,7 @@ const handlePreview = async () => {
             />
           </div>
 
-          <div>
+          {/*<div>
             <label className="block text-sm font-medium text-gray-700">Subsidy</label>
             <input
               type="number"
@@ -1732,7 +1841,7 @@ const handlePreview = async () => {
               placeholder="Enter Subsidy"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
-          </div>
+          </div>*/}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
@@ -1762,7 +1871,7 @@ const handlePreview = async () => {
         </div>
       
 
-      <h2 className="text-xl font-semibold text-gray-700">Finance Details</h2>
+      {/* <h2 className="text-xl font-semibold text-gray-700">Finance Details</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -1795,7 +1904,7 @@ const handlePreview = async () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="flex space-x-4">
   <button
     type="button"
