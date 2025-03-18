@@ -341,10 +341,10 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
-export const updateConsumerPersonalDetails = async (customerId: number, updatedData: any) => {
+export const updateConsumerPersonalDetails = async (customerId: number, updatedCustomerData: any) => {
   try {
 
-    console.log("Sending request to update consumer:", updatedData);
+    console.log("Sending request to update consumer:", updatedCustomerData);
 
     const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
       method: "PUT",
@@ -352,7 +352,7 @@ export const updateConsumerPersonalDetails = async (customerId: number, updatedD
         "Content-Type": "application/json",
         Authorization: `Bearer ${getAuthToken()}`,
       },
-      body: JSON.stringify(updatedData),
+      body: JSON.stringify(updatedCustomerData),
     });
 
     if (!response.ok) {
@@ -443,6 +443,56 @@ export const getPriceDetails = async (data: Record<string, any>): Promise<Record
     return null;
   }
 };
+
+export const fetchPdf = async (id: number, docName: string): Promise<Response> => {
+  let endpoint = "";
+
+  if (docName === "WCR Page-1") {
+    endpoint = `http://localhost:5050/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
+  }
+  if (docName === "Annexure 1") {
+    endpoint = `http://localhost:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
+  }
+  if(docName=== "NetAgreementBondFormat"){
+    endpoint = `http://localhost:5050/api/pdf/netAgreementController/${id}?download=true`;
+  }
+  if(docName=== "Subsidy Agreement Document-Page-1"){
+    endpoint = `http://localhost:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
+  }
+  if(docName=== "Subsidy Agreement Document-Page-2"){
+    endpoint = `http://localhost:5050/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
+  }
+  if(docName=== "Vendor Feasibility Document"){
+    endpoint = `http://localhost:5050/api/pdf/vendorFeasibilityController/${id}?download=true`;
+  }
+  if(docName=== "Netmeter Agreement Document-Page-1"){
+    endpoint = `http://localhost:5050/api/pdf/netAgreementOne/${id}?download=true`;
+  }
+  if(docName=== "Netmeter Agreement Document-Page-2"){
+    endpoint = `http://localhost:5050/api/pdf/netAgreementTwo/${id}?download=true`;
+  }
+  // Add other documents' API endpoints here if needed
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "Accept": "application/pdf",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch document");
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching document:", error);
+    throw error;
+  }
+};
+
 
 
 

@@ -4,6 +4,7 @@ import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import ListOfConsumers from './components/ListOfConsumers';
+import GenerateDocuments from './components/GenerateDocuments';
 
 
 
@@ -51,6 +52,24 @@ const AppContent: React.FC = () => {
               element={
               <PrivateRoute>
                 <QuotationForm />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/generatedocuments"
+            element={
+              <PrivateRoute>
+                <GenerateDocuments />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/generatedocuments/:id"
+              element={
+              <PrivateRoute>
+                <GenerateDocuments />
               </PrivateRoute>
             }
           />

@@ -89,29 +89,36 @@ export function QuotationForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-  
-    const parsedValue = parseFloat(value);
-    if (name === 'monthlyAvgUnit' && parsedValue < 0) {
-      return; // Stops execution if value is negative
+
+    let updatedValue: string | number = value;
+
+    // Only parse numbers for relevant fields
+    if (["monthlyAvgUnit", "solarSystemCost", "fabricationCost"].includes(name)) {
+        const parsedValue = parseFloat(value);
+        if (name === 'monthlyAvgUnit' && parsedValue < 0) {
+            return; // Stops execution if value is negative
+        }
+        updatedValue = isNaN(parsedValue) ? value : parsedValue;
     }
-  
+
     setFormData((prev) => {
-      const updatedData = { 
-        ...prev, 
-        [name]: isNaN(parsedValue) ? value : parsedValue 
-      };
-  
-      if (name === "govIdName") {
-        updatedData.billedTo = value; // Copy value to "billedTo"
-      }
-  
-      updatedData.effectiveCost =
-        (updatedData.solarSystemCost || 0) +
-        (updatedData.fabricationCost || 0) ;
-  
-      return updatedData;
+        const updatedData = { 
+            ...prev, 
+            [name]: updatedValue
+        };
+
+        if (name === "govIdName") {
+            updatedData.billedTo = value; // Copy value to "billedTo"
+        }
+
+        updatedData.effectiveCost =
+            (updatedData.solarSystemCost || 0) +
+            (updatedData.fabricationCost || 0);
+
+        return updatedData;
     });
-  };
+};
+
 
   const handleSave = async () => {
     try {

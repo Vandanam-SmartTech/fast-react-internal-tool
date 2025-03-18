@@ -18,6 +18,14 @@ const ListOfConsumers: React.FC = () => {
     navigate("/quotationform"); 
   };
 
+  const handleGenerateDocuments = (consumer: QuotationData) => {
+    navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
+  };
+
+  const goToGenerateDocuments = () => {
+    navigate("/generateDocuments"); 
+  };
+
   const loadConsumers = async (page: number) => {
     try {
       setLoading(true);
@@ -74,7 +82,7 @@ const ListOfConsumers: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-semibold mb-6">List of Consumers</h1>
 
       {loading ? (
@@ -90,19 +98,23 @@ const ListOfConsumers: React.FC = () => {
               consumers.map((consumer) => (
                 <div key={consumer.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg">
                   <div className="mb-4">
-                    <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerNumber}</p>
+                    <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerId}</p>
                     <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
-                    <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.consumerName}</p>
-                    <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.consumerEmail}</p>
-                    <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.consumerPhoneNumber}</p>
+                    <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.govIdName}</p>
+                    <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.emailAddress}</p>
+                    <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => handleModifyConsumer(consumer)}
                       className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
-                      Modify
+                      View
                     </button>
-                    <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
+                    {/* <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
                       Delete
+                    </button> */}
+                    <button onClick={() => handleGenerateDocuments(consumer)}
+                    className="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 focus:outline-none">
+                      Generate Documents
                     </button>
                   </div>
                 </div>
