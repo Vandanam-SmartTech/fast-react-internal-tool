@@ -22,7 +22,7 @@ const Login = () => {
       const { jwt } = await login({ username, password });
       localStorage.setItem('jwtToken', jwt);
       setAuthToken(jwt);
-      navigate('/quotationform'); // Navigate on success
+      navigate('/CustomerForm'); // Navigate on success
     } catch (err) {
       setError('Invalid username or password.');
     }

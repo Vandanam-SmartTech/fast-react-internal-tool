@@ -5,6 +5,13 @@ import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import ListOfConsumers from './components/ListOfConsumers';
 import GenerateDocuments from './components/GenerateDocuments';
+import { CustomerForm } from './components/CustomerForm';
+import { ViewCustomer } from './components/ViewCustomer';
+import { ConnectionForm } from './components/ConnectionForm';
+import { ViewConnection } from './components/ViewConnection';
+import { InstallationForm } from './components/InstallationForm';
+import { ViewInstallation } from './components/ViewInstallation';
+import { SystemSpecifications } from './components/SystemSpecifications';
 
 
 
@@ -37,6 +44,15 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
+          {/* <Route
+            path="/stepperform"
+            element={
+              <PrivateRoute>
+                <StepperForm />
+              </PrivateRoute>
+            }
+          /> */}
           
           {/* Protected List of Consumers */}
           <Route
@@ -73,6 +89,69 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
+          <Route
+              path="/view-customer/:id"
+              element={
+              <PrivateRoute>
+                <ViewCustomer />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/view-connection/:id"
+              element={
+              <PrivateRoute>
+                <ViewConnection />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/view-installation/:id"
+              element={
+              <PrivateRoute>
+                <ViewInstallation />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/CustomerForm"
+              element={
+              <PrivateRoute>
+                <CustomerForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+              path="/ConnectionForm"
+              element={
+              <PrivateRoute>
+                <ConnectionForm />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/InstallationForm"
+              element={
+              <PrivateRoute>
+                <InstallationForm />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/SystemSpecifications"
+              element={
+              <PrivateRoute>
+                <SystemSpecifications />
+              </PrivateRoute>
+            }
+          />
+
 
         </Routes>
       </div>

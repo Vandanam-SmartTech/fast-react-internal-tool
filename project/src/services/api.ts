@@ -2,10 +2,10 @@
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:7575/api';
+const API_BASE_URL = 'http://192.168.64.162:7575/api';
 
 const API = axios.create({
-  baseURL: 'http://localhost:9090',
+  baseURL: 'http://192.168.64.162:9090',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -323,6 +323,111 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   }
 };
 
+export const getCustomerById = async (customerId: number): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch customer details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching customer details:", error);
+    return null;
+  }
+};
+
+export const getConnectionByConsumerId = async (consumerId: number): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/connections/${consumerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch connection details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching connection details:", error);
+    return null;
+  }
+};
+
+export const getInstallationByConsumerId = async (consumerId: number): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch installation details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching installation details:", error);
+    return null;
+  }
+};
+
+export const getConnectionsByCustomerId = async (customerId: number): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/connections/customer/${customerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch connection details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching connection details:", error);
+    return null;
+  }
+};
+
+export const getInstallationsByCustomerId = async (consumerId: number): Promise<any> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch installation details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching installation details:", error);
+    return null;
+  }
+};
+
 export const fetchConsumers = async (page = 0) => {
   try {
     const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
@@ -367,6 +472,32 @@ export const updateConsumerPersonalDetails = async (customerId: number, updatedC
   }
 };
 
+export const updateInstallationSpaceDetails = async (id: number, updatedInstallationData: any) => {
+  try {
+
+    console.log("Sending request to update installation:", updatedInstallationData);
+
+    const response = await fetch(`http://localhost:8585/api/installations/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(updatedInstallationData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update installation: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating installation details:", error);
+    throw error;
+  }
+};
+
 export const updateConsumerConnectionDetails = async (id: number, updatedData: any) => {
   try {
 
@@ -392,6 +523,55 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
     throw error;
   }
 };
+
+// src/services/districtService.ts
+export const getDistrictNameByCode = async (code: number): Promise<string> => {
+  try {
+    const response = await fetch(`http://localhost:8585/masters/district/name/${code}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch district name");
+    }
+
+    return await response.text(); // API returns a plain string
+  } catch (error) {
+    console.error("Error fetching district name:", error);
+    return "Unknown District"; // Fallback value
+  }
+};
+
+export const getTalukaNameByCode = async (code: number): Promise<string> => {
+  try {
+    const response = await fetch(`http://localhost:8585/masters/taluka/name/${code}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch taluka name");
+    }
+
+    return await response.text(); // API returns a plain string
+  } catch (error) {
+    console.error("Error fetching taluka name:", error);
+    return "Unknown Taluka"; // Fallback value
+  }
+};
+
+export const getVillageNameByCode = async (code: number): Promise<string> => {
+  try {
+    const response = await fetch(`http://localhost:8585/masters/village/name/${code}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch village name");
+    }
+
+    return await response.text(); // API returns a plain string
+  } catch (error) {
+    console.error("Error fetching taluka name:", error);
+    return "Unknown Village"; // Fallback value
+  }
+};
+
+
+
 
 export const fetchRecommendedDetails = async (connectionId: number) => {
   try {

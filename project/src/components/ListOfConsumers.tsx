@@ -10,8 +10,8 @@ const ListOfConsumers: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const handleModifyConsumer = (consumer: QuotationData) => {
-    navigate(`/quotationform/${consumer.id}`, { state: { consumer } });
+  const handleViewConsumer = (consumer: QuotationData) => {
+    navigate(`/view-customer/${consumer.customerId}`, { state: { consumer } });
   };
 
   const goToQuotationForm = () => {
@@ -82,7 +82,7 @@ const ListOfConsumers: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-semibold mb-6">List of Consumers</h1>
 
       {loading ? (
@@ -105,7 +105,7 @@ const ListOfConsumers: React.FC = () => {
                     <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => handleModifyConsumer(consumer)}
+                    <button onClick={() => handleViewConsumer(consumer)}
                       className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
                       View
                     </button>
