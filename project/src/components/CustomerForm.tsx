@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveCustomer, updateConsumerPersonalDetails } from "../services/api";
+import { Stepper, Step } from "react-form-stepper";
 
 export const CustomerForm = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ export const CustomerForm = () => {
     emailAddress: "",
     mobileNumber: "",
     preferredName: "",
+    
   });
 
   useEffect(() => {
@@ -29,21 +31,33 @@ export const CustomerForm = () => {
   
     try {
       if (existingCustomer) {
-        console.log("Updating customer:", formData);
-        const response = await updateConsumerPersonalDetails(existingCustomer.id, formData);
-        console.log("Update response:", response);
-        alert("Customer details updated successfully!");
-        navigate(`/view-customer/${existingCustomer.id}`);
+        const shouldEdit = window.confirm("Do you want to edit the customer details?");
+        
+        if (shouldEdit) {
+          console.log("Updating customer:", formData);
+          const response = await updateConsumerPersonalDetails(existingCustomer.id, formData);
+          console.log("Update response:", response);
+          alert("Customer details updated successfully!");
+          navigate(`/view-customer/${existingCustomer.id}`);
+        } else {
+          setFormData(existingCustomer); // Restore previous details
+        }
       } else {
+        console.log("Saving new customer...");
         const customerId = await saveCustomer(formData);
+        alert("Customer details saved successfully!");
+
+
         if (customerId) {
-          navigate(`/view-customer/${customerId}`,{ state: { customerId }});
+          navigate(`/view-customer/${customerId}`, { state: { customerId } });
         }
       }
     } catch (error) {
       console.error("Error in updating/saving customer:", error);
       alert("Failed to update customer. Please try again.");
     }
+    
+    
   };
   
 
@@ -52,6 +66,15 @@ export const CustomerForm = () => {
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">
         {existingCustomer ? "Update Customer" : "Add New Customer"}
       </h2>
+      <div className="mb-8">
+        <Stepper activeStep={-1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Customer Name</label>
@@ -76,8 +99,10 @@ export const CustomerForm = () => {
             onChange={handleChange}
             placeholder="1234567890"
             maxLength={10}
+            pattern="[6-9]{1}[0-9]{9}"
             required
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            title="Enter a valid 10-digit mobile number starting with 6-9"
           />
         </div>
 
@@ -103,14 +128,16 @@ export const CustomerForm = () => {
             onChange={handleChange}
             placeholder="johndoe@example.com"
             maxLength={35}
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+            title="Enter a valid email address"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
 
-        <div className="col-span-1 md:col-span-2 flex justify-center">
+        <div className="flex justify-start mt-6">
           <button
             type="submit"
-            className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             {existingCustomer ? "Update Customer" : "Save Customer"}
           </button>

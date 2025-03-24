@@ -101,17 +101,23 @@ export const InstallationForm = () => {
 
     try {
         if (installationId) {
+          const shouldEdit = window.confirm("Do you want to edit the installation details?");
+
+          if(shouldEdit){
             console.log("Updating existing installation with ID:", installationId);
             const response = await updateInstallationSpaceDetails(installationId, installationData);
             console.log("Update response:", response);
             alert("Installation details updated successfully!");
-            navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId , installationId: installationId} });
+            navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId , installationId: installationId, customerId} });
+          }else{
+            setFormData(existingInstallation);
+          }
         } else {
             console.log("Saving new installation...");
             const installationId = await saveInstallation(installationData);
             if (installationId) {
                 console.log("New Installation saved with ID:", installationId);
-                navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId, installationId: installationId } });
+                navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId, installationId: installationId, customerId } });
             }
         }
     } catch (error) {
@@ -217,24 +223,26 @@ export const InstallationForm = () => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
-          <input
-            type="text"
-            id="descriptionOfInstallation"
-            name="descriptionOfInstallation"
-            value={formData.descriptionOfInstallation}
-            placeholder='eg.10'
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
+        <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Description about Installation
+            </label>
+            <input
+                type="text"
+                id="descriptionOfInstallation"
+                name="descriptionOfInstallation"
+                value={formData.descriptionOfInstallation}
+                onChange={handleChange}
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 resize-y"
+            />
         </div>
+
   
         {/* Submit Button - Full Width */}
-        <div className="col-span-1 md:col-span-2 flex justify-center">
+        <div className="flex justify-start mt-6">
           <button
             type="submit"
-            className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+            className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
           >
             {existingInstallation ? "Update Installation" : "Save Installation"}
           </button>

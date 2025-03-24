@@ -12,6 +12,7 @@ import { ViewConnection } from './components/ViewConnection';
 import { InstallationForm } from './components/InstallationForm';
 import { ViewInstallation } from './components/ViewInstallation';
 import { SystemSpecifications } from './components/SystemSpecifications';
+import  OnboardedCustomers  from './components/OnboardedCustomers';
 
 
 
@@ -152,7 +153,14 @@ const AppContent: React.FC = () => {
             }
           />
 
-
+          <Route
+              path="/OnboardedCustomers"
+              element={
+              <PrivateRoute>
+                <OnboardedCustomers />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </div>
     </div>

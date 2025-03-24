@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection , updateConsumerConnectionDetails } from "../services/api";
 import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
+import { Stepper, Step } from "react-form-stepper";
 
 interface District {
   code: number;
@@ -17,7 +18,7 @@ interface Taluka {
 interface Village {
   code: number;
   nameEnglish: string;
-  postalCode: string;
+  pincode: string;
 }
 
 const phaseTypeMapping = {
@@ -64,7 +65,7 @@ export const ConnectionForm = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [postalCode, setPostalCode] = useState<String>("");
+  const [pincode, setPincode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -86,7 +87,7 @@ export const ConnectionForm = () => {
     districtCode: 0,
     talukaCode: 0,
     villageCode: 0,
-    postalCode: "",
+    pincode: "",
     sectionId: "",
     isNameCorrection: "No",
     correctionType: "",
@@ -154,7 +155,22 @@ export const ConnectionForm = () => {
       setFormData((prev) => ({
         ...prev,
         ...existingConnection, // Populate form with existing connection data
+        isMsebConnection: existingConnection.isMsebConnection ? "Yes" : "No",
+        isNameCorrection: existingConnection.isNameCorrectionRequired ? "Yes" : "No",
+        phase: Object.keys(phaseTypeMapping).find(
+          key => phaseTypeMapping[key] === existingConnection.phaseTypeId
+      ) || "Single-Phase",
+        addressType: Object.keys(addressTypeMapping).find(
+          key => addressTypeMapping[key] === existingConnection.addressTypeId
+      ) || "Home",
+      connectionType: Object.keys(connectionTypeMapping).find(
+        key => connectionTypeMapping[key] === existingConnection.connectionTypeId
+    ) || "Residential",
+    correctionType: Object.keys(correctionTypeMapping).find(
+      key => correctionTypeMapping[key] === existingConnection.correctionTypeId
+  ) || "",
       }));
+      
   
       // Fetch and set District Name + Taluka List
       if (existingConnection.districtCode) {
@@ -176,7 +192,13 @@ export const ConnectionForm = () => {
         // Now fetch the pincode after villages are fetched
         const selectedVillage = villageData.find(v => v.code === existingConnection.villageCode);
         if (selectedVillage) {
-          setPostalCode(selectedVillage.postalCode);
+          setPincode(selectedVillage.pincode);
+          console.log("selected village:", selectedVillage);
+          console.log("pincode:",pincode)
+          setFormData((prev) => ({
+            ...prev,
+            pincode: selectedVillage.pincode, // Ensure pincode is updated
+          }));
         }
       }
   
@@ -209,13 +231,13 @@ export const ConnectionForm = () => {
     setVillageCode(0);
     setTalukaName(""); 
     setVillageName(""); 
-    setPostalCode("");
+    setPincode("");
     setFormData((prev) => ({
       ...prev,
       districtCode: value,
       talukaCode: 0,
       villageCode: 0,
-      postalCode: "",
+      pincode: "",
     }));
   };
 
@@ -225,12 +247,12 @@ export const ConnectionForm = () => {
 
     setVillageCode(0);
     setVillageName("");
-    setPostalCode("");
+    setPincode("");
     setFormData((prev) => ({
       ...prev,
       talukaCode: value,
       villageCode: 0,
-      postalCode: "",
+      pincode: "",
     }));
   };
 
@@ -240,18 +262,19 @@ export const ConnectionForm = () => {
 
     if (selectedVillage) {
       setVillageCode(value);
+      setPincode(selectedVillage.pincode || "");
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        postalCode: selectedVillage.postalCode,
+        pincode: selectedVillage.pincode,
       }));
     }
   };
 
-  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseInt(e.target.value, 10);
-      setPostalCode(value);
-      setFormData((prev) => ({ ...prev, postalCode: value }));
+      setPincode(value);
+      setFormData((prev) => ({ ...prev, pincode: value }));
     };
 
     const handleNameCorrection = (e) => {
@@ -303,7 +326,7 @@ export const ConnectionForm = () => {
       districtCode: formData.districtCode,
       talukaCode: formData.talukaCode,
       villageCode: formData.villageCode,
-      postalCode: formData.postalCode,
+      postalCode: formData.pincode,
       gstIn: formData.gstIn,
       latitude: formData.latitude,
       longitude: formData.longitude,
@@ -317,12 +340,22 @@ export const ConnectionForm = () => {
 
     try {
             if (connectionId) {
+
+              const shouldEdit = window.confirm("Do you want to edit the connection details?");
+
+
+    if(shouldEdit){
                 console.log("Updating existing connection with ID:", connectionId);
                 const response = await updateConsumerConnectionDetails(connectionId, connectionData);
                 console.log("Update response:", response);
                 alert("Connection details updated successfully!");
                 navigate(`/view-connection/${connectionId}`, { state: { consumerId: formData.consumerId, customerId } });
-            } else {
+            } 
+            else{
+              setFormData(existingConnection)
+            }
+          }
+            else {
                 console.log("Saving new connection...");
                 const connectionId = await saveConnection(connectionData);
                 if (connectionId) {
@@ -339,6 +372,15 @@ export const ConnectionForm = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">{existingConnection ? "Update Connection" : "Add New Connection"}</h2>
+      <div className="mb-8">
+        <Stepper activeStep={0} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Connection Details</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* MSEB Connection Question - Full Width */}
@@ -382,6 +424,8 @@ export const ConnectionForm = () => {
             value={formData.consumerId}
             onChange={handleChange}
             placeholder="000000000000"
+            maxLength={12}
+            required
             disabled={formData.isMsebConnection === "No"}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm disabled:bg-gray-200"
           />
@@ -409,27 +453,7 @@ export const ConnectionForm = () => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-          <input
-            type="text"
-            name="addressLine1"
-            value={formData.addressLine1}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
-          <input
-            type="text"
-            name="addressLine2"
-            value={formData.addressLine2}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
+  
 
         <div>
             <label className="block text-sm font-medium text-gray-700">District</label>
@@ -489,42 +513,37 @@ export const ConnectionForm = () => {
             <label className="block text-sm font-medium text-gray-700">Pincode</label>
             <input
               type="text"
-              id="postalCode"
-              name="postalCode"
-              value={formData.postalCode || ''}  // Ensure it uses formData.pincode
-              onChange={handlePostalCodeChange}
+              id="pincode"
+              name="pincode"
+              value={formData.pincode || ''}  // Ensure it uses formData.pincode
+              onChange={handlepincodeChange}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
 
+          <div>
+          <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+          <input
+            type="text"
+            name="addressLine1"
+            value={formData.addressLine1}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          />
+        </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Phase Type</label>
-          <select
-            name="phase"
-            value={formData.phase}
+          <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
+          <input
+            type="text"
+            name="addressLine2"
+            value={formData.addressLine2}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          >
-            {Object.keys(phaseTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
-          </select>
+          />
         </div>
-  
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-          <select
-            name="connectionType"
-            value={formData.connectionType}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          >
-            {Object.keys(connectionTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
-          </select>
-        </div>
-  
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Address Type</label>
           <select
@@ -540,6 +559,36 @@ export const ConnectionForm = () => {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Connection Type</label>
+          <select
+            name="connectionType"
+            value={formData.connectionType}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          >
+            {Object.keys(connectionTypeMapping).map((key) => (
+              <option key={key} value={key}>{key}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Phase Type</label>
+          <select
+            name="phase"
+            value={formData.phase}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          >
+            {Object.keys(phaseTypeMapping).map((key) => (
+              <option key={key} value={key}>{key}</option>
+            ))}
+          </select>
+        </div>
+  
+  
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
           <input
             type="number"
@@ -549,6 +598,18 @@ export const ConnectionForm = () => {
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Section ID</label>
+          <input
+            type="text"
+            name="sectionId"
+            value={formData.sectionId}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          />
+        </div>
+
   
         <div>
           <label className="block text-sm font-medium text-gray-700">Latitude</label>
@@ -572,78 +633,70 @@ export const ConnectionForm = () => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Section ID</label>
-          <input
-            type="text"
-            name="sectionId"
-            value={formData.sectionId}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
+        <div className="flex flex-col space-y-4">
+  {/* Name Correction Question */}
+  <div className="col-span-2">
+    <label className="block text-sm font-medium text-gray-700">
+      Does the connection require a name correction?
+    </label>
+    <div className="mt-2 flex items-center space-x-4">
+      <label className="flex items-center space-x-2">
+        <input
+          type="radio"
+          name="nameCorrection"
+          value="Yes"
+          onChange={handleNameCorrection}
+          className="focus:ring-blue-500 text-blue-600 border-gray-300"
+          checked={formData.isNameCorrection === "Yes"}
+        />
+        <span className="text-sm text-gray-700">Yes</span>
+      </label>
+      <label className="flex items-center space-x-2">
+        <input
+          type="radio"
+          name="nameCorrection"
+          value="No"
+          onChange={handleNameCorrection}
+          className="focus:ring-blue-500 text-blue-600 border-gray-300"
+          checked={formData.isNameCorrection === "No"}
+        />
+        <span className="text-sm text-gray-700">No</span>
+      </label>
+    </div>
+  </div>
 
-        <div className="col-span-2">
-  <label className="block text-sm font-medium text-gray-700">
-    Does the connection require a name correction?
-  </label>
-  <div className="mt-2 flex items-center space-x-4">
-    <label className="flex items-center space-x-2">
-      <input
-        type="radio"
-        name="nameCorrection"
-        value="Yes"
-        onChange={handleNameCorrection}
-        className="focus:ring-blue-500 text-blue-600 border-gray-300"
-        checked={formData.isNameCorrection === "Yes"}
-      />
-      <span className="text-sm text-gray-700">Yes</span>
-    </label>
-    <label className="flex items-center space-x-2">
-      <input
-        type="radio"
-        name="nameCorrection"
-        value="No"
-        onChange={handleNameCorrection}
-        className="focus:ring-blue-500 text-blue-600 border-gray-300"
-        checked={formData.isNameCorrection === "No"}
-      />
-      <span className="text-sm text-gray-700">No</span>
-    </label>
+  {/* Correction Type (keeps spacing properly) */}
+  {formData.isNameCorrection === "Yes" && (
+    <div className="col-span-1">
+      <label className="block text-sm font-medium text-gray-700">
+        Select Correction Type
+      </label>
+      <select
+        name="correctionType"
+        value={formData.correctionType || ""}
+        onChange={handleCorrectionTypeChange}
+        className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+      >
+        <option value="" disabled>
+          Select an option
+        </option>
+        <option value="Spell Correction">Spell Correction</option>
+        <option value="Transfer Ownership">Transfer Ownership</option>
+      </select>
+    </div>
+  )}
+
+  {/* Submit Button - Always at the bottom */}
+  <div className="self-start mt-6">
+    <button
+      type="submit"
+      className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+    >
+      {existingConnection ? "Update Connection" : "Save Connection"}
+    </button>
   </div>
 </div>
 
-{/* Correction Type should be in a single column */}
-{formData.isNameCorrection === "Yes" && (
-  <div className="col-span-1">
-    <label className="block text-sm font-medium text-gray-700">
-      Select Correction Type
-    </label>
-    <select
-      name="correctionType"
-      value={formData.correctionType || ""}
-      onChange={handleCorrectionTypeChange}
-      className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-    >
-      <option value="" disabled>
-        Select an option
-      </option>
-      <option value="Spell Correction">Spell Correction</option>
-      <option value="Transfer Ownership">Transfer Ownership</option>
-    </select>
-  </div>
-)}
-
-  
-        {/* Submit Button - Full Width */}
-        <div className="col-span-1 md:col-span-2 flex justify-center">
-          <button
-            type="submit"
-            className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
-          >
-            {existingConnection ? "Update Connection" : "Save Connection"}
-          </button>
-        </div>
         
       </form>
     </div>

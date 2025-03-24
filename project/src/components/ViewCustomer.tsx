@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation} from "react-router-dom";
 import { getCustomerById, getConnectionsByCustomerId } from "../services/api";
+import { Stepper, Step } from "react-form-stepper";
 
 export const ViewCustomer = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +34,16 @@ export const ViewCustomer = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Customer Details</h2>
-  
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Customer Details</h2>
+      <div className="mb-8">
+        <Stepper activeStep={0} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Gov ID Name</label>

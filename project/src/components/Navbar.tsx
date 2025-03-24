@@ -25,6 +25,9 @@ const Navbar: React.FC = () => {
   const goToListOfConsumers = () => {
     navigate("/list-of-consumers");
   };
+  const goToOnboardedCustomers = () => {
+    navigate("/OnboardedCustomers");
+  };
 
 
   return (
@@ -42,7 +45,14 @@ const Navbar: React.FC = () => {
           onClick={goToListOfConsumers}
           className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
         >
-          List of Consumers
+          List of Customers
+        </button>
+
+        <button
+          onClick={goToOnboardedCustomers}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+          Onboarded Customers
         </button>
 
 

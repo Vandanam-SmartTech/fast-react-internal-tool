@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails } from '../services/api';
+import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails, fetchInstallationSpaceTypes } from '../services/api';
 import { generateQuotationPDF } from '../services/api';
 
 export const SystemSpecifications = () => {
@@ -11,23 +12,41 @@ export const SystemSpecifications = () => {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
-  const [recommendedInstallationSpaceType, setRecommendedInstallationSpaceType] = useState("");
-  const [recommendedInstallationStructureType, setRecommendedInstallationStructureType] = useState("");
-  const [recommendedKW, setRecommendedKW] = useState("");
-  const [dcrNonDcr, setDcrNonDcr] = useState("");
+  const [installationSpaceType, setInstallationSpaceType] = useState("");
+  const [installationStructureType, setInstallationStructureType] = useState("");
+  const [Kw, setKw] = useState("");
+  const [dcrNonDcrType, setDcrNonDcrType] = useState("");
   const [panelBrand, setPanelBrand] = useState("");
-  const [phase, setPhase] = useState("");
+  const [phaseType, setPhaseType] = useState("");
   const [connectionType, setConnectionType] = useState("");
   const [panelWattages, setPanelWattages] = useState([]);
+  const [isCustomSpecs, setIsCustomSpecs] = useState(false);
+
+  const installationSpaceTypeMapping: Record<number, string> = {
+    1: "Slab",
+    2: "Clay Tiles",
+    3: "Metal Sheets",
+    4: "Plastic Sheets",
+    5: "Bathroom Slab",
+    6: "Cement Sheets",
+    7: "On Ground",
+  };
+
+const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
+
   const [formData, setFormData] = useState({
     solarSystemCost: 0,
     fabricationCost: 0,
-    effectiveCost: 0,
-    recommendedInstallationSpaceType: "",
-    recommendedInstallationStructureType: "",
+    totalCost: 0,
+    installationSpaceType: "",
+    installationStructureType: "",
+    dcrNonDcrType:"",
+    panelBrand:"",
+    Kw:"",
   });
 
   const connectionId = location.state?.connectionId; // Ensure connectionId is correctly retrieved
+  const consumerId = location.state?.consumerId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,17 +55,22 @@ export const SystemSpecifications = () => {
       try {
         const recommendation = await fetchRecommendedDetails(connectionId);
 
-        setRecommendedInstallationSpaceType(recommendation.recommendedInstallationSpaceType || "");
-        setRecommendedInstallationStructureType(recommendation.recommendedInstallationStructureType || "");
-        setRecommendedKW(recommendation.recommendedKW || "");
-        setDcrNonDcr(recommendation.dcrNonDcr || "");
-        setPanelBrand(recommendation.panelBrand || "");
-        setPhase(recommendation.phase || "");
+        setFormData((prev) => ({
+          ...prev,
+          installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
+          installationStructureType: recommendation.recommendedInstallationStructureType || "",
+          Kw: recommendation.recommendedKW || "",
+          dcrNonDcrType:
+          recommendation.dcrNonDcrType?.toLowerCase() === "nonDcr"
+            ? "Non-DCR"
+            : "DCR",
+          panelBrand: recommendation.panelBrand || "",
+        }));
         setConnectionType(recommendation.connectionType || "");
-        setShowSystemSpecificationDetails(true);
+        setPhaseType(recommendation.phaseType || "");
 
-        if (recommendation.phase && recommendation.dcrNonDcr && recommendation.panelBrand) {
-          const wattages = await fetchPanelWattages(connectionId, recommendation.phase, recommendation.dcrNonDcr, recommendation.panelBrand);
+        if (recommendation.phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
+          const wattages = await fetchPanelWattages(connectionId, recommendation.phaseType, recommendation.dcrNonDcrType, recommendation.panelBrand);
           setPanelWattages(wattages);
         }
       } catch (error) {
@@ -57,15 +81,35 @@ export const SystemSpecifications = () => {
     fetchData();
   }, [connectionId]);
 
+
+  useEffect(() => {
+    const loadInstallationSpaceTypes = async () => {
+        if (!consumerId) return; // Ensure consumerId is valid
+
+        const uniqueIds = await fetchInstallationSpaceTypes(Number(consumerId));
+
+        // Convert to user-friendly names using mapping
+        const filteredOptions = uniqueIds
+            .map(id => installationSpaceTypeMapping[id])
+            .filter(Boolean); // Remove undefined values
+
+        setAvailableSpaceTypes(filteredOptions);
+    };
+
+
+    loadInstallationSpaceTypes();
+}, [consumerId]); // Rerun effect when consumerId changes
+
+
   const handleGetPrice = async () => {
     try {
       const requestData = {
-        customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
-        customerSelectedInstallationStructureType: recommendedInstallationStructureType,
-        customerSelectedKW: recommendedKW,
-        customerSelectedBrand: panelBrand,
-        phase,
-        dcrNonDcr,
+        customerSelectedInstallationSpaceType: formData.installationSpaceType,
+        customerSelectedInstallationStructureType: formData.installationStructureType,
+        customerSelectedKW: formData.Kw,
+        customerSelectedBrand: formData.panelBrand,
+        phaseType,
+        dcrNonDcrType: formData.dcrNonDcrType,
         connectionType,
       };
 
@@ -78,7 +122,7 @@ export const SystemSpecifications = () => {
           ...prev,
           solarSystemCost: priceDetails.solarSystemCost || 0,
           fabricationCost: priceDetails.fabricationCost || 0,
-          effectiveCost: (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
+          totalCost: (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
         }));
 
         setShowCostDetails(true);
@@ -87,6 +131,9 @@ export const SystemSpecifications = () => {
       console.error("Error fetching price details:", error);
     }
   };
+
+ // Runs when `formData` updates
+
 
   const handleGenerateQuotation = async () => {
       try {
@@ -98,17 +145,17 @@ export const SystemSpecifications = () => {
           setIsLoading(true);
   
           const requestData = {
-              customerSelectedInstallationStructureType: recommendedInstallationStructureType,
-              customerSelectedKW: recommendedKW,
-              customerSelectedBrand: panelBrand,
-              customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
-              dcrNonDcr: dcrNonDcr,
-              phase: phase,
+              customerSelectedInstallationStructureType: formData.installationStructureType,
+              customerSelectedKW: formData.Kw,
+              customerSelectedBrand: formData.panelBrand,
+              customerSelectedInstallationSpaceType: formData.installationSpaceType,
+              dcrNonDcrType: formData.dcrNonDcrType,
+              phaseType: phaseType,
               connectionType: connectionType,
               inversionType: "On-Grid",
               solarSystemCost: formData.solarSystemCost,  // Added
               fabricationCost: formData.fabricationCost,  // Added
-              effectiveCost: formData.effectiveCost,
+              totalCost: formData.totalCost,
           };
   
           const pdfBlob = await generateQuotationPDF(connectionId, requestData);
@@ -140,20 +187,21 @@ export const SystemSpecifications = () => {
       }
   
       const requestData = {
-        customerSelectedInstallationStructureType: recommendedInstallationStructureType,
-        customerSelectedKW: recommendedKW,
-        customerSelectedBrand: panelBrand,
-        customerSelectedInstallationSpaceType: recommendedInstallationSpaceType,
-        dcrNonDcr: dcrNonDcr,
-        phase: phase,
+        customerSelectedInstallationStructureType: formData.installationStructureType,
+        customerSelectedKW: formData.Kw,
+        customerSelectedBrand: formData.panelBrand,
+        customerSelectedInstallationSpaceType: formData.installationSpaceType,
+        dcrNonDcrType: formData.dcrNonDcrType,
+        phaseType: phaseType,
         connectionType: connectionType,
         inversionType: "On-Grid",
         solarSystemCost: formData.solarSystemCost,  // Added
         fabricationCost: formData.fabricationCost,  // Added
-        effectiveCost: formData.effectiveCost,
+        totalCost: formData.totalCost,
       };
-  
+      console.log("Request Data:",requestData);
       const pdfBlob = await generateQuotationPDF(connectionId, requestData);
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
   
       // Open the PDF in a new window
@@ -179,23 +227,65 @@ export const SystemSpecifications = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData((prev) => {
         const updatedData = { 
             ...prev, 
-            [name]: value
+            [name]: value,
+          
         };
-
-        // Update effectiveCost whenever solarSystemCost or fabricationCost changes
-        updatedData.effectiveCost = 
+        updatedData.totalCost = 
             (Number(updatedData.solarSystemCost) || 0) + 
             (Number(updatedData.fabricationCost) || 0);
 
+
+        // Correct dcrNonDcrType based on recommendation.phaseType
+        if (name === "panelBrand") {
+            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
+                ? "Non-DCR"
+                : "Non-DCR"; // Default to "DCR"
+        }
+
         return updatedData;
     });
+
+    setIsCustomSpecs(true);
+
+    
+    // Fetch panel wattages when relevant fields change
+    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
+      try {
+          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+  
+          console.log("🔍 Fetching panel wattages with:");
+          console.log("📌 Connection ID:", connectionId);
+          console.log("📌 Phase Type:", phaseType);
+          console.log("📌 DCR/Non-DCR Type:", dcrNonDcrValue);
+          console.log("📌 Panel Brand:", panelBrandValue);
+  
+          const wattages = await fetchPanelWattages(
+              connectionId,
+              phaseType,  
+              dcrNonDcrValue,
+              panelBrandValue
+          );
+  
+          console.log("✅ Fetched Wattages:", wattages);
+          setPanelWattages(wattages);
+      } catch (error) {
+          console.error("❌ Error fetching panel wattages:", error);
+      }
+  }
+  
+
+    // Fetch panel wattages when relevant fields change
+
 };
+
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,34 +295,38 @@ export const SystemSpecifications = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">System Specifications</h2>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+    {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
+</h2>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Recommended Installation Space Type</label>
+          <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
           <select
-            id="recommendedInstallationSpaceType"
-            name="recommendedInstallationSpaceType"
-            value={formData.recommendedInstallationSpaceType}
+            id="installationSpaceType"
+            name="installationSpaceType"
+            value={formData.installationSpaceType || ""}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value="Slab">Slab</option>
-            <option value="Clay Tiles">Clay Tiles</option>
-            <option value="Metal Sheets">Metal Sheets</option>
-            <option value="Plastic Sheets">Plastic Sheets</option>
-            <option value="Bathroom Slab">Bathroom Slab</option>
-            <option value="Cement Sheets">Cement Sheets</option>
-            <option value="On Ground">On Ground</option>
+            {availableSpaceTypes.length === 0 ? (
+      <option disabled>Loading...</option> // Prevents user selection while loading
+    ) : (
+      availableSpaceTypes.map((spaceType) => (
+        <option key={spaceType} value={spaceType}>
+          {spaceType}
+        </option>
+      ))
+    )}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Recommended Installation Structure Type</label>
+          <label className="block text-sm font-medium text-gray-700">Installation Structure Type</label>
           <select
-            id="recommendedInstallationStructureType"
-            name="recommendedInstallationStructureType"
-            value={formData.recommendedInstallationStructureType}
+            id="installationStructureType"
+            name="installationStructureType"
+            value={formData.installationStructureType}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
@@ -246,22 +340,29 @@ export const SystemSpecifications = () => {
           <select
             id="panelBrand"
             name="panelBrand"
-            value={panelBrand}
-            onChange={(e) => setPanelBrand(e.target.value)}
+            value={formData.panelBrand}
+            onChange={(e) => {
+              setPanelBrand(e.target.value); // Update local state
+              handleChange(e); // Also update formData
+            }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="Sova">Sova</option>
             <option value="En-Icon">En-Icon</option>
+            <option value="Adani">Adani</option>
           </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
           <select
-            id="dcrNonDcr"
-            name="dcrNonDcr"
-            value={dcrNonDcr}
-            onChange={(e) => setDcrNonDcr(e.target.value)}
+            id="dcrNonDcrType"
+            name="dcrNonDcrType"
+            value={formData.dcrNonDcrType}
+            onChange={(e) => {
+              setDcrNonDcrType(e.target.value); // Update local state
+              handleChange(e); // Also update formData
+            }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="DCR">DCR</option>
@@ -270,12 +371,15 @@ export const SystemSpecifications = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
+          <label className="block text-sm font-medium text-gray-700">KW</label>
           <select
-                id="recommendedKW"
-                name="recommendedKW"
-                value={recommendedKW}
-                onChange={(e) => setRecommendedKW(e.target.value)}
+                id="Kw"
+                name="Kw"
+                value={formData.Kw}
+                onChange={(e) => {
+                  setKw(e.target.value); // Update local state
+                  handleChange(e); // Also update formData
+                }}
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 {panelWattages.map((wattage) => (
                     <option key={wattage} value={wattage}>
@@ -296,8 +400,7 @@ export const SystemSpecifications = () => {
         </button>
       </div>
 
-        {showCostDetails && (
-          <div className="col-span-full space-y-6">
+          { showCostDetails &&(<div className="col-span-full space-y-6">
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -313,8 +416,8 @@ export const SystemSpecifications = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Effective Cost</label>
-                <input type="number" name="effectiveCost" value={formData.effectiveCost} onChange={handleChange} 
+                <label className="block text-sm font-medium text-gray-700">Total Cost</label>
+                <input type="number" name="effectiveCost" value={formData.totalCost} onChange={handleChange} 
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
               </div>
 
@@ -341,9 +444,9 @@ export const SystemSpecifications = () => {
 </div>
 
           </div>
+          )}
 
           
-        )}
       </form>
     </div>
   );
