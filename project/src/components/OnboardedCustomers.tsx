@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { fetchOnboardedConsumers} from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { QuotationData } from "../types/quotation"; 
+
+interface Consumer {
+  id: number;
+  govIdName: string;
+  emailAddress: string;
+  mobileNumber: string;
+  customerId:number;
+  consumerId:number;
+  connectionType:string;
+}
 
 const OnboardedCustomers: React.FC = () => {
   const navigate = useNavigate();
-  const [consumers, setConsumers] = useState<QuotationData[]>([]);
+  const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const handleViewConsumer = (consumer: QuotationData) => {
+  const handleViewConsumer = (consumer: Consumer) => {
     navigate(`/view-connection/${consumer.id}`, { state: { customerId: consumer.customerId, connectionId: consumer.id, consumerId:consumer.consumerId } });
   };
 
@@ -18,7 +27,7 @@ const OnboardedCustomers: React.FC = () => {
     navigate("/quotationform"); 
   };
 
-  const handleGenerateDocuments = (consumer: QuotationData) => {
+  const handleGenerateDocuments = (consumer: Consumer) => {
     navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
   };
 
