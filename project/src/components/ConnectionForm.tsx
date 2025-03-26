@@ -94,6 +94,15 @@ export const ConnectionForm = () => {
     monthlyAvgConsumptionUnits: 0,
   });
 
+  ///////////////////////////////////////////////////////////
+  useEffect(() => {
+    const savedForm = localStorage.getItem('myFormData');
+    if (savedForm) {
+      setFormData(JSON.parse(savedForm));
+    }
+  }, []);
+///////////////////////////////////////////////////////////
+
   useEffect(() => {
     const fetchDistrictsData = async () => {
       try {
@@ -222,6 +231,9 @@ export const ConnectionForm = () => {
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
     }));
+        /////////////////
+        localStorage.setItem('myFormData', JSON.stringify(formData));
+        ////////////////
   };
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -367,19 +379,27 @@ export const ConnectionForm = () => {
             console.error("Error in connection process:", error);
             alert("Failed to process connection. Please try again.");
         }
+
+    /////////////
+    localStorage.removeItem('myFormData');
+    ////////////
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">{existingConnection ? "Update Connection" : "Add New Connection"}</h2>
-      <div className="mb-8">
-        <Stepper activeStep={0} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
-          <Step label="Customer Details" />
-          <Step label="Connection Details" />
-          <Step label="Installation Space Details" />
-          <Step label="System Specifications" />
-        </Stepper>
-      </div>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">{existingConnection ? "Edit Connection Details" : "Add Connection Details"}</h2>
+      <div className="mb-6 sm:mb-8 overflow-x-auto">
+      <Stepper 
+        activeStep={0} 
+        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
+        className="min-w-max sm:w-full"
+      >
+        <Step label="Customer Details" />
+        <Step label="Connection Details" />
+        <Step label="Installation Space Details" />
+        <Step label="System Specifications" />
+      </Stepper>
+    </div>
       <h2 className="text-2xl font-semibold text-gray-700 mb-8">Connection Details</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         

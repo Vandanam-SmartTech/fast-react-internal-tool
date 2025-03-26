@@ -35,14 +35,18 @@ export const ViewCustomer = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Customer Details</h2>
-      <div className="mb-8">
-        <Stepper activeStep={0} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
-          <Step label="Customer Details" />
-          <Step label="Connection Details" />
-          <Step label="Installation Space Details" />
-          <Step label="System Specifications" />
-        </Stepper>
-      </div>
+          <div className="mb-6 sm:mb-8 overflow-x-auto">
+      <Stepper 
+        activeStep={0} 
+        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
+        className="min-w-max sm:w-full"
+      >
+        <Step label="Customer Details" />
+        <Step label="Connection Details" />
+        <Step label="Installation Space Details" />
+        <Step label="System Specifications" />
+      </Stepper>
+    </div>
       <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -69,7 +73,7 @@ export const ViewCustomer = () => {
           onClick={() => navigate(`/CustomerForm`, { state: customer })}
           className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          Update Customer
+          Edit Customer
         </button>
       </div>
   

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getInstallationByConsumerId } from "../services/api";
+import { Stepper, Step } from "react-form-stepper";
 
 export const ViewInstallation = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,8 +42,8 @@ export const ViewInstallation = () => {
   if (!installation) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-4">
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
       {/* Backward Arrow Button */}
       <button
         onClick={() => navigate(`/view-connection/${connectionId}`,{ state: { consumerId, customerId, connectionId }})}
@@ -52,9 +53,18 @@ export const ViewInstallation = () => {
       </button>
 
       {/* Heading */}
-      <h2 className="text-2xl font-semibold text-gray-700">View Installation Details</h2>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Installation Details</h2>
     </div>
-      
+    <div className="mb-6 sm:mb-8 overflow-x-auto">
+        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Installation Space Details</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installationSpaceTypeMapping[installation.installationSpaceTypeId] || ""}</p>
@@ -83,27 +93,37 @@ export const ViewInstallation = () => {
         <label className="block text-sm font-medium text-gray-700">Number of GP Pipes</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.numberOfGpPipes || ""}</p>
       </div>
-      <div className="col-span-2">
+      <div className="col-span-1 md:col-span-2">
         <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.descriptionOfInstallation || ""}</p>
       </div>
+      </div>
       
 
-      <div className="col-span-1 md:col-span-2 flex justify-center mt-6 space-x-14">
-        <button
-          onClick={() => navigate(`/InstallationForm`, { state: { existingInstallation: installation, installationId: id, connectionId ,consumerId}})}
-          className="py-3 px-16 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
-        >
-          Edit Installation
-        </button>
+      <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-6 space-y-4 sm:space-y-0 sm:space-x-6">
+  <button
+    onClick={() =>
+      navigate(`/InstallationForm`, {
+        state: { existingInstallation: installation, installationId: id, connectionId, consumerId },
+      })
+    }
+    className="w-full sm:w-auto max-w-xs py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    Edit Installation
+  </button>
 
-        <button
-          onClick={() => navigate(`/view-connection/${connectionId}`, { state: { consumerId, customerId, connectionId }})}
-          className="py-3 px-16 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 mx-2"
-        >
-          Done
-        </button>
-      </div>
+  <button
+    onClick={() =>
+      navigate(`/view-connection/${connectionId}`, {
+        state: { consumerId, customerId, connectionId },
+      })
+    }
+    className="w-full sm:w-auto max-w-xs py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+  >
+    Done
+  </button>
+</div>
+
     </div>
 
   );

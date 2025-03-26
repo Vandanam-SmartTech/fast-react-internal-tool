@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { Stepper, Step } from "react-form-stepper";
 
 export const ViewConnection = () => {
   const { id } = useParams<{ id: string }>(); // Connection ID from URL
@@ -109,7 +110,7 @@ export const ViewConnection = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-4">
+      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
       {/* Backward Arrow Button */}
       <button
         onClick={() => navigate(`/view-customer/${customerId}`,{ state: { consumerId, customerId, connectionId: id }})}
@@ -121,6 +122,14 @@ export const ViewConnection = () => {
       {/* Heading */}
       <h2 className="text-2xl font-semibold text-gray-700">View Connection Details</h2>
     </div>
+    <div className="col-span-2 mb-4">
+        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
   
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700">
@@ -334,14 +343,14 @@ export const ViewConnection = () => {
     Add New Installation
   </button>
   <button
-    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: id, consumerId: consumerId}})}
+    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: id, consumerId: consumerId, customerId}})}
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
   >
     Get Recommendation
   </button>
 </div>
 
-<div className="col-span-1 md:col-span-2 flex justify-start mt-6">
+    <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
         <button
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
         >

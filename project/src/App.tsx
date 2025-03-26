@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Login from './components/Login';
 import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
-import Navbar from './components/Navbar';
+//import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import ListOfConsumers from './components/ListOfConsumers';
 import GenerateDocuments from './components/GenerateDocuments';
 import { CustomerForm } from './components/CustomerForm';
@@ -20,13 +21,15 @@ const AppContent: React.FC = () => {
   const location = useLocation();
 
   // Show Navbar only on specific routes
-  const showNavbar = location.pathname !== '/login';
+ // const showNavbar = location.pathname !== '/login';
+ const showSidebar = location.pathname !== '/login';
   
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Conditionally Render Navbar */}
-      {showNavbar && <Navbar />}
+      {/* {showNavbar && <Navbar />} */}
+      {showSidebar && <Sidebar />}
 
       <div className="py-12">
         <Routes>
@@ -45,15 +48,6 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
-
-          {/* <Route
-            path="/stepperform"
-            element={
-              <PrivateRoute>
-                <StepperForm />
-              </PrivateRoute>
-            }
-          /> */}
           
           {/* Protected List of Consumers */}
           <Route

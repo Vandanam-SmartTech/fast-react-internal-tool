@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails, fetchInstallationSpaceTypes } from '../services/api';
 import { generateQuotationPDF } from '../services/api';
+import { Stepper, Step } from "react-form-stepper";
+import { ArrowLeft } from "lucide-react";
 
 export const SystemSpecifications = () => {
   const location = useLocation();
@@ -47,6 +49,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
   const connectionId = location.state?.connectionId; // Ensure connectionId is correctly retrieved
   const consumerId = location.state?.consumerId;
+  const customerId = location.state?.customerId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,7 +161,10 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
               totalCost: formData.totalCost,
           };
   
+
           const pdfBlob = await generateQuotationPDF(connectionId, requestData);
+          console.log('PDF Blob size:', pdfBlob.size);
+
   
           // Trigger download
           const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -279,10 +285,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
           console.error("❌ Error fetching panel wattages:", error);
       }
   }
-  
-
     // Fetch panel wattages when relevant fields change
-
 };
 
 
@@ -295,9 +298,26 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-    {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
-</h2>
+      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
+      {/* Backward Arrow Button */}
+      <button
+        onClick={() => navigate(`/view-connection/${connectionId}`,{ state: { consumerId, customerId, connectionId }})}
+        className="p-2 rounded-full hover:bg-gray-200 transition"
+      >
+        <ArrowLeft className="w-6 h-6 text-gray-700" />
+      </button>
+
+      {/* Heading */}
+      <h2 className="text-2xl font-semibold text-gray-700">View Installation Details</h2>
+    </div>
+<div className="col-span-2 mb-4">
+        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+          <Step label="Customer Details" />
+          <Step label="Connection Details" />
+          <Step label="Installation Space Details" />
+          <Step label="System Specifications" />
+        </Stepper>
+      </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
