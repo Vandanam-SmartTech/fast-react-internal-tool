@@ -52,6 +52,24 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
   const customerId = location.state?.customerId;
 
   useEffect(() => {
+    const loadInstallationSpaceTypes = async () => {
+        if (!consumerId) return; // Ensure consumerId is valid
+
+        const uniqueIds = await fetchInstallationSpaceTypes(Number(consumerId));
+
+        // Convert to user-friendly names using mapping
+        const filteredOptions = uniqueIds
+            .map(id => installationSpaceTypeMapping[id])
+            .filter(Boolean); // Remove undefined values
+
+        setAvailableSpaceTypes(filteredOptions);
+    };
+
+
+    loadInstallationSpaceTypes();
+}, [consumerId]); // Rerun effect when consumerId changes
+
+  useEffect(() => {
     const fetchData = async () => {
       if (!connectionId) return;
 
@@ -85,55 +103,65 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
   }, [connectionId]);
 
 
+
+
+
   useEffect(() => {
-    const loadInstallationSpaceTypes = async () => {
-        if (!consumerId) return; // Ensure consumerId is valid
-
-        const uniqueIds = await fetchInstallationSpaceTypes(Number(consumerId));
-
-        // Convert to user-friendly names using mapping
-        const filteredOptions = uniqueIds
-            .map(id => installationSpaceTypeMapping[id])
-            .filter(Boolean); // Remove undefined values
-
-        setAvailableSpaceTypes(filteredOptions);
-    };
-
-
-    loadInstallationSpaceTypes();
-}, [consumerId]); // Rerun effect when consumerId changes
-
-
-  const handleGetPrice = async () => {
-    try {
-      const requestData = {
-        customerSelectedInstallationSpaceType: formData.installationSpaceType,
-        customerSelectedInstallationStructureType: formData.installationStructureType,
-        customerSelectedKW: formData.Kw,
-        customerSelectedBrand: formData.panelBrand,
-        phaseType,
-        dcrNonDcrType: formData.dcrNonDcrType,
-        connectionType,
-      };
-
-      console.log("Request Data:", requestData);
-
-      const priceDetails = await getPriceDetails(requestData);
-
-      if (priceDetails) {
-        setFormData((prev) => ({
-          ...prev,
-          solarSystemCost: priceDetails.solarSystemCost || 0,
-          fabricationCost: priceDetails.fabricationCost || 0,
-          totalCost: (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
-        }));
-
-        setShowCostDetails(true);
+    const handleGetPrice = async () => {
+      try {
+        const requestData = {
+          customerSelectedInstallationSpaceType: formData.installationSpaceType,
+          customerSelectedInstallationStructureType: formData.installationStructureType,
+          customerSelectedKW: formData.Kw,
+          customerSelectedBrand: formData.panelBrand,
+          phaseType,
+          dcrNonDcrType: formData.dcrNonDcrType,
+          connectionType,
+        };
+  
+        console.log("Request Data:", requestData);
+  
+        const priceDetails = await getPriceDetails(requestData);
+  
+        if (priceDetails) {
+          setFormData((prev) => ({
+            ...prev,
+            solarSystemCost: priceDetails.solarSystemCost || 0,
+            fabricationCost: priceDetails.fabricationCost || 0,
+            totalCost:
+              (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
+          }));
+  
+          setShowCostDetails(true);
+        }
+      } catch (error) {
+        console.error("Error fetching price details:", error);
       }
-    } catch (error) {
-      console.error("Error fetching price details:", error);
+    };
+  
+    // Check if all required values are set before fetching price
+    if (
+      formData.installationSpaceType &&
+      formData.installationStructureType &&
+      formData.Kw &&
+      formData.panelBrand &&
+      formData.dcrNonDcrType &&
+      phaseType &&
+      connectionType
+    ) {
+      handleGetPrice();
     }
-  };
+  }, [
+    formData.installationSpaceType,
+    formData.installationStructureType,
+    formData.Kw,
+    formData.panelBrand,
+    formData.dcrNonDcrType,
+    phaseType,
+    connectionType,
+  ]);
+  
+
 
  // Runs when `formData` updates
 
@@ -409,7 +437,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
               </select>
         </div>
 
-        <div className="col-span-full">
+        {/* <div className="col-span-full">
         <button
           type="button"
           onClick={handleGetPrice}
@@ -418,9 +446,9 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
         >
           Get Price
         </button>
-      </div>
+      </div> */}
 
-          { showCostDetails &&(<div className="col-span-full space-y-6">
+          <div className="col-span-full space-y-6">
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -464,7 +492,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 </div>
 
           </div>
-          )}
+
 
           
       </form>
