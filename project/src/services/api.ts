@@ -698,8 +698,8 @@ export const fetchPdf = async (id: number, docName: string): Promise<Response> =
   if (docName === "Annexure 1") {
     endpoint = `http://localhost:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
   }
-  if(docName=== "NetAgreementBondFormat"){
-    endpoint = `http://localhost:5050/api/pdf/netAgreementController/${id}?download=true`;
+  if(docName=== "EarthingPageDocument"){
+    endpoint = `http://localhost:5050/api/pdf/earthingPageController/${id}?download=true`;
   }
   if(docName=== "Subsidy Agreement Document-Page-1"){
     endpoint = `http://localhost:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
