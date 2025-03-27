@@ -106,7 +106,7 @@ export const CustomerForm = () => {
     
     <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 
-        activeStep={2} 
+        activeStep={-1} 
         styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
         className="min-w-max sm:w-full"
       >
