@@ -76,11 +76,13 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
       try {
         const recommendation = await fetchRecommendedDetails(connectionId);
 
+        const recommendedKW = recommendation.recommendedKW || "";
+
         setFormData((prev) => ({
           ...prev,
           installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
           installationStructureType: recommendation.recommendedInstallationStructureType || "",
-          Kw: recommendation.recommendedKW || "",
+          Kw: recommendedKW,
           dcrNonDcrType:
           recommendation.dcrNonDcrType?.toLowerCase() === "nonDcr"
             ? "Non-DCR"
@@ -92,8 +94,10 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
         if (recommendation.phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
           const wattages = await fetchPanelWattages(connectionId, recommendation.phaseType, recommendation.dcrNonDcrType, recommendation.panelBrand);
-          setPanelWattages(wattages);
+          const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
+        setPanelWattages([recommendedKW, ...uniqueWattages]);
         }
+
       } catch (error) {
         console.error("Error fetching recommended details:", error);
       }
@@ -110,7 +114,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     const handleGetPrice = async () => {
       try {
         const requestData = {
-          customerSelectedInstallationSpaceType: formData.installationSpaceType,
+          customerSelectedInstallationSpaceType: formData.installationSpaceType || null,
           customerSelectedInstallationStructureType: formData.installationStructureType,
           customerSelectedKW: formData.Kw,
           customerSelectedBrand: formData.panelBrand,
@@ -141,7 +145,6 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
   
     // Check if all required values are set before fetching price
     if (
-      formData.installationSpaceType &&
       formData.installationStructureType &&
       formData.Kw &&
       formData.panelBrand &&
@@ -294,11 +297,11 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
           const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
           const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
   
-          console.log("🔍 Fetching panel wattages with:");
-          console.log("📌 Connection ID:", connectionId);
-          console.log("📌 Phase Type:", phaseType);
-          console.log("📌 DCR/Non-DCR Type:", dcrNonDcrValue);
-          console.log("📌 Panel Brand:", panelBrandValue);
+          console.log("Fetching panel wattages with:");
+          console.log("Connection ID:", connectionId);
+          console.log("Phase Type:", phaseType);
+          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+          console.log("Panel Brand:", panelBrandValue);
   
           const wattages = await fetchPanelWattages(
               connectionId,
@@ -307,10 +310,10 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
               panelBrandValue
           );
   
-          console.log("✅ Fetched Wattages:", wattages);
+          console.log("Fetched Wattages:", wattages);
           setPanelWattages(wattages);
       } catch (error) {
-          console.error("❌ Error fetching panel wattages:", error);
+          console.error("Error fetching panel wattages:", error);
       }
   }
     // Fetch panel wattages when relevant fields change
@@ -336,7 +339,10 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
       </button>
 
       {/* Heading */}
-      <h2 className="text-2xl font-semibold text-gray-700">View Installation Details</h2>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+    {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
+</h2>
+
     </div>
 <div className="col-span-2 mb-4">
         <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
