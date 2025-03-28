@@ -58,7 +58,6 @@ export const generateQuotationPDF = async (connectionId: number, requestData: ob
 };
 
 
-
 export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
   try {
     const response = await fetch('http://localhost:8585/api/internal-tool/save', {
@@ -185,9 +184,6 @@ export const saveInstallation = async (data: Record<string, any>): Promise<numbe
     return null;
   }
 };
-
-
-
 
 
 export const calculateCosts = async (data: {
@@ -445,6 +441,24 @@ export const getPriceDetails = async (data: Record<string, any>): Promise<Record
 };
 
 
+export const postMaterialData = async (connectionId: any, data: { connectionId: string; systemKw: string; makeOfModule: string; almmModelNo: string; serialNoOfModules: string; wattagePerModule: string; noOfModules: string; totalCapacity: string; warrantyDetails: string; inverterModuleNo: string; inverterMake: string; rating: string; chargeControllerType: string; inverterCapacity: string; earthingRod: string; dateOfInstallation: string; capacityType: string; projectModel: string; reInstalledCapacityRooftop: string; reInstalledCapacityGround: string; reInstalledCapacityTotal: string; }) => {
+  
+  const url = `http://localhost:8585/api/materials?connectionId=${connectionId}`;
+  
+  try {
+    const response = await axios.post(url, data, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response; // success
+  } catch (error) {
+    throw error; // re-throw so component can handle the error
+  }
+};
 
 
 

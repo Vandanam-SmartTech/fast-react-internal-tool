@@ -1,6 +1,5 @@
 // QuotationForm.tsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { FileText } from 'lucide-react';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import { fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages, saveDataToServer } from '../services/api';

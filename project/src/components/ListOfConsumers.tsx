@@ -9,14 +9,24 @@ const ListOfConsumers: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [userRole, setUserRole] = useState<string>('ROLE_REPRESENTATIVE'); // Hardcode the role for testing
 
   const handleModifyConsumer = (consumer: QuotationData) => {
     navigate(`/quotationform/${consumer.id}`, { state: { consumer } });
   };
 
+  const handleInstallationForm = (consumer: QuotationData) => {
+    navigate(`/material-form/${consumer.id}`, { state: { consumer } });
+  };
+
   const goToQuotationForm = () => {
     navigate("/quotationform"); 
   };
+
+  const goTomaterialform = () =>{
+    navigate("/material-form");
+  }
+
 
   const loadConsumers = async (page: number) => {
     try {
@@ -31,6 +41,16 @@ const ListOfConsumers: React.FC = () => {
       setLoading(false);
     }
   };
+
+   // Assuming you have a function to fetch current user's role
+  //  const loadUserRole = async () => {
+  //   try {
+  //     const userData = await fetchCurrentUser(); // Replace with your actual function
+  //     setUserRole("ROLE_ADMIN");
+  //   } catch (error) {
+  //     console.error("Error fetching user role:", error);
+  //   }
+  // };
 
   useEffect(() => {
     loadConsumers(currentPage);
@@ -73,10 +93,11 @@ const ListOfConsumers: React.FC = () => {
     return pages;
   };
 
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-semibold mb-6">List of Consumers</h1>
-
+         
       {loading ? (
         <div className="text-center py-10">
           <span>Loading...</span>
@@ -101,8 +122,17 @@ const ListOfConsumers: React.FC = () => {
                       className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
                       Modify
                     </button>
-                    <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
-                      Delete
+                    {userRole === 'ROLE_ADMIN' && ( // Conditionally render Delete button
+                      <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
+                        Delete
+                      </button>)}
+                      <button 
+                      className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
+                      View
+                    </button>
+                    <button  onClick={() => handleInstallationForm(consumer)}
+                      className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
+                      Installation Form
                     </button>
                   </div>
                 </div>
@@ -125,3 +155,7 @@ const ListOfConsumers: React.FC = () => {
 };
 
 export default ListOfConsumers;
+function fetchCurrentUser() {
+  throw new Error("Function not implemented.");
+}
+

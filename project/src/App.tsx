@@ -4,7 +4,7 @@ import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import ListOfConsumers from './components/ListOfConsumers';
-
+import SolarInstallationForm from './components/installation_team_form';
 
 
 const AppContent: React.FC = () => {
@@ -46,6 +46,23 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+          {/* <Route
+          path="/material-form"
+          element={
+            <PrivateRoute>
+              <SolarInstallationForm/>
+            </PrivateRoute>
+          }/> */}
+
+           <Route
+              path="/material-form/:id"
+              element={
+              <PrivateRoute>
+                <SolarInstallationForm/>
+              </PrivateRoute>
+            }
+          />
+
           <Route
               path="/quotationform/:id"
               element={

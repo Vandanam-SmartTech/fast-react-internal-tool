@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import SearchBar from "./SearchBar"; // Import the SearchBar component
 
+
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Get the current route
@@ -25,7 +26,10 @@ const Navbar: React.FC = () => {
   const goToListOfConsumers = () => {
     navigate("/list-of-consumers");
   };
-
+  
+  // const goTomaterialform = () =>{
+  //   navigate("/material-form");
+  // }
 
   return (
     <nav className="bg-blue-100 text-blue-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between shadow-md">
@@ -37,6 +41,14 @@ const Navbar: React.FC = () => {
 
       {/* Buttons */}
       <div className="flex items-center space-x-4">
+ 
+      {/* <button
+          onClick={goTomaterialform}
+          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none"
+        >
+        Installation Team Form
+        </button> */}
+
         {/* List of Consumers Button */}
         <button
           onClick={goToListOfConsumers}
