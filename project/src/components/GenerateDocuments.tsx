@@ -1,11 +1,20 @@
 import { useLocation } from "react-router-dom";
-import { QuotationData } from '../types/quotation';
 import { fetchPdf } from '../services/api';
 import { useState } from "react";
 
+export interface Consumer{
+  id:number,
+  customerId:number,
+  govIdName: string,
+  consumerId:number,
+  connectionType:string,
+  mobileNumber:string,
+  emailAddress:string,
+
+}
 export default function GenerateDocuments() {
   const location = useLocation();
-  const consumer = location.state?.consumer as QuotationData; // Retrieve consumer data
+  const consumer = location.state?.consumer as Consumer; // Retrieve consumer data
   const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null); // Track loading per document
 
   console.log("Consumer Data:", consumer);
