@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams,useLocation } from "react-router-dom";
 import { materialformDefaults } from "../constants/materialformdefaults";
 import { postMaterialData } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function MaterialForm() {
     const [formData, setFormData] = useState(materialformDefaults);
-    const { id: connectionId } = useParams(); // Route param as connectionId
-  
+    const location = useLocation();
+    const connectionId = location.state?.connectionId;
+    
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     };

@@ -34,7 +34,7 @@ const OnboardedCustomers: React.FC = () => {
   };
 
   const handleMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form/${consumer.id}`, { state: { consumer } });
+    navigate(`/material-form/${consumer.id}`, { state: { consumer,connectionId:consumer.id  } });
   };
   const loadOnboardedConsumers = async (page: number) => {
     try {
