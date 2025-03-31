@@ -14,6 +14,7 @@ import { InstallationForm } from './components/InstallationForm';
 import { ViewInstallation } from './components/ViewInstallation';
 import { SystemSpecifications } from './components/SystemSpecifications';
 import  OnboardedCustomers  from './components/OnboardedCustomers';
+import MaterialForm from './components/MaterialDetails';
 
 
 
@@ -143,6 +144,15 @@ const AppContent: React.FC = () => {
               element={
               <PrivateRoute>
                 <SystemSpecifications />
+              </PrivateRoute>
+            }
+          />
+
+           <Route
+              path="/material-form/:id"
+              element={
+              <PrivateRoute>
+                <MaterialForm/>
               </PrivateRoute>
             }
           />
