@@ -14,9 +14,12 @@ import { InstallationForm } from './components/InstallationForm';
 import { ViewInstallation } from './components/ViewInstallation';
 import { SystemSpecifications } from './components/SystemSpecifications';
 import  OnboardedCustomers  from './components/OnboardedCustomers';
-import MaterialForm from './components/MaterialDetails';
 
-
+import  RepresentativeDashboard  from './components/RepresentativeDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import { EditCustomer } from './components/EditCustomer';
+import { EditConnection } from './components/EditConnection';
+import { EditInstallation } from './components/EditInstallation';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -69,6 +72,24 @@ const AppContent: React.FC = () => {
           />
 
           <Route
+            path="/RepresentativeDashboard"
+            element={
+              <PrivateRoute>
+                <RepresentativeDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/AdminDashboard"
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/generatedocuments"
             element={
               <PrivateRoute>
@@ -91,6 +112,33 @@ const AppContent: React.FC = () => {
               element={
               <PrivateRoute>
                 <ViewCustomer />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/edit-customer/:id"
+              element={
+              <PrivateRoute>
+                <EditCustomer />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/edit-connection/:id"
+              element={
+              <PrivateRoute>
+                <EditConnection />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/edit-installation/:id"
+              element={
+              <PrivateRoute>
+                <EditInstallation />
               </PrivateRoute>
             }
           />

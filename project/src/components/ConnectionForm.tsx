@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveConnection , updateConsumerConnectionDetails } from "../services/api";
-import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
+import { saveConnection  } from "../services/api";
+import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 
 interface District {
@@ -56,8 +56,6 @@ export const ConnectionForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const customerId = location.state?.customerId || null;
-  const existingConnection = location.state?.existingConnection || null;
-  const connectionId = location.state?.connectionId || existingConnection?.id || null;
 
   const [districts, setDistricts] = useState<District[]>([]);
   const [talukas, setTalukas] = useState<Taluka[]>([]);
@@ -71,6 +69,8 @@ export const ConnectionForm = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
+  const representativeName = location.state?.representativeName
+  const [roles, setRoles] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     consumerId: "",
@@ -94,7 +94,7 @@ export const ConnectionForm = () => {
     monthlyAvgConsumptionUnits: 0,
   });
 
-  ///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
   useEffect(() => {
     const savedForm = localStorage.getItem('myFormData');
     if (savedForm) {
@@ -102,6 +102,19 @@ export const ConnectionForm = () => {
     }
   }, []);
 ///////////////////////////////////////////////////////////
+
+useEffect(() => {
+  const getClaims = async () => {
+    try {
+      const claims = await fetchClaims();
+      setRoles(claims.roles || []);
+    } catch (error) {
+      console.error("Failed to fetch user claims", error);
+    }
+  };
+
+  getClaims();
+}, []);
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -154,72 +167,6 @@ export const ConnectionForm = () => {
     };
     fetchVillagesData();
   }, [talukaCode]);
-
-  useEffect(() => {
-    const fetchLocationNames = async () => {
-      if (!existingConnection) return;
-  
-      console.log("Existing Connection Data:", existingConnection);
-  
-      setFormData((prev) => ({
-        ...prev,
-        ...existingConnection, // Populate form with existing connection data
-        isMsebConnection: existingConnection.isMsebConnection ? "Yes" : "No",
-        isNameCorrection: existingConnection.isNameCorrectionRequired ? "Yes" : "No",
-        phase: Object.keys(phaseTypeMapping).find(
-          key => phaseTypeMapping[key] === existingConnection.phaseTypeId
-      ) || "Single-Phase",
-        addressType: Object.keys(addressTypeMapping).find(
-          key => addressTypeMapping[key] === existingConnection.addressTypeId
-      ) || "Home",
-      connectionType: Object.keys(connectionTypeMapping).find(
-        key => connectionTypeMapping[key] === existingConnection.connectionTypeId
-    ) || "Residential",
-    correctionType: Object.keys(correctionTypeMapping).find(
-      key => correctionTypeMapping[key] === existingConnection.correctionTypeId
-  ) || "",
-      }));
-      
-  
-      // Fetch and set District Name + Taluka List
-      if (existingConnection.districtCode) {
-        const districtName = await getDistrictNameByCode(existingConnection.districtCode);
-        setDistrictName(districtName);
-  
-        const talukaData = await fetchTalukas(existingConnection.districtCode);
-        setTalukas(talukaData);
-      }
-  
-      // Fetch and set Taluka Name + Village List
-      if (existingConnection.talukaCode) {
-        const talukaName = await getTalukaNameByCode(existingConnection.talukaCode);
-        setTalukaName(talukaName);
-  
-        const villageData = await fetchVillages(existingConnection.talukaCode);
-        setVillages(villageData);
-  
-        // Now fetch the pincode after villages are fetched
-        const selectedVillage = villageData.find(v => v.code === existingConnection.villageCode);
-        if (selectedVillage) {
-          setPincode(selectedVillage.pincode);
-          console.log("selected village:", selectedVillage);
-          console.log("pincode:",pincode)
-          setFormData((prev) => ({
-            ...prev,
-            pincode: selectedVillage.pincode, // Ensure pincode is updated
-          }));
-        }
-      }
-  
-      // Fetch and set Village Name
-      if (existingConnection.villageCode) {
-        const villageName = await getVillageNameByCode(existingConnection.villageCode);
-        setVillageName(villageName);
-      }
-    };
-  
-    fetchLocationNames();
-  }, [existingConnection]); // Removed `villages` dependency to avoid unnecessary re-renders
   
   
 
@@ -231,9 +178,9 @@ export const ConnectionForm = () => {
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
     }));
-        /////////////////
+        ///////////////
         localStorage.setItem('myFormData', JSON.stringify(formData));
-        ////////////////
+        //////////////
   };
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -304,36 +251,36 @@ export const ConnectionForm = () => {
     };
 
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Received connectionId:", connectionId);
-
+  
     console.log("Received CustomerId:", customerId);
-
+  
     if (!customerId) {
       alert("Customer ID is missing!");
       return;
     }
   
-
-
     const isMsebConnection = formData.isMsebConnection === "Yes";
-    const isNameCorrectionRequired = formData.isNameCorrection === "Yes"
-      ? correctionTypeMapping[formData.correctionType] // 1 or 2 when "Yes"
-      : false;
-
+    const isNameCorrectionRequired =
+      formData.isNameCorrection === "Yes"
+        ? correctionTypeMapping[formData.correctionType]
+        : false;
+  
     const connectionData = {
-      customerId, // Assuming customerId is in state
+      customerId,
       consumerId: formData.consumerId,
-      isMsebConnection, // Now a boolean
+      isMsebConnection,
       isNameCorrectionRequired,
       phaseTypeId: phaseTypeMapping[formData.phase],
       addressTypeId: addressTypeMapping[formData.addressType],
       connectionTypeId: connectionTypeMapping[formData.connectionType],
-      correctionTypeId: formData.isNameCorrection === "Yes"
-        ? correctionTypeMapping[formData.correctionType]
-        : null,
+      correctionTypeId:
+        formData.isNameCorrection === "Yes"
+          ? correctionTypeMapping[formData.correctionType]
+          : null,
       monthlyAvgConsumptionUnits: formData.monthlyAvgConsumptionUnits,
       districtCode: formData.districtCode,
       talukaCode: formData.talukaCode,
@@ -347,47 +294,41 @@ export const ConnectionForm = () => {
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
     };
-
-
-
+  
     try {
-            if (connectionId) {
+      console.log("Saving new connection...");
+      const connectionId = await saveConnection(connectionData);
+      if (connectionId) {
+        console.log("New connection saved with ID:", connectionId);
+        navigate(`/view-connection/${connectionId}`, {
+          state: {
+            consumerId: formData.consumerId,
+            customerId,
+            connectionId: connectionId,
+            representativeName
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error in saving connection:", error);
+      alert("Failed to save connection. Please try again.");
+    }
 
-              const shouldEdit = window.confirm("Do you want to edit the connection details?");
-
-
-    if(shouldEdit){
-                console.log("Updating existing connection with ID:", connectionId);
-                const response = await updateConsumerConnectionDetails(connectionId, connectionData);
-                console.log("Update response:", response);
-                alert("Connection details updated successfully!");
-                navigate(`/view-connection/${connectionId}`, { state: { consumerId: formData.consumerId, customerId } });
-            } 
-            else{
-              setFormData(existingConnection)
-            }
-          }
-            else {
-                console.log("Saving new connection...");
-                const connectionId = await saveConnection(connectionData);
-                if (connectionId) {
-                    console.log("New connection saved with ID:", connectionId);
-                    navigate(`/view-connection/${connectionId}`, { state: { consumerId: formData.consumerId, customerId, connectionId }});
-                }
-            }
-        } catch (error) {
-            console.error("Error in connection process:", error);
-            alert("Failed to process connection. Please try again.");
-        }
-
-    /////////////
+  /////////////
     localStorage.removeItem('myFormData');
-    ////////////
+  ////////////
   };
+  
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">{existingConnection ? "Edit Connection Details" : "Add Connection Details"}</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add Connection Details</h2>
+
+      {roles.includes("ROLE_ADMIN") && (<div className="sm:ml-auto text-sm text-gray-600">
+      <span className="font-medium text-gray-800">Selected Representative:</span> {representativeName}
+    </div> )}
+  </div>
       <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 
         activeStep={0} 
@@ -712,7 +653,7 @@ export const ConnectionForm = () => {
       type="submit"
       className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
     >
-      {existingConnection ? "Update Connection" : "Save Connection"}
+      Save Connection
     </button>
   </div>
 </div>

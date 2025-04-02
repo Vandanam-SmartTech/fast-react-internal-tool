@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveCustomer, updateConsumerPersonalDetails } from "../services/api";
+import { saveCustomer } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
+import { fetchClaims } from '../services/api';
 
 export const CustomerForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const existingCustomer = location.state || null;
+  const [roles, setRoles] = useState<string[]>([]);
+
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
+  const [selectedRepresentative, setSelectedRepresentative] = useState("");
+
 
   const [formData, setFormData] = useState({
     govIdName: "",
@@ -27,21 +31,31 @@ export const CustomerForm = () => {
   }, []);
 ///////////////////////////////////////////////////////////
 
-  useEffect(() => {
-    if (existingCustomer) {
-      setFormData(existingCustomer);
-      setConfirmMobileNumber(existingCustomer.mobileNumber);
-      setConfirmEmailAddress(existingCustomer.emailAddress);
-    }
-  }, [existingCustomer]);
+useEffect(() => {
+    const getClaims = async () => {
+      try {
+        const claims = await fetchClaims();
+        setRoles(claims.roles || []);
+      } catch (error) {
+        console.error("Failed to fetch user claims", error);
+      }
+    };
 
+    getClaims();
+  }, []);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    /////////////////
+    ///////////////
     localStorage.setItem('myFormData', JSON.stringify(formData));
-    ////////////////
+    //////////////
+  };
+
+  const representativeNames: { [key: string]: string } = {
+    REP001: "Pranav Devardekar",
+    REP002: "Yash Devardekar",
+    REP003: "Sarvesh Devardekar",
   };
 
   
@@ -53,56 +67,65 @@ export const CustomerForm = () => {
     setConfirmEmailAddress(e.target.value);
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (formData.mobileNumber !== confirmMobileNumber) {
       alert("Mobile number and Confirm Mobile number do not match.");
       return;
     }
-
+  
     if (formData.emailAddress !== confirmEmailAddress) {
-      alert("Email and Cofirm Email do not match.");
+      alert("Email and Confirm Email do not match.");
       return;
     }
   
     try {
-      if (existingCustomer) {
-        const shouldEdit = window.confirm("Do you want to edit the customer details?");
-        
-        if (shouldEdit) {
-          console.log("Updating customer:", formData);
-          const response = await updateConsumerPersonalDetails(existingCustomer.id, formData);
-          console.log("Update response:", response);
-          alert("Customer details updated successfully!");
-          navigate(`/view-customer/${existingCustomer.id}`);
-        } else {
-          setFormData(existingCustomer); // Restore previous details
-        }
-      } else {
-        console.log("Saving new customer...");
-        const customerId = await saveCustomer(formData);
-        alert("Customer details saved successfully!");
-
-        if (customerId) {
-          navigate(`/view-customer/${customerId}`, { state: { customerId } });
-        }
+      console.log("Saving new customer...");
+      const customerId = await saveCustomer(formData);
+  
+      if (customerId) {
+        navigate(`/view-customer/${customerId}`, { state: { customerId, representativeId: selectedRepresentative,
+          representativeName: representativeNames[selectedRepresentative] || "", } });
       }
     } catch (error) {
-      console.error("Error in updating/saving customer:", error);
-      alert("Failed to update customer. Please try again.");
+      console.error("Error in saving customer:", error);
+      alert("Failed to save customer. Please try again.");
     }
+  
     /////////////
     localStorage.removeItem('myFormData');
     ////////////
   };
   
+  
 
   return (
   <div className="max-w-4xl mx-auto p-4 sm:p-6">
-    <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">
-      {existingCustomer ? "Update Customer" : "Add New Customer"}
-    </h2>
+
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">
+    Add New Customer
+  </h2>
+
+  {roles.includes("ROLE_ADMIN") && (
+    <div className="sm:ml-auto">
+    <select
+  name="representative"
+  value={selectedRepresentative}
+  onChange={(e) => setSelectedRepresentative(e.target.value)}
+  className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  <option value="">Select Representative</option>
+  <option value="REP001">Pranav Devardekar</option>
+  <option value="REP002">Yash Devardekar</option>
+  <option value="REP003">Sarvesh Devardekar</option>
+</select>
+
+  </div> )}
+</div>
+
     
     <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 
@@ -223,7 +246,7 @@ export const CustomerForm = () => {
           type="submit"
           className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          {existingCustomer ? "Update Customer" : "Save Customer"}
+          Save Customer
         </button>
       </div>
     </form>

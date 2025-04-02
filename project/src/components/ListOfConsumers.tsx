@@ -19,7 +19,7 @@ const ListOfConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const handleViewConsumer = (consumer: Consumer) => {
-    navigate(`/view-customer/${consumer.id}`, { state: { consumer } });
+    navigate(`/view-customer/${consumer.id}`, { state: { consumer,customerId: consumer.id, } });
   };
 
   const loadConsumers = async (page: number) => {
