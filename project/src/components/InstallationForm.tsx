@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveInstallation, updateInstallationSpaceDetails } from "../services/api";
+import { saveInstallation } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 
 
@@ -11,8 +11,7 @@ export const InstallationForm = () => {
   const connectionId = location.state?.connectionId || null;
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
-  const existingInstallation = location.state?.existingInstallation || null;
-  const installationId = location.state?.installationId || existingInstallation?.id || null;
+
 
   const installationSpaceTypeMapping = {
     'Slab': 1,
@@ -24,19 +23,6 @@ export const InstallationForm = () => {
     'On Ground': 7,
   };
 
-  useEffect(() => {
-    if (existingInstallation) {
-        console.log("Existing Installation Data:", existingInstallation);
-
-        setFormData((prev) => ({
-            ...prev,
-            ...existingInstallation, // Spread existing data into form
-            spaceType: Object.keys(installationSpaceTypeMapping).find(
-                key => installationSpaceTypeMapping[key] === existingInstallation.installationSpaceTypeId
-            ) || "Slab" // Convert ID to readable text for dropdown
-        }));
-    }
-}, [existingInstallation]);
 
   
 
@@ -71,7 +57,6 @@ export const InstallationForm = () => {
     console.log("Received connectionId:", connectionId);
     console.log("Received consumerId:", consumerId);
     console.log("Received customerId:", customerId);
-    console.log("Installation ID:", installationId);
 
     if (!connectionId || !consumerId) {
         alert("Connection ID and Consumer ID are required!");
@@ -87,7 +72,7 @@ export const InstallationForm = () => {
 
     // Construct installation data object
     const installationData = {
-        customerId: customerId || null, // Ensure customerId is passed correctly
+        customerId: customerId || null,
         connectionId,
         consumerId,
         installationSpaceTypeId,
@@ -101,26 +86,13 @@ export const InstallationForm = () => {
     };
 
     try {
+        console.log("Saving new installation...");
+        const installationId = await saveInstallation(installationData);
         if (installationId) {
-          const shouldEdit = window.confirm("Do you want to edit the installation details?");
-
-          if(shouldEdit){
-            console.log("Updating existing installation with ID:", installationId);
-            const response = await updateInstallationSpaceDetails(installationId, installationData);
-            console.log("Update response:", response);
-            alert("Installation details updated successfully!");
-            navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId , installationId: installationId, customerId} });
-          }else{
-            setFormData(existingInstallation);
-          }
-        } else {
-          
-            console.log("Saving new installation...");
-            const installationId = await saveInstallation(installationData);
-            if (installationId) {
-                console.log("New Installation saved with ID:", installationId);
-                navigate(`/view-installation/${installationId}`, { state: { consumerId, connectionId, installationId: installationId, customerId } });
-            }
+            console.log("New Installation saved with ID:", installationId);
+            navigate(`/view-installation/${installationId}`, {
+                state: { consumerId, connectionId, installationId, customerId },
+            });
         }
     } catch (error) {
         console.error("Error in installation process:", error);
@@ -130,15 +102,16 @@ export const InstallationForm = () => {
 
 
 
+
 return (
   <div className="max-w-4xl mx-auto p-4 sm:p-6">
     <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">
-      {existingInstallation ? "Update Installation" : "Add New Installation"}
+      Add New Installation
     </h2>
 
     <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 
-        activeStep={2} 
+        activeStep={1} 
         styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
         className="min-w-max sm:w-full"
       >
@@ -262,7 +235,7 @@ return (
           type="submit"
           className="w-full sm:w-auto py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition"
         >
-          {existingInstallation ? "Update Installation" : "Save Installation"}
+          Save Installation
         </button>
       </div>
     </form>

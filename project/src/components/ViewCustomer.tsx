@@ -1,40 +1,66 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation} from "react-router-dom";
-import { getCustomerById, getConnectionsByCustomerId } from "../services/api";
+import { getCustomerById, getConnectionsByCustomerId, fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 
 export const ViewCustomer = () => {
-  const { id } = useParams<{ id: string }>();
+  
   const location = useLocation();
   const [customer, setCustomer] = useState<any>(null);
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
+  const representativeName = location.state?.representativeName
+  const [roles, setRoles] = useState<string[]>([]);
+
+
+  useEffect(() => {
+    const getClaims = async () => {
+      try {
+        const claims = await fetchClaims();
+        setRoles(claims.roles || []);
+      } catch (error) {
+        console.error("Failed to fetch user claims", error);
+      }
+    };
+
+    getClaims();
+  }, []);
 
   useEffect(() => {
     const fetchCustomer = async () => {
-      if (id) {
-        const data = await getCustomerById(Number(id));
+      if (customerId) {
+        const data = await getCustomerById(Number(customerId));
         setCustomer(data);
       }
     };
 
     const fetchConnections = async () => {
-      if (id) {
-        const data = await getConnectionsByCustomerId(Number(id));
+      if (customerId) {
+        const data = await getConnectionsByCustomerId(Number(customerId));
         if (data) setConnections(data);
       }
     };
 
     fetchCustomer();
     fetchConnections();
-  }, [id]);
+  }, [customerId]);
+
+ 
 
   if (!customer) return <p>Loading...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Customer Details</h2>
+
+      {roles.includes("ROLE_ADMIN") && (<div className="sm:ml-auto text-sm text-gray-600">
+      <span className="font-medium text-gray-800">Selected Representative:</span> {representativeName}
+    </div> )}
+  </div>
+
+
           <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 
         activeStep={0} 
@@ -70,7 +96,7 @@ export const ViewCustomer = () => {
       {/* Update Customer Button - Placed before connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/CustomerForm`, { state: customer })}
+          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { ...customer, representativeName } })}
           className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Edit Customer
@@ -91,7 +117,7 @@ export const ViewCustomer = () => {
                 <span className="font-semibold">Consumer Name:</span> {customer.govIdName || ""}
               </p>
               <button
-                onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, customerId: id } })}
+                onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, customerId: customerId, representativeName} })}
                 className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 View
@@ -106,7 +132,7 @@ export const ViewCustomer = () => {
       {/* Add New Connection Button - Placed after connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: id } })}
+          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId ,representativeName} })}
           className="py-2 px-4 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
         >
           Add New Connection

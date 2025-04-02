@@ -35,6 +35,24 @@ export const setAuthToken = (token) => {
 
 const getAuthToken = () => localStorage.getItem('jwtToken');
 
+export const fetchClaims = async () => {
+  const token = localStorage.getItem('jwtToken');
+  const response = await fetch('http://localhost:9090/jwt/claims', {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+
+  });
+
+  const data = await response.json(); 
+  return data.claims; 
+};
+
+
+
+
+
 export const generateQuotationPDF = async (connectionId: number, requestData: object): Promise<Blob> => {
   try {
     const response = await fetch(`http://localhost:8080/api/v2/quotation/customer-selected/pdf/${connectionId}`, {
@@ -114,7 +132,7 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
 
     // Check if the response is OK and the id exists
     if (response.ok && responseData.id) {
-      // alert('Customer data saved successfully!');
+      alert('Customer data saved successfully!');
       return responseData.id; // Return the id from CustomerDTO
     } else {
       alert(responseData.message || 'Failed to save customer data.');

@@ -5,13 +5,13 @@ import { getInstallationByConsumerId } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 
 export const ViewInstallation = () => {
-  const { id } = useParams<{ id: string }>();
+
   const [installation, setInstallation] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const consumerId = location.state?.consumerId; // Use consumerId from navigation state if available
+  const consumerId = location.state?.consumerId; 
   const connectionId = location.state?.connectionId;
-  const installationId = location.state?.installationId || id;
+  const installationId = location.state?.installationId;
   const customerId = location.state?.customerId;
 
   const installationSpaceTypeMapping: { [key: number]: string } = {
@@ -56,7 +56,7 @@ export const ViewInstallation = () => {
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Installation Details</h2>
     </div>
     <div className="mb-6 sm:mb-8 overflow-x-auto">
-        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
           <Step label="Customer Details" />
           <Step label="Connection Details" />
           <Step label="Installation Space Details" />
@@ -103,8 +103,8 @@ export const ViewInstallation = () => {
       <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-6 space-y-4 sm:space-y-0 sm:space-x-6">
   <button
     onClick={() =>
-      navigate(`/InstallationForm`, {
-        state: { existingInstallation: installation, installationId: id, connectionId, consumerId },
+      navigate(`/edit-installation/${installationId}`, {
+        state: { installationId, connectionId, consumerId ,customerId},
       })
     }
     className="w-full sm:w-auto max-w-xs py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
