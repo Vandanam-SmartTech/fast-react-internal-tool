@@ -130,7 +130,7 @@ const OnboardedCustomers: React.FC = () => {
     </button>
   </div>
   <button
-     onClick={() => handleMaterialDetails(consumer)}
+   onClick={() => handleMaterialDetails(consumer)}
     className="px-2 h-9 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none w-full"
   >
     Add Material Details
