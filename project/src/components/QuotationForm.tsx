@@ -1667,24 +1667,6 @@ const handlePreview = async () => {
               </select>
           </div>
 
-            {/* <div>
-            <label className="block text-sm font-medium text-gray-700">Recommended KW</label>
-            <select
-              id="recommendedKW"
-              name="recommendedKW"
-              value={recommendedKW}
-              onChange={(e) => setRecommendedKW(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="2.2">2.2</option>
-                <option value="3.3">3.3</option>
-                <option value="4.4">4.4</option>
-                <option value="5.5">5.5</option>
-                <option value="5.9">5.9</option>
-                <option value="6.49">6.49</option>
-                <option value="6.05">6.05</option>
-                <option value="6.6">6.6</option>
-                </select>
-          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
@@ -1837,18 +1819,7 @@ const handlePreview = async () => {
             />
           </div>
 
-          {/*<div>
-            <label className="block text-sm font-medium text-gray-700">Subsidy</label>
-            <input
-              type="number"
-              name="subsidy"
-              id="subsidy"
-              value={formData.subsidy}
-              onChange={handleChange}
-              placeholder="Enter Subsidy"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>*/}
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>

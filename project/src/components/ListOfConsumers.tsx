@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers } from "../services/api";
+import { fetchConsumers, fetchConsumerNumber } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { QuotationData } from "../types/quotation"; 
+import { Eye } from "lucide-react";
+
+interface Consumer {
+  id: number;
+  govIdName: string;
+  emailAddress: string;
+  mobileNumber: string;
+}
 
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
-  const [consumers, setConsumers] = useState<QuotationData[]>([]);
+  const [consumers, setConsumers] = useState<Consumer[]>([]);
+  const [consumerNumbers, setConsumerNumbers] = useState<{ [key: number]: number | string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const handleModifyConsumer = (consumer: QuotationData) => {
-    navigate(`/quotationform/${consumer.id}`, { state: { consumer } });
-  };
-
-  const goToQuotationForm = () => {
-    navigate("/quotationform"); 
-  };
-
-  const handleGenerateDocuments = (consumer: QuotationData) => {
-    navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
-  };
-
-  const goToGenerateDocuments = () => {
-    navigate("/generateDocuments"); 
+  const handleViewConsumer = (consumer: Consumer) => {
+    navigate(`/view-customer/${consumer.id}`, { state: { consumer,customerId: consumer.id, } });
   };
 
   const loadConsumers = async (page: number) => {
@@ -33,12 +29,44 @@ const ListOfConsumers: React.FC = () => {
       
       setConsumers(data.content); // Directly use the response without extra mapping
       setTotalPages(data.totalPages);
+
+      const consumerIds = data.content.map((consumer: Consumer) => consumer.id);
+      fetchConsumerNumbers(consumerIds);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchConsumerNumbers = async (consumerIds: number[]) => {
+    try {
+      const consumerNumberMap: { 
+        [key: number]: { connectionId: number; consumerId: number }[] 
+      } = {}; // Store multiple consumerIds and their IDs per customerId
+  
+      await Promise.all(
+        consumerIds.map(async (id) => {
+          const response = await fetchConsumerNumber(id); // Expecting an array
+          if (Array.isArray(response)) {
+            consumerNumberMap[id] = response.map((item) => ({
+              connectionId: item.id, // Store connectionId
+              consumerId: item.consumerId, // Store consumerId
+            }));
+          } else {
+            consumerNumberMap[id] = []; // Handle cases where response isn't an array
+          }
+        })
+      );
+  
+      setConsumerNumbers((prev) => ({ ...prev, ...consumerNumberMap })); // Update state correctly
+    } catch (error) {
+      console.error("Error fetching consumer numbers:", error);
+    }
+  };
+  
+  
+  
 
   useEffect(() => {
     loadConsumers(currentPage);
@@ -82,58 +110,102 @@ const ListOfConsumers: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-6">List of Consumers</h1>
-
-      {loading ? (
-        <div className="text-center py-10">
-          <span>Loading...</span>
-        </div>
-      ) : (
-        <div>
-          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {consumers.length === 0 ? (
-              <p>No consumers found.</p>
-            ) : (
-              consumers.map((consumer) => (
-                <div key={consumer.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg">
-                  <div className="mb-4">
-                    <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerId}</p>
-                    <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
-                    <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.govIdName}</p>
-                    <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.emailAddress}</p>
-                    <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => handleModifyConsumer(consumer)}
-                      className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
-                      View
-                    </button>
-                    {/* <button className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none">
-                      Delete
-                    </button> */}
-                    <button onClick={() => handleGenerateDocuments(consumer)}
-                    className="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 focus:outline-none">
-                      Generate Documents
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+    <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full lg:w-[87%]">
+        <h1 className="text-2xl font-semibold mb-6 text-center sm:text-left">
+          List of Customers
+        </h1>
+  
+        {loading ? (
+          <div className="text-center py-10">
+            <span>Loading...</span>
           </div>
-
-          <div className="flex justify-center items-center mt-6 space-x-2">
-            {renderPagination()}
+        ) : (
+          <div>
+            <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {consumers.length === 0 ? (
+                <p className="col-span-full text-center text-gray-600">
+                  No consumers found.
+                </p>
+              ) : (
+                consumers.map((consumer) => (
+                  <div
+                    key={consumer.id}
+                    className="relative bg-white p-4 rounded-xl shadow hover:shadow-lg transition-shadow duration-300"
+                  >
+                    {/* View Button */}
+                    <div className="absolute top-4 right-4">
+                      <button
+                        onClick={() => handleViewConsumer(consumer)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600"
+                      >
+                        View
+                      </button>
+                    </div>
+  
+                    <div className="space-y-2 mt-2">
+                      <p className="break-words text-sm">
+                        <span className="font-medium">Consumer Name:</span>{" "}
+                        {consumer.govIdName}
+                      </p>
+                      <p className="truncate text-sm">
+                        <span className="font-medium">Email Address:</span>{" "}
+                        {consumer.emailAddress}
+                      </p>
+                      <p className="truncate text-sm">
+                        <span className="font-medium">Mobile Number:</span>{" "}
+                        {consumer.mobileNumber}
+                      </p>
+                    </div>
+  
+                    {/* Connection IDs */}
+                    {consumerNumbers[consumer.id] &&
+                      consumerNumbers[consumer.id].length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {consumerNumbers[consumer.id].map((entry, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+                            >
+                              <span className="text-sm break-words">
+                                <span className="font-medium">
+                                  Connection {index + 1}:
+                                </span>{" "}
+                                {entry.consumerId}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  navigate(`/view-connection/${entry.connectionId}`, {
+                                    state: {
+                                      customerId: consumer.id,
+                                      connectionId: entry.connectionId,
+                                      consumerId: entry.consumerId,
+                                    },
+                                  })
+                                }
+                              >
+                                <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                  </div>
+                ))
+              )}
+            </div>
+  
+            {/* Pagination */}
+            <div className="flex justify-center items-center mt-8 space-x-2">
+              {renderPagination()}
+            </div>
           </div>
-        </div>
-      )}
-
-      <button onClick={goToQuotationForm}
-        className="mt-6 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none">
-        Back to Home
-      </button>
+        )}
+      </div>
     </div>
   );
+  
+  
 };
 
 export default ListOfConsumers;
