@@ -14,13 +14,12 @@ import { InstallationForm } from './components/InstallationForm';
 import { ViewInstallation } from './components/ViewInstallation';
 import { SystemSpecifications } from './components/SystemSpecifications';
 import  OnboardedCustomers  from './components/OnboardedCustomers';
+
 import  RepresentativeDashboard  from './components/RepresentativeDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import { EditCustomer } from './components/EditCustomer';
 import { EditConnection } from './components/EditConnection';
 import { EditInstallation } from './components/EditInstallation';
-
-
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -193,6 +192,15 @@ const AppContent: React.FC = () => {
               element={
               <PrivateRoute>
                 <SystemSpecifications />
+              </PrivateRoute>
+            }
+          />
+
+           <Route
+              path="/material-form/:id"
+              element={
+              <PrivateRoute>
+                <MaterialForm/>
               </PrivateRoute>
             }
           />
