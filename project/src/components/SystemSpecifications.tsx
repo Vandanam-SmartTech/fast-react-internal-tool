@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails, fetchInstallationSpaceTypes } from '../services/api';
+import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails, fetchInstallationSpaceTypes, fetchClaims } from '../services/api';
 import { generateQuotationPDF } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,8 @@ export const SystemSpecifications = () => {
   const [connectionType, setConnectionType] = useState("");
   const [panelWattages, setPanelWattages] = useState([]);
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
+  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  const [roles, setRoles] = useState<string[]>([]);
 
   const installationSpaceTypeMapping: Record<number, string> = {
     1: "Slab",
@@ -68,6 +70,26 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
     loadInstallationSpaceTypes();
 }, [consumerId]); // Rerun effect when consumerId changes
+
+useEffect(() => {
+  const getClaims = async () => {
+    try {
+      const claims = await fetchClaims();
+      setRoles(claims.roles || []);
+    } catch (error) {
+      console.error("Failed to fetch user claims", error);
+    }
+  };
+
+  getClaims();
+}, []);
+
+useEffect(() => {
+  const storedRep = localStorage.getItem("selectedRepresentative");
+  if (storedRep) {
+    setSelectedRepresentative(JSON.parse(storedRep));
+  }
+}, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -329,8 +351,8 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
-      {/* Backward Arrow Button */}
+      {/* <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
+
       <button
         onClick={() => navigate(`/view-connection/${connectionId}`,{ state: { consumerId, customerId, connectionId }})}
         className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -338,12 +360,40 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
         <ArrowLeft className="w-6 h-6 text-gray-700" />
       </button>
 
-      {/* Heading */}
+
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">
     {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
 </h2>
 
-    </div>
+    </div> */}
+
+<div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+  {/* Backward Arrow Button (Before Title on Mobile) */}
+  <div className="flex items-center w-full md:w-auto">
+    <button
+      onClick={() =>
+        navigate(`/view-connection/${connectionId}`, {
+          state: { consumerId, customerId, connectionId },
+        })
+      }
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
+
+    {/* Heading - Adjusts Position on Small Screens */}
+    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+    {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
+    </h2>
+  </div>
+
+  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+  <div className="sm:ml-auto text-sm text-gray-600">
+    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+  </div>
+)}
+</div>
 <div className="col-span-2 mb-4">
         <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
           <Step label="Customer Details" />
@@ -478,6 +528,15 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
             </div>
 
             <div className="flex space-x-12">
+
+            <button
+        type="button"
+        className="min-w-80 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+        Save Customer Selected System Specifications
+    </button>
+
+
     <button
         type="button"
         onClick={handlePreview}

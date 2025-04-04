@@ -16,6 +16,7 @@ export const ViewConnection = () => {
   const connectionId = location.state?.connectionId; 
   const navigate = useNavigate();
   const [installations, setInstallations] = useState<any[]>([]);
+  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
 
@@ -87,6 +88,13 @@ export const ViewConnection = () => {
       };
   
       getClaims();
+    }, []);
+
+    useEffect(() => {
+      const storedRep = localStorage.getItem("selectedRepresentative");
+      if (storedRep) {
+        setSelectedRepresentative(JSON.parse(storedRep));
+      }
     }, []);
 
   useEffect(() => {
@@ -171,20 +179,36 @@ export const ViewConnection = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-4">
-      {/* Backward Arrow Button */}
-      <button
-        onClick={() => navigate(`/view-customer/${customerId}`,{ state: { consumerId, customerId, connectionId: connectionId }})}
-        className="p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-700" />
-      </button>
+      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+  {/* Backward Arrow Button (Before Title on Mobile) */}
+  <div className="flex items-center w-full md:w-auto">
+    <button
+      onClick={() =>
+        navigate(`/view-customer/${customerId}`, {
+          state: { consumerId, customerId, connectionId },
+        })
+      }
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
 
-      {/* Heading */}
-      <h2 className="text-xl md:text-2xl font-semibold text-gray-700">View Connection Details</h2>
-    </div>
-    <div className="col-span-1 md:col-span-2 mb-4">
-        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+    {/* Heading - Adjusts Position on Small Screens */}
+    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+      View Connection Details
+    </h2>
+  </div>
+
+  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+  <div className="sm:ml-auto text-sm text-gray-600">
+    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+  </div>
+)}
+</div>
+
+    <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
+        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }} className="min-w-max sm:w-full">
           <Step label="Customer Details" />
           <Step label="Connection Details" />
           <Step label="Installation Space Details" />
@@ -345,7 +369,7 @@ export const ViewConnection = () => {
       {/* Edit Connection Button (Before Installations) */}
       <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId, consumerId, customerId} })}
+          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId:connectionId, consumerId, customerId} })}
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
         >
           Edit Connection
@@ -416,12 +440,12 @@ export const ViewConnection = () => {
 
 {roles.includes("ROLE_ADMIN") && (
         <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
-          <button onClick={() => setShowDialog(true)} className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+          <button onClick={() => setShowDialog(true)} className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2">
             Do you want to Onboard the Customer?
           </button>
           {showDialog && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className="bg-white p-6 rounded-md shadow-md w-11/12 max-w-sm">
+              <div className="bg-white p-6 rounded-md shadow-md max-w-sm w-full relative top-[-50px]">
                 <h2 className="text-lg font-semibold mb-4">Do you want to onboard the customer?</h2>
                 <div className="flex justify-end space-x-4">
                   <button onClick={handleNo} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">No</button>

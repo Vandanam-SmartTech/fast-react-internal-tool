@@ -69,7 +69,7 @@ export const ConnectionForm = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
-  const representativeName = location.state?.representativeName
+  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
@@ -114,6 +114,13 @@ useEffect(() => {
   };
 
   getClaims();
+}, []);
+
+useEffect(() => {
+  const storedRep = localStorage.getItem("selectedRepresentative");
+  if (storedRep) {
+    setSelectedRepresentative(JSON.parse(storedRep));
+  }
 }, []);
 
   useEffect(() => {
@@ -304,8 +311,7 @@ useEffect(() => {
           state: {
             consumerId: formData.consumerId,
             customerId,
-            connectionId: connectionId,
-            representativeName
+            connectionId: connectionId
           },
         });
       }
@@ -325,9 +331,11 @@ useEffect(() => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add Connection Details</h2>
 
-      {roles.includes("ROLE_ADMIN") && (<div className="sm:ml-auto text-sm text-gray-600">
-      <span className="font-medium text-gray-800">Selected Representative:</span> {representativeName}
-    </div> )}
+      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+  <div className="sm:ml-auto text-sm text-gray-600">
+    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+  </div>
+)}
   </div>
       <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 

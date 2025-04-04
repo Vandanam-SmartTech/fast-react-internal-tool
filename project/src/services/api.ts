@@ -50,6 +50,33 @@ export const fetchClaims = async () => {
 };
 
 
+export const fetchRepresentatives = async () => {
+  try {
+    const response = await fetch("http://localhost:9090/api/users/all", {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+
+    // Filter users with the role "ROLE_REPRESENTATIVE"
+    return data
+      .filter(user => user.roles.some(role => role.name === "ROLE_REPRESENTATIVE"))
+      .map(user => ({
+        userId: user.userId,
+        name: user.nameAsPerGovId, 
+        representativeCode: user.representativeCode,
+        mobileNumber: user.mobileNumber,
+        emailAddress: user.emailAddress
+      }));
+  } catch (error) {
+    console.error("Error fetching representatives:", error);
+    return [];
+  }
+};
+
+
 
 
 

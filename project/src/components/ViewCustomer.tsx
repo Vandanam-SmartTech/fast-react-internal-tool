@@ -10,7 +10,7 @@ export const ViewCustomer = () => {
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
-  const representativeName = location.state?.representativeName
+  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
 
 
@@ -25,6 +25,13 @@ export const ViewCustomer = () => {
     };
 
     getClaims();
+  }, []);
+
+  useEffect(() => {
+    const storedRep = localStorage.getItem("selectedRepresentative");
+    if (storedRep) {
+      setSelectedRepresentative(JSON.parse(storedRep));
+    }
   }, []);
 
   useEffect(() => {
@@ -55,9 +62,12 @@ export const ViewCustomer = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Customer Details</h2>
 
-      {roles.includes("ROLE_ADMIN") && (<div className="sm:ml-auto text-sm text-gray-600">
-      <span className="font-medium text-gray-800">Selected Representative:</span> {representativeName}
-    </div> )}
+      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+  <div className="sm:ml-auto text-sm text-gray-600">
+    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+  </div>
+)}
+
   </div>
 
 
@@ -96,7 +106,7 @@ export const ViewCustomer = () => {
       {/* Update Customer Button - Placed before connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { ...customer, representativeName } })}
+          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { ...customer } })}
           className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Edit Customer
@@ -117,7 +127,7 @@ export const ViewCustomer = () => {
                 <span className="font-semibold">Consumer Name:</span> {customer.govIdName || ""}
               </p>
               <button
-                onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, customerId: customerId, representativeName} })}
+                onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, customerId: customerId} })}
                 className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 View
@@ -132,7 +142,7 @@ export const ViewCustomer = () => {
       {/* Add New Connection Button - Placed after connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId ,representativeName} })}
+          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId} })}
           className="py-2 px-4 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
         >
           Add New Connection

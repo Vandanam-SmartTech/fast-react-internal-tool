@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, updateInstallationSpaceDetails } from "../services/api";
+import { getInstallationByConsumerId, updateInstallationSpaceDetails, fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 
 export const EditInstallation = () => {
@@ -11,6 +11,8 @@ export const EditInstallation = () => {
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
   const installationId = location.state?.installationId || null;
+  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  const [roles, setRoles] = useState<string[]>([]);
 
   const [installation, setInstallation] = useState<any>(null);
 
@@ -33,7 +35,28 @@ export const EditInstallation = () => {
     availableSouthNorthLengthFt: 0,
     availableEastWestLengthFt: 0,
     spaceType: 'Slab',
+    spaceTitle:'',
   });
+
+  useEffect(() => {
+      const getClaims = async () => {
+        try {
+          const claims = await fetchClaims();
+          setRoles(claims.roles || []);
+        } catch (error) {
+          console.error("Failed to fetch user claims", error);
+        }
+      };
+    
+      getClaims();
+    }, []);
+  
+    useEffect(() => {
+      const storedRep = localStorage.getItem("selectedRepresentative");
+      if (storedRep) {
+        setSelectedRepresentative(JSON.parse(storedRep));
+      }
+    }, []);
 
   useEffect(() => {
     const fetchInstallation = async () => {
@@ -52,6 +75,7 @@ export const EditInstallation = () => {
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
               spaceType: selectedInstallation.spaceType || 'Slab',
+              spaceTitle: selectedInstallation.spaceTitle || '',
             });
           }
         }
@@ -66,7 +90,7 @@ export const EditInstallation = () => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({
       ...prev,
-      [name]: e.target.type === "number" ? Number(value) : value,
+      [name]: value,
     }));
   };
 
@@ -85,6 +109,7 @@ export const EditInstallation = () => {
         availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
         availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
         spaceType: installation.spaceType || 'Slab',
+        spaceTitle: installation.spaceTitle || '',
       });
       return;
     }
@@ -106,9 +131,15 @@ export const EditInstallation = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">
-        Update Installation
-      </h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Installation</h2>
+
+      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+  <div className="sm:ml-auto text-sm text-gray-600">
+    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+  </div>
+)}
+  </div>
   
       <div className="mb-6 sm:mb-8 overflow-x-auto">
         <Stepper 
@@ -140,6 +171,18 @@ export const EditInstallation = () => {
               <option key={key} value={key}>{key}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
+          <input
+            type="text"
+            id="spaceTitle"
+            name="spaceTitle"
+            value={formData.spaceTitle}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
         </div>
   
         <div>
