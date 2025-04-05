@@ -16,9 +16,10 @@ export const ViewConnection = () => {
   const connectionId = location.state?.connectionId; 
   const navigate = useNavigate();
   const [installations, setInstallations] = useState<any[]>([]);
-  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const phaseTypeMapping: { [key: number]: string } = {
     1: "Single-Phase",
@@ -90,12 +91,12 @@ export const ViewConnection = () => {
       getClaims();
     }, []);
 
-    useEffect(() => {
-      const storedRep = localStorage.getItem("selectedRepresentative");
-      if (storedRep) {
-        setSelectedRepresentative(JSON.parse(storedRep));
-      }
-    }, []);
+    // useEffect(() => {
+    //   const storedRep = localStorage.getItem("selectedRepresentative");
+    //   if (storedRep) {
+    //     setSelectedRepresentative(JSON.parse(storedRep));
+    //   }
+    // }, []);
 
   useEffect(() => {
     const fetchLocationNames = async () => {
@@ -185,7 +186,7 @@ export const ViewConnection = () => {
     <button
       onClick={() =>
         navigate(`/view-customer/${customerId}`, {
-          state: { consumerId, customerId, connectionId },
+          state: { consumerId :consumerId, customerId, connectionId : connectionId ,selectedRepresentative :selectedRepresentative},
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -201,10 +202,10 @@ export const ViewConnection = () => {
 
   {/* Selected Representative - Adjusts for Desktop & Mobile */}
   {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-  <div className="sm:ml-auto text-sm text-gray-600">
-    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-  </div>
-)}
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
 </div>
 
     <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
@@ -369,7 +370,7 @@ export const ViewConnection = () => {
       {/* Edit Connection Button (Before Installations) */}
       <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId:connectionId, consumerId, customerId} })}
+          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId: connectionId, consumerId, customerId, selectedRepresentative:selectedRepresentative} })}
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
         >
           Edit Connection
@@ -396,7 +397,7 @@ export const ViewConnection = () => {
           </p>
           <button
             onClick={() =>
-              navigate(`/view-installation/${installation.id}`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,installationId: installation.id, } })
+              navigate(`/view-installation/${installation.id}`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,installationId: installation.id,selectedRepresentative:selectedRepresentative } })
             }
             className="mt-2 py-1 px-3 bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-600"
           >
@@ -424,14 +425,14 @@ export const ViewConnection = () => {
         alert("Connection ID and Consumer Id is missing!");
         return;
       }
-      navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId } });
+      navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId, selectedRepresentative:selectedRepresentative } });
     }}
     className="py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
   >
     Add New Installation
   </button>
   <button
-    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId}})}
+    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
   >
     Get Recommendation

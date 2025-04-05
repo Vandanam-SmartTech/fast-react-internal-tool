@@ -69,9 +69,10 @@ export const EditConnection = () => {
     const [talukaName, setTalukaName] = useState<string>("");
     const [villageName, setVillageName] = useState<string>("");
     const [isNameCorrecction, setIsNameCorrection] = useState("No");
-    const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+    //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
     const [loading, setLoading] = useState(true);
     const [roles, setRoles] = useState<string[]>([]);
+    const selectedRepresentative = location.state?.selectedRepresentative;
 
 
 
@@ -115,12 +116,12 @@ export const EditConnection = () => {
         getClaims();
       }, []);
 
-  useEffect(() => {
-    const storedRep = localStorage.getItem("selectedRepresentative");
-    if (storedRep) {
-      setSelectedRepresentative(JSON.parse(storedRep));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedRep = localStorage.getItem("selectedRepresentative");
+  //   if (storedRep) {
+  //     setSelectedRepresentative(JSON.parse(storedRep));
+  //   }
+  // }, []);
 
 
   useEffect(() => {
@@ -353,7 +354,7 @@ export const EditConnection = () => {
         await updateConsumerConnectionDetails(Number(connectionId), connectionData);
         alert("Connection updated successfully!");
         navigate(`/view-connection/${connectionId}`, {
-          state: { connectionId, consumerId:formData.consumerId, customerId },
+          state: { connectionId, consumerId:formData.consumerId, customerId , selectedRepresentative:selectedRepresentative},
         });
       }
     } catch (error) {
@@ -370,10 +371,10 @@ export const EditConnection = () => {
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Connection</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-  <div className="sm:ml-auto text-sm text-gray-600">
-    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-  </div>
-)}
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
   </div>
         <div className="mb-6 sm:mb-8 overflow-x-auto">
         <Stepper 

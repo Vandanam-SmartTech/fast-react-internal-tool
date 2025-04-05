@@ -81,16 +81,16 @@ useEffect(() => {
   
     if (!selectedUserId) {
       setSelectedRepresentative(null); 
-      localStorage.removeItem("selectedRepresentative");
+      //localStorage.removeItem("selectedRepresentative");
       return;
     }
   
     const selectedRep = representatives.find(rep => rep.userId === Number(selectedUserId)) || null;
     setSelectedRepresentative(selectedRep);
 
-    if (selectedRep) {
-      localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
-    }
+    // if (selectedRep) {
+    //   localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
+    // }
   };
   
 
@@ -118,12 +118,10 @@ useEffect(() => {
     }
   
     try {
-      // Determine referredByRepresentativeId
       const referredByRepresentativeId = selectedRepresentative 
         ? selectedRepresentative.userId 
         : getUserIdFromToken(); 
-  
-      // Prepare the final customer data
+
       const customerData = {
         ...formData,
         referredByRepresentativeId,
@@ -133,7 +131,7 @@ useEffect(() => {
       const customerId = await saveCustomer(customerData);
   
       if (customerId) {
-        navigate(`/view-customer/${customerId}`, { state: { customerId } });
+        navigate(`/view-customer/${customerId}`, { state: { customerId, selectedRepresentative:selectedRepresentative || ""} });
       }
     } catch (error) {
       console.error("Error in saving customer:", error);
@@ -170,11 +168,6 @@ useEffect(() => {
       ))}
     </select>
 
-    {/* {selectedRepresentative && (
-      <p className="mt-2 text-sm text-gray-600">
-        Selected User ID: {selectedRepresentative.userId}
-      </p>
-    )} */}
   </div> )}
 </div>
 

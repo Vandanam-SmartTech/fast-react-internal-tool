@@ -77,20 +77,20 @@ export const fetchRepresentatives = async () => {
 };
 
 
-
-
-
-export const generateQuotationPDF = async (connectionId: number, requestData: object): Promise<Blob> => {
+export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/v2/quotation/customer-selected/pdf/${connectionId}`, {
-      method: "POST",
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://localhost:8080/api/v3/quotation/generating-pdf/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
       },
-      body: JSON.stringify(requestData),
     });
-    console.log("Request Data:",requestData);
 
     if (!response.ok) {
       throw new Error("Failed to generate PDF");
@@ -102,6 +102,7 @@ export const generateQuotationPDF = async (connectionId: number, requestData: ob
     throw new Error("Failed to generate PDF from server");
   }
 };
+
 
 
 
@@ -782,6 +783,69 @@ export const fetchPdf = async (id: number, docName: string): Promise<Response> =
     throw error;
   }
 };
+
+
+export const saveCustomerSpecs = async (connectionId: string, requestData: any) => {
+  if (!connectionId) {
+      throw new Error("Connection ID is missing!");
+  }
+
+  const apiUrl = `http://localhost:8080/api/v3/customer-agreed/${connectionId}`;
+
+  try {
+      const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+              'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to save specifications.");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("Error saving system specs:", error);
+      throw error;
+  }
+};
+
+
+export const uploadFileToOneDrive = async (
+  file: Blob,
+  consumerId: string | number,
+  govIdName: string,
+  districtName: string,
+  talukaName: string,
+  villageName: string
+): Promise<any> => {
+  try {
+    const formData = new FormData();
+    formData.append("files", file, `quotation_${consumerId}.pdf`);
+    formData.append("consumerNumber", String(consumerId));
+    formData.append("customerName", govIdName);
+    formData.append("district", districtName);
+    formData.append("taluka", talukaName);
+    formData.append("village", villageName);
+    formData.append("state", "Maharashtra"); // Default state
+    formData.append("folderType", "Onboarding Documents"); // Default folder
+
+    const response = await axios.post("http://localhost:3000/api/files/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading file to OneDrive:", error);
+    throw error;
+  }
+};
+
 
 
 

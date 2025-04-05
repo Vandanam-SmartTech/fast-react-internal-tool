@@ -11,8 +11,9 @@ export const InstallationForm = () => {
   const connectionId = location.state?.connectionId || null;
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
-  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const installationSpaceTypeMapping = {
     'Slab': 1,
@@ -53,12 +54,12 @@ export const InstallationForm = () => {
     getClaims();
   }, []);
 
-  useEffect(() => {
-    const storedRep = localStorage.getItem("selectedRepresentative");
-    if (storedRep) {
-      setSelectedRepresentative(JSON.parse(storedRep));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedRep = localStorage.getItem("selectedRepresentative");
+  //   if (storedRep) {
+  //     setSelectedRepresentative(JSON.parse(storedRep));
+  //   }
+  // }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -112,7 +113,7 @@ export const InstallationForm = () => {
         if (installationId) {
             console.log("New Installation saved with ID:", installationId);
             navigate(`/view-installation/${installationId}`, {
-                state: { consumerId, connectionId, installationId, customerId },
+                state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
             });
         }
     } catch (error) {
@@ -132,7 +133,7 @@ return (
     <button
       onClick={() =>
         navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId },
+          state: { consumerId, customerId, connectionId,selectedRepresentative:selectedRepresentative },
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -148,10 +149,10 @@ return (
 
   {/* Selected Representative - Adjusts for Desktop & Mobile */}
   {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-  <div className="sm:ml-auto text-sm text-gray-600">
-    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-  </div>
-)}
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
 </div>
 
 

@@ -16,9 +16,9 @@ export const EditCustomer = () => {
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [existingCustomer, setExistingCustomer] = useState(false);
-  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
-
+  const selectedRepresentative = location.state?.selectedRepresentative;
   
 
   const navigate = useNavigate();
@@ -36,12 +36,14 @@ export const EditCustomer = () => {
       getClaims();
     }, []);
 
-    useEffect(() => {
-      const storedRep = localStorage.getItem("selectedRepresentative");
-      if (storedRep) {
-        setSelectedRepresentative(JSON.parse(storedRep));
-      }
-    }, []);
+    // useEffect(() => {
+    //   const storedRep = localStorage.getItem("selectedRepresentative");
+    //   if (storedRep) {
+    //     setSelectedRepresentative(JSON.parse(storedRep));
+    //   }
+    // }, []);
+
+
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -116,7 +118,7 @@ export const EditCustomer = () => {
       if (id) {
         await updateConsumerPersonalDetails(Number(id), formData);
         alert("Customer updated successfully!");
-        navigate(`/view-customer/${id}`, { state: { customerId: id } }); 
+        navigate(`/view-customer/${id}`, { state: { customerId: id, selectedRepresentative:selectedRepresentative } }); 
       }
     } catch (error) {
       alert("Failed to update customer.");
@@ -130,10 +132,11 @@ export const EditCustomer = () => {
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Customer</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-  <div className="sm:ml-auto text-sm text-gray-600">
-    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-  </div>
-)}
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
+
   </div>
       <div className="mb-6 sm:mb-8 overflow-x-auto">
         <Stepper

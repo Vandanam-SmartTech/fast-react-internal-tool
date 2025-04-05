@@ -11,8 +11,9 @@ export const EditInstallation = () => {
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
   const installationId = location.state?.installationId || null;
-  const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const [installation, setInstallation] = useState<any>(null);
 
@@ -51,12 +52,12 @@ export const EditInstallation = () => {
       getClaims();
     }, []);
   
-    useEffect(() => {
-      const storedRep = localStorage.getItem("selectedRepresentative");
-      if (storedRep) {
-        setSelectedRepresentative(JSON.parse(storedRep));
-      }
-    }, []);
+    // useEffect(() => {
+    //   const storedRep = localStorage.getItem("selectedRepresentative");
+    //   if (storedRep) {
+    //     setSelectedRepresentative(JSON.parse(storedRep));
+    //   }
+    // }, []);
 
   useEffect(() => {
     const fetchInstallation = async () => {
@@ -119,7 +120,7 @@ export const EditInstallation = () => {
         const response = await updateInstallationSpaceDetails(installationId, formData);
         alert("Installation details updated successfully!");
         navigate(`/view-installation/${installationId}`, {
-          state: { consumerId, connectionId, installationId, customerId },
+          state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
         });
       }
     } catch (error) {
@@ -135,10 +136,10 @@ export const EditInstallation = () => {
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Installation</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-  <div className="sm:ml-auto text-sm text-gray-600">
-    <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-  </div>
-)}
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
   </div>
   
       <div className="mb-6 sm:mb-8 overflow-x-auto">
