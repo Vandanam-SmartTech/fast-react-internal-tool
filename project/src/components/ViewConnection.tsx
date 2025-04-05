@@ -427,13 +427,13 @@ export const ViewConnection = () => {
       }
       navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId, selectedRepresentative:selectedRepresentative } });
     }}
-    className="py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
+    className="py-3 px-4 sm:px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
   >
     Add New Installation
   </button>
   <button
     onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
-          className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+          className="py-3 px-4 sm:px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
   >
     Get Recommendation
   </button>
