@@ -48,23 +48,26 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="text-2xl font-semibold mb-10">
-        {name ? `${greeting}, ${name}` : 'Loading...'}
+        {name ? `${greeting}! ${name}` : 'Loading...'}
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+  
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <button 
-        onClick={goToListOfConsumers}
-        className="w-full bg-blue-100 text-blue-800 text-lg font-bold py-6 rounded-lg shadow hover:bg-blue-200 transition-all">
-          Total No. of Customers: 100
+          onClick={goToListOfConsumers}
+          className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 p-8 rounded-2xl shadow-md hover:bg-blue-200 transition-all h-48"
+        >
+          <div className="text-5xl font-extrabold mb-2">100</div>
+          <div className="text-lg font-medium tracking-wide">All Customers</div>
         </button>
-
+  
         <button 
-        onClick={goToOnboardedCustomers}
-        className="w-full bg-green-100 text-green-800 text-lg font-bold py-6 rounded-lg shadow hover:bg-green-200 transition-all">
-          Total No. of Onboarded Customers: 50
+          onClick={goToOnboardedCustomers}
+          className="flex flex-col items-center justify-center bg-green-100 text-green-800 p-8 rounded-2xl shadow-md hover:bg-green-200 transition-all h-48"
+        >
+          <div className="text-5xl font-extrabold mb-2">50</div>
+          <div className="text-lg font-medium tracking-wide">Onboarded Customers</div>
         </button>
       </div>
-
     </div>
   );
 };
