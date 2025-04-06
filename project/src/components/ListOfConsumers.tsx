@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers, fetchConsumerNumber } from "../services/api";
+import { fetchConsumers, fetchConsumerNumber,searchCustomers } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react";
+import SearchBar from "../components/SearchBar"; // Import SearchBar component
 
 interface Consumer {
   id: number;
@@ -13,10 +14,12 @@ interface Consumer {
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
   const [consumers, setConsumers] = useState<Consumer[]>([]);
+  const [filteredConsumers, setFilteredConsumers] = useState<Consumer[]>([]);
   const [consumerNumbers, setConsumerNumbers] = useState<{ [key: number]: number | string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [searchQuery, setSearchQuery] = useState<string>(""); // State for search input
 
   const handleViewConsumer = (consumer: Consumer) => {
     navigate(`/view-customer/${consumer.id}`, { state: { consumer } });
@@ -72,6 +75,22 @@ const ListOfConsumers: React.FC = () => {
     loadConsumers(currentPage);
   }, [currentPage]);
 
+  useEffect(() => {
+    if (searchQuery === "") {
+      loadConsumers(currentPage);
+    } else {
+      searchCustomers(searchQuery, currentPage).then((data) => {
+        setFilteredConsumers(data.content);
+        setTotalPages(data.totalPages);
+      });
+    }
+  }, [currentPage, searchQuery]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(0); // Reset page when searching
+  };
+
   const goToPage = (page: number) => {
     if (page >= 0 && page < totalPages) setCurrentPage(page);
   };
@@ -107,7 +126,7 @@ const ListOfConsumers: React.FC = () => {
     }
 
     return pages;
-  };
+  };              
 
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -116,6 +135,9 @@ const ListOfConsumers: React.FC = () => {
           List of Customers
         </h1>
   
+       {/* Search Bar */}
+       <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
+
         {loading ? (
           <div className="text-center py-10">
             <span>Loading...</span>
@@ -123,12 +145,12 @@ const ListOfConsumers: React.FC = () => {
         ) : (
           <div>
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {consumers.length === 0 ? (
+              {(searchQuery === ""? consumers : filteredConsumers).length === 0? (
                 <p className="col-span-full text-center text-gray-600">
                   No consumers found.
                 </p>
               ) : (
-                consumers.map((consumer) => (
+                (searchQuery === ""? consumers : filteredConsumers).map((consumer) => (
                   <div
                     key={consumer.id}
                     className="relative bg-white p-4 rounded-xl shadow hover:shadow-lg transition-shadow duration-300"
