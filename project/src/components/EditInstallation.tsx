@@ -36,7 +36,7 @@ export const EditInstallation = () => {
     availableSouthNorthLengthFt: 0,
     availableEastWestLengthFt: 0,
     spaceType: 'Slab',
-    spaceTitle:'',
+    installationSpaceTitle:'',
   });
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export const EditInstallation = () => {
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
               spaceType: selectedInstallation.spaceType || 'Slab',
-              spaceTitle: selectedInstallation.spaceTitle || '',
+              installationSpaceTitle: selectedInstallation.installationSpaceTitle || '',
             });
           }
         }
@@ -110,7 +110,7 @@ export const EditInstallation = () => {
         availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
         availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
         spaceType: installation.spaceType || 'Slab',
-        spaceTitle: installation.spaceTitle || '',
+        installationSpaceTitle: installation.installationSpaceTitle || '',
       });
       return;
     }
@@ -178,9 +178,9 @@ export const EditInstallation = () => {
           <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
           <input
             type="text"
-            id="spaceTitle"
-            name="spaceTitle"
-            value={formData.spaceTitle}
+            id="installationSpaceTitle"
+            name="installationSpaceTitle"
+            value={formData.installationSpaceTitle}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />

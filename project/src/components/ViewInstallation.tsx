@@ -111,7 +111,7 @@ export const ViewInstallation = () => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.spaceTitle || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.installationSpaceTitle || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>

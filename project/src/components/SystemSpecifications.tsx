@@ -289,7 +289,7 @@ const handleGenerateQuotation = async () => {
       console.log('PDF Blob size:', pdfBlob.size);
 
       await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
-    console.log("Quotation uploaded to OneDrive successfully");
+      console.log("Quotation uploaded to OneDrive successfully");
 
       // Trigger download
       const pdfUrl = URL.createObjectURL(pdfBlob);
