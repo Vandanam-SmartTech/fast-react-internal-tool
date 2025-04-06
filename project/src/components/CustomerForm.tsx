@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveCustomer } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
-import { fetchClaims } from '../services/api';
+import { fetchClaims, fetchRepresentatives } from '../services/api';
 
 export const CustomerForm = () => {
   const location = useLocation();
@@ -11,6 +11,7 @@ export const CustomerForm = () => {
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
+  const [representatives, setRepresentatives] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState("");
 
 
@@ -21,6 +22,20 @@ export const CustomerForm = () => {
     preferredName: "",
     
   });
+
+  const getUserIdFromToken = () => {
+    const token = localStorage.getItem("authToken"); // Assuming token is stored here
+    if (!token) return null;
+  
+    try {
+      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      return decodedToken.userId || null;
+    } catch (error) {
+      console.error("Failed to parse token:", error);
+      return null;
+    }
+  };
+  
 
 ///////////////////////////////////////////////////////////
   useEffect(() => {
@@ -52,11 +67,32 @@ useEffect(() => {
     //////////////
   };
 
-  const representativeNames: { [key: string]: string } = {
-    REP001: "Pranav Devardekar",
-    REP002: "Yash Devardekar",
-    REP003: "Sarvesh Devardekar",
+  useEffect(() => {
+    const getRepresentatives = async () => {
+      const reps = await fetchRepresentatives();
+      setRepresentatives(reps);
+    };
+
+    getRepresentatives();
+  }, []);
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedUserId = e.target.value;
+  
+    if (!selectedUserId) {
+      setSelectedRepresentative(null); 
+      //localStorage.removeItem("selectedRepresentative");
+      return;
+    }
+  
+    const selectedRep = representatives.find(rep => rep.userId === Number(selectedUserId)) || null;
+    setSelectedRepresentative(selectedRep);
+
+    // if (selectedRep) {
+    //   localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
+    // }
   };
+  
 
   
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,22 +118,29 @@ useEffect(() => {
     }
   
     try {
-      console.log("Saving new customer...");
-      const customerId = await saveCustomer(formData);
+      const referredByRepresentativeId = selectedRepresentative 
+        ? selectedRepresentative.userId 
+        : getUserIdFromToken(); 
+
+      const customerData = {
+        ...formData,
+        referredByRepresentativeId,
+      };
+  
+      // Save customer
+      const customerId = await saveCustomer(customerData);
   
       if (customerId) {
-        navigate(`/view-customer/${customerId}`, { state: { customerId, representativeId: selectedRepresentative,
-          representativeName: representativeNames[selectedRepresentative] || "", } });
+        navigate(`/view-customer/${customerId}`, { state: { customerId, selectedRepresentative:selectedRepresentative || ""} });
       }
     } catch (error) {
       console.error("Error in saving customer:", error);
       alert("Failed to save customer. Please try again.");
     }
   
-    /////////////
-    localStorage.removeItem('myFormData');
-    ////////////
+    localStorage.removeItem("myFormData");
   };
+  
   
   
 
@@ -112,16 +155,18 @@ useEffect(() => {
   {roles.includes("ROLE_ADMIN") && (
     <div className="sm:ml-auto">
     <select
-  name="representative"
-  value={selectedRepresentative}
-  onChange={(e) => setSelectedRepresentative(e.target.value)}
-  className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
->
-  <option value="">Select Representative</option>
-  <option value="REP001">Pranav Devardekar</option>
-  <option value="REP002">Yash Devardekar</option>
-  <option value="REP003">Sarvesh Devardekar</option>
-</select>
+      name="representative"
+      value={selectedRepresentative?.userId || ""}
+      onChange={handleSelectChange}
+      className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    >
+      <option value="">Select Representative</option>
+      {representatives.map(rep => (
+        <option key={rep.userId} value={rep.userId}>
+          {rep.name}
+        </option>
+      ))}
+    </select>
 
   </div> )}
 </div>

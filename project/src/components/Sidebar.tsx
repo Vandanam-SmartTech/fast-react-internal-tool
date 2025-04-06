@@ -20,6 +20,7 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("selectedRepresentative");
     localStorage.removeItem("jwtToken");
     navigate("/login");
   };

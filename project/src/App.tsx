@@ -22,6 +22,7 @@ import { EditConnection } from './components/EditConnection';
 import { EditInstallation } from './components/EditInstallation';
 import MaterialDetails from './components/MaterialDetails';
 
+
 const AppContent: React.FC = () => {
   const location = useLocation();
 
@@ -223,6 +224,7 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
         </Routes>
       </div>
     </div>

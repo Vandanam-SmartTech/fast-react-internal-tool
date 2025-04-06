@@ -43,7 +43,7 @@ const ListOfConsumers: React.FC = () => {
     try {
       const consumerNumberMap: { 
         [key: number]: { connectionId: number; consumerId: number }[] 
-      } = {}; // Store multiple consumerIds and their IDs per customerId
+      } = {}; 
   
       await Promise.all(
         consumerIds.map(async (id) => {
@@ -54,7 +54,7 @@ const ListOfConsumers: React.FC = () => {
               consumerId: item.consumerId, // Store consumerId
             }));
           } else {
-            consumerNumberMap[id] = []; // Handle cases where response isn't an array
+            consumerNumberMap[id] = []; 
           }
         })
       );
@@ -134,16 +134,16 @@ const ListOfConsumers: React.FC = () => {
                     className="relative bg-white p-4 rounded-xl shadow hover:shadow-lg transition-shadow duration-300"
                   >
                     {/* View Button */}
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-3 right-3">
                       <button
                         onClick={() => handleViewConsumer(consumer)}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600"
+                        className="px-2 py-1 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600"
                       >
                         View
                       </button>
                     </div>
   
-                    <div className="space-y-2 mt-2">
+                    <div className="space-y-2 mt-1">
                       <p className="break-words text-sm">
                         <span className="font-medium">Consumer Name:</span>{" "}
                         {consumer.govIdName}
