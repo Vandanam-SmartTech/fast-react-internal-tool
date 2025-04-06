@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { login, setAuthToken } from '../services/api';
+import { login, setAuthToken, fetchClaims } from '../services/api';
 import bgImage from '../assets/Solar_Image.jpg';
 import logo from '../assets/Vandanam_Logo.png';
 
@@ -21,12 +21,25 @@ const Login = () => {
     try {
       const { jwt } = await login({ username, password });
       localStorage.setItem('jwtToken', jwt);
+      console.log("hello");
       setAuthToken(jwt);
-      navigate('/CustomerForm'); // Navigate on success
-    } catch (err) {
-      setError('Invalid username or password.');
-    }
-  };
+      const claims = await fetchClaims();
+
+
+      const roles = claims.roles;
+
+      if (roles.includes('ROLE_REPRESENTATIVE')) {
+          navigate('/RepresentativeDashboard');
+       } else if (roles.includes('ROLE_ADMIN')) {
+          navigate('/AdminDashboard');
+       } else {
+          setError('Unauthorized role.');
+       }
+      // navigate('/CustomerForm'); 
+          } catch (err) {
+          setError('Invalid username or password.');
+        }
+      };
 
   return (
     <div
