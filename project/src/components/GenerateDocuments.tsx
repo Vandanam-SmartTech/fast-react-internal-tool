@@ -22,7 +22,7 @@ export default function GenerateDocuments() {
   const documents = [
     "WCR Page-1",
     "Annexure 1",
-    "NetAgreementBondFormat",
+    "EarthingPageDocument",
     "Subsidy Agreement Document-Page-1",
     "Subsidy Agreement Document-Page-2",
     "Vendor Feasibility Document",

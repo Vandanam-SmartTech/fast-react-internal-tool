@@ -164,11 +164,6 @@ const Sidebar: React.FC = () => {
     Logout
   </button>
 </div>
-
-
-
-
-
         </div>
         
       )}

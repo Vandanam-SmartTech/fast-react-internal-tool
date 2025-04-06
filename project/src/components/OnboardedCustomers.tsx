@@ -33,6 +33,9 @@ const OnboardedCustomers: React.FC = () => {
     navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
   };
 
+  const handleMaterialDetails = (consumer: Consumer) => {
+    navigate(`/material-form/${consumer.id}`, { state: { consumer,connectionId:consumer.id  } });
+  };
   const loadOnboardedConsumers = async (page: number) => {
     try {
       setLoading(true);
@@ -127,6 +130,7 @@ const OnboardedCustomers: React.FC = () => {
     </button>
   </div>
   <button
+   onClick={() => handleMaterialDetails(consumer)}
     className="px-2 h-9 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none w-full"
   >
     Add Material Details
