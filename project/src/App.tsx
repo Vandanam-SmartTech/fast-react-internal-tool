@@ -21,6 +21,7 @@ import { EditCustomer } from './components/EditCustomer';
 import { EditConnection } from './components/EditConnection';
 import { EditInstallation } from './components/EditInstallation';
 
+
 const AppContent: React.FC = () => {
   const location = useLocation();
 
@@ -214,14 +215,6 @@ const AppContent: React.FC = () => {
             }
           />
 
-{/* <Route
-              path="/material-form/:id"
-              element={
-              <PrivateRoute>
-                <MaterialDetails/>
-              </PrivateRoute>
-            }
-          /> */}
         </Routes>
       </div>
     </div>
