@@ -20,7 +20,6 @@ import AdminDashboard from './components/AdminDashboard';
 import { EditCustomer } from './components/EditCustomer';
 import { EditConnection } from './components/EditConnection';
 import { EditInstallation } from './components/EditInstallation';
-import MaterialDetails from './components/MaterialDetails';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -215,14 +214,14 @@ const AppContent: React.FC = () => {
             }
           />
 
-<Route
+{/* <Route
               path="/material-form/:id"
               element={
               <PrivateRoute>
                 <MaterialDetails/>
               </PrivateRoute>
             }
-          />
+          /> */}
         </Routes>
       </div>
     </div>
