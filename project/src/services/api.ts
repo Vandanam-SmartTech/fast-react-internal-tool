@@ -2,10 +2,10 @@
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:7575/api';
+const API_BASE_URL = 'http://192.168.41.162:7575/api';
 
 const API = axios.create({
-  baseURL: 'http://localhost:9090',
+  baseURL: 'http://192.168.41.162:9090',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -79,8 +79,14 @@ export const fetchRepresentatives = async () => {
 
 export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
   try {
-    const response = await fetch(`http://192.168.41.162:8080/api/v2/quotation/customer-selected/pdf/${connectionId}`, {
-      method: "POST",
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://192.168.41.162:8080/api/v3/quotation/generating-pdf/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
       },
