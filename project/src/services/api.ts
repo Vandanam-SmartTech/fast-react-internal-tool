@@ -36,11 +36,11 @@ export const setAuthToken = (token) => {
 const getAuthToken = () => localStorage.getItem('jwtToken');
 
 export const fetchClaims = async () => {
-  const token = localStorage.getItem('jwtToken');
+  //const token = localStorage.getItem('jwtToken');
   const response = await fetch('http://localhost:9090/jwt/claims', {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${getAuthToken()}`,
     },
 
   });
@@ -50,20 +50,47 @@ export const fetchClaims = async () => {
 };
 
 
-
-
-
-export const generateQuotationPDF = async (connectionId: number, requestData: object): Promise<Blob> => {
+export const fetchRepresentatives = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/v2/quotation/customer-selected/pdf/${connectionId}`, {
-      method: "POST",
+    const response = await fetch("http://localhost:9090/api/users/all", {
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
       },
-      body: JSON.stringify(requestData),
     });
-    console.log("Request Data:",requestData);
+    const data = await response.json();
+
+    // Filter users with the role "ROLE_REPRESENTATIVE"
+    return data
+      .filter(user => user.roles.some(role => role.name === "ROLE_REPRESENTATIVE"))
+      .map(user => ({
+        userId: user.userId,
+        name: user.nameAsPerGovId, 
+        representativeCode: user.representativeCode,
+        mobileNumber: user.mobileNumber,
+        emailAddress: user.emailAddress
+      }));
+  } catch (error) {
+    console.error("Error fetching representatives:", error);
+    return [];
+  }
+};
+
+
+export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  try {
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://localhost:8080/api/v3/quotation/generating-pdf/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
+      },
+    });
 
     if (!response.ok) {
       throw new Error("Failed to generate PDF");
@@ -75,6 +102,7 @@ export const generateQuotationPDF = async (connectionId: number, requestData: ob
     throw new Error("Failed to generate PDF from server");
   }
 };
+
 
 
 
@@ -475,6 +503,10 @@ export const fetchConsumers = async (page = 0) => {
   try {
     const response = await API.get(`http://localhost:8585/api/customers/paginated`, {
       params: { page },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     });
 
     return {
@@ -493,6 +525,10 @@ export const fetchOnboardedConsumers = async (page = 0) => {
   try {
     const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
       params: { page },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     });
 
     return {
@@ -756,6 +792,68 @@ export const fetchPdf = async (id: number, docName: string): Promise<Response> =
   }
 };
 
+
+export const saveCustomerSpecs = async (connectionId: string, requestData: any) => {
+  if (!connectionId) {
+      throw new Error("Connection ID is missing!");
+  }
+
+  const apiUrl = `http://localhost:8080/api/v3/customer-agreed/${connectionId}`;
+
+  try {
+      const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+              'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to save specifications.");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("Error saving system specs:", error);
+      throw error;
+  }
+};
+
+
+export const uploadFileToOneDrive = async (
+  file: Blob,
+  consumerId: string | number,
+  govIdName: string,
+  districtName: string,
+  talukaName: string,
+  villageName: string
+): Promise<any> => {
+  try {
+    const formData = new FormData();
+    formData.append("files", file, `quotation_${consumerId}.pdf`);
+    formData.append("consumerNumber", String(consumerId));
+    formData.append("customerName", govIdName);
+    formData.append("district", districtName);
+    formData.append("taluka", talukaName);
+    formData.append("village", villageName);
+    formData.append("state", "Maharashtra"); // Default state
+    formData.append("folderType", "Onboarding Documents"); // Default folder
+
+    const response = await axios.post("http://localhost:3000/api/files/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading file to OneDrive:", error);
+    throw error;
+  }
+};
+
 export const postMaterialData = async (connectionId: any, data: { connectionId: string; systemKw: string; makeOfModule: string; almmModelNo: string; serialNoOfModules: string; wattagePerModule: string; noOfModules: string; totalCapacity: string; warrantyDetails: string; inverterModuleNo: string; inverterMake: string; rating: string; chargeControllerType: string; inverterCapacity: string; earthingRod: string; dateOfInstallation: string; capacityType: string; projectModel: string; reInstalledCapacityRooftop: string; reInstalledCapacityGround: string; reInstalledCapacityTotal: string; }) => {
   
   const url = `http://localhost:8585/api/materials?connectionId=${connectionId}`;
@@ -774,6 +872,9 @@ export const postMaterialData = async (connectionId: any, data: { connectionId: 
     throw error; // re-throw so component can handle the error
   }
 };
+
+
+
 
 
 

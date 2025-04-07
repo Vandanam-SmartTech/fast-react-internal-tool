@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchClaims, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 import { Stepper, Step } from "react-form-stepper";
+
 
 export const ViewConnection = () => {
   const location = useLocation();
@@ -16,8 +17,10 @@ export const ViewConnection = () => {
   const connectionId = location.state?.connectionId; 
   const navigate = useNavigate();
   const [installations, setInstallations] = useState<any[]>([]);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const phaseTypeMapping: { [key: number]: string } = {
     1: "Single-Phase",
@@ -88,6 +91,13 @@ export const ViewConnection = () => {
   
       getClaims();
     }, []);
+
+    // useEffect(() => {
+    //   const storedRep = localStorage.getItem("selectedRepresentative");
+    //   if (storedRep) {
+    //     setSelectedRepresentative(JSON.parse(storedRep));
+    //   }
+    // }, []);
 
   useEffect(() => {
     const fetchLocationNames = async () => {
@@ -171,20 +181,46 @@ export const ViewConnection = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-4">
-      {/* Backward Arrow Button */}
-      <button
-        onClick={() => navigate(`/view-customer/${customerId}`,{ state: { consumerId, customerId, connectionId: connectionId }})}
-        className="p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-700" />
-      </button>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4 w-full">
+  {/* Backward Arrow Button (Before Title on Mobile) */}
+  <div className="flex items-center w-full md:w-auto">
+    <button
+      onClick={() =>
+        navigate(`/view-customer/${customerId}`, {
+          state: { consumerId :consumerId, customerId, connectionId : connectionId ,selectedRepresentative :selectedRepresentative},
+        })
+      }
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
 
-      {/* Heading */}
-      <h2 className="text-xl md:text-2xl font-semibold text-gray-700">View Connection Details</h2>
-    </div>
-    <div className="col-span-1 md:col-span-2 mb-4">
-        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+    {/* Heading - Adjusts Position on Small Screens */}
+    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+      View Connection Details
+    </h2>
+  </div>
+
+  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+          <div className="text-sm text-gray-600 mt-2 md:mt-0">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
+
+<div className="mt-2 md:mt-0 md:ml-auto">
+    <button
+      //onClick={handleUploadDocuments} 
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+      title="Upload Documents"
+    >
+      <Upload className="w-6 h-6 text-gray-700" />
+    </button>
+  </div>
+</div>
+
+    <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
+        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }} className="min-w-max sm:w-full">
           <Step label="Customer Details" />
           <Step label="Connection Details" />
           <Step label="Installation Space Details" />
@@ -345,7 +381,7 @@ export const ViewConnection = () => {
       {/* Edit Connection Button (Before Installations) */}
       <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId, consumerId, customerId} })}
+          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId: connectionId, consumerId, customerId, selectedRepresentative:selectedRepresentative} })}
           className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
         >
           Edit Connection
@@ -372,7 +408,7 @@ export const ViewConnection = () => {
           </p>
           <button
             onClick={() =>
-              navigate(`/view-installation/${installation.id}`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,installationId: installation.id, } })
+              navigate(`/view-installation/${installation.id}`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,installationId: installation.id,selectedRepresentative:selectedRepresentative } })
             }
             className="mt-2 py-1 px-3 bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-600"
           >
@@ -400,15 +436,15 @@ export const ViewConnection = () => {
         alert("Connection ID and Consumer Id is missing!");
         return;
       }
-      navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId } });
+      navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId, selectedRepresentative:selectedRepresentative } });
     }}
-    className="py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
+    className="py-3 px-4 sm:px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
   >
     Add New Installation
   </button>
   <button
-    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId}})}
-          className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
+          className="py-3 px-4 sm:px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
   >
     Get Recommendation
   </button>
@@ -416,12 +452,12 @@ export const ViewConnection = () => {
 
 {roles.includes("ROLE_ADMIN") && (
         <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
-          <button onClick={() => setShowDialog(true)} className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+          <button onClick={() => setShowDialog(true)} className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2">
             Do you want to Onboard the Customer?
           </button>
           {showDialog && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className="bg-white p-6 rounded-md shadow-md w-11/12 max-w-sm">
+              <div className="bg-white p-6 rounded-md shadow-md max-w-sm w-full relative top-[-50px]">
                 <h2 className="text-lg font-semibold mb-4">Do you want to onboard the customer?</h2>
                 <div className="flex justify-end space-x-4">
                   <button onClick={handleNo} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">No</button>

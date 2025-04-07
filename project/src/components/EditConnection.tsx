@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { getConnectionByConsumerId, updateConsumerConnectionDetails } from "../services/api";
+import { getConnectionByConsumerId, updateConsumerConnectionDetails, fetchClaims } from "../services/api";
 import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 
@@ -69,7 +69,11 @@ export const EditConnection = () => {
     const [talukaName, setTalukaName] = useState<string>("");
     const [villageName, setVillageName] = useState<string>("");
     const [isNameCorrecction, setIsNameCorrection] = useState("No");
+    //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [roles, setRoles] = useState<string[]>([]);
+    const selectedRepresentative = location.state?.selectedRepresentative;
+
 
 
   const [formData, setFormData] = useState<any>({
@@ -92,12 +96,33 @@ export const EditConnection = () => {
     isNameCorrection: "No",
     correctionType: "",
     monthlyAvgConsumptionUnits: 0,
-    isOnboardedCustomers:"No",
+    isOnboardedCustomers:false,
   });
 
   
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+        const getClaims = async () => {
+          try {
+            const claims = await fetchClaims();
+            setRoles(claims.roles || []);
+          } catch (error) {
+            console.error("Failed to fetch user claims", error);
+          }
+        };
+    
+        getClaims();
+      }, []);
+
+  // useEffect(() => {
+  //   const storedRep = localStorage.getItem("selectedRepresentative");
+  //   if (storedRep) {
+  //     setSelectedRepresentative(JSON.parse(storedRep));
+  //   }
+  // }, []);
+
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -244,7 +269,7 @@ export const EditConnection = () => {
           pincode: data.postalCode,
           latitude: data.latitude,
           longitude: data.longitude,
-          isOnboardedCustomers: data.isOnboardedCustomers ?? "No",
+          isOnboardedCustomers: data.isOnboardedCustomers ?? false,
         });
         setDistrictCode(data.districtCode);
         setTalukaCode(data.talukaCode);
@@ -329,7 +354,7 @@ export const EditConnection = () => {
         await updateConsumerConnectionDetails(Number(connectionId), connectionData);
         alert("Connection updated successfully!");
         navigate(`/view-connection/${connectionId}`, {
-          state: { connectionId, consumerId:formData.consumerId, customerId },
+          state: { connectionId, consumerId:formData.consumerId, customerId , selectedRepresentative:selectedRepresentative},
         });
       }
     } catch (error) {
@@ -342,7 +367,15 @@ export const EditConnection = () => {
 
   return (
       <div className="max-w-4xl mx-auto p-6">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Connection</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Connection</h2>
+
+      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
+  </div>
         <div className="mb-6 sm:mb-8 overflow-x-auto">
         <Stepper 
           activeStep={0} 
@@ -356,6 +389,8 @@ export const EditConnection = () => {
         </Stepper>
       </div>
         <h2 className="text-2xl font-semibold text-gray-700 mb-8">Connection Details</h2>
+
+    
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* MSEB Connection Question - Full Width */}
