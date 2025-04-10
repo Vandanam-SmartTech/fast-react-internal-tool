@@ -873,7 +873,7 @@ export const postMaterialData = async (connectionId: any, data: { connectionId: 
   }
 };
 
-export const searchCustomers = async (query: string, currentPage: number): Promise<any> => {
+export const searchCustomers = async (query: string): Promise<any> => {
   try {
     const response = await fetch(`http://localhost:8585/api/customers/searchByAny?query=${query}`, {
       method: "GET",
