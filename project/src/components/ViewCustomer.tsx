@@ -107,7 +107,7 @@ export const ViewCustomer = () => {
       {/* Update Customer Button - Placed before connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { ...customer, selectedRepresentative: selectedRepresentative } })}
+          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { selectedRepresentative: selectedRepresentative } })}
           className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Edit Customer
@@ -127,12 +127,21 @@ export const ViewCustomer = () => {
               <p className="text-sm text-gray-600 mt-1">
                 <span className="font-semibold">Consumer Name:</span> {customer.govIdName || ""}
               </p>
+              <div className="flex gap-4 mt-3">
               <button
                 onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, connectionId:connection.id, customerId: customerId, selectedRepresentative: selectedRepresentative} })}
                 className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 View
               </button>
+
+              <button
+                onClick={() => navigate(`/edit-connection/${connection.id}`, { state: { consumerId: connection.consumerId, connectionId:connection.id, customerId: customerId, selectedRepresentative: selectedRepresentative} })}
+                className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                Edit
+              </button>
+              </div>
             </div>
           ))
         ) : (
@@ -143,7 +152,7 @@ export const ViewCustomer = () => {
       {/* Add New Connection Button - Placed after connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId, selectedRepresentative:selectedRepresentative} })}
+          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId, selectedRepresentative:selectedRepresentative, govIdName:customer.govIdName} })}
           className="py-2 px-4 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
         >
           Add New Connection

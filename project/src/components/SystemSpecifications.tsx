@@ -60,9 +60,11 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     Kw:"",
   });
 
+
   const connectionId = location.state?.connectionId; 
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
+  
 
   useEffect(() => {
     const loadInstallationSpaceTypes = async () => {
@@ -258,6 +260,7 @@ useEffect(() => {
         phaseType: phaseType,
         connectionType: connectionType,
         inversionType: "On-Grid",
+        inverterWattage: 6.4,
         solarSystemCost: formData.solarSystemCost,
         fabricationCost: formData.fabricationCost,
         totalCost: formData.totalCost,
@@ -266,6 +269,7 @@ useEffect(() => {
     try {
         await saveCustomerSpecs(connectionId, requestData);
         alert("System specifications saved successfully!");
+        //setIsCustomSpecs(true);
     } catch (error) {
         alert(error.message || "An error occurred while saving.");
     }
@@ -291,7 +295,7 @@ const handleGenerateQuotation = async () => {
       await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
       console.log("Quotation uploaded to OneDrive successfully");
 
-      // Trigger download
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
@@ -590,6 +594,7 @@ const handleGenerateQuotation = async () => {
     <button
         type="button"
         onClick={handlePreview}
+        //disabled={!isCustomSpecs || isPreviewLoading}
         className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         disabled={isPreviewLoading}
     >
@@ -599,6 +604,7 @@ const handleGenerateQuotation = async () => {
     <button
         type="submit"
         onClick={handleGenerateQuotation}
+        //disabled={!isCustomSpecs || isLoading}
         disabled={isLoading}
         className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
