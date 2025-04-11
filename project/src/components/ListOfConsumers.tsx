@@ -8,7 +8,7 @@ interface Consumer {
   id: number;
   govIdName: string;
   emailAddress: string;
-  mobileNumber: number;
+  mobileNumber: string;
 }
 
 const ListOfConsumers: React.FC = () => {
@@ -72,27 +72,24 @@ const ListOfConsumers: React.FC = () => {
   };
 
   const handleSearch = async (query: string) => {
-    
-    setIsSearching(true);
     setSearchQuery(query);
-    
-    if (query.trim() === "") {
+    if (!query.trim()) {
+      setSearchResults([]);
       loadConsumers(0);
       return;
     }
+ 
+    setIsSearching(true);
     try {
-      const response = await searchCustomers(query);
-      console.log('API Response:', response); // Add this line
-  
-      setSearchResults(response);
-      setTotalPages(1); // Reset total pages for search results
-    } catch (error) {
-      console.error("Error searching customers:", error);
+      const result = await searchCustomers(query);
+      setSearchResults(result);
+      setTotalPages(1); // reset
+    } catch (err) {
+      console.error("Error searching consumers:", err);
     } finally {
       setIsSearching(false);
     }
   };
-  
 
   useEffect(() => {
     loadConsumers(currentPage);
