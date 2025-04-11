@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId } from "../services/api";
+import { getInstallationByConsumerId, fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 
 export const ViewInstallation = () => {
@@ -13,6 +13,10 @@ export const ViewInstallation = () => {
   const connectionId = location.state?.connectionId;
   const installationId = location.state?.installationId;
   const customerId = location.state?.customerId;
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
+
 
   const installationSpaceTypeMapping: { [key: number]: string } = {
     1: "Slab",
@@ -23,6 +27,26 @@ export const ViewInstallation = () => {
     6: "Cement Sheets",
     7: "On Ground",
   };
+
+  useEffect(() => {
+    const getClaims = async () => {
+      try {
+        const claims = await fetchClaims();
+        setRoles(claims.roles || []);
+      } catch (error) {
+        console.error("Failed to fetch user claims", error);
+      }
+    };
+  
+    getClaims();
+  }, []);
+
+  // useEffect(() => {
+  //   const storedRep = localStorage.getItem("selectedRepresentative");
+  //   if (storedRep) {
+  //     setSelectedRepresentative(JSON.parse(storedRep));
+  //   }
+  // }, []);
 
   useEffect(() => {
     const fetchInstallation = async () => {
@@ -43,20 +67,36 @@ export const ViewInstallation = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
-      {/* Backward Arrow Button */}
-      <button
-        onClick={() => navigate(`/view-connection/${connectionId}`,{ state: { consumerId, customerId, connectionId }})}
-        className="p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-700" />
-      </button>
+      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+  {/* Backward Arrow Button (Before Title on Mobile) */}
+  <div className="flex items-center w-full md:w-auto">
+    <button
+      onClick={() =>
+        navigate(`/view-connection/${connectionId}`, {
+          state: { consumerId, customerId, connectionId ,selectedRepresentative:selectedRepresentative},
+        })
+      }
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
 
-      {/* Heading */}
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Installation Details</h2>
-    </div>
-    <div className="mb-6 sm:mb-8 overflow-x-auto">
-        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+    {/* Heading - Adjusts Position on Small Screens */}
+    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+      View Installation Details
+    </h2>
+  </div>
+
+  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
+</div>
+
+<div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
+        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }} className="min-w-max sm:w-full">
           <Step label="Customer Details" />
           <Step label="Connection Details" />
           <Step label="Installation Space Details" />
@@ -68,6 +108,10 @@ export const ViewInstallation = () => {
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installationSpaceTypeMapping[installation.installationSpaceTypeId] || ""}</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.installationSpaceTitle || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
@@ -104,7 +148,7 @@ export const ViewInstallation = () => {
   <button
     onClick={() =>
       navigate(`/edit-installation/${installationId}`, {
-        state: { installationId, connectionId, consumerId ,customerId},
+        state: { installationId, connectionId, consumerId ,customerId,selectedRepresentative:selectedRepresentative},
       })
     }
     className="w-full sm:w-auto max-w-xs py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -115,7 +159,7 @@ export const ViewInstallation = () => {
   <button
     onClick={() =>
       navigate(`/view-connection/${connectionId}`, {
-        state: { consumerId, customerId, connectionId },
+        state: { consumerId, customerId, connectionId ,selectedRepresentative:selectedRepresentative},
       })
     }
     className="w-full sm:w-auto max-w-xs py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"

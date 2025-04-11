@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveCustomer } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
-import { fetchClaims } from '../services/api';
+import { fetchClaims, fetchRepresentatives } from '../services/api';
 
 export const CustomerForm = () => {
   const location = useLocation();
@@ -11,6 +11,7 @@ export const CustomerForm = () => {
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
+  const [representatives, setRepresentatives] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState("");
 
 
@@ -22,13 +23,44 @@ export const CustomerForm = () => {
     
   });
 
-///////////////////////////////////////////////////////////
-  useEffect(() => {
-    const savedForm = localStorage.getItem('myFormData');
-    if (savedForm) {
-      setFormData(JSON.parse(savedForm));
+  const getUserIdFromToken = () => {
+    const token = localStorage.getItem("authToken"); // Assuming token is stored here
+    if (!token) return null;
+  
+    try {
+      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      return decodedToken.userId || null;
+    } catch (error) {
+      console.error("Failed to parse token:", error);
+      return null;
     }
-  }, []);
+  };
+  
+
+///////////////////////////////////////////////////////////
+useEffect(() => {
+  const savedFormData = localStorage.getItem("myFormData");
+  const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
+  const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
+  const savedRepresentative = localStorage.getItem("selectedRepresentative");
+
+  if (savedFormData) {
+    setFormData(JSON.parse(savedFormData));
+  }
+
+  if (savedConfirmMobile) {
+    setConfirmMobileNumber(savedConfirmMobile);
+  }
+
+  if (savedConfirmEmail) {
+    setConfirmEmailAddress(savedConfirmEmail);
+  }
+
+  if (savedRepresentative) {
+    setSelectedRepresentative(JSON.parse(savedRepresentative));
+  }
+}, []);
+
 ///////////////////////////////////////////////////////////
 
 useEffect(() => {
@@ -45,26 +77,49 @@ useEffect(() => {
   }, []);
 
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    ///////////////
-    localStorage.setItem('myFormData', JSON.stringify(formData));
-    //////////////
-  };
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updatedFormData = { ...formData, [e.target.name]: e.target.value };
+  setFormData(updatedFormData);
+  localStorage.setItem('myFormData', JSON.stringify(updatedFormData));
+};
 
-  const representativeNames: { [key: string]: string } = {
-    REP001: "Pranav Devardekar",
-    REP002: "Yash Devardekar",
-    REP003: "Sarvesh Devardekar",
+  useEffect(() => {
+    const getRepresentatives = async () => {
+      const reps = await fetchRepresentatives();
+      setRepresentatives(reps);
+    };
+
+    getRepresentatives();
+  }, []);
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedUserId = e.target.value;
+  
+    if (!selectedUserId) {
+      setSelectedRepresentative(null); 
+      localStorage.removeItem("selectedRepresentative");
+      return;
+    }
+  
+    const selectedRep = representatives.find(rep => rep.userId === Number(selectedUserId)) || null;
+    setSelectedRepresentative(selectedRep);
+
+    if (selectedRep) {
+      localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
+    }
   };
+  
 
   
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmMobileNumber(e.target.value);
+    const value = e.target.value;
+    setConfirmMobileNumber(value);
+    localStorage.setItem('confirmMobileNumber', value);
   };
-
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmEmailAddress(e.target.value);
+    const value = e.target.value;
+    setConfirmEmailAddress(value);
+    localStorage.setItem('confirmEmailAddress', value);
   };
 
 
@@ -82,22 +137,33 @@ useEffect(() => {
     }
   
     try {
-      console.log("Saving new customer...");
-      const customerId = await saveCustomer(formData);
+      const referredByRepresentativeId = selectedRepresentative 
+        ? selectedRepresentative.userId 
+        : getUserIdFromToken(); 
+
+      const customerData = {
+        ...formData,
+        referredByRepresentativeId,
+      };
+  
+      // Save customer
+      const customerId = await saveCustomer(customerData);
   
       if (customerId) {
-        navigate(`/view-customer/${customerId}`, { state: { customerId, representativeId: selectedRepresentative,
-          representativeName: representativeNames[selectedRepresentative] || "", } });
+        navigate(`/view-customer/${customerId}`, { state: { customerId, selectedRepresentative:selectedRepresentative || ""} });
       }
     } catch (error) {
       console.error("Error in saving customer:", error);
       alert("Failed to save customer. Please try again.");
     }
   
-    /////////////
-    localStorage.removeItem('myFormData');
-    ////////////
+    localStorage.removeItem("myFormData");
+localStorage.removeItem("confirmMobileNumber");
+localStorage.removeItem("confirmEmailAddress");
+localStorage.removeItem("selectedRepresentative");
+
   };
+  
   
   
 
@@ -112,16 +178,18 @@ useEffect(() => {
   {roles.includes("ROLE_ADMIN") && (
     <div className="sm:ml-auto">
     <select
-  name="representative"
-  value={selectedRepresentative}
-  onChange={(e) => setSelectedRepresentative(e.target.value)}
-  className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
->
-  <option value="">Select Representative</option>
-  <option value="REP001">Pranav Devardekar</option>
-  <option value="REP002">Yash Devardekar</option>
-  <option value="REP003">Sarvesh Devardekar</option>
-</select>
+      name="representative"
+      value={selectedRepresentative?.userId || ""}
+      onChange={handleSelectChange}
+      className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    >
+      <option value="">Select Representative</option>
+      {representatives.map(rep => (
+        <option key={rep.userId} value={rep.userId}>
+          {rep.name}
+        </option>
+      ))}
+    </select>
 
   </div> )}
 </div>
@@ -172,49 +240,55 @@ useEffect(() => {
         />
       </div>
 
-      <div>
-          <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
-          <input
-            type="password"
-            name="confirmMobileNumber"
-            value={confirmMobileNumber}
-            onChange={handleConfirmMobileChange}
-            placeholder="1234567890"
-            maxLength={10}
-            pattern="[6-9]{1}[0-9]{9}"
-            required
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            title="Enter a valid 10-digit mobile number starting with 6-9"
-          />
-        </div>
+      {/* Mobile Number (Primary Entry) */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
+  <input
+    type="password"
+    name="mobileNumber"
+    value={formData.mobileNumber}
+    onChange={handleChange}
+    placeholder="1234567890"
+    maxLength={10}
+    pattern="[6-9]{1}[0-9]{9}"
+    required
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    title="Enter a valid 10-digit mobile number starting with 6-9"
+  />
+  {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
+    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
+  )}
+</div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
-        <input
-          type="tel"
-          name="mobileNumber"
-          value={formData.mobileNumber}
-          onChange={handleChange}
-          placeholder="Confirm mobile number"
-          maxLength={10}
-          pattern="[6-9]{1}[0-9]{9}"
-          required
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          title="Re-enter the same 10-digit mobile number"
-        />
-        {confirmMobileNumber &&
+{/* Confirm Mobile Number */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
+  <input
+    type="tel"
+    name="confirmMobileNumber"
+    value={confirmMobileNumber}
+    onChange={handleConfirmMobileChange}
+    placeholder="Confirm mobile number"
+    maxLength={10}
+    pattern="[6-9]{1}[0-9]{9}"
+    required
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    title="Re-enter the same 10-digit mobile number"
+  />
+  {confirmMobileNumber &&
     confirmMobileNumber !== formData.mobileNumber && (
       <p className="text-red-600 text-sm mt-1">Mobile numbers do not match</p>
   )}
-      </div>
+</div>
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
         <input
           type="password"
-          name="confirmEmailAddress"
-          value={confirmEmailAddress}
-          onChange={handleConfirmEmailChange}
+          name="emailAddress"
+          value={formData.emailAddress}
+          onChange={handleChange}
           placeholder="johndoe@example.com"
           maxLength={35}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
@@ -227,9 +301,9 @@ useEffect(() => {
         <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
         <input
           type="email"
-          name="emailAddress"
-          value={formData.emailAddress}
-          onChange={handleChange}
+          name="confirmEmailAddress"
+          value={confirmEmailAddress}
+          onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
           maxLength={35}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"

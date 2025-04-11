@@ -69,8 +69,10 @@ export const ConnectionForm = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
-  const representativeName = location.state?.representativeName
+  const govIdName = location.state?.govIdName || null;
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const [formData, setFormData] = useState({
     consumerId: "",
@@ -115,6 +117,22 @@ useEffect(() => {
 
   getClaims();
 }, []);
+
+// useEffect(() => {
+//   const storedRep = localStorage.getItem("selectedRepresentative");
+//   if (storedRep) {
+//     setSelectedRepresentative(JSON.parse(storedRep));
+//   }
+// }, []);
+
+console.log("Recived govIdName:",govIdName);
+
+useEffect(() => {
+  if (govIdName) {
+    setFormData((prev) => ({ ...prev, billedTo: govIdName }));
+  }
+}, [govIdName]);
+
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -177,6 +195,7 @@ useEffect(() => {
       ...prev,
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+
     }));
         ///////////////
         localStorage.setItem('myFormData', JSON.stringify(formData));
@@ -297,6 +316,7 @@ useEffect(() => {
   
     try {
       console.log("Saving new connection...");
+      console.log("Hello");
       const connectionId = await saveConnection(connectionData);
       if (connectionId) {
         console.log("New connection saved with ID:", connectionId);
@@ -305,7 +325,7 @@ useEffect(() => {
             consumerId: formData.consumerId,
             customerId,
             connectionId: connectionId,
-            representativeName
+            selectedRepresentative: selectedRepresentative
           },
         });
       }
@@ -325,9 +345,11 @@ useEffect(() => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add Connection Details</h2>
 
-      {roles.includes("ROLE_ADMIN") && (<div className="sm:ml-auto text-sm text-gray-600">
-      <span className="font-medium text-gray-800">Selected Representative:</span> {representativeName}
-    </div> )}
+      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
   </div>
       <div className="mb-6 sm:mb-8 overflow-x-auto">
       <Stepper 

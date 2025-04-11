@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchPanelWattages, fetchRecommendedDetails, getPriceDetails, fetchInstallationSpaceTypes } from '../services/api';
+import { getCustomerById, uploadFileToOneDrive, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
 import { generateQuotationPDF } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,19 @@ export const SystemSpecifications = () => {
   const [connectionType, setConnectionType] = useState("");
   const [panelWattages, setPanelWattages] = useState([]);
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
+  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [connection, setConnection] = useState<any>(null);
+  const [customer, setCustomer] = useState<any>(null)
+  const [districtName, setDistrictName] = useState<string>("");
+  const [talukaName, setTalukaName] = useState<string>("");
+  const [villageName, setVillageName] = useState<string>("");
+  const [govIdName, setGovIdName] = useState("");
+  const selectedRepresentative = location.state?.selectedRepresentative;
+
+  const state = "Maharashtra";
+  const folderType = "Onboarding Documents";
+
 
   const installationSpaceTypeMapping: Record<number, string> = {
     1: "Slab",
@@ -47,9 +60,11 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     Kw:"",
   });
 
-  const connectionId = location.state?.connectionId; // Ensure connectionId is correctly retrieved
+
+  const connectionId = location.state?.connectionId; 
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
+  
 
   useEffect(() => {
     const loadInstallationSpaceTypes = async () => {
@@ -68,6 +83,76 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
     loadInstallationSpaceTypes();
 }, [consumerId]); // Rerun effect when consumerId changes
+
+useEffect(() => {
+  const fetchConnection = async () => {
+    if (!consumerId) {
+      console.error("Consumer ID not found!");
+      return;
+    }
+
+    // Fetch connection details using consumerId
+    const data = await getConnectionByConsumerId(Number(consumerId));
+    setConnection(data);
+  };
+
+  fetchConnection();
+}, [consumerId]);
+
+useEffect(() => {
+    const fetchLocationNames = async () => {
+      if (connection) {
+        if (connection.districtCode) {
+          const name = await getDistrictNameByCode(connection.districtCode);
+          setDistrictName(name);
+        }
+        if (connection.talukaCode) {
+          const name = await getTalukaNameByCode(connection.talukaCode);
+          setTalukaName(name);
+        }
+        if (connection.villageCode) {
+          const name = await getVillageNameByCode(connection.villageCode);
+          setVillageName(name);
+        }
+      }
+    };
+
+    fetchLocationNames();
+
+  }, [connection]);
+
+    useEffect(() => {
+      const fetchCustomer = async () => {
+        if (customerId) {
+          const data = await getCustomerById(Number(customerId));
+          setGovIdName(data?.govIdName || "");
+        }
+      };
+      fetchCustomer();
+
+    }, [customerId]);
+
+
+
+useEffect(() => {
+  const getClaims = async () => {
+    try {
+      const claims = await fetchClaims();
+      setRoles(claims.roles || []);
+    } catch (error) {
+      console.error("Failed to fetch user claims", error);
+    }
+  };
+
+  getClaims();
+}, []);
+
+// useEffect(() => {
+//   const storedRep = localStorage.getItem("selectedRepresentative");
+//   if (storedRep) {
+//     setSelectedRepresentative(JSON.parse(storedRep));
+//   }
+// }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -165,55 +250,72 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
   ]);
   
 
+  const handleSaveSpecs = async () => {
+    const requestData = {
+        customerSelectedInstallationStructureType: formData.installationStructureType,
+        customerSelectedKW: formData.Kw,
+        customerSelectedBrand: formData.panelBrand,
+        customerSelectedInstallationSpaceType: formData.installationSpaceType,
+        dcrNonDcrType: formData.dcrNonDcrType,
+        phaseType: phaseType,
+        connectionType: connectionType,
+        inversionType: "On-Grid",
+        inverterWattage: 6.4,
+        solarSystemCost: formData.solarSystemCost,
+        fabricationCost: formData.fabricationCost,
+        totalCost: formData.totalCost,
+    };
 
- // Runs when `formData` updates
+    try {
+        await saveCustomerSpecs(connectionId, requestData);
+        alert("System specifications saved successfully!");
+        //setIsCustomSpecs(true);
+    } catch (error) {
+        alert(error.message || "An error occurred while saving.");
+    }
+};
 
 
-  const handleGenerateQuotation = async () => {
-      try {
-          if (!connectionId) {
-              console.error("Connection ID is missing");
-              return;
-          }
-  
-          setIsLoading(true);
-  
-          const requestData = {
-              customerSelectedInstallationStructureType: formData.installationStructureType,
-              customerSelectedKW: formData.Kw,
-              customerSelectedBrand: formData.panelBrand,
-              customerSelectedInstallationSpaceType: formData.installationSpaceType,
-              dcrNonDcrType: formData.dcrNonDcrType,
-              phaseType: phaseType,
-              connectionType: connectionType,
-              inversionType: "On-Grid",
-              solarSystemCost: formData.solarSystemCost,  // Added
-              fabricationCost: formData.fabricationCost,  // Added
-              totalCost: formData.totalCost,
-          };
-  
 
-          const pdfBlob = await generateQuotationPDF(connectionId, requestData);
-          console.log('PDF Blob size:', pdfBlob.size);
 
-  
-          // Trigger download
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const link = document.createElement("a");
-          link.href = pdfUrl;
-          link.download = `quotation_${connectionId}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(pdfUrl);
-          
-          console.log("Quotation PDF downloaded successfully");
-      } catch (error) {
-          console.error("Error generating quotation:", error);
-      } finally {
-          setIsLoading(false);
+const handleGenerateQuotation = async () => {
+  try {
+      if (!connectionId) {
+          console.error("Connection ID is missing");
+          return;
       }
-  };
+
+      setIsLoading(true);
+
+      console.log("Fetching Quotation PDF for Connection ID:", connectionId);
+
+      const pdfBlob = await generateQuotationPDF(connectionId);
+      console.log('PDF Blob size:', pdfBlob.size);
+
+      await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
+      console.log("Quotation uploaded to OneDrive successfully");
+
+
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = `quotation_${connectionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(pdfUrl);
+
+      console.log("Quotation PDF downloaded successfully");
+
+    
+
+  } catch (error) {
+      console.error("Error generating or uploading quotation:", error);
+  } finally {
+      setIsLoading(false);
+  }
+};
+
   
   const handlePreview = async () => {
     setIsPreviewLoading(true);
@@ -223,22 +325,10 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
         return;
       }
   
-      const requestData = {
-        customerSelectedInstallationStructureType: formData.installationStructureType,
-        customerSelectedKW: formData.Kw,
-        customerSelectedBrand: formData.panelBrand,
-        customerSelectedInstallationSpaceType: formData.installationSpaceType,
-        dcrNonDcrType: formData.dcrNonDcrType,
-        phaseType: phaseType,
-        connectionType: connectionType,
-        inversionType: "On-Grid",
-        solarSystemCost: formData.solarSystemCost,  // Added
-        fabricationCost: formData.fabricationCost,  // Added
-        totalCost: formData.totalCost,
-      };
-      console.log("Request Data:",requestData);
-      const pdfBlob = await generateQuotationPDF(connectionId, requestData);
-
+      console.log("Fetching PDF for Connection ID:", connectionId);
+      
+      const pdfBlob = await generateQuotationPDF(connectionId);
+  
       const pdfUrl = URL.createObjectURL(pdfBlob);
   
       // Open the PDF in a new window
@@ -263,6 +353,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
       setIsPreviewLoading(false);
     }
   };
+  
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -329,23 +420,37 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center space-x-3 col-span-1 md:col-span-2 mb-2">
-      {/* Backward Arrow Button */}
-      <button
-        onClick={() => navigate(`/view-connection/${connectionId}`,{ state: { consumerId, customerId, connectionId }})}
-        className="p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-700" />
-      </button>
+    
 
-      {/* Heading */}
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+<div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+  {/* Backward Arrow Button (Before Title on Mobile) */}
+  <div className="flex items-center w-full md:w-auto">
+    <button
+      onClick={() =>
+        navigate(`/view-connection/${connectionId}`, {
+          state: { consumerId, customerId, connectionId,selectedRepresentative:selectedRepresentative },
+        })
+      }
+      className="p-2 rounded-full hover:bg-gray-200 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
+
+    {/* Heading - Adjusts Position on Small Screens */}
+    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
     {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
-</h2>
+    </h2>
+  </div>
 
-    </div>
-<div className="col-span-2 mb-4">
-        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}>
+  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+          <div className="sm:ml-auto text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+          </div>
+        )}
+</div>
+<div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
+        <Stepper activeStep={2} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }} className="min-w-max sm:w-full">
           <Step label="Customer Details" />
           <Step label="Connection Details" />
           <Step label="Installation Space Details" />
@@ -477,11 +582,20 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
 
             </div>
 
-            <div className="flex space-x-12">
+            <div className="flex flex-wrap gap-4 justify-center sm:justify-start sm:ml-4 md:ml-24">
+            <button
+            type="button"
+            onClick={handleSaveSpecs}
+            className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            Save System Specs
+        </button>
+
     <button
         type="button"
         onClick={handlePreview}
-        className="hidden md:block min-w-80 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        //disabled={!isCustomSpecs || isPreviewLoading}
+        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         disabled={isPreviewLoading}
     >
         {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
@@ -490,12 +604,14 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     <button
         type="submit"
         onClick={handleGenerateQuotation}
+        //disabled={!isCustomSpecs || isLoading}
         disabled={isLoading}
-        className="min-w-80 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-        {isLoading ? "Generating..." : "Generate Quotation"}
+        {isLoading ? "Generating..." : "Generate & Save Quotation"}
     </button>
 </div>
+
 
           </div>
 
