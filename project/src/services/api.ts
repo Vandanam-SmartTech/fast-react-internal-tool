@@ -922,7 +922,23 @@ export const searchCustomers = async (query: string): Promise<any> => {
       throw new Error("Failed to fetch search results");
     }
 
-    return await response.json();
+    const data = await response.json();
+    // Validate the response data to ensure it's in the expected format
+    if (Array.isArray(data)) {
+      // Assuming each item in the array has the following properties: id, govIdName, emailAddress, mobileNumber
+      return data.map((item: any) => (
+        {
+        id: item?.id,
+        govIdName: item?.govIdName,
+        emailAddress: item?.emailAddress,
+        mobileNumber: item?.mobileNumber,
+        consumerId: item?.connectionId, // Added consumerId property
+      })
+    );
+    } else {
+      console.error("Invalid API response format:", data);
+      throw new Error("Failed to parse search results");
+    }
   } catch (error) {
     console.error("Error fetching search results:", error);
     throw new Error("Failed to fetch search results");
