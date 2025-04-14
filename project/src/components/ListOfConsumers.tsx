@@ -173,7 +173,7 @@ const ListOfConsumers: React.FC = () => {
                     {searchResults.map((consumer) => (
                       <div
                         key={consumer.id}
-                        className="relative bg-white p-4 rounded-xl shadow hover:shadow-lg transition-shadow duration-300"
+                        className="relative bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-lg transition-shadow duration-300 w-full overflow-hidden break-words"
                       >
                         {/* View Button */}
                         <div className="absolute top-3 right-3">
@@ -223,7 +223,7 @@ const ListOfConsumers: React.FC = () => {
                         consumers.map((consumer) => (
                           <div
                             key={consumer.id}
-                            className="relative bg-white p-4 rounded-xl shadow hover:shadow-lg transition-shadow duration-300"
+                            className="relative bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-lg transition-shadow duration-300 w-full overflow-hidden break-words"
                           >
                             {/* View Button */}
                             <div className="absolute top-3 right-3">

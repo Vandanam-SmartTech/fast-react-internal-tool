@@ -6,11 +6,13 @@ import { generateQuotationPDF } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 
+
 export const SystemSpecifications = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const [showCostDetails, setShowCostDetails] = useState(false);
+  const [isSpecsSaved, setIsSpecsSaved] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
@@ -32,6 +34,7 @@ export const SystemSpecifications = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [govIdName, setGovIdName] = useState("");
   const selectedRepresentative = location.state?.selectedRepresentative;
+
 
   const state = "Maharashtra";
   const folderType = "Onboarding Documents";
@@ -269,7 +272,7 @@ useEffect(() => {
     try {
         await saveCustomerSpecs(connectionId, requestData);
         alert("System specifications saved successfully!");
-        //setIsCustomSpecs(true);
+        setIsSpecsSaved(true);
     } catch (error) {
         alert(error.message || "An error occurred while saving.");
     }
@@ -380,6 +383,7 @@ const handleGenerateQuotation = async () => {
     });
 
     setIsCustomSpecs(true);
+    setIsSpecsSaved(false);
 
     
     // Fetch panel wattages when relevant fields change
@@ -464,12 +468,12 @@ const handleGenerateQuotation = async () => {
           <select
             id="installationSpaceType"
             name="installationSpaceType"
-            value={formData.installationSpaceType || ""}
+            value={formData.installationSpaceType || "Installations Not Available"}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             {availableSpaceTypes.length === 0 ? (
-      <option disabled>Loading...</option> // Prevents user selection while loading
+      <option disabled>Installations Not Available</option> // Prevents user selection while loading
     ) : (
       availableSpaceTypes.map((spaceType) => (
         <option key={spaceType} value={spaceType}>
@@ -594,9 +598,9 @@ const handleGenerateQuotation = async () => {
     <button
         type="button"
         onClick={handlePreview}
-        //disabled={!isCustomSpecs || isPreviewLoading}
-        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        disabled={isPreviewLoading}
+        disabled={!isSpecsSaved || isPreviewLoading}
+        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        //disabled={isPreviewLoading}
     >
         {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
     </button>
@@ -604,8 +608,8 @@ const handleGenerateQuotation = async () => {
     <button
         type="submit"
         onClick={handleGenerateQuotation}
-        //disabled={!isCustomSpecs || isLoading}
-        disabled={isLoading}
+        disabled={!isSpecsSaved || isLoading}
+        //disabled={isLoading}
         className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
         {isLoading ? "Generating..." : "Generate & Save Quotation"}

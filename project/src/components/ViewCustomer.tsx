@@ -107,7 +107,7 @@ export const ViewCustomer = () => {
       {/* Update Customer Button - Placed before connections */}
       <div className="flex justify-start mt-6">
         <button
-          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { selectedRepresentative: selectedRepresentative } })}
+          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { customerId:customerId, selectedRepresentative: selectedRepresentative } })}
           className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Edit Customer

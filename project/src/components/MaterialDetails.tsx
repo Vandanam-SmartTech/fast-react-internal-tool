@@ -1,12 +1,45 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { materialformDefaults } from "../constants/materialformdefaults";
+import { useLocation, useNavigate } from "react-router-dom";
 import { postMaterialData } from "../services/api";
+import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 export default function MaterialForm() {
-  const [formData, setFormData] = useState(materialformDefaults);
+  const [formData, setFormData] = useState({
+    systemKw: 0,                              
+    makeOfModule: "",                         
+    almmModelNo: "",                          
+    serialNoOfModules: "",                    
+    wattagePerModule: 0,                      
+    noOfModules: 0,                           
+    totalCapacity: 0,                         
+    warrantyDetails: "",                      
+    inverterModuleNo: "",                     
+    inverterMake: "",                         
+    rating: "",                               
+    chargeControllerType: "",                 
+    inverterCapacity: 0,                      
+    earthingRod: 0,                           
+    dateOfInstallation: "",                   
+    capacityType: "",                         
+    projectModel: "",                         
+    reInstalledCapacityRooftop: 0,            
+    reInstalledCapacityGround: 0,             
+    reInstalledCapacityTotal: 0               
+  });
   const location = useLocation();
+  const navigate = useNavigate();
   const connectionId = location.state?.connectionId;
+  const [scanning, setScanning] = useState(false);
+
+  const handleScan = (scannedValue: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      serialNoOfModules: scannedValue,
+    }));
+    setScanning(false);
+  };
+  
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -33,6 +66,7 @@ export default function MaterialForm() {
       const response = await postMaterialData(connectionId, formData);
       console.log("Success:", response.data);
       alert("Data submitted successfully!");
+      navigate("/OnboardedCustomers");
     } catch (error) {
       console.error("Submission failed:", error);
       alert("Failed to submit data. Please check inputs or try again.");
@@ -42,15 +76,60 @@ export default function MaterialForm() {
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="w-full lg:w-[85%]">
-        <h2 className="text-2xl font-semibold mb-6">Material Details Form</h2>
+        <h2 className="text-2xl font-semibold mb-6">Material Details</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <fieldset className="max-w-6xl bg-white rounded-lg shadow-lg p-6 sm:p-8">
+          <fieldset>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
               <InputField name="systemKw" label="System KW" value={formData.systemKw} handleChange={handleChange} type="number" />
               <InputField name="makeOfModule" label="Make Of Module" value={formData.makeOfModule} handleChange={handleChange} />
               <InputField name="almmModelNo" label="ALMM Model Number" value={formData.almmModelNo} handleChange={handleChange} />
-              <InputField name="serialNoOfModules" label="Serial Number Of Modules" value={formData.serialNoOfModules} handleChange={handleChange} />
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+  <div className="flex flex-col">
+    <label className="block text-sm font-medium text-gray-700">
+      Serial Number Of Modules:
+    </label>
+    <div className="flex gap-2 mt-1">
+      <input
+        type="text"
+        name="serialNoOfModules"
+        value={formData.serialNoOfModules}
+        onChange={handleChange}
+        className="block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      />
+      <button
+        type="button"
+        onClick={() => setScanning(true)}
+        className="bg-green-600 text-white px-4 rounded-md hover:bg-green-700 transition"
+      >
+        Scan
+      </button>
+    </div>
+  </div>
+
+  {scanning && (
+    <div className="mt-4">
+      <BarcodeScannerComponent
+        width={400}
+        height={300}
+        onUpdate={(err, result) => {
+          if (result) {
+            handleScan(result.text);
+          }
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => setScanning(false)}
+        className="mt-2 bg-red-500 text-white px-3 py-1 rounded"
+      >
+        Cancel
+      </button>
+    </div>
+  )}
+</div>
+
+
               <InputField name="wattagePerModule" label="Wattage Per Module" value={formData.wattagePerModule} handleChange={handleChange} type="number" />
               <InputField name="noOfModules" label="Number Of Modules" value={formData.noOfModules} handleChange={handleChange} type="number" />
               <InputField name="totalCapacity" label="Total Capacity" value={formData.totalCapacity} handleChange={handleChange} type="number" />
@@ -69,12 +148,12 @@ export default function MaterialForm() {
               <InputField name="reInstalledCapacityTotal" label="ReInstalled Capacity Total" value={formData.reInstalledCapacityTotal} handleChange={handleChange} type="number" />
             </div>
 
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
               <button
                 type="submit"
-                className="bg-blue-600 text-white py-2 px-6 text-base sm:text-lg font-bold rounded-md hover:bg-blue-500 transition w-full sm:w-auto"
+                className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                Submit
+                Save Material Data
               </button>
             </div>
           </fieldset>
@@ -95,13 +174,13 @@ type InputFieldProps = {
 function InputField({ name, label, value, handleChange, type = "text" }: InputFieldProps) {
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-bold text-gray-600 mb-1">{label}:</label>
+      <label className="block text-sm font-medium text-gray-700">{label}:</label>
       <input
         type={type}
         name={name}
         value={value}
         onChange={handleChange}
-        className="p-2 border border-blue-500 rounded-md bg-white text-blue-900 text-base sm:text-lg w-full"
+        className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
   );

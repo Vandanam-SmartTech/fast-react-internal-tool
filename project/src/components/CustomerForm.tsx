@@ -158,9 +158,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
   
     localStorage.removeItem("myFormData");
-localStorage.removeItem("confirmMobileNumber");
-localStorage.removeItem("confirmEmailAddress");
-localStorage.removeItem("selectedRepresentative");
+    localStorage.removeItem("confirmMobileNumber");
+    localStorage.removeItem("confirmEmailAddress");
+    localStorage.removeItem("selectedRepresentative");
 
   };
   
@@ -183,7 +183,9 @@ localStorage.removeItem("selectedRepresentative");
       onChange={handleSelectChange}
       className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
     >
-      <option value="">Select Representative</option>
+      <option value="" disabled hidden>
+      Select Representative
+    </option>
       {representatives.map(rep => (
         <option key={rep.userId} value={rep.userId}>
           {rep.name}
