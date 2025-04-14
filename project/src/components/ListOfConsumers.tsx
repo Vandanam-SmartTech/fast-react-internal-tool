@@ -5,11 +5,13 @@ import { Eye } from "lucide-react";
 import SearchBar from "../components/SearchBar"; // Import SearchBar component
 
 interface Consumer {
+  
   id: number;
   govIdName: string;
   emailAddress: string;
   mobileNumber: string;
 }
+
 
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
@@ -78,12 +80,27 @@ const ListOfConsumers: React.FC = () => {
       loadConsumers(0);
       return;
     }
- 
+  
     setIsSearching(true);
     try {
       const result = await searchCustomers(query);
-      setSearchResults(result);
-      setTotalPages(1); // reset
+      console.log('Search Results:', result); // Inspect API response
+      if (Array.isArray(result)) {
+        const filteredResults = result
+         .filter((consumer) => consumer!== null && consumer!== undefined)
+         .filter((consumer: any) => {
+            return (
+              consumer.govIdName?.toLowerCase().includes(query.toLowerCase()) ||
+              consumer.emailAddress?.toLowerCase().includes(query.toLowerCase()) ||
+              consumer.mobileNumber?.toString().includes(query) ||
+              consumer.consumerId?.toString().includes(query)
+            );
+          });
+        setSearchResults(filteredResults);
+      } else {
+        setSearchResults([]);
+      }
+      setTotalPages(1); // Reset
     } catch (err) {
       console.error("Error searching consumers:", err);
     } finally {
@@ -198,11 +215,46 @@ const ListOfConsumers: React.FC = () => {
                             <span className="font-medium">Mobile Number:</span>{" "}
                             {consumer.mobileNumber}
                           </p>
+                          
                         </div>
+
+                        {/* Connection IDs */}
+                        {consumerNumbers[consumer.id]!== undefined && consumerNumbers[consumer.id].length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                {consumerNumbers[consumer.id].map((entry, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+                                  >
+                                    <span className="text-sm break-words">
+                                      <span className="font-medium">
+                                        Connection {index + 1}:
+                                      </span>{" "}
+                                      {entry.consumerId}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        navigate(`/view-connection/${entry.connectionId}`, {
+                                          state: {
+                                            customerId: consumer.id,
+                                            connectionId: entry.connectionId,
+                                            consumerId: entry.consumerId,
+                                          },
+                                        })
+                                      }
+                                    >
+                                      <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                       </div>
                     ))}
+
                   </div>
                 )}
+                 
               </div>
             ) : ( 
               
