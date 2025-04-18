@@ -198,15 +198,6 @@ const AppContent: React.FC = () => {
             }
           />
 
-           {/* <Route
-              path="/material-form/:id"
-              element={
-              <PrivateRoute>
-                <MaterialForm/>
-              </PrivateRoute>
-            }
-          /> */}
-
           <Route
               path="/OnboardedCustomers"
               element={
@@ -216,7 +207,7 @@ const AppContent: React.FC = () => {
             }
           />
 
-<Route
+            <Route
               path="/material-form/:id"
               element={
               <PrivateRoute>

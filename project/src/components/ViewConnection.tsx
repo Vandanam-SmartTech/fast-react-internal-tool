@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchClaims,fetchUploadedDocuments, uploadDocuments, getCustomerById, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, FileUp } from "lucide-react";
 import { Stepper, Step } from "react-form-stepper";
 
 
@@ -283,9 +283,9 @@ export const ViewConnection = () => {
 <div className="mt-2 md:mt-0 md:ml-auto">
   <button
     onClick={() => setModalOpen(true)}
-    className="flex items-center gap-2 text-blue-600 hover:underline"
+    className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
   >
-    <Upload className="w-6 h-6 text-gray-700" />
+    <FileUp className="w-6 h-6 text-gray-700" />
   </button>
 
   {modalOpen && (

@@ -164,6 +164,7 @@ useEffect(() => {
       try {
         const recommendation = await fetchRecommendedDetails(connectionId);
 
+        console.log("Recommended Data:",recommendation);
         const recommendedKW = recommendation.recommendedKW || "";
 
         setFormData((prev) => ({
@@ -172,9 +173,9 @@ useEffect(() => {
           installationStructureType: recommendation.recommendedInstallationStructureType || "",
           Kw: recommendedKW,
           dcrNonDcrType:
-          recommendation.dcrNonDcrType?.toLowerCase() === "nonDcr"
-            ? "Non-DCR"
-            : "DCR",
+          recommendation.dcrNonDcrType?.toLowerCase() === "nondcr"
+          ? "Non-DCR"
+          : "DCR",
           panelBrand: recommendation.panelBrand || "",
         }));
         setConnectionType(recommendation.connectionType || "");
@@ -193,6 +194,71 @@ useEffect(() => {
 
     fetchData();
   }, [connectionId]);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => {
+        const updatedData = { 
+            ...prev, 
+            [name]: value,
+          
+        };
+        updatedData.totalCost = 
+            (Number(updatedData.solarSystemCost) || 0) + 
+            (Number(updatedData.fabricationCost) || 0);
+
+
+        // Correct dcrNonDcrType based on recommendation.phaseType
+        if (name === "panelBrand") {
+            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
+                ? "Non-DCR"
+                : "DCR"; // Default to "DCR"
+        }
+
+        return updatedData;
+    });
+
+    setIsCustomSpecs(true);
+    //////
+    setIsSpecsSaved(false);
+    //////
+
+    
+    // Fetch panel wattages when relevant fields change
+    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
+      try {
+          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+  
+          console.log("Fetching panel wattages with:");
+          console.log("Connection ID:", connectionId);
+          console.log("Phase Type:", phaseType);
+          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+          console.log("Panel Brand:", panelBrandValue);
+  
+          const wattages = await fetchPanelWattages(
+              connectionId,
+              phaseType,  
+              dcrNonDcrValue,
+              panelBrandValue
+          );
+  
+          console.log("Fetched Wattages:", wattages);
+          setPanelWattages(wattages);
+
+          if (!wattages.includes(formData.Kw)) {
+            setFormData((prev) => ({
+              ...prev,
+              Kw: wattages[0] || "", // fallback to first available
+            }));
+          }
+      } catch (error) {
+          console.error("Error fetching panel wattages:", error);
+      }
+  }
+    // Fetch panel wattages when relevant fields change
+};
 
 
 
@@ -272,7 +338,9 @@ useEffect(() => {
     try {
         await saveCustomerSpecs(connectionId, requestData);
         alert("System specifications saved successfully!");
+        //////
         setIsSpecsSaved(true);
+        ///////
     } catch (error) {
         alert(error.message || "An error occurred while saving.");
     }
@@ -358,61 +426,6 @@ const handleGenerateQuotation = async () => {
   };
   
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => {
-        const updatedData = { 
-            ...prev, 
-            [name]: value,
-          
-        };
-        updatedData.totalCost = 
-            (Number(updatedData.solarSystemCost) || 0) + 
-            (Number(updatedData.fabricationCost) || 0);
-
-
-        // Correct dcrNonDcrType based on recommendation.phaseType
-        if (name === "panelBrand") {
-            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
-                ? "Non-DCR"
-                : "Non-DCR"; // Default to "DCR"
-        }
-
-        return updatedData;
-    });
-
-    setIsCustomSpecs(true);
-    setIsSpecsSaved(false);
-
-    
-    // Fetch panel wattages when relevant fields change
-    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
-      try {
-          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-  
-          console.log("Fetching panel wattages with:");
-          console.log("Connection ID:", connectionId);
-          console.log("Phase Type:", phaseType);
-          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-          console.log("Panel Brand:", panelBrandValue);
-  
-          const wattages = await fetchPanelWattages(
-              connectionId,
-              phaseType,  
-              dcrNonDcrValue,
-              panelBrandValue
-          );
-  
-          console.log("Fetched Wattages:", wattages);
-          setPanelWattages(wattages);
-      } catch (error) {
-          console.error("Error fetching panel wattages:", error);
-      }
-  }
-    // Fetch panel wattages when relevant fields change
-};
 
 
 

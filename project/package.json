@@ -25,6 +25,7 @@
     "react-qr-barcode-scanner": "^2.0.0",
     "react-router-dom": "^7.1.2",
     "react-stepper-horizontal": "^1.0.11",
+    "recharts": "^2.15.2",
     "stepper": "^0.0.4"
   },
   "devDependencies": {
