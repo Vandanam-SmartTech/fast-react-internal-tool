@@ -2,10 +2,10 @@
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:7575/api';
+const API_BASE_URL = 'http://192.168.41.162:7575/api';
 
 const API = axios.create({
-  baseURL: 'http://localhost:9090',
+  baseURL: 'http://192.168.41.162:9090',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -37,7 +37,8 @@ const getAuthToken = () => localStorage.getItem('jwtToken');
 
 export const fetchClaims = async () => {
   //const token = localStorage.getItem('jwtToken');
-  const response = await fetch('http://localhost:9090/jwt/claims', {
+  try{
+  const response = await fetch('http://192.168.41.162:9090/jwt/claims', {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getAuthToken()}`,
@@ -47,12 +48,16 @@ export const fetchClaims = async () => {
 
   const data = await response.json(); 
   return data.claims; 
+}catch (error) {
+  console.error('Error fetching claims:', error);
+  return null; 
+}
 };
 
 
 export const fetchRepresentatives = async () => {
   try {
-    const response = await fetch("http://localhost:9090/api/users/all", {
+    const response = await fetch("http://192.168.41.162:9090/api/users/all", {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getAuthToken()}`,
@@ -83,7 +88,7 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
       throw new Error("Connection ID is missing");
     }
 
-    const apiUrl = `http://localhost:8080/api/v3/quotation/generating-pdf/${connectionId}`;
+    const apiUrl = `http://192.168.41.162:8080/api/v3/quotation/generating-pdf/${connectionId}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -108,7 +113,7 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
 
 export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
   try {
-    const response = await fetch('http://localhost:8585/api/internal-tool/save', {
+    const response = await fetch('http://192.168.41.162:8585/api/internal-tool/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -145,7 +150,7 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
   try {
 
 
-    const response = await fetch('http://localhost:8585/api/customers', {
+    const response = await fetch('http://192.168.41.162:8585/api/customers', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -175,7 +180,7 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
 
 export const saveConnection = async (data: Record<string, any>): Promise<number | null> => {
   try {
-    const response = await fetch('http://localhost:8585/api/connections', {
+    const response = await fetch('http://192.168.41.162:8585/api/connections', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -205,7 +210,7 @@ export const saveConnection = async (data: Record<string, any>): Promise<number 
 
 export const saveInstallation = async (data: Record<string, any>): Promise<number | null> => {
   try {
-    const response = await fetch('http://localhost:8585/api/installations', {
+    const response = await fetch('http://192.168.41.162:8585/api/installations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -272,7 +277,7 @@ export const fetchPanelWattages = async (
 ): Promise<number[]> => {
   try {
     console.log('Fetching panel wattages...');
-    const response = await fetch(`http://localhost:8080/api/panelWattages/${connectionId}`, {
+    const response = await fetch(`http://192.168.41.162:8080/api/panelWattages/${connectionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -327,7 +332,7 @@ export const calculateKw = async (
 
 export const fetchDistricts = async (): Promise<District[]> => {
   try {
-    const response = await fetch('http://localhost:8585/masters/district/27', {
+    const response = await fetch('http://192.168.41.162:8585/masters/district/27', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -342,7 +347,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
 
 export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   try {
-    const response = await fetch(`http://localhost:8585/masters/taluka/${districtCode}`, {
+    const response = await fetch(`http://192.168.41.162:8585/masters/taluka/${districtCode}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -357,7 +362,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
 
 export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   try {
-    const response = await fetch(`http://localhost:8585/masters/village/${talukaCode}`, {
+    const response = await fetch(`http://192.168.41.162:8585/masters/village/${talukaCode}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -372,7 +377,7 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
 
 export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<number[]> => {
   try {
-      const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
+      const response = await fetch(`http://192.168.41.162:8585/api/installations/consumer/${consumerId}`, {
           method: "GET",
           headers: {
               Authorization: `Bearer ${getAuthToken()}`,
@@ -396,7 +401,7 @@ export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<n
 
 export const getCustomerById = async (customerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/customers/${customerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -417,7 +422,7 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
 
 export const getConnectionByConsumerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:8585/api/connections/${consumerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/connections/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -438,7 +443,7 @@ export const getConnectionByConsumerId = async (consumerId: number): Promise<any
 
 export const getInstallationByConsumerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/installations/consumer/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -459,7 +464,7 @@ export const getInstallationByConsumerId = async (consumerId: number): Promise<a
 
 export const getConnectionsByCustomerId = async (customerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:8585/api/connections/customer/${customerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/connections/customer/${customerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -480,7 +485,7 @@ export const getConnectionsByCustomerId = async (customerId: number): Promise<an
 
 export const getInstallationsByCustomerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/installations/consumer/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -501,7 +506,7 @@ export const getInstallationsByCustomerId = async (consumerId: number): Promise<
 
 export const fetchConsumers = async (page = 0) => {
   try {
-    const response = await API.get(`http://localhost:8585/api/customers/paginated`, {
+    const response = await API.get(`http://192.168.41.162:8585/api/customers/paginated`, {
       params: { page },
       headers: {
         "Content-Type": "application/json",
@@ -523,7 +528,7 @@ export const fetchConsumers = async (page = 0) => {
 
 export const fetchOnboardedConsumers = async (page = 0) => {
   try {
-    const response = await API.get(`http://localhost:8585/api/customers/by-representative/paginated`, {
+    const response = await API.get(`http://192.168.41.162:8585/api/customers/onboarded/by-representative/paginated`, {
       params: { page },
       headers: {
         "Content-Type": "application/json",
@@ -543,9 +548,44 @@ export const fetchOnboardedConsumers = async (page = 0) => {
   }
 };
 
+
+export const getOnboardedCustomerCount = async() :Promise<Number> => {
+  const response = await fetch("http://192.168.41.162:8585/api/customers/onboarded-count",{
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${getAuthToken()}`,
+    },
+  });
+
+  if(!response.ok){
+    throw new Error("Failed to fetch onboarded customer count");
+  }
+
+  const count = await response.json();
+  return count;
+}
+
+export const getCustomerCount = async() :Promise<Number> => {
+  const response = await fetch("http://192.168.41.162:8585/api/customers/count",{
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${getAuthToken()}`,
+    },
+  });
+
+  if(!response.ok){
+    throw new Error("Failed to fetch customer count");
+  }
+
+  const count = await response.json();
+  return count;
+
+}
+
+
 export const fetchConsumerNumber = async (customerId: number) => {
   try {
-    const response = await API.get(`http://localhost:8585/api/connections/by-customer/${customerId}`, {
+    const response = await API.get(`http://192.168.41.162:8585/api/connections/by-customer/${customerId}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -570,7 +610,7 @@ export const updateConsumerPersonalDetails = async (customerId: number, updatedC
 
     console.log("Sending request to update consumer:", updatedCustomerData);
 
-    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/customers/${customerId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -596,7 +636,7 @@ export const updateInstallationSpaceDetails = async (id: number, updatedInstalla
 
     console.log("Sending request to update installation:", updatedInstallationData);
 
-    const response = await fetch(`http://localhost:8585/api/installations/${id}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/installations/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -622,7 +662,7 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
 
     console.log("Sending request to update consumer:", updatedData);
 
-    const response = await fetch(`http://localhost:8585/api/connections/${id}`, {
+    const response = await fetch(`http://192.168.41.162:8585/api/connections/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -646,7 +686,7 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
 // src/services/districtService.ts
 export const getDistrictNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://localhost:8585/masters/district/name/${code}`);
+    const response = await fetch(`http://192.168.41.162:8585/masters/district/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch district name");
@@ -661,7 +701,7 @@ export const getDistrictNameByCode = async (code: number): Promise<string> => {
 
 export const getTalukaNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://localhost:8585/masters/taluka/name/${code}`);
+    const response = await fetch(`http://192.168.41.162:8585/masters/taluka/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch taluka name");
@@ -676,7 +716,7 @@ export const getTalukaNameByCode = async (code: number): Promise<string> => {
 
 export const getVillageNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://localhost:8585/masters/village/name/${code}`);
+    const response = await fetch(`http://192.168.41.162:8585/masters/village/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch village name");
@@ -696,7 +736,7 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
   try {
     console.log(`Fetching recommendation for connectionId: ${connectionId}`);
 
-    const response = await fetch(`http://localhost:8080/api/v2/recommendation/getAndSave/${connectionId}`, {
+    const response = await fetch(`http://192.168.41.162:8080/api/v2/recommendation/getAndSave/${connectionId}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -717,7 +757,7 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
 
 export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
   try {
-    const response = await fetch('http://localhost:8080/api/v3/getPrice', {
+    const response = await fetch('http://192.168.41.162:8080/api/v4/getPrice', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -743,32 +783,53 @@ export const getPriceDetails = async (data: Record<string, any>): Promise<Record
   }
 };
 
+export const fetchBrandCapacityDetails = async (connectionId: number) => {
+  try{
+    const response = await fetch(`http://192.168.41.162:8080/api/checkBrandAndCapacity/${connectionId}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch KW and Brand: ${response.status}, Message: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching KW and Brand:", error);
+    alert("Failed to fetch details. Please try again.");
+    return null; // Prevent app crash
+  }
+};
+
 export const fetchPdf = async (id: number, docName: string): Promise<Response> => {
   let endpoint = "";
 
   if (docName === "WCR Page-1") {
-    endpoint = `http://localhost:5050/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
   }
   if (docName === "Annexure 1") {
-    endpoint = `http://localhost:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
   }
   if(docName=== "EarthingPageDocument"){
-    endpoint = `http://localhost:5050/api/pdf/earthingPageController/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/earthingPageController/${id}?download=true`;
   }
   if(docName=== "Subsidy Agreement Document-Page-1"){
-    endpoint = `http://localhost:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
   }
   if(docName=== "Subsidy Agreement Document-Page-2"){
-    endpoint = `http://localhost:5050/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
   }
   if(docName=== "Vendor Feasibility Document"){
-    endpoint = `http://localhost:5050/api/pdf/vendorFeasibilityController/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/vendorFeasibilityController/${id}?download=true`;
   }
   if(docName=== "Netmeter Agreement Document-Page-1"){
-    endpoint = `http://localhost:5050/api/pdf/netAgreementOne/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/netAgreementOne/${id}?download=true`;
   }
   if(docName=== "Netmeter Agreement Document-Page-2"){
-    endpoint = `http://localhost:5050/api/pdf/netAgreementTwo/${id}?download=true`;
+    endpoint = `http://192.168.41.162:5050/api/pdf/netAgreementTwo/${id}?download=true`;
   }
   // Add other documents' API endpoints here if needed
 
@@ -798,7 +859,7 @@ export const saveCustomerSpecs = async (connectionId: string, requestData: any) 
       throw new Error("Connection ID is missing!");
   }
 
-  const apiUrl = `http://localhost:8080/api/v3/customer-agreed/${connectionId}`;
+  const apiUrl = `http://192.168.41.162:8080/api/v3/customer-agreed/${connectionId}`;
 
   try {
       const response = await fetch(apiUrl, {
@@ -841,7 +902,7 @@ export const uploadFileToOneDrive = async (
     formData.append("state", "Maharashtra"); // Default state
     formData.append("folderType", "Onboarding Documents"); // Default folder
 
-    const response = await axios.post("http://localhost:3000/api/files/upload", formData, {
+    const response = await axios.post("http://192.168.41.162:3000/api/files/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -856,7 +917,7 @@ export const uploadFileToOneDrive = async (
 
 export const postMaterialData = async (connectionId: any, data: { connectionId: string; systemKw: string; makeOfModule: string; almmModelNo: string; serialNoOfModules: string; wattagePerModule: string; noOfModules: string; totalCapacity: string; warrantyDetails: string; inverterModuleNo: string; inverterMake: string; rating: string; chargeControllerType: string; inverterCapacity: string; earthingRod: string; dateOfInstallation: string; capacityType: string; projectModel: string; reInstalledCapacityRooftop: string; reInstalledCapacityGround: string; reInstalledCapacityTotal: string; }) => {
   
-  const url = `http://localhost:8585/api/materials?connectionId=${connectionId}`;
+  const url = `http://192.168.41.162:8585/api/materials?connectionId=${connectionId}`;
   
   try {
     const response = await axios.post(url, data, {
@@ -872,6 +933,106 @@ export const postMaterialData = async (connectionId: any, data: { connectionId: 
     throw error; // re-throw so component can handle the error
   }
 };
+
+export const searchCustomers = async (query: string): Promise<any> => {
+  try {
+    const response = await fetch(`http://192.168.41.162:8585/api/customers/searchByAny?query=${query}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch search results");
+    }
+
+    const data = await response.json();
+    // Validate the response data to ensure it's in the expected format
+    if (Array.isArray(data)) {
+      // Assuming each item in the array has the following properties: id, govIdName, emailAddress, mobileNumber
+      return data.map((item: any) => (
+        {
+        id: item?.id,
+        govIdName: item?.govIdName,
+        emailAddress: item?.emailAddress,
+        mobileNumber: item?.mobileNumber,
+        consumerId: item?.connectionId, // Added consumerId property
+      })
+    );
+    } else {
+      console.error("Invalid API response format:", data);
+      throw new Error("Failed to parse search results");
+    }
+  } catch (error) {
+    console.error("Error fetching search results:", error);
+    throw new Error("Failed to fetch search results");
+  }
+};
+
+
+export const uploadDocuments = async (
+  consumerId: string,
+  districtName: string,
+  talukaName: string,
+  villageName: string,
+  govIdName: string,
+  aadharFile: File | null,
+  passbookFile: File | null,
+  billFile: File | null
+) => {
+  const formData = new FormData();
+
+  formData.append("state", "Maharashtra");
+  formData.append("district", districtName);
+  formData.append("taluka", talukaName);
+  formData.append("village", villageName);
+  formData.append("customerName", govIdName);
+  formData.append("consumerNumber", consumerId);
+  formData.append("folderType", "Onboarding Documents");
+  formData.append("override", "true");
+
+  if (aadharFile) formData.append("files", aadharFile, "Aadhar Card.pdf");
+  if (passbookFile) formData.append("files", passbookFile, "Bank Passbook.pdf");
+  if (billFile) formData.append("files", billFile, "Electricity Bill.pdf");
+
+  const response = await axios.post("http://192.168.41.162:3000/api/files/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+};
+
+export const fetchUploadedDocuments = async (
+  consumerId: string,
+  districtName: string,
+  talukaName: string,
+  villageName: string,
+  govIdName: string
+) => {
+  try {
+    const response = await axios.get("http://192.168.41.162:3000/api/files/list", {
+      params: {
+        state: "Maharashtra",
+        district: districtName,
+        taluka: talukaName,
+        village: villageName,
+        customerName: govIdName,
+        consumerNumber: consumerId,
+        folderType: "Onboarding Documents"
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching documents", error);
+    return [];
+  }
+};
+
+
 
 
 

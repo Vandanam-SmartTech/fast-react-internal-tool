@@ -69,6 +69,7 @@ export const ConnectionForm = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
+  const govIdName = location.state?.govIdName || null;
   //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
@@ -123,6 +124,15 @@ useEffect(() => {
 //     setSelectedRepresentative(JSON.parse(storedRep));
 //   }
 // }, []);
+
+console.log("Recived govIdName:",govIdName);
+
+useEffect(() => {
+  if (govIdName) {
+    setFormData((prev) => ({ ...prev, billedTo: govIdName }));
+  }
+}, [govIdName]);
+
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -185,6 +195,7 @@ useEffect(() => {
       ...prev,
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+
     }));
         ///////////////
         localStorage.setItem('myFormData', JSON.stringify(formData));

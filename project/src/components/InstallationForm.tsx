@@ -40,6 +40,15 @@ export const InstallationForm = () => {
     spaceType:'Slab',
     installationSpaceTitle:'',
   });
+
+  ///////////////////////////////////////////////////////////
+  useEffect(() => {
+    const savedForm = localStorage.getItem('myFormData');
+    if (savedForm) {
+      setFormData(JSON.parse(savedForm));
+    }
+  }, []);
+///////////////////////////////////////////////////////////
   
   useEffect(() => {
     const getClaims = async () => {
@@ -69,6 +78,10 @@ export const InstallationForm = () => {
       ...prev,
       [name]: value,
     }));
+
+    ///////////////
+    localStorage.setItem('myFormData', JSON.stringify(formData));
+    //////////////
   };
 
 
@@ -121,6 +134,9 @@ export const InstallationForm = () => {
         console.error("Error in installation process:", error);
         alert("Failed to process installation. Please try again.");
     }
+    /////////////
+    localStorage.removeItem('myFormData');
+    ////////////
 };
 
 

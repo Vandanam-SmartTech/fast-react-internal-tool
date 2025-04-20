@@ -38,12 +38,29 @@ export const CustomerForm = () => {
   
 
 ///////////////////////////////////////////////////////////
-  useEffect(() => {
-    const savedForm = localStorage.getItem('myFormData');
-    if (savedForm) {
-      setFormData(JSON.parse(savedForm));
-    }
-  }, []);
+useEffect(() => {
+  const savedFormData = localStorage.getItem("myFormData");
+  const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
+  const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
+  const savedRepresentative = localStorage.getItem("selectedRepresentative");
+
+  if (savedFormData) {
+    setFormData(JSON.parse(savedFormData));
+  }
+
+  if (savedConfirmMobile) {
+    setConfirmMobileNumber(savedConfirmMobile);
+  }
+
+  if (savedConfirmEmail) {
+    setConfirmEmailAddress(savedConfirmEmail);
+  }
+
+  if (savedRepresentative) {
+    setSelectedRepresentative(JSON.parse(savedRepresentative));
+  }
+}, []);
+
 ///////////////////////////////////////////////////////////
 
 useEffect(() => {
@@ -60,12 +77,11 @@ useEffect(() => {
   }, []);
 
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    ///////////////
-    localStorage.setItem('myFormData', JSON.stringify(formData));
-    //////////////
-  };
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updatedFormData = { ...formData, [e.target.name]: e.target.value };
+  setFormData(updatedFormData);
+  localStorage.setItem('myFormData', JSON.stringify(updatedFormData));
+};
 
   useEffect(() => {
     const getRepresentatives = async () => {
@@ -81,26 +97,29 @@ useEffect(() => {
   
     if (!selectedUserId) {
       setSelectedRepresentative(null); 
-      //localStorage.removeItem("selectedRepresentative");
+      localStorage.removeItem("selectedRepresentative");
       return;
     }
   
     const selectedRep = representatives.find(rep => rep.userId === Number(selectedUserId)) || null;
     setSelectedRepresentative(selectedRep);
 
-    // if (selectedRep) {
-    //   localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
-    // }
+    if (selectedRep) {
+      localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
+    }
   };
   
 
   
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmMobileNumber(e.target.value);
+    const value = e.target.value;
+    setConfirmMobileNumber(value);
+    localStorage.setItem('confirmMobileNumber', value);
   };
-
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmEmailAddress(e.target.value);
+    const value = e.target.value;
+    setConfirmEmailAddress(value);
+    localStorage.setItem('confirmEmailAddress', value);
   };
 
 
@@ -139,6 +158,10 @@ useEffect(() => {
     }
   
     localStorage.removeItem("myFormData");
+    localStorage.removeItem("confirmMobileNumber");
+    localStorage.removeItem("confirmEmailAddress");
+    localStorage.removeItem("selectedRepresentative");
+
   };
   
   
@@ -160,7 +183,9 @@ useEffect(() => {
       onChange={handleSelectChange}
       className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
     >
-      <option value="">Select Representative</option>
+      <option value="" disabled hidden>
+      Select Representative
+    </option>
       {representatives.map(rep => (
         <option key={rep.userId} value={rep.userId}>
           {rep.name}
@@ -217,49 +242,55 @@ useEffect(() => {
         />
       </div>
 
-      <div>
-          <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
-          <input
-            type="password"
-            name="confirmMobileNumber"
-            value={confirmMobileNumber}
-            onChange={handleConfirmMobileChange}
-            placeholder="1234567890"
-            maxLength={10}
-            pattern="[6-9]{1}[0-9]{9}"
-            required
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            title="Enter a valid 10-digit mobile number starting with 6-9"
-          />
-        </div>
+      {/* Mobile Number (Primary Entry) */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
+  <input
+    type="password"
+    name="mobileNumber"
+    value={formData.mobileNumber}
+    onChange={handleChange}
+    placeholder="1234567890"
+    maxLength={10}
+    pattern="[6-9]{1}[0-9]{9}"
+    required
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    title="Enter a valid 10-digit mobile number starting with 6-9"
+  />
+  {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
+    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
+  )}
+</div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
-        <input
-          type="tel"
-          name="mobileNumber"
-          value={formData.mobileNumber}
-          onChange={handleChange}
-          placeholder="Confirm mobile number"
-          maxLength={10}
-          pattern="[6-9]{1}[0-9]{9}"
-          required
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          title="Re-enter the same 10-digit mobile number"
-        />
-        {confirmMobileNumber &&
+{/* Confirm Mobile Number */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
+  <input
+    type="tel"
+    name="confirmMobileNumber"
+    value={confirmMobileNumber}
+    onChange={handleConfirmMobileChange}
+    placeholder="Confirm mobile number"
+    maxLength={10}
+    pattern="[6-9]{1}[0-9]{9}"
+    required
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    title="Re-enter the same 10-digit mobile number"
+  />
+  {confirmMobileNumber &&
     confirmMobileNumber !== formData.mobileNumber && (
       <p className="text-red-600 text-sm mt-1">Mobile numbers do not match</p>
   )}
-      </div>
+</div>
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
         <input
           type="password"
-          name="confirmEmailAddress"
-          value={confirmEmailAddress}
-          onChange={handleConfirmEmailChange}
+          name="emailAddress"
+          value={formData.emailAddress}
+          onChange={handleChange}
           placeholder="johndoe@example.com"
           maxLength={35}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
@@ -272,9 +303,9 @@ useEffect(() => {
         <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
         <input
           type="email"
-          name="emailAddress"
-          value={formData.emailAddress}
-          onChange={handleChange}
+          name="confirmEmailAddress"
+          value={confirmEmailAddress}
+          onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
           maxLength={35}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"

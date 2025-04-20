@@ -792,12 +792,6 @@ export function QuotationForm() {
     }
 };
 
-
-
-
-  
-  
-
   const handleSaveSystemSpecification = () => {
     // You can include any save logic here
     setShowCostDetails(true); // Show the additional div when button is clicked

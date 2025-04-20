@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchClaims, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
+import { fetchClaims,fetchUploadedDocuments, uploadDocuments, getCustomerById, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, FileUp } from "lucide-react";
 import { Stepper, Step } from "react-form-stepper";
 
 
@@ -21,6 +21,16 @@ export const ViewConnection = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
+  const [govIdName, setGovIdName] = useState("");
+  const state = "Maharashtra";
+  const folderType = "Onboarding Documents";
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [aadharFile, setAadharFile] = useState<File | null>(null);
+  const [passbookFile, setPassbookFile] = useState<File | null>(null);
+  const [billFile, setBillFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
 
   const phaseTypeMapping: { [key: number]: string } = {
     1: "Single-Phase",
@@ -61,6 +71,32 @@ export const ViewConnection = () => {
     8: "Public_Water_Works",
   };
 
+  const handleFileUpload = async () => {
+    setIsLoading(true);
+    
+    try {
+      const result = await uploadDocuments(
+        consumerId,
+        districtName,
+        talukaName,
+        villageName,
+        govIdName,
+        aadharFile,
+        passbookFile,
+        billFile
+      );
+
+      alert("" + result.message);
+      setModalOpen(false);
+    } catch (error: any) {
+      alert("Upload failed: " + error.response?.data?.message || error.message);
+    }
+    finally {
+      setIsLoading(false);
+  }
+  };
+
+
 
 
 
@@ -78,6 +114,42 @@ export const ViewConnection = () => {
 
     fetchConnection();
   }, [consumerId]);
+
+  useEffect(() => {
+    if (modalOpen) {
+      (async () => {
+        const files = await fetchUploadedDocuments(
+          consumerId,
+          districtName,
+          talukaName,
+          villageName,
+          govIdName
+        );
+  
+        const fileMap: { [key: string]: string } = {};
+        files.forEach((file: any) => {
+          if (file.name.includes("Aadhar")) fileMap["Aadhar"] = file.downloadUrl;
+          else if (file.name.includes("Passbook")) fileMap["Passbook"] = file.downloadUrl;
+          else if (file.name.includes("Electricity")) fileMap["Electricity"] = file.downloadUrl;
+        });
+  
+        setUploadedFiles(fileMap);
+      })();
+    }
+  }, [modalOpen]);
+  
+  
+
+  useEffect(() => {
+        const fetchCustomer = async () => {
+          if (customerId) {
+            const data = await getCustomerById(Number(customerId));
+            setGovIdName(data?.govIdName || "");
+          }
+        };
+        fetchCustomer();
+  
+      }, [customerId]);
 
   useEffect(() => {
       const getClaims = async () => {
@@ -209,14 +281,114 @@ export const ViewConnection = () => {
         )}
 
 <div className="mt-2 md:mt-0 md:ml-auto">
-    <button
-      //onClick={handleUploadDocuments} 
-      className="p-2 rounded-full hover:bg-gray-200 transition"
-      title="Upload Documents"
-    >
-      <Upload className="w-6 h-6 text-gray-700" />
-    </button>
-  </div>
+  <button
+    onClick={() => setModalOpen(true)}
+    className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
+  >
+    <FileUp className="w-6 h-6 text-gray-700" />
+  </button>
+
+  {modalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">Upload Required Documents</h3>
+
+        {/* Aadhar */}
+        <div className="mb-4">
+          <label className="block font-medium text-gray-700 mb-1">Aadhar Card</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
+              onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
+            />
+            {aadharFile && (
+              <span className="text-sm text-gray-600 truncate">{aadharFile.name}</span>
+            )}
+          </div>
+          {uploadedFiles.Aadhar && (
+            <a
+              href={uploadedFiles.Aadhar}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 underline mt-1 inline-block"
+            >
+              View Uploaded Aadhar Card
+            </a>
+          )}
+        </div>
+
+        {/* Passbook */}
+        <div className="mb-4">
+          <label className="block font-medium text-gray-700 mb-1">Bank Passbook</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
+              onChange={(e) => setPassbookFile(e.target.files?.[0] || null)}
+            />
+            {passbookFile && (
+              <span className="text-sm text-gray-600 truncate">{passbookFile.name}</span>
+            )}
+          </div>
+          {uploadedFiles.Passbook && (
+            <a
+              href={uploadedFiles.Passbook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 underline mt-1 inline-block"
+            >
+              View Uploaded Passbook
+            </a>
+          )}
+        </div>
+
+        {/* Electricity Bill */}
+        <div className="mb-6">
+          <label className="block font-medium text-gray-700 mb-1">Electricity Bill</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
+              onChange={(e) => setBillFile(e.target.files?.[0] || null)}
+            />
+            {billFile && (
+              <span className="text-sm text-gray-600 truncate">{billFile.name}</span>
+            )}
+          </div>
+          {uploadedFiles.Electricity && (
+            <a
+              href={uploadedFiles.Electricity}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 underline mt-1 inline-block"
+            >
+              View Uploaded Electricity Bill
+            </a>
+          )}
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-between">
+          <button
+            onClick={() => setModalOpen(false)}
+            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleFileUpload}
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          >
+            {isLoading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
 </div>
 
     <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">

@@ -6,11 +6,13 @@ import { generateQuotationPDF } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 
+
 export const SystemSpecifications = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const [showCostDetails, setShowCostDetails] = useState(false);
+  const [isSpecsSaved, setIsSpecsSaved] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
@@ -32,6 +34,7 @@ export const SystemSpecifications = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [govIdName, setGovIdName] = useState("");
   const selectedRepresentative = location.state?.selectedRepresentative;
+
 
   const state = "Maharashtra";
   const folderType = "Onboarding Documents";
@@ -60,9 +63,11 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     Kw:"",
   });
 
+
   const connectionId = location.state?.connectionId; 
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
+  
 
   useEffect(() => {
     const loadInstallationSpaceTypes = async () => {
@@ -159,6 +164,7 @@ useEffect(() => {
       try {
         const recommendation = await fetchRecommendedDetails(connectionId);
 
+        console.log("Recommended Data:",recommendation);
         const recommendedKW = recommendation.recommendedKW || "";
 
         setFormData((prev) => ({
@@ -167,9 +173,9 @@ useEffect(() => {
           installationStructureType: recommendation.recommendedInstallationStructureType || "",
           Kw: recommendedKW,
           dcrNonDcrType:
-          recommendation.dcrNonDcrType?.toLowerCase() === "nonDcr"
-            ? "Non-DCR"
-            : "DCR",
+          recommendation.dcrNonDcrType?.toLowerCase() === "nondcr"
+          ? "Non-DCR"
+          : "DCR",
           panelBrand: recommendation.panelBrand || "",
         }));
         setConnectionType(recommendation.connectionType || "");
@@ -188,6 +194,71 @@ useEffect(() => {
 
     fetchData();
   }, [connectionId]);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => {
+        const updatedData = { 
+            ...prev, 
+            [name]: value,
+          
+        };
+        updatedData.totalCost = 
+            (Number(updatedData.solarSystemCost) || 0) + 
+            (Number(updatedData.fabricationCost) || 0);
+
+
+        // Correct dcrNonDcrType based on recommendation.phaseType
+        if (name === "panelBrand") {
+            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
+                ? "Non-DCR"
+                : "DCR"; // Default to "DCR"
+        }
+
+        return updatedData;
+    });
+
+    setIsCustomSpecs(true);
+    //////
+    setIsSpecsSaved(false);
+    //////
+
+    
+    // Fetch panel wattages when relevant fields change
+    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
+      try {
+          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+  
+          console.log("Fetching panel wattages with:");
+          console.log("Connection ID:", connectionId);
+          console.log("Phase Type:", phaseType);
+          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+          console.log("Panel Brand:", panelBrandValue);
+  
+          const wattages = await fetchPanelWattages(
+              connectionId,
+              phaseType,  
+              dcrNonDcrValue,
+              panelBrandValue
+          );
+  
+          console.log("Fetched Wattages:", wattages);
+          setPanelWattages(wattages);
+
+          if (!wattages.includes(formData.Kw)) {
+            setFormData((prev) => ({
+              ...prev,
+              Kw: wattages[0] || "", // fallback to first available
+            }));
+          }
+      } catch (error) {
+          console.error("Error fetching panel wattages:", error);
+      }
+  }
+    // Fetch panel wattages when relevant fields change
+};
 
 
 
@@ -258,6 +329,7 @@ useEffect(() => {
         phaseType: phaseType,
         connectionType: connectionType,
         inversionType: "On-Grid",
+        inverterWattage: 6.4,
         solarSystemCost: formData.solarSystemCost,
         fabricationCost: formData.fabricationCost,
         totalCost: formData.totalCost,
@@ -266,6 +338,9 @@ useEffect(() => {
     try {
         await saveCustomerSpecs(connectionId, requestData);
         alert("System specifications saved successfully!");
+        //////
+        setIsSpecsSaved(true);
+        ///////
     } catch (error) {
         alert(error.message || "An error occurred while saving.");
     }
@@ -291,7 +366,7 @@ const handleGenerateQuotation = async () => {
       await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
       console.log("Quotation uploaded to OneDrive successfully");
 
-      // Trigger download
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
@@ -351,60 +426,6 @@ const handleGenerateQuotation = async () => {
   };
   
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => {
-        const updatedData = { 
-            ...prev, 
-            [name]: value,
-          
-        };
-        updatedData.totalCost = 
-            (Number(updatedData.solarSystemCost) || 0) + 
-            (Number(updatedData.fabricationCost) || 0);
-
-
-        // Correct dcrNonDcrType based on recommendation.phaseType
-        if (name === "panelBrand") {
-            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
-                ? "Non-DCR"
-                : "Non-DCR"; // Default to "DCR"
-        }
-
-        return updatedData;
-    });
-
-    setIsCustomSpecs(true);
-
-    
-    // Fetch panel wattages when relevant fields change
-    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
-      try {
-          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-  
-          console.log("Fetching panel wattages with:");
-          console.log("Connection ID:", connectionId);
-          console.log("Phase Type:", phaseType);
-          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-          console.log("Panel Brand:", panelBrandValue);
-  
-          const wattages = await fetchPanelWattages(
-              connectionId,
-              phaseType,  
-              dcrNonDcrValue,
-              panelBrandValue
-          );
-  
-          console.log("Fetched Wattages:", wattages);
-          setPanelWattages(wattages);
-      } catch (error) {
-          console.error("Error fetching panel wattages:", error);
-      }
-  }
-    // Fetch panel wattages when relevant fields change
-};
 
 
 
@@ -460,12 +481,12 @@ const handleGenerateQuotation = async () => {
           <select
             id="installationSpaceType"
             name="installationSpaceType"
-            value={formData.installationSpaceType || ""}
+            value={formData.installationSpaceType || "Installations Not Available"}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             {availableSpaceTypes.length === 0 ? (
-      <option disabled>Loading...</option> // Prevents user selection while loading
+      <option disabled>Installations Not Available</option> // Prevents user selection while loading
     ) : (
       availableSpaceTypes.map((spaceType) => (
         <option key={spaceType} value={spaceType}>
@@ -590,8 +611,9 @@ const handleGenerateQuotation = async () => {
     <button
         type="button"
         onClick={handlePreview}
-        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        disabled={isPreviewLoading}
+        disabled={!isSpecsSaved || isPreviewLoading}
+        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        //disabled={isPreviewLoading}
     >
         {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
     </button>
@@ -599,7 +621,8 @@ const handleGenerateQuotation = async () => {
     <button
         type="submit"
         onClick={handleGenerateQuotation}
-        disabled={isLoading}
+        disabled={!isSpecsSaved || isLoading}
+        //disabled={isLoading}
         className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
         {isLoading ? "Generating..." : "Generate & Save Quotation"}
