@@ -95,7 +95,7 @@ export const EditConnection = () => {
     sectionId: "",
     isNameCorrection: "No",
     correctionType: "",
-    monthlyAvgConsumptionUnits: 0,
+    monthlyAvgConsumptionUnits: NaN,
     isOnboardedCustomers:false,
   });
 
@@ -433,7 +433,7 @@ export const EditConnection = () => {
               name="consumerId"
               value={formData.consumerId}
               onChange={handleChange}
-              placeholder="000000000000"
+              placeholder="e.g. 987654321000"
               maxLength={12}
               required
               disabled={formData.isMsebConnection === "No"}
@@ -448,6 +448,7 @@ export const EditConnection = () => {
               name="gstIn"
               value={formData.gstIn}
               onChange={handleChange}
+              placeholder="e.g. 22AAAAA0000A1Z6"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -459,6 +460,7 @@ export const EditConnection = () => {
               name="billedTo"
               value={formData.billedTo}
               onChange={handleChange}
+              placeholder="Enter the name of the billed person or company"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -527,6 +529,7 @@ export const EditConnection = () => {
                 name="pincode"
                 value={formData.pincode || ''}  // Ensure it uses formData.pincode
                 onChange={handlepincodeChange}
+                placeholder="e.g. 416000"
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm"
               />
             </div>
@@ -538,6 +541,7 @@ export const EditConnection = () => {
               name="addressLine1"
               value={formData.addressLine1}
               onChange={handleChange}
+              placeholder="e.g. Flat No, House No, Street Name"
               required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
@@ -550,6 +554,7 @@ export const EditConnection = () => {
               name="addressLine2"
               value={formData.addressLine2}
               onChange={handleChange}
+              placeholder="e.g. Apartment, Suite, Unit, Building"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -605,6 +610,9 @@ export const EditConnection = () => {
               name="monthlyAvgConsumptionUnits"
               value={formData.monthlyAvgConsumptionUnits}
               onChange={handleChange}
+              min="0"
+              placeholder="e.g. 1"
+              onWheel={(e)=>e.currentTarget.blur()}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -616,6 +624,7 @@ export const EditConnection = () => {
               name="sectionId"
               value={formData.sectionId}
               onChange={handleChange}
+              placeholder="e.g. 7137"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -628,6 +637,7 @@ export const EditConnection = () => {
               name="latitude"
               value={formData.latitude}
               onChange={handleChange}
+              placeholder="e.g. 16.7049873"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -639,6 +649,7 @@ export const EditConnection = () => {
               name="longitude"
               value={formData.longitude}
               onChange={handleChange}
+              placeholder="e.g. 74.2432527"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>

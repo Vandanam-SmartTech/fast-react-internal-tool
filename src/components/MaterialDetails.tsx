@@ -10,8 +10,7 @@ export default function MaterialForm() {
     almmModelNo: "",                          
     serialNoOfModules: [],                    
     wattagePerModule: 0,                      
-    noOfModules: 0,                           
-    totalCapacity: 0,                         
+    noOfModules: 0,                                                   
     warrantyDetails: "",                      
     inverterModuleNo: "",                     
     inverterMake: "",                         
@@ -147,7 +146,7 @@ export default function MaterialForm() {
               <div>
         <label className="block text-sm font-medium text-gray-700">Wattage Per Module</label>
         <input
-          type="number"
+          type="text"
           name="wattagePerModule"
           value={formData.wattagePerModule}
           onChange={handleChange}
@@ -155,17 +154,7 @@ export default function MaterialForm() {
         />
       </div>
 
-              {/* <InputField name="totalCapacity" label="Total Capacity" value={formData.totalCapacity} handleChange={handleChange} type="number" /> */}
-              <div>
-        <label className="block text-sm font-medium text-gray-700">Total Capacity</label>
-        <input
-          type="number"
-          name="totalCapacity"
-          value={formData.totalCapacity}
-          onChange={handleChange}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+              
               {/* <InputField name="warrantyDetails" label="Warranty Details" value={formData.warrantyDetails} handleChange={handleChange} /> */}
               <div>
         <label className="block text-sm font-medium text-gray-700">Warranty Details</label>

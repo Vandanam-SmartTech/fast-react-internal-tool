@@ -250,7 +250,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     name="mobileNumber"
     value={formData.mobileNumber}
     onChange={handleChange}
-    placeholder="1234567890"
+    placeholder="9567023456"
     maxLength={10}
     pattern="[6-9]{1}[0-9]{9}"
     required

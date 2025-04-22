@@ -30,13 +30,13 @@ export const InstallationForm = () => {
 
 
   const [formData, setFormData] = useState({
-    acWireLengthFt: 0,
-    dcWireLengthFt: 0,
-    earthingWireLengthFt: 0,
-    numberOfGpPipes: 0,
+    acWireLengthFt: NaN,
+    dcWireLengthFt: NaN,
+    earthingWireLengthFt: NaN,
+    numberOfGpPipes: NaN,
     descriptionOfInstallation:'',
-    availableSouthNorthLengthFt: 0,
-    availableEastWestLengthFt: 0,
+    availableSouthNorthLengthFt: NaN,
+    availableEastWestLengthFt: NaN,
     spaceType:'Slab',
     installationSpaceTitle:'',
   });
@@ -212,6 +212,7 @@ return (
           name="installationSpaceTitle"
           value={formData.installationSpaceTitle}
           onChange={handleChange}
+          placeholder="e.g. South-West side of space type"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
@@ -221,6 +222,8 @@ return (
         <input
           type="number"
           name="availableEastWestLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableEastWestLengthFt}
           onChange={handleChange}
           placeholder="e.g. 10"
@@ -233,6 +236,8 @@ return (
         <input
           type="number"
           name="availableSouthNorthLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableSouthNorthLengthFt}
           placeholder="e.g. 10"
           onChange={handleChange}
@@ -246,6 +251,8 @@ return (
           type="number"
           id="acWireLengthFt"
           name="acWireLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.acWireLengthFt}
           placeholder="e.g. 10"
           onChange={handleChange}
@@ -259,6 +266,8 @@ return (
           type="number"
           id="dcWireLengthFt"
           name="dcWireLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.dcWireLengthFt}
           placeholder="e.g. 10"
           onChange={handleChange}
@@ -272,6 +281,8 @@ return (
           type="number"
           id="earthingWireLengthFt"
           name="earthingWireLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.earthingWireLengthFt}
           placeholder="e.g. 10"
           onChange={handleChange}
@@ -285,6 +296,8 @@ return (
           type="number"
           id="numberOfGpPipes"
           name="numberOfGpPipes"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
           value={formData.numberOfGpPipes}
           placeholder="e.g. 10"
           onChange={handleChange}
@@ -300,6 +313,7 @@ return (
           name="descriptionOfInstallation"
           value={formData.descriptionOfInstallation}
           onChange={handleChange}
+          placeholder="e.g. Designated area is on rooftop"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
