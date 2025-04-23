@@ -3,6 +3,13 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getConnectionByConsumerId, updateConsumerConnectionDetails, fetchClaims } from "../services/api";
 import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
+import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import {
+  UserCircleIcon,
+  BoltIcon,
+  HomeModernIcon,
+  Cog6ToothIcon,
+} from "@heroicons/react/24/solid";
 
 interface District {
     code: number;
@@ -73,6 +80,14 @@ export const EditConnection = () => {
     const [loading, setLoading] = useState(true);
     const [roles, setRoles] = useState<string[]>([]);
     const selectedRepresentative = location.state?.selectedRepresentative;
+    const [activeTab, setActiveTab] = useState("Connection Details");
+
+    const tabs = [
+    "Customer Details",
+    "Connection Details",
+    "Installation Details",
+    "System Specifications",
+  ];
 
 
 
@@ -376,7 +391,7 @@ export const EditConnection = () => {
           </div>
         )}
   </div>
-        <div className="mb-6 sm:mb-8 overflow-x-auto">
+        {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
         <Stepper 
           activeStep={0} 
           styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
@@ -387,7 +402,70 @@ export const EditConnection = () => {
           <Step label="Installation Space Details" />
           <Step label="System Specifications" />
         </Stepper>
-      </div>
+      </div> */}
+
+<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+    
+    {/* Connector Line: between the first and last icon only */}
+    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+
+    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+      {tabs.map((tab, index) => {
+        const isActive = activeTab === tab;
+
+        const Icon =
+          tab === "Customer Details"
+            ? UserCircleIcon
+            : tab === "Connection Details"
+            ? BoltIcon
+            : tab === "Installation Details"
+            ? HomeModernIcon
+            : Cog6ToothIcon;
+
+            const shouldHighlightIcon = tab === "Customer Details" || tab==="Connection Details";
+
+
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "Customer Details") {
+                    navigate(`/view-customer/${customerId}`, {
+                      state: {
+                        customerId,
+                        selectedRepresentative: selectedRepresentative || "",
+                      },
+                    });
+                  }
+                }}
+                className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+              >
+                <div
+                  className={`rounded-full p-2 transition-all duration-300 ${
+                    shouldHighlightIcon
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
+                  }`}
+                >
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span
+                  className={`text-xs md:text-sm font-semibold mt-1 ${
+                    isActive ? "text-gray-700" : "text-gray-700"
+                  }`}
+                >
+                  {tab}
+                </span>
+              </button>
+            );
+      })}
+    </div>
+  </div>
+</div>
+
+
         <h2 className="text-2xl font-semibold text-gray-700 mb-8">Connection Details</h2>
 
     
