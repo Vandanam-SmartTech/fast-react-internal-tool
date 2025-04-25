@@ -39,6 +39,10 @@ export const ViewConnection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("Connection Details");
+  const [activeDocumentTab, setActiveDocumentTab] = useState("Aadhar");
+  const [activeDocTab, setActiveDocTab] = useState<"Aadhar" | "Passbook" | "Electricity">("Aadhar");
+  const [file, setFile] = useState<File | null>(null);
+  
 
   const tabs = [
     "Customer Details",
@@ -122,7 +126,7 @@ export const ViewConnection = () => {
         return;
       }
 
-      // Fetch connection details using consumerId
+
       const data = await getConnectionByConsumerId(Number(consumerId));
       setConnection(data);
     };
@@ -130,28 +134,59 @@ export const ViewConnection = () => {
     fetchConnection();
   }, [consumerId]);
 
+  const fetchAndSetUploadedFiles = async () => {
+    const files = await fetchUploadedDocuments(
+      consumerId,
+      districtName,
+      talukaName,
+      villageName,
+      govIdName
+    );
+  
+    const fileMap: { [key: string]: string } = {};
+    files.forEach((file: any) => {
+      if (file.name.includes("Aadhar")) fileMap["Aadhar"] = file.downloadUrl;
+      else if (file.name.includes("Passbook")) fileMap["Passbook"] = file.downloadUrl;
+      else if (file.name.includes("Electricity")) fileMap["Electricity"] = file.downloadUrl;
+    });
+  
+    setUploadedFiles(fileMap);
+  };
+
   useEffect(() => {
     if (modalOpen) {
-      (async () => {
-        const files = await fetchUploadedDocuments(
-          consumerId,
-          districtName,
-          talukaName,
-          villageName,
-          govIdName
-        );
-  
-        const fileMap: { [key: string]: string } = {};
-        files.forEach((file: any) => {
-          if (file.name.includes("Aadhar")) fileMap["Aadhar"] = file.downloadUrl;
-          else if (file.name.includes("Passbook")) fileMap["Passbook"] = file.downloadUrl;
-          else if (file.name.includes("Electricity")) fileMap["Electricity"] = file.downloadUrl;
-        });
-  
-        setUploadedFiles(fileMap);
-      })();
+      fetchAndSetUploadedFiles();
     }
   }, [modalOpen]);
+  
+  
+
+  const handleSingleFileUpload = async () => {
+    setIsLoading(true);
+    try {
+      const result = await uploadDocuments(
+        consumerId,
+        districtName,
+        talukaName,
+        villageName,
+        govIdName,
+        activeDocTab === "Aadhar" ? file : null,
+        activeDocTab === "Passbook" ? file : null,
+        activeDocTab === "Electricity" ? file : null
+      );
+  
+      alert(`${activeDocTab} uploaded successfully: ` + result.message);
+      setFile(null); 
+  
+      await fetchAndSetUploadedFiles(); 
+    } catch (error: any) {
+      alert(`${activeDocTab} upload failed: ` + (error.response?.data?.message || error.message));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  
   
   
 
@@ -239,7 +274,6 @@ export const ViewConnection = () => {
     }
   };
 
-  console.log("fetched Connection:",connection);
 
   const handleNo = async () => {
     setShowDialog(false);
@@ -269,7 +303,7 @@ export const ViewConnection = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4 w-full">
-  {/* Backward Arrow Button (Before Title on Mobile) */}
+
   <div className="flex items-center w-full md:w-auto">
     <button
       onClick={() =>
@@ -282,13 +316,13 @@ export const ViewConnection = () => {
       <ArrowLeft className="w-6 h-6 text-gray-700" />
     </button>
 
-    {/* Heading - Adjusts Position on Small Screens */}
+
     <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
       View Connection Details
     </h2>
   </div>
 
-  {/* Selected Representative - Adjusts for Desktop & Mobile */}
+
   {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
           <div className="text-sm text-gray-600 mt-2 md:mt-0">
             <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
@@ -296,113 +330,83 @@ export const ViewConnection = () => {
         )}
 
 <div className="mt-2 md:mt-0 md:ml-auto">
-  <button
-    onClick={() => setModalOpen(true)}
-    className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
-  >
-    <FileUp className="w-6 h-6 text-gray-700" />
-  </button>
+      <button
+        onClick={() => setModalOpen(true)}
+        className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
+      >
+        <FileUp className="w-6 h-6 text-gray-700" />
+      </button>
 
-  {modalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">Upload Required Documents</h3>
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
+            <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+              Upload Required Documents
+            </h3>
 
-        {/* Aadhar */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-1">Aadhar Card</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
-              onChange={(e) => setAadharFile(e.target.files?.[0] || null)}
-            />
-            {aadharFile && (
-              <span className="text-sm text-gray-600 truncate">{aadharFile.name}</span>
-            )}
+
+            <div className="flex justify-around mb-4">
+              {["Aadhar Card", "Bank Passbook", "Electricity Bill"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveDocTab(tab as any);
+                    setFile(null); 
+                  }}
+                  className={`px-4 py-2 rounded-t ${
+                    activeDocTab === tab
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">{activeTab} File</label>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="file"
+                  className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
+                {file && <span className="text-sm text-gray-600 truncate">{file.name}</span>}
+              </div>
+              {uploadedFiles[activeDocTab] && (
+                <a
+                  href={uploadedFiles[activeDocTab]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-green-600 underline mb-4 inline-block"
+                >
+                  View Uploaded {activeDocTab}
+                </a>
+              )}
+            </div>
+
+
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSingleFileUpload}
+                disabled={isLoading || !file}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+              >
+                {isLoading ? "Uploading..." : `Upload ${activeDocTab}`}
+              </button>
+            </div>
           </div>
-          {uploadedFiles.Aadhar && (
-            <a
-              href={uploadedFiles.Aadhar}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-green-600 underline mt-1 inline-block"
-            >
-              View Uploaded Aadhar Card
-            </a>
-          )}
         </div>
-
-        {/* Passbook */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-1">Bank Passbook</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
-              onChange={(e) => setPassbookFile(e.target.files?.[0] || null)}
-            />
-            {passbookFile && (
-              <span className="text-sm text-gray-600 truncate">{passbookFile.name}</span>
-            )}
-          </div>
-          {uploadedFiles.Passbook && (
-            <a
-              href={uploadedFiles.Passbook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-green-600 underline mt-1 inline-block"
-            >
-              View Uploaded Passbook
-            </a>
-          )}
-        </div>
-
-        {/* Electricity Bill */}
-        <div className="mb-6">
-          <label className="block font-medium text-gray-700 mb-1">Electricity Bill</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
-              onChange={(e) => setBillFile(e.target.files?.[0] || null)}
-            />
-            {billFile && (
-              <span className="text-sm text-gray-600 truncate">{billFile.name}</span>
-            )}
-          </div>
-          {uploadedFiles.Electricity && (
-            <a
-              href={uploadedFiles.Electricity}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-green-600 underline mt-1 inline-block"
-            >
-              View Uploaded Electricity Bill
-            </a>
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-between">
-          <button
-            onClick={() => setModalOpen(false)}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleFileUpload}
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-          >
-            {isLoading ? "Uploading..." : "Upload"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
-  )}
-</div>
 
 </div>
 
@@ -636,7 +640,6 @@ export const ViewConnection = () => {
         </button>
       </div>
   
-      {/* Installation Cards */}
       {/* Installation Cards */}
       {installations.length > 0 ? (
   <>

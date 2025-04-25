@@ -49,6 +49,7 @@ const OnboardedCustomers: React.FC = () => {
     }
   };
 
+
   useEffect(() => {
     loadOnboardedConsumers(currentPage);
   }, [currentPage]);
@@ -103,7 +104,9 @@ const OnboardedCustomers: React.FC = () => {
         <div>
           <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {consumers.length === 0 ? (
-              <p>No consumers found.</p>
+             <p className="col-span-full text-center text-gray-600">
+             No consumers found.
+           </p>
             ) : (
               consumers.map((consumer) => (
                 <div key={consumer.id} className="bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">

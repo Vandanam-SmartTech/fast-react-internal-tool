@@ -119,6 +119,7 @@ const ListOfConsumers: React.FC = () => {
       handleSearch(searchQuery);
     }
   }, [searchQuery]);
+
   
   const goToPage = (page: number) => {
     if (searchQuery.trim() === "") {
