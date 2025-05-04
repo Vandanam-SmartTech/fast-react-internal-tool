@@ -34,9 +34,9 @@ export const EditInstallation = () => {
 
   const installationSpaceTypeMapping = {
     'Slab': 1,
-    'Clay Tiles': 2,
-    'Metal Sheets': 3,
-    'Plastic Sheets': 4,
+    'Metal Sheets': 2,
+    'Plastic Sheets': 3,
+    'Clay Tiles': 4,
     'Bathroom Slab': 5,
     'Cement Sheets': 6,
     'On Ground': 7,
@@ -82,6 +82,7 @@ export const EditInstallation = () => {
           const selectedInstallation = data.find(inst => inst.id === Number(installationId));
           if (selectedInstallation) {
             setInstallation(selectedInstallation);
+            console.log("selected installation:",selectedInstallation);
             setFormData({
               acWireLengthFt: selectedInstallation.acWireLengthFt || 0,
               dcWireLengthFt: selectedInstallation.dcWireLengthFt || 0,

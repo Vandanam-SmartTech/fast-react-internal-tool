@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveCustomer } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
-import { fetchClaims, fetchRepresentatives } from '../services/api';
+import { fetchClaims, fetchRepresentatives, checkMobileNumberExists } from '../services/api';
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
   UserCircleIcon,
@@ -20,6 +20,7 @@ export const CustomerForm = () => {
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [representatives, setRepresentatives] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState("");
+  const [mobileExists, setMobileExists] = useState(false);
 
   const [activeTab, setActiveTab] = useState("Customer Details");
 
@@ -92,12 +93,25 @@ useEffect(() => {
     getClaims();
   }, []);
 
+  useEffect(() => {
+    const checkExists = async () => {
+      if (formData.mobileNumber.length === 10) {
+        const exists = await checkMobileNumberExists(formData.mobileNumber);
+        setMobileExists(exists);
+      } else {
+        setMobileExists(false);
+      }
+    };
+    checkExists();
+  }, [formData.mobileNumber]);
+
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const updatedFormData = { ...formData, [e.target.name]: e.target.value };
   setFormData(updatedFormData);
   localStorage.setItem('myFormData', JSON.stringify(updatedFormData));
 };
+
 
   useEffect(() => {
     const getRepresentatives = async () => {
@@ -326,6 +340,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
     <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
   )}
+  {mobileExists && (
+        <p className="text-red-600 text-sm mt-1">Mobile number already exists</p>
+      )}
 </div>
 
 {/* Confirm Mobile Number */}

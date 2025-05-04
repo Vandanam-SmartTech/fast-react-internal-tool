@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation} from "react-router-dom";
-import { getCustomerById, getConnectionsByCustomerId, fetchClaims } from "../services/api";
+import { getCustomerById, fetchConsumerNumber, fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
@@ -51,6 +51,7 @@ export const ViewCustomer = () => {
 
 
   useEffect(() => {
+    console.log("Fetch Consumer Number API is used");
     const fetchCustomer = async () => {
       if (customerId) {
         const data = await getCustomerById(Number(customerId));
@@ -60,7 +61,7 @@ export const ViewCustomer = () => {
 
     const fetchConnections = async () => {
       if (customerId) {
-        const data = await getConnectionsByCustomerId(Number(customerId));
+        const data = await fetchConsumerNumber(Number(customerId));
         if (data) setConnections(data);
       }
     };
@@ -173,59 +174,118 @@ export const ViewCustomer = () => {
       </div>
   
       {/* Update Customer Button - Placed before connections */}
-      <div className="flex justify-start mt-6">
-        <button
-          onClick={() => navigate(`/edit-customer/${customerId}`, { state: { customerId:customerId, selectedRepresentative: selectedRepresentative } })}
-          className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Edit Customer
-        </button>
-      </div>
-  
-      {/* Connection Cards */}
-      <h2 className="text-xl font-semibold text-gray-700 mt-8">Connections</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-        {connections.length > 0 ? (
-          connections.map((connection, index) => (
-            <div key={connection.id} className="border rounded-lg shadow p-4 bg-white">
-              <h3 className="text-lg font-medium text-gray-900">Connection {index + 1}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                <span className="font-semibold">Consumer Number:</span> {connection.consumerId}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                <span className="font-semibold">Consumer Name:</span> {customer.govIdName || ""}
-              </p>
-              <div className="flex gap-4 mt-3">
-              <button
-                onClick={() => navigate(`/view-connection/${connection.id}`, { state: { consumerId: connection.consumerId, connectionId:connection.id, customerId: customerId, selectedRepresentative: selectedRepresentative} })}
-                className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                View
-              </button>
+      <div className="flex flex-col sm:flex-row justify-start mt-12 sm:space-x-16 space-y-4 sm:space-y-0">
+  <button
+    onClick={() =>
+      navigate(`/edit-customer/${customerId}`, {
+        state: {
+          customerId: customerId,
+          selectedRepresentative: selectedRepresentative,
+        },
+      })
+    }
+    className="py-3 px-10 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
+  >
+    Edit Customer
+  </button>
 
-              <button
-                onClick={() => navigate(`/edit-connection/${connection.id}`, { state: { consumerId: connection.consumerId, connectionId:connection.id, customerId: customerId, selectedRepresentative: selectedRepresentative} })}
-                className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                Edit
-              </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-600">No connections found.</p>
-        )}
-      </div>
-  
-      {/* Add New Connection Button - Placed after connections */}
-      <div className="flex justify-start mt-6">
-        <button
-          onClick={() => navigate(`/ConnectionForm`, { state: { customerId: customerId, selectedRepresentative:selectedRepresentative, govIdName:customer.govIdName} })}
-          className="py-2 px-4 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+  {connections.length === 0 && (
+    <button
+      onClick={() =>
+        navigate(`/ConnectionForm`, {
+          state: {
+            customerId: customerId,
+            selectedRepresentative: selectedRepresentative,
+            govIdName: customer.govIdName,
+          },
+        })
+      }
+      className="py-3 px-10 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 w-full sm:w-auto"
+    >
+      Add New Connection
+    </button>
+  )}
+</div>
+
+
+{/* Only show Connections section if there are connections */}
+{connections.length > 0 && (
+  <>
+    <h2 className="text-xl font-semibold text-gray-700 mt-8">Connections</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+      {connections.map((connection, index) => (
+        <div
+          key={connection.id}
+          className="border rounded-lg shadow p-4 bg-white"
         >
-          Add New Connection
-        </button>
-      </div>
+          <h3 className="text-lg font-medium text-gray-900">
+            Connection {index + 1}
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            <span className="font-semibold">Consumer Number:</span>{" "}
+            {connection.consumerId}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">
+            <span className="font-semibold">Consumer Name:</span>{" "}
+            {customer.govIdName || ""}
+          </p>
+          <div className="flex gap-4 mt-3">
+            <button
+              onClick={() =>
+                navigate(`/view-connection/${connection.id}`, {
+                  state: {
+                    consumerId: connection.consumerId,
+                    connectionId: connection.id,
+                    customerId: customerId,
+                    selectedRepresentative: selectedRepresentative,
+                  },
+                })
+              }
+              className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              View
+            </button>
+
+            <button
+              onClick={() =>
+                navigate(`/edit-connection/${connection.id}`, {
+                  state: {
+                    consumerId: connection.consumerId,
+                    connectionId: connection.id,
+                    customerId: customerId,
+                    selectedRepresentative: selectedRepresentative,
+                  },
+                })
+              }
+              className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Show Add Connection button only when there are connections */}
+    <div className="flex justify-start mt-6">
+      <button
+        onClick={() =>
+          navigate(`/ConnectionForm`, {
+            state: {
+              customerId: customerId,
+              selectedRepresentative: selectedRepresentative,
+              govIdName: customer.govIdName,
+            },
+          })
+        }
+        className="py-3 px-10 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+      >
+        Add New Connection
+      </button>
+    </div>
+  </>
+)}
+
     </div>
   );
   

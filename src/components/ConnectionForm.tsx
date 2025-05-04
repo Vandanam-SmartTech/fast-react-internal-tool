@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection  } from "../services/api";
-import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims } from '../services/api';
+import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
@@ -28,28 +28,28 @@ interface Village {
   pincode: string;
 }
 
-const phaseTypeMapping = {
-  "Single-Phase": 1,
-  "Three-Phase": 2,
-};
+// const phaseTypeMapping = {
+//   "Single-Phase": 1,
+//   "Three-Phase": 2,
+// };
 
-const connectionTypeMapping = {
-  Residential: 1,
-  Commercial: 2,
-  Industrial: 3,
-  PWW: 4,
-};
+// const connectionTypeMapping = {
+//   Residential: 1,
+//   Commercial: 2,
+//   Industrial: 3,
+//   PWW: 4,
+// };
 
-const addressTypeMapping = {
-  Home: 1,
-  Hotel: 2,
-  Office: 3,
-  Charitable: 4,
-  Non_Commercial_Education: 5,
-  Street_Light: 6,
-  Construction: 7,
-  Public_Water_Works: 8,
-};
+// const addressTypeMapping = {
+//   Home: 1,
+//   Hotel: 2,
+//   Office: 3,
+//   Charitable: 4,
+//   Non_Commercial_Education: 5,
+//   Street_Light: 6,
+//   Construction: 7,
+//   Public_Water_Works: 8,
+// };
 
 const correctionTypeMapping = {
   'Spell Correction': 1,
@@ -80,7 +80,11 @@ export const ConnectionForm = () => {
   //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
-  const [activeTab, setActiveTab] = useState("Connection Details");
+  const [activeTab, setActiveTab ] = useState("Connection Details");
+  const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
+  const [phaseTypes, setPhaseTypes] = useState<{ id: Number; nameEn: string }[]>([]);
+  const [addressTypes, setAddressTypes] = useState<{ id: Number; nameEn: string }[]>([]);
+
 
   const tabs = [
     "Customer Details",
@@ -92,9 +96,9 @@ export const ConnectionForm = () => {
   const [formData, setFormData] = useState({
     consumerId: "",
     isMsebConnection: "Yes",
-    phase: "Single-Phase",
-    connectionType: "Residential",
-    addressType: "Home",
+    phaseTypeId: 1,
+    connectionTypeId: 1,
+    addressTypeId: 1,
     latitude: "",
     longitude: "",
     gstIn: "",
@@ -198,6 +202,46 @@ useEffect(() => {
     };
     fetchVillagesData();
   }, [talukaCode]);
+
+  useEffect(() => {
+    const getConnectionTypes = async () => {
+      try {
+        const data = await fetchConnectionType();
+        setConnectionTypes(data);
+      } catch (error) {
+        console.error("Failed to fetch connection types", error);
+      }
+    };
+  
+    getConnectionTypes();
+  }, []);
+
+  useEffect(() => {
+    const getPhaseTypes = async () => {
+      try {
+        const data = await fetchPhaseType();
+        setPhaseTypes(data);
+      } catch (error) {
+        console.error("Failed to fetch phase types", error);
+      }
+    };
+  
+    getPhaseTypes();
+  }, []);
+
+  useEffect(() => {
+    const getAddressTypes = async () => {
+      try {
+        const data = await fetchAddressType();
+        setAddressTypes(data);
+      } catch (error) {
+        console.error("Failed to fetch address types", error);
+      }
+    };
+  
+    getAddressTypes();
+  }, []);
+  
   
   
 
@@ -294,6 +338,12 @@ useEffect(() => {
       alert("Customer ID is missing!");
       return;
     }
+
+    if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
+      alert("Please select a Correction Type.");
+      return;
+    }
+  
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
     const isNameCorrectionRequired =
@@ -306,9 +356,9 @@ useEffect(() => {
       consumerId: formData.consumerId,
       isMsebConnection,
       isNameCorrectionRequired,
-      phaseTypeId: phaseTypeMapping[formData.phase],
-      addressTypeId: addressTypeMapping[formData.addressType],
-      connectionTypeId: connectionTypeMapping[formData.connectionType],
+      phaseTypeId: formData.phaseTypeId,
+      addressTypeId: formData.addressTypeId,
+      connectionTypeId: formData.connectionTypeId,
       correctionTypeId:
         formData.isNameCorrection === "Yes"
           ? correctionTypeMapping[formData.correctionType]
@@ -610,42 +660,48 @@ useEffect(() => {
         <div>
           <label className="block text-sm font-medium text-gray-700">Address Type</label>
           <select
-            name="addressType"
-            value={formData.addressType}
+            name="addressTypeId"
+            value={formData.addressTypeId}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           >
-            {Object.keys(addressTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
+            {addressTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
+              ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-          <select
-            name="connectionType"
-            value={formData.connectionType}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          >
-            {Object.keys(connectionTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
-          </select>
+            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
+            <select
+                name="connectionTypeId"
+                value={formData.connectionTypeId}
+                onChange={handleChange}
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            >
+              {connectionTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
+              ))}
+             </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Phase Type</label>
           <select
-            name="phase"
-            value={formData.phase}
+            name="phaseTypeId"
+            value={formData.phaseTypeId}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           >
-            {Object.keys(phaseTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
+            {phaseTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
+              ))}
           </select>
         </div>
   
@@ -736,24 +792,23 @@ useEffect(() => {
 
   {/* Correction Type (keeps spacing properly) */}
   {formData.isNameCorrection === "Yes" && (
-    <div className="col-span-1">
-      <label className="block text-sm font-medium text-gray-700">
-        Select Correction Type
-      </label>
-      <select
-        name="correctionType"
-        value={formData.correctionType || ""}
-        onChange={handleCorrectionTypeChange}
-        className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-      >
-        <option value="" disabled>
-          Select an option
-        </option>
-        <option value="Spell Correction">Spell Correction</option>
-        <option value="Transfer Ownership">Transfer Ownership</option>
-      </select>
-    </div>
-  )}
+  <div className="col-span-1">
+    <label className="block text-sm font-medium text-gray-700">
+      Select Correction Type
+    </label>
+    <select
+      name="correctionType"
+      value={formData.correctionType || ""}
+      onChange={handleCorrectionTypeChange}
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+    >
+      <option value="" disabled>Select an option</option>
+      <option value="Spell Correction">Spell Correction</option>
+      <option value="Transfer Ownership">Transfer Ownership</option>
+    </select>
+  </div>
+)}
+
 
   {/* Submit Button - Always at the bottom */}
   <div className="self-start mt-6">

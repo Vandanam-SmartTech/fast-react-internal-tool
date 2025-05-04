@@ -59,9 +59,9 @@ export const ViewConnection = () => {
 
   const installationSpaceTypeMapping: { [key: number]: string } = {
     1: "Slab",
-    2: "Clay Tiles",
-    3: "Metal Sheets",
-    4: "Plastic Sheets",
+    2: "Metal Sheets",
+    3: "Plastic Sheets",
+    4: "Clay Tiles",
     5: "Bathroom Slab",
     6: "Cement Sheets",
     7: "On Ground",

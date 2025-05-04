@@ -59,15 +59,16 @@ export const SystemSpecifications = () => {
 
   const installationSpaceTypeMapping: Record<number, string> = {
     1: "Slab",
-    2: "Clay Tiles",
-    3: "Metal Sheets",
-    4: "Plastic Sheets",
+    2: "Metal Sheets",
+    3: "Plastic Sheets",
+    4: "Clay Tiles",
     5: "Bathroom Slab",
     6: "Cement Sheets",
     7: "On Ground",
   };
 
-const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
+  const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
+
 
   const [formData, setFormData] = useState({
     solarSystemCost: 0,
@@ -78,6 +79,7 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
     dcrNonDcrType:"",
     panelBrand:"",
     Kw:"",
+    numberOfGpPipes: 0,
   });
 
 
@@ -85,24 +87,28 @@ const [availableSpaceTypes, setAvailableSpaceTypes] = useState<string[]>([]);
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
   
-
   useEffect(() => {
-    const loadInstallationSpaceTypes = async () => {
-        if (!consumerId) return; // Ensure consumerId is valid
-
-        const uniqueIds = await fetchInstallationSpaceTypes(Number(consumerId));
-
-        // Convert to user-friendly names using mapping
-        const filteredOptions = uniqueIds
-            .map(id => installationSpaceTypeMapping[id])
-            .filter(Boolean); // Remove undefined values
-
-        setAvailableSpaceTypes(filteredOptions);
+    const loadInstallationSpaceDetails = async () => {
+      if (!consumerId) return;
+  
+      const installationSpaces = await fetchInstallationSpaceTypes(Number(consumerId));
+  
+      const enrichedSpaces = installationSpaces.map((space: any) => ({
+        ...space,
+        installationSpaceType: installationSpaceTypeMapping[space.installationSpaceTypeId] || "Unknown",
+        
+      }));
+  
+      console.log("enriched spaces:", enrichedSpaces);
+      
+      setAvailableSpaceTypes(enrichedSpaces);
     };
+  
+    loadInstallationSpaceDetails();
+  }, [consumerId]);
+  
 
 
-    loadInstallationSpaceTypes();
-}, [consumerId]); // Rerun effect when consumerId changes
 
 useEffect(() => {
   const fetchConnection = async () => {
@@ -189,6 +195,7 @@ useEffect(() => {
           installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
           installationStructureType: recommendation.recommendedInstallationStructureType || "",
           Kw: recommendedKW,
+          numberOfGpPipes: recommendation.numberOfGpPipes || 0,
           dcrNonDcrType:
           recommendation.dcrNonDcrType?.toLowerCase() === "nondcr"
           ? "Non-DCR"
@@ -225,6 +232,13 @@ useEffect(() => {
             (Number(updatedData.solarSystemCost) || 0) + 
             (Number(updatedData.fabricationCost) || 0);
 
+            if (name === "installationSpaceType") {
+              const selectedSpace = availableSpaceTypes.find((space: any) => space.installationSpaceType === value);
+        
+              if (selectedSpace) {
+                updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0; 
+              }
+            }
 
         // Correct dcrNonDcrType based on recommendation.phaseType
         if (name === "panelBrand") {
@@ -292,6 +306,7 @@ useEffect(() => {
           phaseType,
           dcrNonDcrType: formData.dcrNonDcrType,
           connectionType,
+          numberOfGpPipes: formData.numberOfGpPipes || 0,
         };
   
         console.log("Request Data:", requestData);
@@ -553,26 +568,26 @@ const handleGenerateQuotation = async () => {
 
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
-          <select
-            id="installationSpaceType"
-            name="installationSpaceType"
-            value={formData.installationSpaceType || "Installations Not Available"}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            {availableSpaceTypes.length === 0 ? (
-      <option disabled>Installations Not Available</option> // Prevents user selection while loading
+      <div>
+  <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+  <select
+    id="installationSpaceType"
+    name="installationSpaceType"
+    value={formData.installationSpaceType || "Installations Not Available"}
+    onChange={handleChange}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    {availableSpaceTypes.length === 0 ? (
+      <option disabled>Installations Not Available</option>
     ) : (
-      availableSpaceTypes.map((spaceType) => (
-        <option key={spaceType} value={spaceType}>
-          {spaceType}
+      availableSpaceTypes.map((space) => (
+        <option key={space.id} value={space.installationSpaceType}>
+          {space.installationSpaceType}
         </option>
       ))
     )}
-          </select>
-        </div>
+  </select>
+</div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Installation Structure Type</label>

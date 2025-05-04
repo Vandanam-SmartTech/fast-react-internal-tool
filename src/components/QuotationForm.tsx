@@ -6,7 +6,7 @@ import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import { fetchPanelWattages, fetchDistricts, fetchTalukas, fetchVillages, saveDataToServer } from '../services/api';
 //import { downloadBlob } from '../utils/downloadHelper';
 import { initialFormData } from '../constants/formDefaults';
-import { calculateKw, calculateCosts } from '../services/api';
+//import { calculateKw, calculateCosts } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import { useLocation } from "react-router-dom";

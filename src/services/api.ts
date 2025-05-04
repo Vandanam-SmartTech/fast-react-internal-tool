@@ -178,6 +178,52 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
   }
 };
 
+export const checkMobileNumberExists = async (mobileNumber: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/customers/check-mobile?mobileNumber=${mobileNumber}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Server responded with error:', response.status);
+      return false;
+    }
+
+    const data: boolean = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error checking mobile number', error);
+    return false; // Default to false if error occurs
+  }
+};
+
+export const checkEmailAddressExists = async (emailAddress: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/customers/check-email?emailAddress=${emailAddress}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Server responded with error:', response.status);
+      return false;
+    }
+
+    const data: boolean = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error checking email address', error);
+    return false; // Default to false if error occurs
+  }
+};
+
 export const saveConnection = async (data: Record<string, any>): Promise<number | null> => {
   try {
     const response = await fetch('http://localhost:8585/api/connections', {
@@ -375,6 +421,68 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   }
 };
 
+export const fetchConnectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/connectionType', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching connection types:', error);
+    throw new Error('Failed to fetch connection types');
+  }
+};
+
+export const fetchPhaseType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/phaseType', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching phase types:', error);
+    throw new Error('Failed to fetch phase types');
+  }
+};
+
+export const fetchAddressType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/addressType', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching address types:', error);
+    throw new Error('Failed to fetch address types');
+  }
+};
+
+export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/correctionType', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching correction types:', error);
+    throw new Error('Failed to fetch correction types');
+  }
+};
+
+
+
 export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<number[]> => {
   try {
       const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
@@ -392,7 +500,7 @@ export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<n
       const data = await response.json();
 
       // Extract unique installationSpaceTypeIds
-      return Array.from(new Set(data.map((item: any) => item.installationSpaceTypeId)));
+      return data;
   } catch (error) {
       console.error("Error fetching installation space types:", error);
       return [];
