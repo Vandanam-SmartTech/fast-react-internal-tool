@@ -1,6 +1,8 @@
 
+import SockJS from 'sockjs-client';
 import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
+import { Client } from '@stomp/stompjs';
 
 const API_BASE_URL = 'http://localhost:7575/api';
 
@@ -110,42 +112,6 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
 
 
 
-
-export const saveDataToServer = async (data: Record<string, any>): Promise<void> => {
-  try {
-    const response = await fetch('http://localhost:8585/api/internal-tool/save', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`, // Ensure getAuthToken() returns a valid JWT
-      },
-      body: JSON.stringify(data),
-    });
-
-    // Parse the response JSON
-    const responseData = await response.json();
-
-    // Check for success or failure based on the API's response
-    if (response.ok && responseData.success) {
-      alert(responseData.message || 'Data saved successfully!');
-    } else {
-      alert(responseData.message || 'Failed to save data.');
-    }
-  } catch (error: any) {
-    // Improved error handling
-    if (error.response) {
-      alert(
-        `Error: ${error.response.data.message || 'An error occurred on the server.'}`
-      );
-    } else if (error.request) {
-      alert('Error: No response from the server. Please check your network connection.');
-    } else {
-      alert('Error: ' + error.message);
-    }
-    console.error('Error details:', error);
-  }
-};
-
 export const saveCustomer = async (data: Record<string, any>): Promise<number | null> => {
   try {
 
@@ -176,6 +142,28 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
     console.error('Error details:', error);
     return null;
   }
+};
+
+export const createStompClient = () => {
+  const socket = new SockJS('http://localhost:8585/ws'); // Backend URL
+
+  const stompClient = new Client({
+    webSocketFactory: () => socket,
+    debug: (str) => console.log(str),
+    reconnectDelay: 5000,
+    connectHeaders: {
+      Authorization: `Bearer ${getAuthToken()}`
+    },
+    onConnect: () => {
+      console.log('Connected to WebSocket');
+    },
+    onStompError: (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+    },
+  });
+
+  return stompClient;
 };
 
 export const checkMobileNumberExists = async (mobileNumber: string): Promise<boolean> => {
@@ -285,36 +273,6 @@ export const saveInstallation = async (data: Record<string, any>): Promise<numbe
 };
 
 
-
-
-
-export const calculateCosts = async (data: {
-  connectionType: string;
-  phase: string;
-  dcrNonDcr: string;
-  kw: number;
-}): Promise<any> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/prices/calculate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch cost data');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw new Error('Failed to fetch cost data');
-  }
-};
-
 export const fetchPanelWattages = async (
   connectionId: string,
   phaseType: string,
@@ -344,37 +302,6 @@ export const fetchPanelWattages = async (
 };
 
 
-export const calculateKw = async (
-  phase: string,
-  energyUsage: number
-): Promise<number | null> => {
-  const url = `${API_BASE_URL}/kw/calculate`;
-  const requestPayload = {
-    phase,
-    energyUsage: energyUsage.toString(),
-  };
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-      body: JSON.stringify(requestPayload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch KW value');
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching KW:', error);
-    return null;
-  }
-};
 
 export const fetchDistricts = async (): Promise<District[]> => {
   try {
@@ -481,6 +408,21 @@ export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: strin
   }
 };
 
+export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; nameEnglish: string }[]> => {
+  try {
+    const response = await fetch('http://localhost:8585/api/installationSpaceTypes', {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching correction types:', error);
+    throw new Error('Failed to fetch correction types');
+  }
+};
+
 
 
 export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<number[]> => {
@@ -570,24 +512,44 @@ export const getInstallationByConsumerId = async (consumerId: number): Promise<a
   }
 };
 
-export const getConnectionsByCustomerId = async (customerId: number): Promise<any> => {
+// export const getConnectionsByCustomerId = async (customerId: number): Promise<any> => {
+//   try {
+//     const response = await fetch(`http://localhost:8585/api/connections/customer/${customerId}`, {
+//       method: "GET",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${getAuthToken()}`,
+//       },
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to fetch connection details");
+//     }
+
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error fetching connection details:", error);
+//     return null;
+//   }
+// };
+
+export const fetchConsumerNumber = async (customerId: number) => {
   try {
-    const response = await fetch(`http://localhost:8585/api/connections/customer/${customerId}`, {
-      method: "GET",
+    const response = await API.get(`http://localhost:8585/api/connections/by-customer/${customerId}`, {
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${getAuthToken()}`,
       },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch connection details");
+    if (!Array.isArray(response.data)) {
+      console.warn(`Unexpected response format for customerId ${customerId}:`, response.data);
+      return [];
     }
 
-    return await response.json();
+    return response.data; // Return full array
   } catch (error) {
-    console.error("Error fetching connection details:", error);
-    return null;
+    console.error(`Error fetching consumer numbers for customerId ${customerId}:`, error);
+    return [];
   }
 };
 
@@ -690,26 +652,6 @@ export const getCustomerCount = async() :Promise<Number> => {
 
 }
 
-
-export const fetchConsumerNumber = async (customerId: number) => {
-  try {
-    const response = await API.get(`http://localhost:8585/api/connections/by-customer/${customerId}`, {
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!Array.isArray(response.data)) {
-      console.warn(`Unexpected response format for customerId ${customerId}:`, response.data);
-      return [];
-    }
-
-    return response.data; // Return full array
-  } catch (error) {
-    console.error(`Error fetching consumer numbers for customerId ${customerId}:`, error);
-    return [];
-  }
-};
 
 
 

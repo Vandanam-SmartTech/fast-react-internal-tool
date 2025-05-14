@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveInstallation, fetchClaims} from "../services/api";
+import { saveInstallation, fetchClaims, fetchInstallationSpaceTypesNames} from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
@@ -21,16 +21,18 @@ export const InstallationForm = () => {
   //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
+  const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
-  const installationSpaceTypeMapping = {
-    'Slab': 1,
-    'Metal Sheets': 2,
-    'Plastic Sheets': 3,
-    'Clay Tiles': 4,
-    'Bathroom Slab': 5,
-    'Cement Sheets': 6,
-    'On Ground': 7,
-  };
+  // const installationSpaceTypeMapping = {
+  //   'Slab': 1,
+  //   'Metal Sheets': 2,
+  //   'Plastic Sheets': 3,
+  //   'Clay Tiles': 4,
+  //   'Bathroom Slab': 5,
+  //   'Cement Sheets': 6,
+  //   'On Ground': 7,
+  // };
+
   const [activeTab, setActiveTab] = useState("Installation Details");
 
     const tabs = [
@@ -52,7 +54,7 @@ export const InstallationForm = () => {
     descriptionOfInstallation:'',
     availableSouthNorthLengthFt: NaN,
     availableEastWestLengthFt: NaN,
-    spaceType:'Slab',
+    installationSpaceTypeId:1,
     installationSpaceTitle:'',
   });
 
@@ -77,6 +79,19 @@ export const InstallationForm = () => {
   
     getClaims();
   }, []);
+
+  useEffect(() => {
+      const getInstallationSpaceTypesNames = async () => {
+        try {
+          const data = await fetchInstallationSpaceTypesNames();
+          setInstallationSpaceTypes(data);
+        } catch (error) {
+          console.error("Failed to fetch connection types", error);
+        }
+      };
+    
+      getInstallationSpaceTypesNames();
+    }, []);
 
   // useEffect(() => {
   //   const storedRep = localStorage.getItem("selectedRepresentative");
@@ -113,19 +128,18 @@ export const InstallationForm = () => {
     }
 
     // Ensure space type ID mapping is correct
-    const installationSpaceTypeId = installationSpaceTypeMapping[formData.spaceType] || null;
-    if (!installationSpaceTypeId) {
-        alert("Invalid installation space type.");
-        return;
-    }
+    //const installationSpaceTypeId = installationSpaceTypeMapping[formData.spaceType] || null;
+    // if (!installationSpaceTypeId) {
+    //     alert("Invalid installation space type.");
+    //     return;
+    // }
 
     // Construct installation data object
     const installationData = {
         customerId: customerId || null,
         connectionId,
         consumerId,
-        installationSpaceTypeId,
-        spaceTitle:formData.spaceTitle,
+        installationSpaceTypeId:formData.installationSpaceTypeId,
         availableEastWestLengthFt: formData.availableEastWestLengthFt,
         availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
         acWireLengthFt: formData.acWireLengthFt,
@@ -186,20 +200,6 @@ return (
           </div>
         )}
 </div>
-
-
-    {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-      <Stepper 
-        activeStep={1} 
-        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-        className="min-w-max sm:w-full"
-      >
-        <Step label="Customer Details" />
-        <Step label="Connection Details" />
-        <Step label="Installation Space Details" />
-        <Step label="System Specifications" />
-      </Stepper>
-    </div> */}
 
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -276,14 +276,16 @@ return (
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
         <select
-          name="spaceType"
-          value={formData.spaceType}
+          name="installationSpaceTypeId"
+          value={formData.installationSpaceTypeId}
           onChange={handleChange}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          {Object.keys(installationSpaceTypeMapping).map((key) => (
-            <option key={key} value={key}>{key}</option>
-          ))}
+          {installationSpaceTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEnglish}
+              </option>
+              ))}
         </select>
       </div>
 

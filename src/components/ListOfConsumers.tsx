@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers, fetchConsumerNumber,searchCustomers } from "../services/api";
+import { fetchConsumers, fetchConsumerNumber,searchCustomers, createStompClient } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react";
 import SearchBar from "../components/SearchBar"; // Import SearchBar component
@@ -107,6 +107,33 @@ const ListOfConsumers: React.FC = () => {
       setIsSearching(false);
     }
   };
+
+   useEffect(() => {
+    const stompClient = createStompClient();
+
+    stompClient.onConnect = () => {
+      console.log("Connected to WebSocket");
+
+      
+      stompClient.subscribe('/topic/customerAdded', (message: Message) => {
+        console.log("Received customerAdded message:", message.body);
+        loadConsumers(0);  // Reload consumers on new customer addition
+      });
+
+      stompClient.subscribe('/topic/connection', (message: Message) => {
+        console.log("Received connection update message:", message.body);
+        const consumerIds = consumers.map((consumer) => consumer.id);
+        fetchConsumerNumbers(consumerIds);  // Refresh consumer numbers
+      });
+    };
+
+    stompClient.activate();
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [consumers]);
+
 
   useEffect(() => {
     loadConsumers(currentPage);

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, fetchClaims } from "../services/api";
-import { Stepper, Step } from "react-form-stepper";
+import { getInstallationByConsumerId, fetchClaims, fetchInstallationSpaceTypesNames } from "../services/api";
+
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
   UserCircleIcon,
@@ -23,6 +23,8 @@ export const ViewInstallation = () => {
   //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
+  const [spaceTypes, setSpaceTypes] = useState([]);
+
 
 
   const installationSpaceTypeMapping: { [key: number]: string } = {
@@ -66,17 +68,31 @@ export const ViewInstallation = () => {
   useEffect(() => {
     const fetchInstallation = async () => {
       if (consumerId && installationId) {
-        const data = await getInstallationByConsumerId(Number(consumerId));
-        
-        if (data && Array.isArray(data)) {
-          // Find the specific installation based on installationId
-          const selectedInstallation = data.find(inst => inst.id === Number(installationId));
-          setInstallation(selectedInstallation || null);
+        try {
+          const [installations, spaceTypeList] = await Promise.all([
+            getInstallationByConsumerId(Number(consumerId)),
+            fetchInstallationSpaceTypesNames(), // <-- fetch space types dynamically
+          ]);
+  
+          if (Array.isArray(installations)) {
+            const selectedInstallation = installations.find(
+              inst => inst.id === Number(installationId)
+            );
+            setInstallation(selectedInstallation || null);
+          }
+  
+          if (Array.isArray(spaceTypeList)) {
+            setSpaceTypes(spaceTypeList); // <-- new state to hold space types
+          }
+        } catch (error) {
+          console.error("Error fetching installation or space types", error);
         }
       }
     };
+  
     fetchInstallation();
   }, [consumerId, installationId]);
+  
 
   if (!installation) return <p>Loading...</p>;
 
@@ -189,7 +205,10 @@ export const ViewInstallation = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installationSpaceTypeMapping[installation.installationSpaceTypeId] || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">
+  {spaceTypes.find(type => type.id === installation?.installationSpaceTypeId)?.nameEnglish || ""}
+</p>
+
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>

@@ -349,17 +349,20 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 <div>
   <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
   <input
-    type="tel"
-    name="confirmMobileNumber"
-    value={confirmMobileNumber}
-    onChange={handleConfirmMobileChange}
-    placeholder="Confirm mobile number"
-    maxLength={10}
-    pattern="[6-9]{1}[0-9]{9}"
-    required
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    title="Re-enter the same 10-digit mobile number"
-  />
+  type="tel"
+  name="confirmMobileNumber"
+  value={confirmMobileNumber}
+  onChange={handleConfirmMobileChange}
+  placeholder="Confirm mobile number"
+  maxLength={10}
+  pattern="[6-9]{1}[0-9]{9}"
+  required
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  title="Re-enter the same 10-digit mobile number"
+  disabled={!(
+    /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
+  )}
+/>
   {confirmMobileNumber &&
     confirmMobileNumber !== formData.mobileNumber && (
       <p className="text-red-600 text-sm mt-1">Mobile numbers do not match</p>

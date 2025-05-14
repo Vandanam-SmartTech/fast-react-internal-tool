@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { fetchClaims,getOnboardedCustomerCount, getCustomerCount } from '../services/api';
+import { fetchClaims,getOnboardedCustomerCount, getCustomerCount, createStompClient } from '../services/api';
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserCheck, Users } from 'lucide-react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 
 const AdminDashboard = () => {
@@ -48,17 +50,62 @@ const AdminDashboard = () => {
     getClaims();
   }, []);
 
-  useEffect(() => {
-    getOnboardedCustomerCount()
-    .then(setOnboardedCount)
-    .catch((err) => console.error("Error:",err));
-  },[]);
+  // useEffect(() => {
+  //   getOnboardedCustomerCount()
+  //   .then(setOnboardedCount)
+  //   .catch((err) => console.error("Error:",err));
+  // },[]);
 
-  useEffect(()=>{
-    getCustomerCount()
+//   useEffect(() => {
+//   getCustomerCount()
+//     .then(setCount)
+//     .catch((err) => console.error("Error:", err));
+// }, []);  
+
+
+useEffect(() => {
+
+  getCustomerCount()
     .then(setCount)
-    .catch((err) => console.error("Error:",err));
-  })
+    .catch(console.error);
+
+  getOnboardedCustomerCount()
+    .then(setOnboardedCount)
+    .catch(console.error);
+
+  const stompClient = createStompClient();
+
+  stompClient.onConnect = () => {
+    console.log('Connected to WebSocket');
+
+    stompClient.subscribe('/topic/customerCount', (message) => {
+      console.log('Customer count update received:', message.body);
+
+      getCustomerCount()
+        .then(setCount)
+        .catch(console.error);
+
+    });
+
+    stompClient.subscribe('/topic/onboardedCustomerCount', (message) => {
+      console.log('Onboarded customer count update received:', message.body);
+
+
+      getOnboardedCustomerCount()
+        .then(setOnboardedCount)
+        .catch(console.error);
+    });
+
+  };
+
+  stompClient.activate();
+
+  return () => {
+    stompClient.deactivate();
+  };
+}, []);
+
+
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
