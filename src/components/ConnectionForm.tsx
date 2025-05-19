@@ -527,6 +527,7 @@ useEffect(() => {
           <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
           <input
             type="text"
+            inputMode="numeric"
             id="consumerId"
             name="consumerId"
             value={formData.consumerId}

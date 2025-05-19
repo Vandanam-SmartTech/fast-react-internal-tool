@@ -54,7 +54,7 @@ export const InstallationForm = () => {
     descriptionOfInstallation:'',
     availableSouthNorthLengthFt: NaN,
     availableEastWestLengthFt: NaN,
-    installationSpaceTypeId:1,
+    installationSpaceTypeId: 1,
     installationSpaceTitle:'',
   });
 

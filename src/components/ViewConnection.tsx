@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchClaims,fetchUploadedDocuments, uploadDocuments, getCustomerById, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
+import { fetchClaims,fetchUploadedDocuments, fetchConsumerNumber, uploadDocuments, getCustomerById, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
 import { ArrowLeft, Upload, FileUp } from "lucide-react";
 import { Stepper, Step } from "react-form-stepper";
@@ -17,11 +17,11 @@ export const ViewConnection = () => {
   const location = useLocation();
   const consumerId = location.state?.consumerId; 
   const [connection, setConnection] = useState<any>(null);
+  const customerId = location.state?.customerId;
+  const connectionId = location.state?.connectionId;
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
-  const customerId = location.state?.customerId;
-  const connectionId = location.state?.connectionId; 
   const navigate = useNavigate();
   const [installations, setInstallations] = useState<any[]>([]);
   //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
@@ -29,6 +29,7 @@ export const ViewConnection = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [govIdName, setGovIdName] = useState("");
+  
   const state = "Maharashtra";
   const folderType = "Onboarding Documents";
 
@@ -51,10 +52,7 @@ export const ViewConnection = () => {
     "System Specifications",
   ];
 
-  const phaseTypeMapping: { [key: number]: string } = {
-    1: "Single-Phase",
-    2: "Three-Phase",
-  };
+
 
 
   const installationSpaceTypeMapping: { [key: number]: string } = {
@@ -67,28 +65,6 @@ export const ViewConnection = () => {
     7: "On Ground",
   };
 
-  const connectionTypeMapping: { [key: number]: string } = {
-    1: "Residential",
-    2: "Commercial",
-    3: "Industrial",
-    4: "PWW",
-  };
-
-  const correctionTypeMapping: { [key: number]: string } = {
-    1: "Spell Correction",
-    2: "Transfer Ownership",
-  };
-
-  const addressTypeMapping: { [key: number]: string } = {
-    1: "Home",
-    2: "Hotel",
-    3: "Office",
-    4: "Charitable",
-    5: "Non_Commercial_Education",
-    6: "Street_Light",
-    7: "Construction",
-    8: "Public_Water_Works",
-  };
 
   const handleFileUpload = async () => {
     setIsLoading(true);
@@ -115,24 +91,36 @@ export const ViewConnection = () => {
   }
   };
 
-
-
-
-
   useEffect(() => {
-    const fetchConnection = async () => {
-      if (!consumerId) {
-        console.error("Consumer ID not found!");
-        return;
+  console.log("Hello Samiksha !!!");
+  const fetchConnection = async () => {
+    if (!customerId || !connectionId) {
+      console.error("Customer ID or Connection ID not found!");
+      return;
+    }
+
+    const data = await fetchConsumerNumber(customerId); 
+    if (Array.isArray(data) && data.length > 0) {
+      const selectedConnection = data.find(conn => conn.id === Number(connectionId));
+      if (selectedConnection) {
+        setConnection(selectedConnection);
+
+        setDistrictName(selectedConnection.districtName || "");
+        setTalukaName(selectedConnection.talukaName || "");
+        setVillageName(selectedConnection.villageName || "");
+      } else {
+        console.warn("No matching connection found for given connectionId.");
+        setConnection(null);
       }
+    } else {
+      console.warn("No connections found for customer.");
+      setConnection(null);
+    }
+  };
 
+  fetchConnection();
+}, [customerId, connectionId]);
 
-      const data = await getConnectionByConsumerId(Number(consumerId));
-      setConnection(data);
-    };
-
-    fetchConnection();
-  }, [consumerId]);
 
   const fetchAndSetUploadedFiles = async () => {
     const files = await fetchUploadedDocuments(
@@ -221,26 +209,6 @@ export const ViewConnection = () => {
     //   }
     // }, []);
 
-  useEffect(() => {
-    const fetchLocationNames = async () => {
-      if (connection) {
-        if (connection.districtCode) {
-          const name = await getDistrictNameByCode(connection.districtCode);
-          setDistrictName(name);
-        }
-        if (connection.talukaCode) {
-          const name = await getTalukaNameByCode(connection.talukaCode);
-          setTalukaName(name);
-        }
-        if (connection.villageCode) {
-          const name = await getVillageNameByCode(connection.villageCode);
-          setVillageName(name);
-        }
-      }
-    };
-
-    fetchLocationNames();
-  }, [connection]);
 
   useEffect(() => {
     const fetchInstallations = async () => {
@@ -530,15 +498,15 @@ export const ViewConnection = () => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">District</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{districtName || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.districtName || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Taluka</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{talukaName || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.talukaName || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Village</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{villageName || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.villageName || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Pincode</label>
@@ -556,17 +524,17 @@ export const ViewConnection = () => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Address Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{addressTypeMapping[connection.addressTypeId] || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.addressTypeName || ""}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connectionTypeMapping[connection.connectionTypeId] || ""}</p>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.connectionTypeName || ""}</p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Phase Type</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
-            {phaseTypeMapping[connection.phaseTypeId] || ""}
+            {connection.phaseTypeName || ""}
         </p>
       </div>
       
@@ -622,7 +590,7 @@ export const ViewConnection = () => {
     <div className="mt-4">
       <label className="block text-sm font-medium text-gray-700">Correction Type</label>
       <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
-      {correctionTypeMapping[connection.correctionTypeId] || ""}
+      {connection.correctionName || ""}
       </p>
     </div>
   )}

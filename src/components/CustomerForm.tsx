@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveCustomer } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
-import { fetchClaims, fetchRepresentatives, checkMobileNumberExists } from '../services/api';
+import { fetchClaims, fetchRepresentatives, checkMobileNumberExists, checkEmailAddressExists } from '../services/api';
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -21,6 +22,13 @@ export const CustomerForm = () => {
   const [representatives, setRepresentatives] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState("");
   const [mobileExists, setMobileExists] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+
+  const [showMobile, setShowMobile] = useState(false);
+  const handleToggleMobile = () => setShowMobile(!showMobile);
+
+  const [showEmail, setShowEmail] = useState(false);
+  const handleToggleEmail = () => setShowEmail(!showEmail);
 
   const [activeTab, setActiveTab] = useState("Customer Details");
 
@@ -36,8 +44,7 @@ export const CustomerForm = () => {
     govIdName: "",
     emailAddress: "",
     mobileNumber: "",
-    preferredName: "",
-    
+    preferredName: "", 
   });
 
   const getUserIdFromToken = () => {
@@ -104,6 +111,24 @@ useEffect(() => {
     };
     checkExists();
   }, [formData.mobileNumber]);
+
+useEffect(() => {
+  const checkEmailExists = async () => {
+    const email = formData.emailAddress;
+
+    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+
+    if (emailPattern.test(email)) {
+      const exists = await checkEmailAddressExists(email);
+      setEmailExists(exists);
+    } else {
+      setEmailExists(false);
+    }
+  };
+
+  checkEmailExists();
+}, [formData.emailAddress]);
+
 
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -322,27 +347,39 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         />
       </div>
 
-      {/* Mobile Number (Primary Entry) */}
 <div>
   <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
-  <input
-    type="password"
-    name="mobileNumber"
-    value={formData.mobileNumber}
-    onChange={handleChange}
-    placeholder="9567023456"
-    maxLength={10}
-    pattern="[6-9]{1}[0-9]{9}"
-    required
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    title="Enter a valid 10-digit mobile number starting with 6-9"
-  />
+
+  <div className="relative">
+    <input
+      type={showMobile ? 'text' : 'password'}
+      inputMode="numeric"
+      pattern="[6-9]{1}[0-9]{9}"
+      maxLength={10}
+      name="mobileNumber"
+      value={formData.mobileNumber}
+      onChange={handleChange}
+      placeholder="9567023456"
+      required
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      title="Enter a valid 10-digit mobile number starting with 6-9"
+    />
+    
+    <span
+      onClick={handleToggleMobile}
+      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+    >
+      {showMobile ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+
   {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
-    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
+    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6–9</p>
   )}
+
   {mobileExists && (
-        <p className="text-red-600 text-sm mt-1">Mobile number already exists</p>
-      )}
+    <p className="text-red-600 text-sm mt-1">Mobile number already exists</p>
+  )}
 </div>
 
 {/* Confirm Mobile Number */}
@@ -357,11 +394,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   maxLength={10}
   pattern="[6-9]{1}[0-9]{9}"
   required
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
   title="Re-enter the same 10-digit mobile number"
   disabled={!(
     /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
   )}
+
 />
   {confirmMobileNumber &&
     confirmMobileNumber !== formData.mobileNumber && (
@@ -371,19 +409,33 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
-        <input
-          type="password"
-          name="emailAddress"
-          value={formData.emailAddress}
-          onChange={handleChange}
-          placeholder="johndoe@example.com"
-          maxLength={35}
-          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-          title="Enter a valid email address"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+  <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
+
+  <div className="relative">
+    <input
+      type={showEmail ? 'text' : 'password'}
+      name="emailAddress"
+      value={formData.emailAddress}
+      onChange={handleChange}
+      placeholder="johndoe@example.com"
+      maxLength={35}
+      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+      title="Enter a valid email address"
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+
+    <span
+      onClick={handleToggleEmail}
+      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+    >
+      {showEmail ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+
+  {emailExists && (
+    <p className="text-red-600 text-sm mt-1">Email address already exists</p>
+  )}
+</div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
@@ -395,8 +447,11 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           placeholder="Confirm email address"
           maxLength={35}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
+          disabled={!(
+            /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(formData.emailAddress) && !emailExists
+          )}
         />
         {confirmEmailAddress &&
     confirmEmailAddress !== formData.emailAddress && (

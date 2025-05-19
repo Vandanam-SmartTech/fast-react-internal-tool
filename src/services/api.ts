@@ -145,15 +145,13 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
 };
 
 export const createStompClient = () => {
-  const socket = new SockJS('http://localhost:8585/ws'); // Backend URL
-
   const stompClient = new Client({
-    webSocketFactory: () => socket,
+    webSocketFactory: () => new SockJS('http://localhost:8585/ws'), // Correct SockJS usage
     debug: (str) => console.log(str),
     reconnectDelay: 5000,
-    connectHeaders: {
-      Authorization: `Bearer ${getAuthToken()}`
-    },
+    // connectHeaders: {
+    //   Authorization: `Bearer ${getAuthToken()}`
+    // },
     onConnect: () => {
       console.log('Connected to WebSocket');
     },
@@ -548,7 +546,7 @@ export const fetchConsumerNumber = async (customerId: number) => {
 
     return response.data; // Return full array
   } catch (error) {
-    console.error(`Error fetching consumer numbers for customerId ${customerId}:`, error);
+    console.error(`Error fetching details for customerId ${customerId}:`, error);
     return [];
   }
 };
