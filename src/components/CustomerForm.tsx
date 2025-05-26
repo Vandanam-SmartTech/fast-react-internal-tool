@@ -66,7 +66,7 @@ useEffect(() => {
   const savedFormData = localStorage.getItem("myFormData");
   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
-  const savedRepresentative = localStorage.getItem("selectedRepresentative");
+  //const savedRepresentative = localStorage.getItem("selectedRepresentative");
 
   if (savedFormData) {
     setFormData(JSON.parse(savedFormData));
@@ -80,9 +80,9 @@ useEffect(() => {
     setConfirmEmailAddress(savedConfirmEmail);
   }
 
-  if (savedRepresentative) {
-    setSelectedRepresentative(JSON.parse(savedRepresentative));
-  }
+  // if (savedRepresentative) {
+  //   setSelectedRepresentative(JSON.parse(savedRepresentative));
+  // }
 }, []);
 
 ///////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     localStorage.removeItem("myFormData");
     localStorage.removeItem("confirmMobileNumber");
     localStorage.removeItem("confirmEmailAddress");
-    localStorage.removeItem("selectedRepresentative");
+    //localStorage.removeItem("selectedRepresentative");
 
   };
   
@@ -373,8 +373,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     </span>
   </div>
 
-  {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
-    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6–9</p>
+  {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
+    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
   )}
 
   {mobileExists && (
@@ -386,17 +386,17 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 <div>
   <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
   <input
-  type="tel"
-  name="confirmMobileNumber"
-  value={confirmMobileNumber}
-  onChange={handleConfirmMobileChange}
-  placeholder="Confirm mobile number"
-  maxLength={10}
-  pattern="[6-9]{1}[0-9]{9}"
-  required
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
-  title="Re-enter the same 10-digit mobile number"
-  disabled={!(
+      type="tel"
+      name="confirmMobileNumber"
+      value={confirmMobileNumber}
+      onChange={handleConfirmMobileChange}
+      placeholder="Confirm mobile number"
+      maxLength={10}
+      pattern="[6-9]{1}[0-9]{9}"
+      required
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+      title="Re-enter the same 10-digit mobile number"
+      disabled={!(
     /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
   )}
 

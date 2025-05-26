@@ -112,6 +112,7 @@ export const EditConnection = () => {
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
     isOnboardedCustomers:false,
+    discomId: "",
   });
 
   
@@ -285,6 +286,7 @@ export const EditConnection = () => {
           latitude: data.latitude,
           longitude: data.longitude,
           isOnboardedCustomers: data.isOnboardedCustomers ?? false,
+          discomId: data.discomId,
         });
         setDistrictCode(data.districtCode);
         setTalukaCode(data.talukaCode);
@@ -350,6 +352,7 @@ export const EditConnection = () => {
       latitude: formData.latitude,
       longitude: formData.longitude,
       sectionId: formData.sectionId,
+      discomId: formData.discomId,
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
@@ -664,6 +667,21 @@ export const EditConnection = () => {
               ))}
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+            <input
+              type="number"
+              name="monthlyAvgConsumptionUnits"
+              value={formData.monthlyAvgConsumptionUnits}
+              onChange={handleChange}
+              min="0"
+              placeholder="e.g. 1"
+              onWheel={(e)=>e.currentTarget.blur()}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div>
+  
   
           <div>
             <label className="block text-sm font-medium text-gray-700">Phase Type</label>
@@ -679,33 +697,6 @@ export const EditConnection = () => {
             </select>
           </div>
     
-    
-  
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
-            <input
-              type="number"
-              name="monthlyAvgConsumptionUnits"
-              value={formData.monthlyAvgConsumptionUnits}
-              onChange={handleChange}
-              min="0"
-              placeholder="e.g. 1"
-              onWheel={(e)=>e.currentTarget.blur()}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
-          </div>
-  
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Section ID</label>
-            <input
-              type="text"
-              name="sectionId"
-              value={formData.sectionId}
-              onChange={handleChange}
-              placeholder="e.g. 7137"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
-          </div>
   
     
           <div>
@@ -731,6 +722,30 @@ export const EditConnection = () => {
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Section ID</label>
+            <input
+              type="text"
+              name="sectionId"
+              value={formData.sectionId}
+              onChange={handleChange}
+              placeholder="e.g. 7137"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div>
+
+          {/* <div>
+            <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+            <input
+              type="text"
+              name="discomId"
+              value={formData.discomId}
+              onChange={handleChange}
+              placeholder="e.g. 64797718"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div> */}
   
           <div className="flex flex-col space-y-4">
     {/* Name Correction Question */}

@@ -310,6 +310,7 @@ return (
           onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableEastWestLengthFt}
           onChange={handleChange}
+          required
           placeholder="e.g. 10"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
@@ -324,6 +325,7 @@ return (
           onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableSouthNorthLengthFt}
           placeholder="e.g. 10"
+          required
           onChange={handleChange}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />

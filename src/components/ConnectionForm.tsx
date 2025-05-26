@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection  } from "../services/api";
-import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
+import { getDistrictNameByCode, getTalukaNameByCode, checkConsumerNumberExists, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
   UserCircleIcon,
@@ -85,6 +86,13 @@ export const ConnectionForm = () => {
   const [phaseTypes, setPhaseTypes] = useState<{ id: Number; nameEn: string }[]>([]);
   const [addressTypes, setAddressTypes] = useState<{ id: Number; nameEn: string }[]>([]);
 
+  const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
+  const [consumerNumberExists, setConsumerNumberExists] = useState(false);
+
+  const [showConsumerNumber, setShowConsumerNumber] = useState(false);
+  const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
+
+
 
   const tabs = [
     "Customer Details",
@@ -113,14 +121,20 @@ export const ConnectionForm = () => {
     isNameCorrection: "No",
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
+    discomId: "",
   });
 
 ///////////////////////////////////////////////////////////
   useEffect(() => {
     const savedForm = localStorage.getItem('myFormData');
+    const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
     if (savedForm) {
       setFormData(JSON.parse(savedForm));
     }
+
+    if (savedConfirmConsumerNumber) {
+    setConfirmConsumerNumber(savedConfirmConsumerNumber);
+  }
   }, []);
 ///////////////////////////////////////////////////////////
 
@@ -149,6 +163,18 @@ useEffect(() => {
     setFormData((prev) => ({ ...prev, billedTo: govIdName }));
   }
 }, [govIdName]);
+
+useEffect(() => {
+    const checkConsumerIdExists = async () => {
+      if (formData.consumerId.length === 12) {
+        const exists = await checkConsumerNumberExists(formData.consumerId);
+        setConsumerNumberExists(exists);
+      } else {
+        setConsumerNumberExists(false);
+      }
+    };
+    checkConsumerIdExists();
+  }, [formData.consumerId]);
 
 
   useEffect(() => {
@@ -326,6 +352,12 @@ useEffect(() => {
       setFormData((prev) => ({ ...prev, correctionType: e.target.value }));
     };
 
+    const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmConsumerNumber(value);
+    localStorage.setItem('confirmConsumerNumber', value);
+  };
+
 
 
 
@@ -339,8 +371,14 @@ useEffect(() => {
       return;
     }
 
+
     if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
       alert("Please select a Correction Type.");
+      return;
+    }
+
+    if (formData.consumerId !== confirmConsumerNumber) {
+      alert("Consumer number and Confirm Consumer number do not match.");
       return;
     }
   
@@ -375,6 +413,7 @@ useEffect(() => {
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
+      discomId:formData.discomId,
     };
   
     try {
@@ -399,6 +438,7 @@ useEffect(() => {
 
   /////////////
     localStorage.removeItem('myFormData');
+    localStorage.removeItem('confirmConsumerNumber');
   ////////////
   };
   
@@ -523,7 +563,7 @@ useEffect(() => {
         </div>
   
         {/* Two-Column Layout for Other Fields */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
           <input
             type="text"
@@ -538,7 +578,69 @@ useEffect(() => {
             disabled={formData.isMsebConnection === "No"}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm disabled:bg-gray-200"
           />
-        </div>
+        </div> */}
+
+        <div>
+  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number</label>
+
+  <div className="relative">
+    <input
+      type={showConsumerNumber ? 'text' : 'password'}
+      inputMode="numeric"
+      maxLength={12}
+      name="consumerId"
+      value={formData.consumerId}
+      pattern="[0-9]{12}"
+      onChange={handleChange}
+      placeholder="e.g. 987654321000"
+      required
+      disabled={formData.isMsebConnection === "No"}
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      title="Enter a valid 12-digit consumer number"
+    />
+    
+    <span
+      onClick={handleToggleConsumerNumber}
+      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+    >
+      {showConsumerNumber ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+
+{formData.consumerId?.length === 12 && !/^[0-9]{12}$/.test(formData.consumerId) && (
+  <p className="text-red-600 text-sm mt-1">Enter a valid 12-digit consumer number</p>
+)}
+
+
+  {consumerNumberExists && (
+    <p className="text-red-600 text-sm mt-1">Consumer number already exists</p>
+  )}
+</div>
+
+{/* Confirm Consumer Number */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number</label>
+  <input
+  type="text"
+  name="confirmConsumerNumber"
+  value={confirmConsumerNumber}
+  onChange={handleConfirmConsumerNumberChange}
+  placeholder="Confirm consumer number"
+  maxLength={12}
+  required
+  //disabled={formData.isMsebConnection === "No"}
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+  title="Re-enter the same 12-digit consumer number"
+  disabled={!(
+     /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
+  )}
+
+/>
+  {confirmConsumerNumber &&
+    confirmConsumerNumber !== formData.consumerId && (
+      <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
+  )}
+</div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
@@ -691,6 +793,21 @@ useEffect(() => {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+          <input
+            type="number"
+            min="0"
+            onWheel={(e) => e.currentTarget.blur()}
+            name="monthlyAvgConsumptionUnits"
+            value={formData.monthlyAvgConsumptionUnits}
+            onChange={handleChange}
+            required
+            placeholder="e.g. 1"
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Phase Type</label>
           <select
             name="phaseTypeId"
@@ -706,34 +823,6 @@ useEffect(() => {
           </select>
         </div>
   
-  
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
-          <input
-            type="number"
-            min="0"
-            onWheel={(e) => e.currentTarget.blur()}
-            name="monthlyAvgConsumptionUnits"
-            value={formData.monthlyAvgConsumptionUnits}
-            onChange={handleChange}
-            placeholder="e.g. 1"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Section ID</label>
-          <input
-            type="text"
-            name="sectionId"
-            value={formData.sectionId}
-            onChange={handleChange}
-            placeholder="e.g. 7137"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
-
   
         <div>
           <label className="block text-sm font-medium text-gray-700">Latitude</label>
@@ -755,6 +844,31 @@ useEffect(() => {
             value={formData.longitude}
             onChange={handleChange}
             placeholder="e.g. 74.2432527"
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Section ID</label>
+          <input
+            type="text"
+            name="sectionId"
+            value={formData.sectionId}
+            onChange={handleChange}
+            placeholder="e.g. 7137"
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          />
+        </div>
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+          <input
+            type="text"
+            name="discomId"
+            value={formData.discomId}
+            onChange={handleChange}
+            placeholder="e.g. 64797718"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           />
         </div>

@@ -532,20 +532,15 @@ export const ViewConnection = () => {
       </div>
 
       <div>
+        <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.monthlyAvgConsumptionUnits || ""}</p>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700">Phase Type</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
             {connection.phaseTypeName || ""}
         </p>
-      </div>
-      
-    
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.monthlyAvgConsumptionUnits || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Section ID</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.sectionId || ""}</p>
       </div>
 
       <div>
@@ -556,6 +551,12 @@ export const ViewConnection = () => {
         <label className="block text-sm font-medium text-gray-700">Longitude</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.longitude || ""}</p>
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Section ID</label>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.sectionId || ""}</p>
+      </div>
+
       <div>
   <label className="block text-sm font-medium text-gray-700">
     Does the connection require a name correction?
@@ -596,6 +597,10 @@ export const ViewConnection = () => {
   )}
 </div>
 
+<div>
+        <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.discomId || ""}</p>
+      </div>
 
   
       {/* Edit Connection Button (Before Installations) */}

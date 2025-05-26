@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
 import Logo from "../assets/Vandanam_SmartTech_Logo.png"; // Adjust path if needed
@@ -13,6 +13,7 @@ const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
 
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
   const toggleSidebar = () => {
     const newState = !isOpen;
     setIsOpen(newState);
@@ -29,6 +30,26 @@ const Sidebar: React.FC = () => {
     const storedState = localStorage.getItem("sidebarOpen");
     setIsOpen(storedState === "true"); // If not present, will default to false
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        window.innerWidth < 768 &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        localStorage.setItem("sidebarOpen", "false");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
 
   const goToListOfConsumers = () => {
     navigate("/list-of-consumers");
@@ -81,6 +102,7 @@ const Sidebar: React.FC = () => {
       {/* Sidebar */}
       {isOpen && (
         <div
+        ref={sidebarRef}
           className={`fixed top-0 left-0 h-full w-64 bg-blue-100 text-blue-800 shadow-md z-40 transition-transform duration-300 ease-in-out`}
         >
           {/* Close Icon */}
@@ -149,12 +171,12 @@ const Sidebar: React.FC = () => {
     Onboarded Customers
   </button>
 
-  {roles.includes("ROLE_ADMIN") && (
+  {/* {roles.includes("ROLE_ADMIN") && (
               <button className="flex items-center gap-2 px-2 py-1 text-black whitespace-nowrap">
                 <UserCog className="h-7 w-7" />
                 Manage Representatives
               </button>
-            )}
+            )} */}
 
   <button
     onClick={handleLogout}
