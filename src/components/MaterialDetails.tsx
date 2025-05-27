@@ -19,8 +19,8 @@ export default function MaterialForm() {
     inverterCapacity: null,
     earthingRod: null,
     dateOfInstallation: "",
-    capacityType: "",
-    projectModel: "",
+    capacityType: "Rooftop",
+    projectModel: "Capex",
     reInstalledCapacityRooftop: null,
     reInstalledCapacityGround: null,
     reInstalledCapacityTotal: null
@@ -334,7 +334,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               </div>
               {/* <InputField name="dateOfInstallation" label="Date Of Installation" value={formData.dateOfInstallation} handleChange={handleChange} type="date" /> */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">date of Installation</label>
+                <label className="block text-sm font-medium text-gray-700">Date of Installation</label>
                 <input
                   type="date"
                   name="dateOfInstallation"
@@ -402,7 +402,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">No of modules</label>
+                <label className="block text-sm font-medium text-gray-700">No of PV modules</label>
                 <input
                   type="number"
                   name="noOfModules"

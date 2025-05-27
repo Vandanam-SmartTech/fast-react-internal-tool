@@ -5,6 +5,7 @@ import { Stepper, Step } from "react-form-stepper";
 import { fetchClaims, fetchRepresentatives, checkMobileNumberExists, checkEmailAddressExists } from '../services/api';
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { X } from "lucide-react";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -230,25 +231,55 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     Add New Customer
   </h2>
 
-  {roles.includes("ROLE_ADMIN") && (
-    <div className="sm:ml-auto">
-    <select
-      name="representative"
-      value={selectedRepresentative?.userId || ""}
-      onChange={handleSelectChange}
-      className="block w-full sm:w-64 p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    >
-      <option value="" disabled hidden>
-      Select Representative
-    </option>
-      {representatives.map(rep => (
-        <option key={rep.userId} value={rep.userId}>
-          {rep.name}
+{roles.includes("ROLE_ADMIN") && (
+  <div className="flex items-center gap-2 sm:ml-auto">
+    <div className="relative w-full sm:w-64">
+      <select
+        name="representative"
+        value={selectedRepresentative?.userId || ""}
+        onChange={handleSelectChange}
+        className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+      >
+        <option value="" disabled hidden>
+          Select Representative
         </option>
-      ))}
-    </select>
+        {representatives.map(rep => (
+          <option key={rep.userId} value={rep.userId}>
+            {rep.name}
+          </option>
+        ))}
+      </select>
 
-  </div> )}
+      {/* Custom dropdown arrow */}
+      <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500">
+        {!selectedRepresentative && (
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </div>
+
+      {/* X button to clear selection */}
+      {selectedRepresentative && (
+        <button
+          type="button"
+          onClick={() => setSelectedRepresentative(null)}
+          className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-600 hover:text-red-500 transition"
+          title="Clear selection"
+        >
+          <X size={18} />
+        </button>
+      )}
+    </div>
+  </div>
+)}
+
 </div>
 
     
@@ -321,7 +352,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+        <label className="block text-sm font-medium text-gray-700">Customer Name*</label>
         <input
           type="text"
           name="govIdName"
@@ -335,7 +366,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Preferred Name (optional)</label>
+        <label className="block text-sm font-medium text-gray-700">Preferred Name</label>
         <input
           type="text"
           name="preferredName"
@@ -348,7 +379,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number*</label>
 
   <div className="relative">
     <input
@@ -384,7 +415,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 {/* Confirm Mobile Number */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
+  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number*</label>
   <input
       type="tel"
       name="confirmMobileNumber"
@@ -409,7 +440,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Email Address*</label>
 
   <div className="relative">
     <input
@@ -438,7 +469,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
+        <label className="block text-sm font-medium text-gray-700">Confirm Email Address*</label>
         <input
           type="email"
           name="confirmEmailAddress"

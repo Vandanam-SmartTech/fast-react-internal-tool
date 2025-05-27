@@ -581,7 +581,7 @@ useEffect(() => {
         </div> */}
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number*</label>
 
   <div className="relative">
     <input
@@ -619,7 +619,7 @@ useEffect(() => {
 
 {/* Confirm Consumer Number */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number</label>
+  <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number*</label>
   <input
   type="text"
   name="confirmConsumerNumber"
@@ -669,7 +669,7 @@ useEffect(() => {
   
 
         <div>
-            <label className="block text-sm font-medium text-gray-700">District</label>
+            <label className="block text-sm font-medium text-gray-700">District*</label>
             <select
               name="distrct"
               id="district"
@@ -687,7 +687,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Taluka</label>
+            <label className="block text-sm font-medium text-gray-700">Taluka*</label>
             <select
               name="talukaCode"
               id="taluka"
@@ -705,7 +705,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Village</label>
+            <label className="block text-sm font-medium text-gray-700">Village*</label>
             <select
               name="villageCode"
               id="village"
@@ -723,7 +723,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Pincode</label>
+            <label className="block text-sm font-medium text-gray-700">Pincode*</label>
             <input
               type="text"
               id="pincode"
@@ -736,7 +736,7 @@ useEffect(() => {
           </div>
 
           <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+          <label className="block text-sm font-medium text-gray-700">Address Line 1*</label>
           <input
             type="text"
             name="addressLine1"
@@ -749,7 +749,7 @@ useEffect(() => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
+          <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
           <input
             type="text"
             name="addressLine2"
@@ -761,7 +761,7 @@ useEffect(() => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Address Type</label>
+          <label className="block text-sm font-medium text-gray-700">Address Type*</label>
           <select
             name="addressTypeId"
             value={formData.addressTypeId}
@@ -777,23 +777,7 @@ useEffect(() => {
         </div>
 
         <div>
-            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-            <select
-                name="connectionTypeId"
-                value={formData.connectionTypeId}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            >
-              {connectionTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.nameEn}
-              </option>
-              ))}
-             </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units*</label>
           <input
             type="number"
             min="0"
@@ -808,7 +792,24 @@ useEffect(() => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Phase Type</label>
+            <label className="block text-sm font-medium text-gray-700">Connection Type*</label>
+            <select
+                name="connectionTypeId"
+                value={formData.connectionTypeId}
+                onChange={handleChange}
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            >
+              {connectionTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
+              ))}
+             </select>
+        </div>
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Phase Type*</label>
           <select
             name="phaseTypeId"
             value={formData.phaseTypeId}

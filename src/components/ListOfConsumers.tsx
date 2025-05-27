@@ -108,31 +108,31 @@ const ListOfConsumers: React.FC = () => {
     }
   };
 
-  //  useEffect(() => {
-  //   const stompClient = createStompClient();
+   useEffect(() => {
+    const stompClient = createStompClient();
 
-  //   stompClient.onConnect = () => {
-  //     console.log("Connected to WebSocket");
+    stompClient.onConnect = () => {
+      console.log("Connected to WebSocket");
 
       
-  //     stompClient.subscribe('/topic/customerAdded', (message: Message) => {
-  //       console.log("Received customerAdded message:", message.body);
-  //       loadConsumers(0);  // Reload consumers on new customer addition
-  //     });
+      stompClient.subscribe('/topic/customerAdded', (message: Message) => {
+        console.log("Received customerAdded message:", message.body);
+        loadConsumers(0);  // Reload consumers on new customer addition
+      });
 
-  //     stompClient.subscribe('/topic/connection', (message: Message) => {
-  //       console.log("Received connection update message:", message.body);
-  //       const consumerIds = consumers.map((consumer) => consumer.id);
-  //       fetchConsumerNumbers(consumerIds);  // Refresh consumer numbers
-  //     });
-  //   };
+      stompClient.subscribe('/topic/connection', (message: Message) => {
+        console.log("Received connection update message:", message.body);
+        const consumerIds = consumers.map((consumer) => consumer.id);
+        fetchConsumerNumbers(consumerIds);  // Refresh consumer numbers
+      });
+    };
 
-  //   stompClient.activate();
+    stompClient.activate();
 
-  //   return () => {
-  //     stompClient.deactivate();
-  //   };
-  // }, [consumers]);
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [consumers]);
 
 
   useEffect(() => {

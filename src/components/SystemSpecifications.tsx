@@ -75,7 +75,7 @@ export const SystemSpecifications = () => {
     fabricationCost: 0,
     totalCost: 0,
     installationSpaceType: "",
-    installationStructureType: "",
+    installationStructureType: "Static",
     dcrNonDcrType:"",
     panelBrand:"",
     Kw:"",
@@ -242,7 +242,7 @@ useEffect(() => {
 
         // Correct dcrNonDcrType based on recommendation.phaseType
         if (name === "panelBrand") {
-            updatedData.dcrNonDcrType = phaseType === "Three-Phase" && value === "En-Icon"
+            updatedData.dcrNonDcrType =   value === "En-Icon"
                 ? "Non-DCR"
                 : "DCR"; // Default to "DCR"
         }
@@ -591,16 +591,15 @@ const handleGenerateQuotation = async () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Installation Structure Type</label>
-          <select
+          <input
             id="installationStructureType"
             name="installationStructureType"
             value={formData.installationStructureType}
-            onChange={handleChange}
+            //onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="Static">Static</option>
-            <option value="Dynamic">Dynamic</option>
-          </select>
+          />
+          
+          
         </div>
 
         <div>

@@ -274,7 +274,7 @@ return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       {/* Input Fields */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+        <label className="block text-sm font-medium text-gray-700">Installation Space Type*</label>
         <select
           name="installationSpaceTypeId"
           value={formData.installationSpaceTypeId}
@@ -302,7 +302,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)*</label>
         <input
           type="number"
           name="availableEastWestLengthFt"
@@ -317,7 +317,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)*</label>
         <input
           type="number"
           name="availableSouthNorthLengthFt"
