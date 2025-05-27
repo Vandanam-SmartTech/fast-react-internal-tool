@@ -40,7 +40,7 @@ export const ViewConnection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("Connection Details");
-  const [activeDocumentTab, setActiveDocumentTab] = useState("Aadhar");
+  //const [activeDocumentTab, setActiveDocumentTab] = useState("Aadhar");
   const [activeDocTab, setActiveDocTab] = useState<"Aadhar" | "Passbook" | "Electricity">("Aadhar");
   const [file, setFile] = useState<File | null>(null);
   
@@ -122,7 +122,8 @@ export const ViewConnection = () => {
 }, [customerId, connectionId]);
 
 
-  const fetchAndSetUploadedFiles = async () => {
+const fetchAndSetUploadedFiles = async () => {
+  try {
     const files = await fetchUploadedDocuments(
       consumerId,
       districtName,
@@ -130,16 +131,20 @@ export const ViewConnection = () => {
       villageName,
       govIdName
     );
-  
+
     const fileMap: { [key: string]: string } = {};
     files.forEach((file: any) => {
-      if (file.name.includes("Aadhar")) fileMap["Aadhar"] = file.downloadUrl;
-      else if (file.name.includes("Passbook")) fileMap["Passbook"] = file.downloadUrl;
-      else if (file.name.includes("Electricity")) fileMap["Electricity"] = file.downloadUrl;
+      const fileName = file.name.toLowerCase();
+      if (fileName.includes("aadhar")) fileMap["Aadhar"] = file.downloadUrl;
+      else if (fileName.includes("passbook")) fileMap["Passbook"] = file.downloadUrl;
+      else if (fileName.includes("electricity")) fileMap["Electricity"] = file.downloadUrl;
     });
-  
+
     setUploadedFiles(fileMap);
-  };
+  } catch (error: any) {
+    console.error("Error fetching uploaded files:", error);
+  }
+};
 
   useEffect(() => {
     if (modalOpen) {
@@ -150,29 +155,35 @@ export const ViewConnection = () => {
   
 
   const handleSingleFileUpload = async () => {
-    setIsLoading(true);
-    try {
-      const result = await uploadDocuments(
-        consumerId,
-        districtName,
-        talukaName,
-        villageName,
-        govIdName,
-        activeDocTab === "Aadhar" ? file : null,
-        activeDocTab === "Passbook" ? file : null,
-        activeDocTab === "Electricity" ? file : null
-      );
-  
-      alert(`${activeDocTab} uploaded successfully: ` + result.message);
-      setFile(null); 
-  
-      await fetchAndSetUploadedFiles(); 
-    } catch (error: any) {
-      alert(`${activeDocTab} upload failed: ` + (error.response?.data?.message || error.message));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!file) {
+    alert("Please select a file before uploading.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const result = await uploadDocuments(
+      consumerId,
+      districtName,
+      talukaName,
+      villageName,
+      govIdName,
+      activeDocTab === "Aadhar" ? file : null,
+      activeDocTab === "Passbook" ? file : null,
+      activeDocTab === "Electricity" ? file : null
+    );
+
+    alert(`${activeDocTab} uploaded successfully: ${result.message}`);
+    setFile(null);
+
+    await fetchAndSetUploadedFiles(); // Refresh the file links after upload
+  } catch (error: any) {
+    alert(`${activeDocTab} upload failed: ${error.response?.data?.message || error.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
   
   
   
@@ -298,83 +309,100 @@ export const ViewConnection = () => {
         )}
 
 <div className="mt-2 md:mt-0 md:ml-auto">
-      <button
-        onClick={() => setModalOpen(true)}
-        className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
-      >
-        <FileUp className="w-6 h-6 text-gray-700" />
-      </button>
+  <button
+    onClick={() => setModalOpen(true)}
+    className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
+  >
+    <FileUp className="w-6 h-6 text-gray-700" />
+  </button>
 
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
-            <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-              Upload Required Documents
-            </h3>
+  {modalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+          Upload Required Documents
+        </h3>
 
-
-            <div className="flex justify-around mb-4">
-              {["Aadhar Card", "Bank Passbook", "Electricity Bill"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveDocTab(tab as any);
-                    setFile(null); 
-                  }}
-                  className={`px-4 py-2 rounded-t ${
-                    activeDocTab === tab
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            
-            <div>
-              <label className="block font-medium text-gray-700 mb-1">{activeTab} File</label>
-              <div className="flex items-center gap-2 mb-2">
-                <input
-                  type="file"
-                  className="text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-blue-600 file:text-white file:rounded-full hover:file:bg-blue-700"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                />
-                {file && <span className="text-sm text-gray-600 truncate">{file.name}</span>}
-              </div>
-              {uploadedFiles[activeDocTab] && (
-                <a
-                  href={uploadedFiles[activeDocTab]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-green-600 underline mb-4 inline-block"
-                >
-                  View Uploaded {activeDocTab}
-                </a>
-              )}
-            </div>
-
-
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSingleFileUpload}
-                disabled={isLoading || !file}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-              >
-                {isLoading ? "Uploading..." : `Upload ${activeDocTab}`}
-              </button>
-            </div>
-          </div>
+        <div className="flex justify-around mb-4">
+          {[
+            { label: "Aadhar Card", key: "Aadhar" },
+            { label: "Bank Passbook", key: "Passbook" },
+            { label: "Electricity Bill", key: "Electricity" }
+          ].map(({ label, key }) => (
+            <button
+              key={key}
+              onClick={() => {
+                setActiveDocTab(key as "Aadhar" | "Passbook" | "Electricity");
+                setFile(null);
+              }}
+              className={`px-4 py-2 rounded-t ${
+                activeDocTab === key
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-      )}
+
+        <div>
+          <label className="block font-medium text-gray-700 mb-1">
+            Upload {activeDocTab} File
+          </label>
+<div className="flex items-center gap-2 mb-2">
+  <input
+    type="file"
+    className="hidden"
+    id="fileUpload"
+    onChange={(e) => setFile(e.target.files?.[0] || null)}
+  />
+  <label
+    htmlFor="fileUpload"
+    className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+  >
+    Choose File
+  </label>
+  {file && (
+    <span className="text-sm text-gray-600 truncate max-w-[200px]">
+      {file.name}
+    </span>
+  )}
+</div>
+
+
+          {uploadedFiles[activeDocTab] && (
+            <a
+              href={uploadedFiles[activeDocTab]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 underline mb-4 inline-block"
+            >
+              View Uploaded {activeDocTab}
+            </a>
+          )}
+        </div>
+
+        <div className="flex justify-between mt-6">
+          <button
+            onClick={() => setModalOpen(false)}
+            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSingleFileUpload}
+            disabled={isLoading || !file}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          >
+            {isLoading ? "Uploading..." : `Upload ${activeDocTab}`}
+          </button>
+        </div>
+      </div>
     </div>
+  )}
+</div>
+
 
 </div>
 

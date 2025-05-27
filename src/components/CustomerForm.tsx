@@ -352,7 +352,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Customer Name*</label>
+        <label className="block text-sm font-medium text-gray-700">Customer Name <span className="text-red-500">*</span></label>
         <input
           type="text"
           name="govIdName"
@@ -379,7 +379,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number*</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -415,7 +415,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 {/* Confirm Mobile Number */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number*</label>
+  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number <span className="text-red-500">*</span></label>
   <input
       type="tel"
       name="confirmMobileNumber"
@@ -440,7 +440,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Email Address*</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -469,7 +469,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Email Address*</label>
+        <label className="block text-sm font-medium text-gray-700">Confirm Email Address <span className="text-red-500">*</span></label>
         <input
           type="email"
           name="confirmEmailAddress"

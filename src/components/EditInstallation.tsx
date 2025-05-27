@@ -255,7 +255,7 @@ export const EditInstallation = () => {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Fields */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+          <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
           <select
             name="spaceType"
             value={formData.spaceType}
@@ -282,7 +282,7 @@ export const EditInstallation = () => {
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="number"
             name="availableEastWestLengthFt"
@@ -296,7 +296,7 @@ export const EditInstallation = () => {
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="number"
             name="availableSouthNorthLengthFt"

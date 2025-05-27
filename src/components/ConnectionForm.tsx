@@ -581,7 +581,7 @@ useEffect(() => {
         </div> */}
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number*</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -619,7 +619,7 @@ useEffect(() => {
 
 {/* Confirm Consumer Number */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number*</label>
+  <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number <span className="text-red-500">*</span></label>
   <input
   type="text"
   name="confirmConsumerNumber"
@@ -669,7 +669,7 @@ useEffect(() => {
   
 
         <div>
-            <label className="block text-sm font-medium text-gray-700">District*</label>
+            <label className="block text-sm font-medium text-gray-700">District <span className="text-red-500">*</span></label>
             <select
               name="distrct"
               id="district"
@@ -687,7 +687,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Taluka*</label>
+            <label className="block text-sm font-medium text-gray-700">Taluka <span className="text-red-500">*</span></label>
             <select
               name="talukaCode"
               id="taluka"
@@ -705,7 +705,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Village*</label>
+            <label className="block text-sm font-medium text-gray-700">Village <span className="text-red-500">*</span></label>
             <select
               name="villageCode"
               id="village"
@@ -723,7 +723,7 @@ useEffect(() => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Pincode*</label>
+            <label className="block text-sm font-medium text-gray-700">Pincode <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="pincode"
@@ -736,7 +736,7 @@ useEffect(() => {
           </div>
 
           <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 1*</label>
+          <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="addressLine1"
@@ -761,7 +761,7 @@ useEffect(() => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Address Type*</label>
+          <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
           <select
             name="addressTypeId"
             value={formData.addressTypeId}
@@ -777,7 +777,7 @@ useEffect(() => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units*</label>
+          <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units <span className="text-red-500">*</span></label>
           <input
             type="number"
             min="0"
@@ -792,7 +792,7 @@ useEffect(() => {
         </div>
 
         <div>
-            <label className="block text-sm font-medium text-gray-700">Connection Type*</label>
+            <label className="block text-sm font-medium text-gray-700">Connection Type <span className="text-red-500">*</span></label>
             <select
                 name="connectionTypeId"
                 value={formData.connectionTypeId}
@@ -809,7 +809,7 @@ useEffect(() => {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Phase Type*</label>
+          <label className="block text-sm font-medium text-gray-700">Phase Type <span className="text-red-500">*</span></label>
           <select
             name="phaseTypeId"
             value={formData.phaseTypeId}

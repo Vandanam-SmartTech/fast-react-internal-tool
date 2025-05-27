@@ -507,7 +507,7 @@ export const EditConnection = () => {
     
           {/* Two-Column Layout for Other Fields */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
+            <label className="block text-sm font-medium text-gray-700">Consumer Number <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="consumerId"
@@ -549,7 +549,7 @@ export const EditConnection = () => {
     
   
           <div>
-              <label className="block text-sm font-medium text-gray-700">District</label>
+              <label className="block text-sm font-medium text-gray-700">District <span className="text-red-500">*</span></label>
               <select
                 name="distrct"
                 id="district"
@@ -567,7 +567,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Taluka</label>
+              <label className="block text-sm font-medium text-gray-700">Taluka <span className="text-red-500">*</span></label>
               <select
                 name="talukaCode"
                 id="taluka"
@@ -585,7 +585,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Village</label>
+              <label className="block text-sm font-medium text-gray-700">Village <span className="text-red-500">*</span></label>
               <select
                 name="villageCode"
                 id="village"
@@ -603,7 +603,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Pincode</label>
+              <label className="block text-sm font-medium text-gray-700">Pincode <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="pincode"
@@ -616,7 +616,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="addressLine1"
@@ -629,7 +629,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
             <input
               type="text"
               name="addressLine2"
@@ -641,7 +641,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Address Type</label>
+            <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
             <select
               name="addressType"
               value={formData.addressType}
@@ -655,7 +655,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
+            <label className="block text-sm font-medium text-gray-700">Connection Type <span className="text-red-500">*</span></label>
             <select
               name="connectionType"
               value={formData.connectionType}
@@ -669,7 +669,7 @@ export const EditConnection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units <span className="text-red-500">*</span></label>
             <input
               type="number"
               name="monthlyAvgConsumptionUnits"
@@ -684,7 +684,7 @@ export const EditConnection = () => {
   
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phase Type</label>
+            <label className="block text-sm font-medium text-gray-700">Phase Type <span className="text-red-500">*</span></label>
             <select
               name="phase"
               value={formData.phase}

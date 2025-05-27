@@ -395,8 +395,8 @@ const handleGenerateQuotation = async () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-      // await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
-      // console.log("Quotation uploaded to OneDrive successfully");
+      await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
+      console.log("Quotation uploaded to OneDrive successfully");
 
 
       const pdfUrl = URL.createObjectURL(pdfBlob);

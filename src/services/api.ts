@@ -144,25 +144,25 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
   }
 };
 
-export const createStompClient = () => {
-  const stompClient = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8585/ws'), // Correct SockJS usage
-    debug: (str) => console.log(str),
-    reconnectDelay: 5000,
-    // connectHeaders: {
-    //   Authorization: `Bearer ${getAuthToken()}`
-    // },
-    onConnect: () => {
-      console.log('Connected to WebSocket');
-    },
-    onStompError: (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
-    },
-  });
+// export const createStompClient = () => {
+//   const stompClient = new Client({
+//     webSocketFactory: () => new SockJS('http://localhost:8585/ws'), // Correct SockJS usage
+//     debug: (str) => console.log(str),
+//     reconnectDelay: 5000,
+//     // connectHeaders: {
+//     //   Authorization: `Bearer ${getAuthToken()}`
+//     // },
+//     onConnect: () => {
+//       console.log('Connected to WebSocket');
+//     },
+//     onStompError: (frame) => {
+//       console.error('Broker reported error: ' + frame.headers['message']);
+//       console.error('Additional details: ' + frame.body);
+//     },
+//   });
 
-  return stompClient;
-};
+//   return stompClient;
+// };
 
 export const checkMobileNumberExists = async (mobileNumber: string): Promise<boolean> => {
   try {
