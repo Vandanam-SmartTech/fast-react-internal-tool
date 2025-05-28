@@ -16,6 +16,7 @@ export default function GenerateDocuments() {
   const location = useLocation();
   const consumer = location.state?.consumer as Consumer; // Retrieve consumer data
   const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null); // Track loading per document
+  const [loadingGenerateDoc, setLoadingGenerateDoc] = useState<string | null>(null);
 
   console.log("Consumer Data:", consumer);
 
@@ -28,7 +29,7 @@ export default function GenerateDocuments() {
     "Vendor Feasibility Document",
     "Netmeter Agreement Document-Page-1",
     "Netmeter Agreement Document-Page-2",
-    "Declarartion Document",
+    "Declaration Page",
   ];
 
   const handleGenerate = async (doc: string) => {
@@ -37,6 +38,8 @@ export default function GenerateDocuments() {
       console.error("Consumer data missing");
       return;
     }
+
+    setLoadingGenerateDoc(doc);
   
     try {
       const response = await fetchPdf(consumer.id, doc);
@@ -55,6 +58,9 @@ export default function GenerateDocuments() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Error generating document:", error);
+    }
+    finally {
+      setLoadingGenerateDoc(null); // Reset loading state after completion
     }
   };
 
@@ -119,14 +125,15 @@ export default function GenerateDocuments() {
                 onClick={() => handlePreview(doc)}
                 disabled={loadingPreviewDoc === doc} // Disable only the button being clicked
               >
-                {loadingPreviewDoc === doc ? "Loading..." : "Preview Document"}
+                {loadingPreviewDoc === doc ? "Previewing..." : "Preview Document"}
               </button>
               <button
                     className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
                     onClick={() => handleGenerate(doc)}
+                    disabled={loadingGenerateDoc === doc}
             >
-        Generate Document
-</button>
+        {loadingGenerateDoc === doc ? "Generating..." : "Generate Document"}
+          </button>
             </div>
           </div>
         ))}
