@@ -28,6 +28,7 @@ export default function GenerateDocuments() {
     "Vendor Feasibility Document",
     "Netmeter Agreement Document-Page-1",
     "Netmeter Agreement Document-Page-2",
+    "Declarartion Document",
   ];
 
   const handleGenerate = async (doc: string) => {

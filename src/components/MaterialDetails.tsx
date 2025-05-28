@@ -402,7 +402,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">No of modules</label>
+                <label className="block text-sm font-medium text-gray-700">Number of PV modules</label>
                 <input
                   type="number"
                   name="noOfModules"

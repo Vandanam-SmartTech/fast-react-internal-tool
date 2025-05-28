@@ -879,6 +879,10 @@ export const fetchPdf = async (id: number, docName: string): Promise<Response> =
   if(docName=== "Netmeter Agreement Document-Page-2"){
     endpoint = `http://localhost:5050/api/pdf/netAgreementTwo/${id}?download=true`;
   }
+  if(docName=== "Declarartion Document"){
+    endpoint = `http://localhost:5050/api/pdf/declarationPage/${id}?download=true`;
+  }
+   
   // Add other documents' API endpoints here if needed
 
   try {
