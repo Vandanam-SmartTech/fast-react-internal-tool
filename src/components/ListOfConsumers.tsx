@@ -358,7 +358,7 @@ const ListOfConsumers: React.FC = () => {
                 },
               })
             }
-            
+            title="View Connection"
           >
             <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
           </button>
