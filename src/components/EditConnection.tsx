@@ -112,6 +112,7 @@ export const EditConnection = () => {
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
     isOnboardedCustomers:false,
+    discomId: "",
   });
 
   
@@ -285,6 +286,7 @@ export const EditConnection = () => {
           latitude: data.latitude,
           longitude: data.longitude,
           isOnboardedCustomers: data.isOnboardedCustomers ?? false,
+          discomId: data.discomId,
         });
         setDistrictCode(data.districtCode);
         setTalukaCode(data.talukaCode);
@@ -350,6 +352,7 @@ export const EditConnection = () => {
       latitude: formData.latitude,
       longitude: formData.longitude,
       sectionId: formData.sectionId,
+      discomId: formData.discomId,
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
@@ -504,7 +507,7 @@ export const EditConnection = () => {
     
           {/* Two-Column Layout for Other Fields */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
+            <label className="block text-sm font-medium text-gray-700">Consumer Number <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="consumerId"
@@ -546,7 +549,7 @@ export const EditConnection = () => {
     
   
           <div>
-              <label className="block text-sm font-medium text-gray-700">District</label>
+              <label className="block text-sm font-medium text-gray-700">District <span className="text-red-500">*</span></label>
               <select
                 name="distrct"
                 id="district"
@@ -564,7 +567,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Taluka</label>
+              <label className="block text-sm font-medium text-gray-700">Taluka <span className="text-red-500">*</span></label>
               <select
                 name="talukaCode"
                 id="taluka"
@@ -582,7 +585,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Village</label>
+              <label className="block text-sm font-medium text-gray-700">Village <span className="text-red-500">*</span></label>
               <select
                 name="villageCode"
                 id="village"
@@ -600,7 +603,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-              <label className="block text-sm font-medium text-gray-700">Pincode</label>
+              <label className="block text-sm font-medium text-gray-700">Pincode <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="pincode"
@@ -613,7 +616,7 @@ export const EditConnection = () => {
             </div>
   
             <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="addressLine1"
@@ -626,7 +629,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
             <input
               type="text"
               name="addressLine2"
@@ -638,7 +641,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Address Type</label>
+            <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
             <select
               name="addressType"
               value={formData.addressType}
@@ -652,7 +655,7 @@ export const EditConnection = () => {
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Connection Type</label>
+            <label className="block text-sm font-medium text-gray-700">Connection Type <span className="text-red-500">*</span></label>
             <select
               name="connectionType"
               value={formData.connectionType}
@@ -664,25 +667,9 @@ export const EditConnection = () => {
               ))}
             </select>
           </div>
-  
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phase Type</label>
-            <select
-              name="phase"
-              value={formData.phase}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            >
-              {Object.keys(phaseTypeMapping).map((key) => (
-                <option key={key} value={key}>{key}</option>
-              ))}
-            </select>
-          </div>
-    
-    
-  
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
+            <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units <span className="text-red-500">*</span></label>
             <input
               type="number"
               name="monthlyAvgConsumptionUnits"
@@ -695,17 +682,21 @@ export const EditConnection = () => {
             />
           </div>
   
+  
           <div>
-            <label className="block text-sm font-medium text-gray-700">Section ID</label>
-            <input
-              type="text"
-              name="sectionId"
-              value={formData.sectionId}
+            <label className="block text-sm font-medium text-gray-700">Phase Type <span className="text-red-500">*</span></label>
+            <select
+              name="phase"
+              value={formData.phase}
               onChange={handleChange}
-              placeholder="e.g. 7137"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
+            >
+              {Object.keys(phaseTypeMapping).map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </select>
           </div>
+    
   
     
           <div>
@@ -731,6 +722,30 @@ export const EditConnection = () => {
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Section ID</label>
+            <input
+              type="text"
+              name="sectionId"
+              value={formData.sectionId}
+              onChange={handleChange}
+              placeholder="e.g. 7137"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div>
+
+          {/* <div>
+            <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+            <input
+              type="text"
+              name="discomId"
+              value={formData.discomId}
+              onChange={handleChange}
+              placeholder="e.g. 64797718"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div> */}
   
           <div className="flex flex-col space-y-4">
     {/* Name Correction Question */}

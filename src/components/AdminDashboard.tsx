@@ -15,6 +15,10 @@ const AdminDashboard = () => {
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
   const [count, setCount] = useState<Number | null>(null);
 
+  const [animatedCount, setAnimatedCount] = useState(0);
+  const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
+
+
     const goToListOfConsumers = () => {
     navigate("/list-of-consumers");
   };
@@ -50,61 +54,36 @@ const AdminDashboard = () => {
     getClaims();
   }, []);
 
-  // useEffect(() => {
-  //   getOnboardedCustomerCount()
-  //   .then(setOnboardedCount)
-  //   .catch((err) => console.error("Error:",err));
-  // },[]);
-
-//   useEffect(() => {
-//   getCustomerCount()
-//     .then(setCount)
-//     .catch((err) => console.error("Error:", err));
-// }, []);  
-
 
 useEffect(() => {
+    getCustomerCount()
+      .then(actualCount => {
+        setCount(actualCount);
+        animateCountUp(actualCount, setAnimatedCount);
+      })
+      .catch(console.error);
 
-  getCustomerCount()
-    .then(setCount)
-    .catch(console.error);
+    getOnboardedCustomerCount()
+      .then(actualCount => {
+        setOnboardedCount(actualCount);
+        animateCountUp(actualCount, setAnimatedOnboardedCount);
+      })
+      .catch(console.error);
+  }, []);
 
-  getOnboardedCustomerCount()
-    .then(setOnboardedCount)
-    .catch(console.error);
-
-  const stompClient = createStompClient();
-
-  stompClient.onConnect = () => {
-    console.log('Connected to WebSocket');
-
-    stompClient.subscribe('/topic/customerCount', (message) => {
-      console.log('Customer count update received:', message.body);
-
-      getCustomerCount()
-        .then(setCount)
-        .catch(console.error);
-
-    });
-
-    stompClient.subscribe('/topic/onboardedCustomerCount', (message) => {
-      console.log('Onboarded customer count update received:', message.body);
-
-
-      getOnboardedCustomerCount()
-        .then(setOnboardedCount)
-        .catch(console.error);
-    });
-
+  const animateCountUp = (target: number, setDisplay: (val: number) => void) => {
+    let current = 0;
+    const step = Math.max(Math.floor(target / 50), 1); 
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= target) {
+        setDisplay(target);
+        clearInterval(interval);
+      } else {
+        setDisplay(current);
+      }
+    }, 5);
   };
-
-  stompClient.activate();
-
-  return () => {
-    stompClient.deactivate();
-  };
-}, []);
-
 
 
   return (
@@ -119,7 +98,9 @@ useEffect(() => {
           className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-blue-200 transition-all h-36 sm:h-48"
         >
           <Users className="w-8 h-8 mb-2" />
-          <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">{count !== null ? count : "Loading..."}</div>
+          <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
+            {count !== null ? animatedCount : ''}
+          </div>
           <div className="text-sm sm:text-lg font-medium tracking-wide text-center">All Customers</div>
         </button>
   
@@ -128,7 +109,9 @@ useEffect(() => {
           className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-green-200 transition-all h-36 sm:h-48"
         >
           <UserCheck className="w-8 h-8 mb-2" />
-          <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">{onboardedCount !== null ? onboardedCount : "Loading..."}</div>
+          <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
+            {onboardedCount !== null ? animatedOnboardedCount : ''}
+          </div>
           <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Customers</div>
         </button>
       </div>

@@ -114,7 +114,8 @@ export default function GenerateDocuments() {
 
             <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
             <button
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                //className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                className="hidden md:block w-full sm:w-auto px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 onClick={() => handlePreview(doc)}
                 disabled={loadingPreviewDoc === doc} // Disable only the button being clicked
               >

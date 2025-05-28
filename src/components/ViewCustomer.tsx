@@ -153,7 +153,7 @@ export const ViewCustomer = () => {
 
 
 
-      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
+<h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Gov ID Name</label>
@@ -172,6 +172,7 @@ export const ViewCustomer = () => {
           <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{customer.emailAddress || ""}</p>
         </div>
       </div>
+
   
       {/* Update Customer Button - Placed before connections */}
       <div className="flex flex-col sm:flex-row justify-start mt-12 sm:space-x-16 space-y-4 sm:space-y-0">

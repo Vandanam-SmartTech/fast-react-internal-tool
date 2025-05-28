@@ -144,25 +144,25 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
   }
 };
 
-export const createStompClient = () => {
-  const stompClient = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8585/ws'), // Correct SockJS usage
-    debug: (str) => console.log(str),
-    reconnectDelay: 5000,
-    // connectHeaders: {
-    //   Authorization: `Bearer ${getAuthToken()}`
-    // },
-    onConnect: () => {
-      console.log('Connected to WebSocket');
-    },
-    onStompError: (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
-    },
-  });
+// export const createStompClient = () => {
+//   const stompClient = new Client({
+//     webSocketFactory: () => new SockJS('http://localhost:8585/ws'), // Correct SockJS usage
+//     debug: (str) => console.log(str),
+//     reconnectDelay: 5000,
+//     // connectHeaders: {
+//     //   Authorization: `Bearer ${getAuthToken()}`
+//     // },
+//     onConnect: () => {
+//       console.log('Connected to WebSocket');
+//     },
+//     onStompError: (frame) => {
+//       console.error('Broker reported error: ' + frame.headers['message']);
+//       console.error('Additional details: ' + frame.body);
+//     },
+//   });
 
-  return stompClient;
-};
+//   return stompClient;
+// };
 
 export const checkMobileNumberExists = async (mobileNumber: string): Promise<boolean> => {
   try {
@@ -206,6 +206,29 @@ export const checkEmailAddressExists = async (emailAddress: string): Promise<boo
     return data;
   } catch (error) {
     console.error('Error checking email address', error);
+    return false; // Default to false if error occurs
+  }
+};
+
+export const checkConsumerNumberExists = async (consumerId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`http://localhost:8585/api/connections/check-consumerId?consumerId=${consumerId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Server responded with error:', response.status);
+      return false;
+    }
+
+    const data: boolean = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error checking consumer number', error);
     return false; // Default to false if error occurs
   }
 };

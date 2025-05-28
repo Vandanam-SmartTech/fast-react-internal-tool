@@ -91,7 +91,8 @@ export const EditInstallation = () => {
               descriptionOfInstallation: selectedInstallation.descriptionOfInstallation || '',
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
-              spaceType: selectedInstallation.spaceType || 'Slab',
+              // spaceType: selectedInstallation.spaceType || 'Slab',
+              spaceType: Object.keys(installationSpaceTypeMapping).find(key => installationSpaceTypeMapping[key] === selectedInstallation.installationSpaceTypeId) || "Slab",
               installationSpaceTitle: selectedInstallation.installationSpaceTitle || '',
             });
           }
@@ -112,38 +113,48 @@ export const EditInstallation = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const confirmUpdate = window.confirm("Do you want to update the installation details?");
-    if (!confirmUpdate) {
-      // Rollback to original installation data
-      setFormData({
-        acWireLengthFt: installation.acWireLengthFt || 0,
-        dcWireLengthFt: installation.dcWireLengthFt || 0,
-        earthingWireLengthFt: installation.earthingWireLengthFt || 0,
-        numberOfGpPipes: installation.numberOfGpPipes || 0,
-        descriptionOfInstallation: installation.descriptionOfInstallation || '',
-        availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
-        availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
-        spaceType: installation.spaceType || 'Slab',
-        installationSpaceTitle: installation.installationSpaceTitle || '',
+  const confirmUpdate = window.confirm("Do you want to update the installation details?");
+  if (!confirmUpdate) {
+    // Rollback to original formData without touching ID
+    setFormData({
+      acWireLengthFt: installation.acWireLengthFt || 0,
+      dcWireLengthFt: installation.dcWireLengthFt || 0,
+      earthingWireLengthFt: installation.earthingWireLengthFt || 0,
+      numberOfGpPipes: installation.numberOfGpPipes || 0,
+      descriptionOfInstallation: installation.descriptionOfInstallation || '',
+      availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
+      availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
+      spaceType: Object.keys(installationSpaceTypeMapping).find(key => installationSpaceTypeMapping[key] === selectedInstallation.installationSpaceTypeId) || "Slab",
+      installationSpaceTitle: installation.installationSpaceTitle || '',
+    });
+    return;
+  }
+
+  try {
+    if (installationId) {
+      await updateInstallationSpaceDetails(installationId, {
+        ...formData,
+        installationSpaceTypeId: installationSpaceTypeMapping[formData.spaceType],
       });
-      return;
+      alert("Installation details updated successfully!");
+      navigate(`/view-installation/${installationId}`, {
+        state: {
+          consumerId,
+          connectionId,
+          installationId,
+          customerId,
+          selectedRepresentative,
+        },
+      });
     }
+  } catch (error) {
+    console.error("Update failed", error);
+    alert("Failed to update installation.");
+  }
+};
 
-    try {
-      if (installationId) {
-        const response = await updateInstallationSpaceDetails(installationId, formData);
-        alert("Installation details updated successfully!");
-        navigate(`/view-installation/${installationId}`, {
-          state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
-        });
-      }
-    } catch (error) {
-      console.error("Update failed", error);
-      alert("Failed to update installation.");
-    }
-  };
   
 
   return (
@@ -244,7 +255,7 @@ export const EditInstallation = () => {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Fields */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+          <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
           <select
             name="spaceType"
             value={formData.spaceType}
@@ -271,7 +282,7 @@ export const EditInstallation = () => {
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="number"
             name="availableEastWestLengthFt"
@@ -285,7 +296,7 @@ export const EditInstallation = () => {
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="number"
             name="availableSouthNorthLengthFt"

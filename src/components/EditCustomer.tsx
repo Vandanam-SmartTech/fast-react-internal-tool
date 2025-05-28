@@ -223,7 +223,7 @@ export const EditCustomer = () => {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+          <label className="block text-sm font-medium text-gray-700">Customer Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="govIdName"
@@ -237,7 +237,7 @@ export const EditCustomer = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Preferred Name (optional)</label>
+          <label className="block text-sm font-medium text-gray-700">Preferred Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="preferredName"
@@ -250,7 +250,7 @@ export const EditCustomer = () => {
         </div>
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number</label>
+  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number <span className="text-red-500">*</span></label>
   <input
     type="password"
     name="mobileNumber"
@@ -270,7 +270,7 @@ export const EditCustomer = () => {
 
 {/* Confirm Mobile Number */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number</label>
+  <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number <span className="text-red-500">*</span></label>
   <input
     type="tel"
     name="confirmMobileNumber"
@@ -291,7 +291,7 @@ export const EditCustomer = () => {
 
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Enter Email Address</label>
+        <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
         <input
           type="password"
           name="emailAddress"
@@ -306,7 +306,7 @@ export const EditCustomer = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
+        <label className="block text-sm font-medium text-gray-700">Confirm Email Address <span className="text-red-500">*</span></label>
         <input
           type="email"
           name="confirmEmailAddress"

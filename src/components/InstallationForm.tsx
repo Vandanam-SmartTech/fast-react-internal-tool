@@ -274,7 +274,7 @@ return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       {/* Input Fields */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+        <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
         <select
           name="installationSpaceTypeId"
           value={formData.installationSpaceTypeId}
@@ -302,7 +302,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
         <input
           type="number"
           name="availableEastWestLengthFt"
@@ -310,13 +310,14 @@ return (
           onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableEastWestLengthFt}
           onChange={handleChange}
+          required
           placeholder="e.g. 10"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
         <input
           type="number"
           name="availableSouthNorthLengthFt"
@@ -324,6 +325,7 @@ return (
           onWheel={(e) => e.currentTarget.blur()}
           value={formData.availableSouthNorthLengthFt}
           placeholder="e.g. 10"
+          required
           onChange={handleChange}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
