@@ -88,29 +88,29 @@ const RepresentativeDashboard = () => {
         {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
         </div>
     
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-8">
-          <button 
-            onClick={goToListOfConsumers}
-            className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-blue-200 transition-all h-36 sm:h-48"
-          >
-            <Users className="w-8 h-8 mb-2" />
-            <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-            {count !== null ? animatedCount : ''}
-          </div>
-            <div className="text-sm sm:text-lg font-medium tracking-wide text-center">All Customers</div>
-          </button>
-    
-          <button 
-            onClick={goToOnboardedCustomers}
-            className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-green-200 transition-all h-36 sm:h-48"
-          >
-            <UserCheck className="w-8 h-8 mb-2"/>
-            <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-            {onboardedCount !== null ? animatedOnboardedCount : ''}
-          </div>
-            <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Customers</div>
-          </button>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+  <button 
+    onClick={goToListOfConsumers}
+    className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-blue-300 transition-all h-36 sm:h-48"
+  >
+    <Users className="w-8 h-8 mb-2" />
+    <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
+      {count !== null ? animatedCount : ''}
+    </div>
+    <div className="text-sm sm:text-lg font-medium tracking-wide text-center">All Customers</div>
+  </button>
+
+  <button 
+    onClick={goToOnboardedCustomers}
+    className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-green-300 transition-all h-36 sm:h-48"
+  >
+    <UserCheck className="w-8 h-8 mb-2" />
+    <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
+      {onboardedCount !== null ? animatedOnboardedCount : ''}
+    </div>
+    <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Customers</div>
+  </button>
+</div>
       </div>
     );
     

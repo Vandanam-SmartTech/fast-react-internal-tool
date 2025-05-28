@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchConsumers, fetchConsumerNumber,searchCustomers } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { Eye } from "lucide-react";
+import { Eye, Mail, Phone, Lightbulb } from "lucide-react";
 import SearchBar from "../components/SearchBar"; // Import SearchBar component
 
 interface Consumer {
@@ -230,21 +230,21 @@ const ListOfConsumers: React.FC = () => {
                           </button>
                         </div>
   
-                        <div className="space-y-2 mt-1">
-                          <p className="break-words text-sm">
-                            <span className="font-medium">Consumer Name:</span>{" "}
-                            {consumer.govIdName}
-                          </p>
-                          <p className="truncate text-sm">
-                            <span className="font-medium">Email Address:</span>{" "}
-                            {consumer.emailAddress}
-                          </p>
-                          <p className="truncate text-sm">
-                            <span className="font-medium">Mobile Number:</span>{" "}
-                            {consumer.mobileNumber}
-                          </p>
-                          
-                        </div>
+                        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {consumer.govIdName}
+          </h2>
+
+          <div className="flex items-center space-x-2 text-gray-700 text-sm">
+            <Mail className="w-4 h-4 text-gray-500" />
+            <span className="break-all">{consumer.emailAddress}</span>
+          </div>
+
+          <div className="flex items-center space-x-2 text-gray-700 text-sm">
+            <Phone className="w-4 h-4 text-gray-500" />
+            <span>{consumer.mobileNumber}</span>
+          </div>
+        </div>
 
                         {/* Connection IDs */}
                         {consumerNumbers[consumer.id]!== undefined && consumerNumbers[consumer.id].length > 0 && (
@@ -315,52 +315,75 @@ const ListOfConsumers: React.FC = () => {
                               </button>
                             </div>
   
-                            <div className="space-y-2 mt-1">
-                              <p className="break-words text-sm">
-                                <span className="font-medium">Consumer Name:</span>{" "}
-                                {consumer.govIdName}
-                              </p>
-                              <p className="truncate text-sm">
-                                <span className="font-medium">Email Address:</span>{" "}
-                                {consumer.emailAddress}
-                              </p>
-                              <p className="truncate text-sm">
-                                <span className="font-medium">Mobile Number:</span>{" "}
-                                {consumer.mobileNumber}
-                              </p>
+                            <div className="space-y-3">
+                                  <h2 className="text-lg font-semibold text-gray-800">
+                                    {consumer.govIdName}
+                                  </h2>
+
+                                <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                                  <Mail className="w-4 h-4 text-gray-500" />
+                                    <span className="break-all">{consumer.emailAddress}</span>
                             </div>
+
+                            <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                                  <Phone className="w-4 h-4 text-gray-500" />
+                                   <span>{consumer.mobileNumber}</span>
+                            </div>
+                      </div>
   
                             {/* Connection IDs */}
-                            {consumerNumbers[consumer.id]!== undefined && consumerNumbers[consumer.id].length > 0 && (
-                              <div className="mt-4 space-y-2">
-                                {consumerNumbers[consumer.id].map((entry, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
-                                  >
-                                    <span className="text-sm break-words">
-                                      <span className="font-medium">
-                                        Connection {index + 1}:
-                                      </span>{" "}
-                                      {entry.consumerId}
-                                    </span>
-                                    <button
-                                      onClick={() =>
-                                        navigate(`/view-connection/${entry.connectionId}`, {
-                                          state: {
-                                            customerId: consumer.id,
-                                            connectionId: entry.connectionId,
-                                            consumerId: entry.consumerId,
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+{consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
+  <div className="mt-4 space-y-2">
+    {consumerNumbers[consumer.id].map((entry, index) => (
+      <div
+        key={index}
+        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+      >
+        <span className="text-sm break-words">
+          <span className="font-medium">
+            Connection {index + 1}:
+          </span>{" "}
+          {entry.consumerId}
+        </span>
+
+        {/* Icons with minimal spacing */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() =>
+              navigate(`/view-connection/${entry.connectionId}`, {
+                state: {
+                  customerId: consumer.id,
+                  connectionId: entry.connectionId,
+                  consumerId: entry.consumerId,
+                },
+              })
+            }
+            
+          >
+            <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+          </button>
+
+
+          <button
+            onClick={() =>
+              navigate(`/SystemSpecifications`, {
+                state: {
+                  connectionId: entry.connectionId,
+                  consumerId: entry.consumerId,
+                  customerId: consumer.id,
+                },
+              })
+            }
+            title="Get Recommendation"
+          >
+            <Lightbulb className="w-5 h-5 text-green-500 hover:text-green-700" />
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
                           </div>
                         ))
                       )}

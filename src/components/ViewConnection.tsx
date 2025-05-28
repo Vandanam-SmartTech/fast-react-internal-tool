@@ -406,14 +406,6 @@ const fetchAndSetUploadedFiles = async () => {
 
 </div>
 
-    {/* <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 overflow-x-auto">
-        <Stepper activeStep={1} styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }} className="min-w-max sm:w-full">
-          <Step label="Customer Details" />
-          <Step label="Connection Details" />
-          <Step label="Installation Space Details" />
-          <Step label="System Specifications" />
-        </Stepper>
-      </div> */}
 
 <div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 w-full max-w-4xl mx-auto overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -476,159 +468,112 @@ const fetchAndSetUploadedFiles = async () => {
   </div>
 </div>
   
-      <div className="col-span-1 md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Does the customer currently have an active grid connection with the local electricity provider (e.g., MSEB or BESCOM)?
-        </label>
-        <div className="mt-2 flex items-center space-x-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="isMsebConnection"
-              value="Yes"
-              checked={connection.isMsebConnection === true}
-              readOnly
-              className="text-blue-600 border-gray-300"
-            />
-            <span className="text-sm text-gray-700">Yes</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="isMsebConnection"
-              value="No"
-              checked={connection.isMsebConnection === false}
-              readOnly
-              className="text-blue-600 border-gray-300"
-            />
-            <span className="text-sm text-gray-700">No</span>
-          </label>
-        </div>
-      </div>
-  
-      {connection.isMsebConnection && (
-        <div className="col-span-1">
-          <label className="block text-sm font-medium text-gray-700">Consumer Number</label>
-          <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
-            {connection.consumerId || ""}
-          </p>
-        </div>
-      )}
-  
+
+<div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-2">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-24">
       <div>
-        <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.gstIn || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
+          <p className="mt-1 text-base text-gray-800">Yes</p>
       </div>
+      
       <div>
-        <label className="block text-sm font-medium text-gray-700">Billed To</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.billedTo || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.consumerId || "......"}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">District</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.districtName || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Taluka</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.talukaName || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Village</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.villageName || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Pincode</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.postalCode || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.addressLine1 || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.addressLine2 || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Address Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.addressTypeName || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Address Line 1</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.addressLine1 || "....."}</p>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Connection Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.connectionTypeName || ""}</p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.monthlyAvgConsumptionUnits || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Address Line 2</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.addressLine2 || "....."}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Phase Type</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
-            {connection.phaseTypeName || ""}
-        </p>
+          <h3 className="text-sm font-medium text-gray-500">Village Name</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.villageName || "....."}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Latitude</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.latitude || ""}</p>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Longitude</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.longitude || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">Taluka Name</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.talukaName || "....."}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Section ID</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.sectionId || ""}</p>
+          <h3 className="text-sm font-medium text-gray-500">District Name</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.districtName || "....."}</p>
       </div>
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">
-    Does the connection require a name correction?
-  </label>
-  <div className="mt-2 flex items-center space-x-4">
-    <label className="flex items-center space-x-2">
-      <input
-        type="radio"
-        name="nameCorrection"
-        value="Yes"
-        checked={connection.isNameCorrectionRequired === true}
-        readOnly
-        className="focus:ring-blue-500 text-blue-600 border-gray-300"
-      />
-      <span className="text-sm text-gray-700">Yes</span>
-    </label>
-    <label className="flex items-center space-x-2">
-      <input
-        type="radio"
-        name="nameCorrection"
-        value="No"
-        checked={connection.isNameCorrectionRequired === false}
-        readOnly
-        className="focus:ring-blue-500 text-blue-600 border-gray-300"
-      />
-      <span className="text-sm text-gray-700">No</span>
-    </label>
+          <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Monthly Average Consumption Units</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Latitude</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.latitude || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">longitude</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.longitude || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
+      </div>
+
+      <div>
+          <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
+          <p className="mt-1 text-base text-gray-800">{connection.discomId || "....."}</p>
+      </div>
+
+      {connection.isNameCorrectionRequired && (
+  <div>
+    <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
+    <p className="mt-1 text-base text-gray-800">Spell Correction</p>
   </div>
+)}
 
-  {/* Show correction type only if isNameCorrectionRequired is true */}
-  {connection.isNameCorrectionRequired && (
-    <div className="mt-4">
-      <label className="block text-sm font-medium text-gray-700">Correction Type</label>
-      <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">
-      {connection.correctionName || ""}
-      </p>
+
+
     </div>
-  )}
+  </div>
 </div>
 
-<div>
-        <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
-        <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10 min-h-[2.5rem]">{connection.discomId || ""}</p>
-      </div>
 
   
       {/* Edit Connection Button (Before Installations) */}

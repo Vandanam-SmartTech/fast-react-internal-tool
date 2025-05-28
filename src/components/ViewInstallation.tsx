@@ -202,7 +202,7 @@ export const ViewInstallation = () => {
 
 
       <h2 className="text-2xl font-semibold text-gray-700 mb-8">Installation Space Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">
@@ -242,7 +242,76 @@ export const ViewInstallation = () => {
         <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
         <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{installation.descriptionOfInstallation || ""}</p>
       </div>
+      </div> */}
+
+
+<div className="flex items-center min-h-[20vh] px-2">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-4xl">
+    {/* Row 1 */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {spaceTypes.find(type => type.id === installation?.installationSpaceTypeId)?.nameEnglish || "....."}
+        </p>
       </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.installationSpaceTitle || "....."}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">East-West-Length (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.availableEastWestLengthFt || "....."}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">South-North-Length (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.availableSouthNorthLengthFt || "....."}
+        </p>
+      </div>
+    </div>
+
+    {/* Row 2 */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.acWireLengthFt || "....."}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">DC Wire Length (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.dcWireLengthFt || "....."}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Earthing Wire Length (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.earthingWireLengthFt || "....."}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Number of GP Pipes</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.numberOfGpPipes || "....."}
+        </p>
+      </div>
+      <div className="md:col-span-2">
+        <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.descriptionOfInstallation || "....."}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
       
 
       <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-6 space-y-4 sm:space-y-0 sm:space-x-6">

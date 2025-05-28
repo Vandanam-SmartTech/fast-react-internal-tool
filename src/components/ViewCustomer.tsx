@@ -152,30 +152,32 @@ export const ViewCustomer = () => {
 </div>
 
 
-
 <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Gov ID Name</label>
-          <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{customer.govIdName || ""}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
-          <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{customer.mobileNumber || ""}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Preferred Name</label>
-          <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{customer.preferredName || ""}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email Address</label>
-          <p className="mt-1 block w-full p-2 border rounded-md shadow-sm h-10">{customer.emailAddress || ""}</p>
-        </div>
+<div className="flex items-start px-2 mt-4">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-20">
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Gov ID Name</h3>
+        <p className="mt-1 text-base text-gray-800">{customer.govIdName || "....."}</p>
       </div>
-
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
+        <p className="mt-1 text-base text-gray-800">{customer.mobileNumber || "....."}</p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
+        <p className="mt-1 text-base text-gray-800">{customer.preferredName || "....."}</p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
+        <p className="mt-1 text-base text-gray-800">{customer.emailAddress || "....."}</p>
+      </div>
+    </div>
+  </div>
+</div>
   
       {/* Update Customer Button - Placed before connections */}
-      <div className="flex flex-col sm:flex-row justify-start mt-12 sm:space-x-16 space-y-4 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row justify-start mt-8 sm:gap-16 gap-4">
   <button
     onClick={() =>
       navigate(`/edit-customer/${customerId}`, {
