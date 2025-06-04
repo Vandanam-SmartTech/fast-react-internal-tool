@@ -1036,7 +1036,8 @@ export const searchCustomers = async (query: string): Promise<any> => {
         govIdName: item?.govIdName,
         emailAddress: item?.emailAddress,
         mobileNumber: item?.mobileNumber,
-        consumerId: item?.connectionId, // Added consumerId property
+        consumerId: item?.consumerId, // Added consumerId property
+        connectionType:item?.connectionType,
       })
     );
     } else {
