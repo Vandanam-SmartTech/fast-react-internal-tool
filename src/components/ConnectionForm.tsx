@@ -6,6 +6,9 @@ import { getDistrictNameByCode, getTalukaNameByCode, checkConsumerNumberExists, 
 import { Stepper, Step } from "react-form-stepper";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -91,6 +94,12 @@ export const ConnectionForm = () => {
 
   const [showConsumerNumber, setShowConsumerNumber] = useState(false);
   const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
+
+  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState('');
+  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+  const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
 
 
 
@@ -367,18 +376,29 @@ useEffect(() => {
     console.log("Received CustomerId:", customerId);
   
     if (!customerId) {
-      alert("Customer ID is missing!");
+      toast.error("Customer ID is missing! ",{
+        autoClose:1000,
+        hideProgressBar:true,
+      });
       return;
     }
 
 
     if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
-      alert("Please select a Correction Type.");
+      toast.error("Please select a correctiontype. ",{
+        autoClose:1000,
+        hideProgressBar:true,
+      });
       return;
     }
 
     if (formData.consumerId !== confirmConsumerNumber) {
-      alert("Consumer number and Confirm Consumer number do not match.");
+      // alert("Consumer number and Confirm Consumer number do not match.");
+      // return;
+      toast.error("Consumer number and Confirm Consumer number do not match.",{
+        autoClose:1000,
+        hideProgressBar:true,
+      });
       return;
     }
   
@@ -419,22 +439,47 @@ useEffect(() => {
     try {
       console.log("Saving new connection...");
       console.log("Hello");
-      const connectionId = await saveConnection(connectionData);
-      if (connectionId) {
-        console.log("New connection saved with ID:", connectionId);
-        navigate(`/view-connection/${connectionId}`, {
+      const result = await saveConnection(connectionData);
+      if (result.id) {
+        // console.log("New connection saved with ID:", connectionId);
+        // navigate(`/view-connection/${connectionId}`, {
+        //   state: {
+        //     consumerId: formData.consumerId,
+        //     customerId,
+        //     connectionId: connectionId,
+        //     selectedRepresentative: selectedRepresentative
+        //   },
+        // });
+        setCreatedConnectionId(result.id);
+        setNavigateAfterClose(true);
+        
+        toast.success(result.message || "Connection data saved successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      navigate(`/view-connection/${result.id}`, {
           state: {
-            consumerId: formData.consumerId,
-            customerId,
-            connectionId: connectionId,
-            selectedRepresentative: selectedRepresentative
-          },
+                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative: selectedRepresentative
+      },
+    });
+    setNavigateAfterClose(false);
+    setCreatedConnectionId(null);
+
+      }
+      else{
+        toast.error(result.message || "Failed to save connection data.",{
+          autoClose:1000,
+          hideProgressBar:true,
         });
       }
     } catch (error) {
       console.error("Error in saving connection:", error);
-      alert("Failed to save connection. Please try again.");
-    }
+      toast.error("Failed to save connection. Please try again.",{
+      autoClose:1000,
+      hideProgressBar: true,
+    });
+  }
 
   /////////////
     localStorage.removeItem('myFormData');
@@ -442,6 +487,8 @@ useEffect(() => {
   ////////////
   };
   
+
+
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -643,16 +690,22 @@ useEffect(() => {
 </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
-          <input
-            type="text"
-            name="gstIn"
-            value={formData.gstIn}
-            onChange={handleChange}
-            placeholder="e.g. 22AAAAA0000A1Z6"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
+  <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
+  <input
+    type="text"
+    name="gstIn"
+    value={formData.gstIn}
+    onChange={(e) =>
+      handleChange({ target: { name: "gstIn", value: e.target.value.toUpperCase() } })
+    }
+    pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+    title="GSTIN must be in format: 22AAAAA0000A1Z6"
+    placeholder="e.g. 22AAAAA0000A1Z6"
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+    maxLength={15}
+  />
+</div>
+
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Billed To</label>
@@ -939,6 +992,7 @@ useEffect(() => {
 
         
       </form>
+
     </div>
   );
   

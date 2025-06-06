@@ -6,6 +6,11 @@ import { fetchClaims, fetchRepresentatives, checkMobileNumberExists, checkEmailA
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+
+
 import {
   UserCircleIcon,
   BoltIcon,
@@ -32,6 +37,17 @@ export const CustomerForm = () => {
   const handleToggleEmail = () => setShowEmail(!showEmail);
 
   const [activeTab, setActiveTab] = useState("Customer Details");
+
+  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState('');
+  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+  const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
+
+
+// const handleMessageBoxClose = () => {
+//   setMessageBoxOpen(false);
+// };
 
   const tabs = [
     "Customer Details",
@@ -179,49 +195,93 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   };
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
-    if (formData.mobileNumber !== confirmMobileNumber) {
-      alert("Mobile number and Confirm Mobile number do not match.");
-      return;
-    }
-  
-    if (formData.emailAddress !== confirmEmailAddress) {
-      alert("Email and Confirm Email do not match.");
-      return;
-    }
-  
-    try {
-      const referredByRepresentativeId = selectedRepresentative 
-        ? selectedRepresentative.userId 
-        : getUserIdFromToken(); 
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-      const customerData = {
-        ...formData,
-        referredByRepresentativeId,
-      };
-  
-      // Save customer
-      const customerId = await saveCustomer(customerData);
-  
-      if (customerId) {
-        navigate(`/view-customer/${customerId}`, { state: { customerId, selectedRepresentative:selectedRepresentative || ""} });
-      }
-    } catch (error) {
-      console.error("Error in saving customer:", error);
-      alert("Failed to save customer. Please try again.");
-    }
-  
-    localStorage.removeItem("myFormData");
-    localStorage.removeItem("confirmMobileNumber");
-    localStorage.removeItem("confirmEmailAddress");
-    //localStorage.removeItem("selectedRepresentative");
+  if (formData.mobileNumber !== confirmMobileNumber) {
+    toast.error("Mobile number and Confirm Mobile number do not match.",{
+      autoClose:1000,
+      hideProgressBar:true,
+    });
+    return;
+  }
 
-  };
-  
-  
-  
+  if (formData.emailAddress !== confirmEmailAddress) {
+    toast.error("Email and Confirm Email do not match.",{
+      autoClose: 1000,
+      hideProgressBar:true,
+    });
+    return;
+  }
+
+  try {
+    const referredByRepresentativeId = selectedRepresentative 
+      ? selectedRepresentative.userId 
+      : getUserIdFromToken();
+
+    const customerData = {
+      ...formData,
+      referredByRepresentativeId,
+    };
+
+    const result = await saveCustomer(customerData);
+
+    if (result.id) {
+      setCreatedCustomerId(result.id); 
+      setNavigateAfterClose(true);
+
+      // Show success toast (for 1 second only)
+      toast.success(result.message || "Customer data saved successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      // Navigate immediately
+      navigate(`/view-customer/${result.id}`, {
+        state: {
+          customerId: result.id,
+          selectedRepresentative: selectedRepresentative || "",
+        },
+      });
+
+      setNavigateAfterClose(false);
+      setCreatedCustomerId(null);
+      
+    } else {
+      toast.error(result.message || "Failed to save customer data.",{
+        autoClose: 1000,
+        hideProgressBar:true,
+      });
+    }
+
+  } catch (error) {
+    console.error("Error in saving customer:", error);
+    toast.error("Failed to save customer. Please try again.",{
+      autoClose:1000,
+      hideProgressBar: true,
+    });
+  }
+
+  localStorage.removeItem("myFormData");
+  localStorage.removeItem("confirmMobileNumber");
+  localStorage.removeItem("confirmEmailAddress");
+};
+
+
+// const handleMessageBoxClose = () => {
+//   setMessageBoxOpen(false);
+
+//   if (messageBoxSeverity === 'success' && navigateAfterClose && createdCustomerId) {
+//     navigate(`/view-customer/${createdCustomerId}`, {
+//       state: {
+//         customerId: createdCustomerId,
+//         selectedRepresentative: selectedRepresentative || "",
+//       },
+//     });
+//     setNavigateAfterClose(false); // reset
+//     setCreatedCustomerId(null);   // reset
+//   }
+// };
 
   return (
   <div className="max-w-4xl mx-auto p-4 sm:p-6">
@@ -449,7 +509,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       value={formData.emailAddress}
       onChange={handleChange}
       placeholder="johndoe@example.com"
-      maxLength={35}
+      maxLength={50}
       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
       title="Enter a valid email address"
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -476,7 +536,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           value={confirmEmailAddress}
           onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
-          maxLength={35}
+          maxLength={50}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
@@ -498,6 +558,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </button>
       </div>
     </form>
+
+
   </div>
 );
 

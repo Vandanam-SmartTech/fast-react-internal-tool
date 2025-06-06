@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, fetchBrandCapacityDetails } from "../services/api";
+import { postMaterialData, fetchBrandCapacityDetails, getMaterialsByConnectionId } from "../services/api";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+
+export interface Consumer{
+  id:number,
+  customerId:number,
+  govIdName:string,
+  consumerId:number,
+  connectionType:string,
+  mobileNumber:string,
+  emailAddress:string,
+}
 
 export default function MaterialForm() {
   const [formData, setFormData] = useState({
@@ -14,7 +25,7 @@ export default function MaterialForm() {
     warrantyDetails: "",
     inverterModuleNo: "",
     inverterMake: "",
-    rating: "",
+    rating: "IP65",
     chargeControllerType: "",
     inverterCapacity: null,
     earthingRod: null,
@@ -29,6 +40,13 @@ export default function MaterialForm() {
   const navigate = useNavigate();
   const connectionId = location.state?.connectionId;
   const [scanningIndex, setScanningIndex] = useState(false);
+  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState("");
+  const [messageBoxSeverity, setMessageBoxSeverity] = useState<"success" | "error">("success");
+  const consumer = location.state?.consumer as Consumer;
+  const [existingMaterialData, setExistingMaterialData] = useState<any | null>(null);
+
+
 
   // const handleScan = (scannedValue: string) => {
   //   setFormData((prev) => ({
@@ -92,12 +110,30 @@ export default function MaterialForm() {
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+useEffect(() => {
+  const fetchMaterialData = async () => {
+    if (!connectionId) return;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const materials = await getMaterialsByConnectionId(connectionId);
+    if (materials.length > 0) {
+      setFormData({ ...materials[0] }); // populate form with first entry
+      setExistingMaterialData(materials[0]); // track edit mode
+    }
+  };
+
+  fetchMaterialData();
+}, [connectionId]);
+
+
+
+
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!connectionId) {
-    alert("Connection ID is missing from URL!");
+    setMessageBoxContent("Connection ID is missing from URL!");
+    setMessageBoxSeverity("error");
+    setMessageBoxOpen(true);
     return;
   }
 
@@ -116,21 +152,61 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
         : formData.wattagePerModule,
   };
 
-  try {
+try {
     const response = await postMaterialData(connectionId, dataToSubmit);
-    console.log("Success:", response.data);
-    alert("Data submitted successfully!");
-    navigate("/OnboardedCustomers");
+    setMessageBoxContent(
+      existingMaterialData ? "Material data updated successfully!" : "Material data saved successfully!"
+    );
+    setMessageBoxSeverity("success");
+    setMessageBoxOpen(true);
   } catch (error) {
-    console.error("Submission failed:", error);
-    alert("Failed to submit data. Please check inputs or try again.");
+    setMessageBoxContent("Failed to submit data.");
+    setMessageBoxSeverity("error");
+    setMessageBoxOpen(true);
   }
 };
+
+const handleDialogClose = () => {
+  setMessageBoxOpen(false);
+
+  if (messageBoxSeverity === "success") {
+    navigate("/OnboardedCustomers");
+  }
+};
+
+
+
 
 
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="w-full lg:w-[85%]">
+
+        {consumer && (
+  <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-4 w-full max-w-3xl">
+    {/*<h3 className="text-base font-semibold text-gray-800 mb-3">Consumer Details</h3>*/}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
+      <div>
+        <span className="font-medium text-gray-700">Consumer Name:</span>
+        <span className="ml-1 text-gray-800">{consumer.govIdName || "—"}</span>
+      </div>
+      <div>
+        <span className="font-medium text-gray-700">Consumer Number:</span>
+        <span className="ml-1 text-gray-800">{consumer.consumerId || "—"}</span>
+      </div>
+      <div>
+        <span className="font-medium text-gray-700">Mobile Number:</span>
+        <span className="ml-1 text-gray-800">{consumer.mobileNumber || "—"}</span>
+      </div>
+      <div>
+        <span className="font-medium text-gray-700">Email Address:</span>
+        <span className="ml-1 text-gray-800">{consumer.emailAddress || "—"}</span>
+      </div>
+    </div>
+  </div>
+)}
+
+
         <h2 className="text-2xl font-semibold mb-6">Material Details</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -140,28 +216,28 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               <div>
                 <label className="block text-sm font-medium text-gray-700">System KW</label>
                 <select
-  name="systemKw"
-  value={formData.systemKw}
-  onChange={handleChange}
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
->
-  <option value="">Select System kW</option>
-  {[...Array(24)].map((_, i) => {
-    const value = ((i + 1) * 1.1).toFixed(1); // e.g., 2.2, 3.3...
-    return <option key={value} value={value}>{value}</option>;
-  })}
-  <option value="Other">Other</option>
-</select>
+                    name="systemKw"
+                    value={formData.systemKw}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                <option value="">Select System kW</option>
+                   {[...Array(24)].map((_, i) => {
+                      const value = ((i + 1) * 1.1).toFixed(1); // e.g., 2.2, 3.3...
+                        return <option key={value} value={value}>{value}</option>;
+                    })}
+                      <option value="Other">Other</option>
+                  </select>
 
-{formData.systemKw === "Other" && (
-  <input
-    type="number"
-    step="0.1"
-    name="customSystemKw"
-    placeholder="Enter custom kW"
-    value={formData.customSystemKw || ""}
-    onChange={handleChange}
-    className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                {formData.systemKw === "Other" && (
+                           <input
+                              type="number"
+                              step="0.1"
+                              name="customSystemKw"
+                              placeholder="Enter custom kW"
+                              value={formData.customSystemKw || ""}
+                              onChange={handleChange}
+                              className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
   />
 )}
 
@@ -490,15 +566,36 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
             </div>
 
             <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
-              <button
-                type="submit"
-                className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                Save Material Data
-              </button>
+<button
+  type="submit"
+  className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+>
+  {existingMaterialData ? "Update Material Data" : "Save Material Data"}
+</button>
+
             </div>
           </fieldset>
         </form>
+
+<Dialog open={messageBoxOpen} onClose={handleDialogClose}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+  maxWidth="xs"
+  fullWidth>
+  <DialogTitle id="alert-dialog-title">
+    {messageBoxSeverity === "success" ? "Success" : "Error"}
+  </DialogTitle>
+  <DialogContent dividers>
+    <Alert severity={messageBoxSeverity}>{messageBoxContent}</Alert>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleDialogClose} autoFocus>
+      OK
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ import { EditCustomer } from './components/EditCustomer';
 import { EditConnection } from './components/EditConnection';
 import { EditInstallation } from './components/EditInstallation';
 import MaterialDetails from './components/MaterialDetails';
-
+import { ToastContainer } from 'react-toastify';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -36,6 +36,9 @@ const AppContent: React.FC = () => {
       {/* Conditionally Render Navbar */}
       {/* {showNavbar && <Navbar />} */}
       {showSidebar && <Sidebar />}
+
+      <ToastContainer position="top-right" autoClose={1000} />
+
 
       <div className="py-12">
         <Routes>

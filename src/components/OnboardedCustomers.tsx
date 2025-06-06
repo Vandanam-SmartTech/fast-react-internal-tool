@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchOnboardedConsumers, searchCustomers } from "../services/api";
+import { fetchOnboardedConsumers, searchCustomers , getMaterialsByConnectionId} from "../services/api";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/SearchBar"; 
 
@@ -20,6 +20,7 @@ const OnboardedCustomers: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
 
   const handleViewConsumer = (consumer: Consumer) => {
     navigate(`/view-connection/${consumer.id}`, {
@@ -35,22 +36,52 @@ const OnboardedCustomers: React.FC = () => {
     navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
   };
 
-  const handleMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form/${consumer.id}`, { state: { consumer, connectionId: consumer.id } });
-  };
-
+  // const handleMaterialDetails = (consumer: Consumer) => {
+  //   navigate(`/material-form/${consumer.id}`, { state: { consumer,connectionId:consumer.id  } });
+  // };
+  
+  
   const loadOnboardedConsumers = async (page: number) => {
     try {
       setLoading(true);
       const data = await fetchOnboardedConsumers(page);
       setConsumers(data.content);
       setTotalPages(data.totalPages);
+
+            // Fetch materials for all consumers in parallel
+      const materialChecks = await Promise.all(
+        data.content.map((consumer: Consumer) =>
+          getMaterialsByConnectionId(consumer.id).then((materials) => ({
+            id: consumer.id,
+            exists: materials.length > 0,
+          }))
+        )
+      );
+
+      const map: Record<number, boolean> = {};
+      materialChecks.forEach(({ id, exists }) => {
+        map[id] = exists;
+      });
+      setMaterialsMap(map);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
       setLoading(false);
     }
   };
+
+    const handleMaterialDetails = (consumer: Consumer) => {
+    navigate(`/material-form/${consumer.id}`, {
+      state: { consumer, connectionId: consumer.id },
+    });
+  };
+
+  const handleViewMaterialDetails = (consumer: Consumer) => {
+    navigate(`/material-form/${consumer.id}`, {
+      state: { consumer, connectionId: consumer.id },
+    });
+  };
+
 
   useEffect(() => {
     loadOnboardedConsumers(currentPage);
@@ -111,10 +142,9 @@ const OnboardedCustomers: React.FC = () => {
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="w-full lg:w-[85%]">
-        <h1 className="text-2xl font-semibold mb-6">Onboarded Customers</h1>
+      <h1 className="text-2xl font-semibold mb-6">Onboarded Customers</h1>
 
-        {/* Search Bar */}
-        <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
+      <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
 
         {loading ? (
           <div className="text-center py-10">
@@ -150,12 +180,18 @@ const OnboardedCustomers: React.FC = () => {
                           Generate Documents
                         </button>
                       </div>
-                      <button
-                        onClick={() => handleMaterialDetails(consumer)}
-                        className="px-2 h-9 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none w-full"
+<button
+                        onClick={() =>
+                          materialsMap[consumer.id]
+                            ? handleViewMaterialDetails(consumer)
+                            : handleMaterialDetails(consumer)
+                        }
+                        className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full 
+                          ${materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"} 
+                          focus:outline-none`}
                       >
-                        Add Material Details
-                      </button>
+                        {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
+                      </button>
                     </div>
                   </div>
                 ))

@@ -154,27 +154,28 @@ export const ViewCustomer = () => {
 
 <h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
 <div className="flex items-start px-2 mt-4">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-20">
-      <div>
+  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
+      <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Gov ID Name</h3>
-        <p className="mt-1 text-base text-gray-800">{customer.govIdName || "....."}</p>
+        <p className="mt-1 text-base text-gray-800 break-words">{customer.govIdName || "....."}</p>
       </div>
-      <div>
+      <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-        <p className="mt-1 text-base text-gray-800">{customer.mobileNumber || "....."}</p>
+        <p className="mt-1 text-base text-gray-800 break-words">{customer.mobileNumber || "....."}</p>
       </div>
-      <div>
+      <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
-        <p className="mt-1 text-base text-gray-800">{customer.preferredName || "....."}</p>
+        <p className="mt-1 text-base text-gray-800 break-words">{customer.preferredName || "....."}</p>
       </div>
-      <div>
+      <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
-        <p className="mt-1 text-base text-gray-800">{customer.emailAddress || "....."}</p>
+        <p className="mt-1 text-base text-gray-800 break-words">{customer.emailAddress || "....."}</p>
       </div>
     </div>
   </div>
 </div>
+
   
       {/* Update Customer Button - Placed before connections */}
       <div className="flex flex-col sm:flex-row justify-start mt-8 sm:gap-16 gap-4">

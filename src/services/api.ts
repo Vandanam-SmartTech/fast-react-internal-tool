@@ -90,7 +90,33 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
       throw new Error("Connection ID is missing");
     }
 
-    const apiUrl = `http://localhost:8080/api/v3/quotation/generating-pdf/${connectionId}`;
+    const apiUrl = `http://localhost:8080/api/quotation/generating-pdf/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to generate PDF");
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to generate PDF from server");
+  }
+};
+
+export const previewQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  try {
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://localhost:8080/api/preview-quotation/${connectionId}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -112,10 +138,8 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
 
 
 
-export const saveCustomer = async (data: Record<string, any>): Promise<number | null> => {
+export const saveCustomer = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
-
-
     const response = await fetch('http://localhost:8585/api/customers', {
       method: 'POST',
       headers: {
@@ -125,24 +149,20 @@ export const saveCustomer = async (data: Record<string, any>): Promise<number | 
       body: JSON.stringify(data),
     });
 
-    // Parse the response JSON
     const responseData = await response.json();
-    console.log('API response data:', responseData); // Debug: check the full response
+    console.log('API response data:', responseData);
 
-    // Check if the response is OK and the id exists
     if (response.ok && responseData.id) {
-      alert('Customer data saved successfully!');
-      return responseData.id; // Return the id from CustomerDTO
+      return { id: responseData.id, message: 'Customer data saved successfully!' };
     } else {
-      alert(responseData.message || 'Failed to save customer data.');
-      return null;
+      return { id: null, message: responseData.message || 'Failed to save customer data.' };
     }
   } catch (error: any) {
-    alert('An error occurred while saving customer data.');
     console.error('Error details:', error);
-    return null;
+    return { id: null, message: 'An error occurred while saving customer data.' };
   }
 };
+
 
 // export const createStompClient = () => {
 //   const stompClient = new Client({
@@ -233,7 +253,7 @@ export const checkConsumerNumberExists = async (consumerId: string): Promise<boo
   }
 };
 
-export const saveConnection = async (data: Record<string, any>): Promise<number | null> => {
+export const saveConnection = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
     const response = await fetch('http://localhost:8585/api/connections', {
       method: 'POST',
@@ -250,20 +270,24 @@ export const saveConnection = async (data: Record<string, any>): Promise<number 
 
     // Check if the response is OK and the id exists
     if (response.ok && responseData.id) {
-      alert('Connection data saved successfully!');
-      return responseData.id; // Return the id from CustomerDTO
+      return { id: responseData.id, message: 'Connection data saved successfully' };
+      // alert('Connection data saved successfully!');
+      // return responseData.id;
+
     } else {
-      alert(responseData.message || 'Failed to save connection data.');
-      return null;
+      // alert(responseData.message || 'Failed to save connection data.');
+      // return null;
+      return { id: null, message: responseData.message || 'Failed to save connection data. '};
     }
   } catch (error: any) {
-    alert('An error occurred while saving connection data.');
+    //alert('An error occurred while saving connection data.');
     console.error('Error details:', error);
-    return null;
+    // return null;
+    return { id: null, message: 'An error occurred while saving connection data' };
   }
 };
 
-export const saveInstallation = async (data: Record<string, any>): Promise<number | null> => {
+export const saveInstallation = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
     const response = await fetch('http://localhost:8585/api/installations', {
       method: 'POST',
@@ -274,22 +298,25 @@ export const saveInstallation = async (data: Record<string, any>): Promise<numbe
       body: JSON.stringify(data),
     });
 
-    // Parse the response JSON
+    
     const responseData = await response.json();
-    console.log('API response data:', responseData); // Debug: check the full response
+    console.log('API response data:', responseData); 
 
-    // Check if the response is OK and the id exists
+    
     if (response.ok && responseData.id) {
-      alert('Installation data saved successfully!');
-      return responseData.id; // Return the id from CustomerDTO
+      // alert('Installation data saved successfully!');
+      // return responseData.id; 
+      return { id: responseData.id, message: 'Installation data saved successfully! '};
     } else {
-      alert(responseData.message || 'Failed to save installation data.');
-      return null;
+      // alert(responseData.message || 'Failed to save installation data.');
+      // return null;
+      return { id: null, message: responseData.message || 'Failed to save installation data. '};
     }
   } catch (error: any) {
-    alert('An error occurred while saving installation data.');
+    // alert('An error occurred while saving installation data.');
     console.error('Error details:', error);
-    return null;
+    // return null;
+    return { id: null, message: 'An error occurred while saving installation data. '};
   }
 };
 
@@ -807,7 +834,7 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
   try {
     console.log(`Fetching recommendation for connectionId: ${connectionId}`);
 
-    const response = await fetch(`http://localhost:8080/api/v2/recommendation/getAndSave/${connectionId}`, {
+    const response = await fetch(`http://localhost:8080/api/recommendation/getAndSave/${connectionId}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -821,14 +848,14 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
     return await response.json();
   } catch (error) {
     console.error("Error fetching recommended details:", error);
-    alert("Failed to fetch recommended details. Please try again.");
-    return null; // Prevent app crash
+    throw error; // Let caller handle it
   }
 };
 
+
 export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
   try {
-    const response = await fetch('http://localhost:8080/api/v4/getPrice', {
+    const response = await fetch('http://localhost:8080/api/getPrice', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -937,7 +964,7 @@ export const saveCustomerSpecs = async (connectionId: string, requestData: any) 
       throw new Error("Connection ID is missing!");
   }
 
-  const apiUrl = `http://localhost:8080/api/v3/customer-agreed/${connectionId}`;
+  const apiUrl = `http://localhost:8080/api/customer-agreed/${connectionId}`;
 
   try {
       const response = await fetch(apiUrl, {
@@ -1109,6 +1136,35 @@ export const fetchUploadedDocuments = async (
     console.error("Error fetching documents", error);
     return [];
   }
+};
+
+export const getMaterialsByConnectionId = async (connectionId: number) => {
+  try {
+    const response = await API.get(`http://localhost:8585/api/materials/${connectionId}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!Array.isArray(response.data)) {
+      console.warn(`Unexpected response format for connectionId ${connectionId}:`, response.data);
+      return [];
+    }
+
+    return response.data; // Return full array
+  } catch (error) {
+    console.error(`Error fetching materials for connectionId ${connectionId}:`, error);
+    return [];
+  }
+};
+
+export const getCustomerStats = async () => {
+  const response = await API.get('http://localhost:8585/api/customers/stats',{
+    headers:{
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+  });
+  return response.data; 
 };
 
 

@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { ArrowLeft, Upload, FileUp } from "lucide-react";
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -43,6 +44,17 @@ export const ViewConnection = () => {
   //const [activeDocumentTab, setActiveDocumentTab] = useState("Aadhar");
   const [activeDocTab, setActiveDocTab] = useState<"Aadhar" | "Passbook" | "Electricity">("Aadhar");
   const [file, setFile] = useState<File | null>(null);
+
+  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState('');
+  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"success" | "error" | "confirm">("confirm");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
   
 
   const tabs = [
@@ -92,7 +104,6 @@ export const ViewConnection = () => {
   };
 
   useEffect(() => {
-  console.log("Hello Samiksha !!!");
   const fetchConnection = async () => {
     if (!customerId || !connectionId) {
       console.error("Customer ID or Connection ID not found!");
@@ -152,7 +163,9 @@ const fetchAndSetUploadedFiles = async () => {
     }
   }, [modalOpen]);
   
-  
+  const handleMessageBoxClose = () => {
+  setMessageBoxOpen(false);
+  };
 
   const handleSingleFileUpload = async () => {
   if (!file) {
@@ -234,45 +247,50 @@ const fetchAndSetUploadedFiles = async () => {
   }, [consumerId]);
 
   const handleYes = async () => {
-    setShowDialog(false);
+  if (!connection?.id) return;
 
-    if (connection && connection.id) {
-      try {
-        const updatedConnection = {
-          ...connection,
-          isOnboardedCustomers: true,
-        };
+  try {
+    const updatedConnection = {
+      ...connection,
+      isOnboardedCustomers: true,
+    };
 
-        const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
-        alert('Customer onboarded successfully!');
-        console.log('Updated connection:', response);
-      } catch (error) {
-        alert('Failed to onboard customer. Please try again.');
-        console.error(error);
-      }
-    }
-  };
+    const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
+    setMessageBoxContent("Customer onboarded successfully!");
+    setMessageBoxSeverity("success");
+    setMessageBoxOpen(true);
+    console.log("Updated connection:", response);
+  } catch (error) {
+    setMessageBoxContent("Failed to onboard customer. Please try again.");
+    setMessageBoxSeverity("error");
+    setMessageBoxOpen(true);
+    console.error("Onboarding failed:", error);
+  }
+};
+
+const handleNo = async () => {
+  if (!connection?.id) return;
+
+  try {
+    const updatedConnection = {
+      ...connection,
+      isOnboardedCustomers: false,
+    };
+
+    const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
+    setMessageBoxContent("Customer NOT onboarded.");
+    setMessageBoxSeverity("error");
+    setMessageBoxOpen(true);
+    console.log("Updated connection:", response);
+  } catch (error) {
+    setMessageBoxContent("Failed to update customer onboarding status. Please try again.");
+    setMessageBoxSeverity("error");
+    setMessageBoxOpen(true);
+    console.error("Onboarding status update failed:", error);
+  }
+};
 
 
-  const handleNo = async () => {
-    setShowDialog(false);
-  
-    if (connection && connection.id) {
-      try {
-        const updatedConnection = {
-          ...connection,
-          isOnboardedCustomers: false, 
-        };
-  
-        const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
-        alert('Customer NOT onboarded.');
-        console.log('Updated connection:', response);
-      } catch (error) {
-        alert('Failed to update customer onboarding status. Please try again.');
-        console.error(error);
-      }
-    }
-  };
   
 
   if (!connection) return <p>Loading...</p>;
@@ -469,9 +487,9 @@ const fetchAndSetUploadedFiles = async () => {
 </div>
   
 
-<div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-2">
+<div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
   <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-24">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-28">
       <div>
           <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
           <p className="mt-1 text-base text-gray-800">Yes</p>
@@ -648,22 +666,99 @@ const fetchAndSetUploadedFiles = async () => {
 </div>
 
 {roles.includes("ROLE_ADMIN") && (
-        <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
-          <button onClick={() => setShowDialog(true)} className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2">
-            Do you want to Onboard the Customer?
-          </button>
-          {showDialog && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-              <div className="bg-white p-6 rounded-md shadow-md max-w-sm w-full relative top-[-50px]">
-                <h2 className="text-lg font-semibold mb-4">Do you want to onboard the customer?</h2>
-                <div className="flex justify-end space-x-4">
-                  <button onClick={handleNo} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">No</button>
-                  <button onClick={handleYes} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Yes</button>
-                </div>
-              </div>
-            </div>
-          )}
-    </div>)}
+  <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
+    <button
+      onClick={() => {
+        setDialogType("confirm");
+        setDialogMessage("Do you want to onboard the customer?");
+        setDialogAction(() => handleYes); // `handleYes` is the confirmation action
+        setDialogOpen(true);
+      }}
+      className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+    >
+      Do you want to Onboard the Customer?
+    </button>
+  </div>
+)}
+
+
+
+<Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle>
+    {dialogType === "success" && "Success"}
+    {dialogType === "error" && "Error"}
+    {dialogType === "confirm" && "Confirm"}
+  </DialogTitle>
+
+  <DialogContent dividers>
+    <Alert
+      severity={
+        dialogType === "success"
+          ? "success"
+          : dialogType === "error"
+          ? "error"
+          : "info"
+      }
+    >
+      {dialogMessage}
+    </Alert>
+  </DialogContent>
+
+  <DialogActions>
+    {dialogType === "confirm" ? (
+      <>
+        <Button onClick={() => setDialogOpen(false)}>No</Button>
+        <Button
+          onClick={() => {
+            setDialogOpen(false);
+            if (dialogAction) dialogAction(); // run action like `handleYes`
+          }}
+          autoFocus
+        >
+          Yes
+        </Button>
+      </>
+    ) : (
+      <Button
+        onClick={() => {
+          setDialogOpen(false);
+          if (dialogAction) dialogAction();
+        }}
+        autoFocus
+      >
+        OK
+      </Button>
+    )}
+  </DialogActions>
+</Dialog>
+
+<Dialog
+  open={messageBoxOpen}
+  onClose={handleMessageBoxClose}
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle>
+    {messageBoxSeverity === "success" ? "Success" : "Error"}
+  </DialogTitle>
+  <DialogContent dividers>
+    <Alert severity={messageBoxSeverity}>
+      {messageBoxContent}
+    </Alert>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleMessageBoxClose} autoFocus>
+      OK
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
 
     </div>
   );
