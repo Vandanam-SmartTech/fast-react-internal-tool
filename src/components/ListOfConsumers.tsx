@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers, fetchConsumerNumber,searchCustomers } from "../services/api";
+import { fetchConsumers, fetchConsumerNumber, searchCustomers } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { Eye, Mail, Phone, Lightbulb } from "lucide-react";
 import SearchBar from "../components/SearchBar"; // Import SearchBar component
 
 interface Consumer {
-  
+
   id: number;
   govIdName: string;
   emailAddress: string;
@@ -24,22 +24,22 @@ const ListOfConsumers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>(""); // existing state
   const [searchResults, setSearchResults] = useState<Consumer[]>([]); // new state for search results
   const [isSearching, setIsSearching] = useState<boolean>(false); // new state for search indicator
-  
+
 
   const handleViewConsumer = (consumer: Consumer) => {
-    navigate(`/view-customer/${consumer.id}`, { state: { consumer,customerId: consumer.id, } });
+    navigate(`/view-customer/${consumer.id}`, { state: { consumer, customerId: consumer.id, } });
   };
 
   const loadConsumers = async (page: number) => {
     try {
       setLoading(true);
       const data = await fetchConsumers(page);
-      setConsumers(data.content); 
+      setConsumers(data.content);
       setTotalPages(data.totalPages);
       setCurrentPage(page);
 
-  const consumerIds = data.content.map((consumer: Consumer) => consumer.id);
-    fetchConsumerNumbers(consumerIds);
+      const consumerIds = data.content.map((consumer: Consumer) => consumer.id);
+      fetchConsumerNumbers(consumerIds);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
@@ -49,10 +49,10 @@ const ListOfConsumers: React.FC = () => {
 
   const fetchConsumerNumbers = async (consumerIds: number[]) => {
     try {
-      const consumerNumberMap: { 
-        [key: number]: { connectionId: number; consumerId: number }[] 
-      } = {}; 
-  
+      const consumerNumberMap: {
+        [key: number]: { connectionId: number; consumerId: number }[]
+      } = {};
+
       await Promise.all(
         consumerIds.map(async (id) => {
           const response = await fetchConsumerNumber(id); // Expecting an array
@@ -62,11 +62,11 @@ const ListOfConsumers: React.FC = () => {
               consumerId: item.consumerId, // Store consumerId
             }));
           } else {
-            consumerNumberMap[id] = []; 
+            consumerNumberMap[id] = [];
           }
         })
       );
-  
+
       setConsumerNumbers((prev) => ({ ...prev, ...consumerNumberMap })); // Update state correctly
     } catch (error) {
       console.error("Error fetching consumer numbers:", error);
@@ -80,27 +80,33 @@ const ListOfConsumers: React.FC = () => {
       loadConsumers(0);
       return;
     }
-  
+
     setIsSearching(true);
     try {
       const result = await searchCustomers(query);
       console.log('Search Results:', result); // Inspect API response
       if (Array.isArray(result)) {
         const filteredResults = result
-         .filter((consumer) => consumer!== null && consumer!== undefined)
-         .filter((consumer: any) => {
-            return (
+          .filter((consumer) => consumer !== null && consumer !== undefined)
+          .filter((consumer: any) => {
+            const baseMatch =
               consumer.govIdName?.toLowerCase().includes(query.toLowerCase()) ||
               consumer.emailAddress?.toLowerCase().includes(query.toLowerCase()) ||
-              consumer.mobileNumber?.toString().includes(query) ||
-              consumer.consumerId?.toString().includes(query)
+              consumer.mobileNumber?.toString().includes(query);
+
+            // Include match from connection consumerId
+            const connectionMatches = consumerNumbers[consumer.id]?.some(
+              (entry) =>
+                entry.consumerId?.toString().includes(query)
             );
+
+            return baseMatch || connectionMatches;
           });
         setSearchResults(filteredResults);
       } else {
         setSearchResults([]);
       }
-      setTotalPages(1); // Reset
+
     } catch (err) {
       console.error("Error searching consumers:", err);
     } finally {
@@ -114,7 +120,7 @@ const ListOfConsumers: React.FC = () => {
   //   stompClient.onConnect = () => {
   //     console.log("Connected to WebSocket");
 
-      
+
   //     stompClient.subscribe('/topic/customerAdded', (message: Message) => {
   //       console.log("Received customerAdded message:", message.body);
   //       loadConsumers(0);  // Reload consumers on new customer addition
@@ -147,7 +153,7 @@ const ListOfConsumers: React.FC = () => {
     }
   }, [searchQuery]);
 
-  
+
   const goToPage = (page: number) => {
     if (searchQuery.trim() === "") {
       if (page >= 0 && page < totalPages) setCurrentPage(page);
@@ -170,26 +176,26 @@ const ListOfConsumers: React.FC = () => {
       for (let i = Math.max(0, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
         pages.push(
           <button key={i} onClick={() => goToPage(i)}
-            className={`px-3 py-1 rounded ${i === currentPage? "bg-blue-600 text-white" : "bg-gray-300 hover:bg-gray-400"}`}>
+            className={`px-3 py-1 rounded ${i === currentPage ? "bg-blue-600 text-white" : "bg-gray-300 hover:bg-gray-400"}`}>
             {i + 1}
           </button>
         );
       }
-    if (currentPage < totalPages - 3) {
-      if (currentPage < totalPages - 4) pages.push(<span key="dots2">...</span>);
-      pages.push(
-        <button key="last" onClick={() => goToPage(totalPages - 1)}
-          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-          {totalPages}
-        </button>
-      );
-    }
+      if (currentPage < totalPages - 3) {
+        if (currentPage < totalPages - 4) pages.push(<span key="dots2">...</span>);
+        pages.push(
+          <button key="last" onClick={() => goToPage(totalPages - 1)}
+            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+            {totalPages}
+          </button>
+        );
+      }
 
-    return pages;
-  } else {
-    return null;
-  }
-  };              
+      return pages;
+    } else {
+      return null;
+    }
+  };
 
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -197,19 +203,19 @@ const ListOfConsumers: React.FC = () => {
         <h1 className="text-2xl font-semibold mb-6 text-center sm:text-left">
           List of Customers
         </h1>
-  
-       {/* Search Bar */}
-       <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
 
-       {isSearching? (
+        {/* Search Bar */}
+        <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
+
+        {isSearching ? (
           <div className="text-center py-10">
             <span>Loading search results...</span>
           </div>
         ) : (
           <div>
-            {searchQuery.trim()!== ""? ( // if searching, display search results
+            {searchQuery.trim() !== "" ? ( // if searching, display search results
               <div>
-                {searchResults.length === 0? (
+                {searchResults.length === 0 ? (
                   <p className="col-span-full text-center text-gray-600">
                     No search results found.
                   </p>
@@ -229,73 +235,73 @@ const ListOfConsumers: React.FC = () => {
                             View
                           </button>
                         </div>
-  
+
                         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">
-            {consumer.govIdName}
-          </h2>
+                          <h2 className="text-lg font-semibold text-gray-800">
+                            {consumer.govIdName}
+                          </h2>
 
-          <div className="flex items-center space-x-2 text-gray-700 text-sm">
-            <Mail className="w-4 h-4 text-gray-500" />
-            <span className="break-all">{consumer.emailAddress}</span>
-          </div>
+                          <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                            <Mail className="w-4 h-4 text-gray-500" />
+                            <span className="break-all">{consumer.emailAddress}</span>
+                          </div>
 
-          <div className="flex items-center space-x-2 text-gray-700 text-sm">
-            <Phone className="w-4 h-4 text-gray-500" />
-            <span>{consumer.mobileNumber}</span>
-          </div>
-        </div>
+                          <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                            <Phone className="w-4 h-4 text-gray-500" />
+                            <span>{consumer.mobileNumber}</span>
+                          </div>
+                        </div>
 
                         {/* Connection IDs */}
-                        {consumerNumbers[consumer.id]!== undefined && consumerNumbers[consumer.id].length > 0 && (
-                              <div className="mt-4 space-y-2">
-                                {consumerNumbers[consumer.id].map((entry, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
-                                  >
-                                    <span className="text-sm break-words">
-                                      <span className="font-medium">
-                                        Connection {index + 1}:
-                                      </span>{" "}
-                                      {entry.consumerId}
-                                    </span>
-                                    <button
-                                      onClick={() =>
-                                        navigate(`/view-connection/${entry.connectionId}`, {
-                                          state: {
-                                            customerId: consumer.id,
-                                            connectionId: entry.connectionId,
-                                            consumerId: entry.consumerId,
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
-                                    </button>
-                                  </div>
-                                ))}
+                        {consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            {consumerNumbers[consumer.id].map((entry, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+                              >
+                                <span className="text-sm break-words">
+                                  <span className="font-medium">
+                                    Connection {index + 1}:
+                                  </span>{" "}
+                                  {entry.consumerId}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    navigate(`/view-connection/${entry.connectionId}`, {
+                                      state: {
+                                        customerId: consumer.id,
+                                        connectionId: entry.connectionId,
+                                        consumerId: entry.consumerId,
+                                      },
+                                    })
+                                  }
+                                >
+                                  <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+                                </button>
                               </div>
-                            )}
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
 
                   </div>
                 )}
-                 
+
               </div>
-            ) : ( 
-              
+            ) : (
+
               // if not searching, display regular consumers
               <div>
-                {loading? (
+                {loading ? (
                   <div className="text-center py-10">
                     <span>Loading...</span>
                   </div>
                 ) : (
                   <div>
                     <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                      {consumers.length === 0? (
+                      {consumers.length === 0 ? (
                         <p className="col-span-full text-center text-gray-600">
                           No consumers found.
                         </p>
@@ -314,81 +320,81 @@ const ListOfConsumers: React.FC = () => {
                                 View
                               </button>
                             </div>
-  
+
                             <div className="space-y-3">
-                                  <h2 className="text-lg font-semibold text-gray-800">
-                                    {consumer.govIdName}
-                                  </h2>
+                              <h2 className="text-lg font-semibold text-gray-800">
+                                {consumer.govIdName}
+                              </h2>
 
-                                <div className="flex items-center space-x-2 text-gray-700 text-sm">
-                                  <Mail className="w-4 h-4 text-gray-500" />
-                                    <span className="break-all">{consumer.emailAddress}</span>
+                              <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                                <Mail className="w-4 h-4 text-gray-500" />
+                                <span className="break-all">{consumer.emailAddress}</span>
+                              </div>
+
+                              <div className="flex items-center space-x-2 text-gray-700 text-sm">
+                                <Phone className="w-4 h-4 text-gray-500" />
+                                <span>{consumer.mobileNumber}</span>
+                              </div>
                             </div>
 
-                            <div className="flex items-center space-x-2 text-gray-700 text-sm">
-                                  <Phone className="w-4 h-4 text-gray-500" />
-                                   <span>{consumer.mobileNumber}</span>
-                            </div>
-                      </div>
-  
                             {/* Connection IDs */}
-{consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
-  <div className="mt-4 space-y-2">
-    {consumerNumbers[consumer.id].map((entry, index) => (
-      <div
-        key={index}
-        className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
-      >
-        <span className="text-sm break-words">
-          <span className="font-medium">
-            Connection {index + 1}:
-          </span>{" "}
-          {entry.consumerId}
-        </span>
+                            {consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                {consumerNumbers[consumer.id].map((entry, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+                                  >
+                                    <span className="text-sm break-words">
+                                      <span className="font-medium">
+                                        Connection {index + 1}:
+                                      </span>{" "}
+                                      {entry.consumerId}
+                                    </span>
 
-        {/* Icons with minimal spacing */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() =>
-              navigate(`/view-connection/${entry.connectionId}`, {
-                state: {
-                  customerId: consumer.id,
-                  connectionId: entry.connectionId,
-                  consumerId: entry.consumerId,
-                },
-              })
-            }
-            title="View Connection"
-          >
-            <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
-          </button>
+                                    {/* Icons with minimal spacing */}
+                                    <div className="flex items-center space-x-3">
+                                      <button
+                                        onClick={() =>
+                                          navigate(`/view-connection/${entry.connectionId}`, {
+                                            state: {
+                                              customerId: consumer.id,
+                                              connectionId: entry.connectionId,
+                                              consumerId: entry.consumerId,
+                                            },
+                                          })
+                                        }
+                                        title="View Connection"
+                                      >
+                                        <Eye className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+                                      </button>
 
 
-          <button
-            onClick={() =>
-              navigate(`/SystemSpecifications`, {
-                state: {
-                  connectionId: entry.connectionId,
-                  consumerId: entry.consumerId,
-                  customerId: consumer.id,
-                },
-              })
-            }
-            title="Get Recommendation"
-          >
-            <Lightbulb className="w-5 h-5 text-green-500 hover:text-green-700" />
-          </button>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+                                      <button
+                                        onClick={() =>
+                                          navigate(`/SystemSpecifications`, {
+                                            state: {
+                                              connectionId: entry.connectionId,
+                                              consumerId: entry.consumerId,
+                                              customerId: consumer.id,
+                                            },
+                                          })
+                                        }
+                                        title="Get Recommendation"
+                                      >
+                                        <Lightbulb className="w-5 h-5 text-green-500 hover:text-green-700" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
 
                           </div>
                         ))
                       )}
                     </div>
-  
+
                     {/* Pagination */}
                     <div className="flex justify-center items-center mt-8 space-x-2">
                       {renderPagination()}

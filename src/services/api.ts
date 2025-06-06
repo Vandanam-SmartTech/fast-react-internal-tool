@@ -932,6 +932,10 @@ export const fetchPdf = async (id: number, docName: string): Promise<Response> =
   if(docName=== "Declaration Page"){
     endpoint = `http://localhost:5050/api/pdf/declarationPage/${id}?download=true`;
   }
+  if(docName=== "Declarartion Document"){
+    endpoint = `http://localhost:5050/api/pdf/declarationPage/${id}?download=true`;
+  }
+   
   // Add other documents' API endpoints here if needed
 
   try {
@@ -1059,7 +1063,8 @@ export const searchCustomers = async (query: string): Promise<any> => {
         govIdName: item?.govIdName,
         emailAddress: item?.emailAddress,
         mobileNumber: item?.mobileNumber,
-        consumerId: item?.connectionId, // Added consumerId property
+        consumerId: item?.consumerId, // Added consumerId property
+        connectionType:item?.connectionType,
       })
     );
     } else {

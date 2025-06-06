@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { fetchOnboardedConsumers , getMaterialsByConnectionId} from "../services/api";
+import { fetchOnboardedConsumers, searchCustomers , getMaterialsByConnectionId} from "../services/api";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "../components/SearchBar"; 
 
 interface Consumer {
   id: number;
@@ -18,6 +19,7 @@ const OnboardedCustomers: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
 
   const handleViewConsumer = (consumer: Consumer) => {
@@ -89,6 +91,21 @@ const OnboardedCustomers: React.FC = () => {
     if (page >= 0 && page < totalPages) setCurrentPage(page);
   };
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const filteredConsumers = consumers.filter((consumer) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      String(consumer.govIdName).toLowerCase().includes(lowerSearch) ||
+      String(consumer.emailAddress).toLowerCase().includes(lowerSearch) ||
+      String(consumer.mobileNumber).toLowerCase().includes(lowerSearch) ||
+      String(consumer.consumerId).toLowerCase().includes(lowerSearch) ||
+      String(consumer.connectionType).toLowerCase().includes(lowerSearch)
+    );
+  });
+
   const renderPagination = () => {
     const pages = [];
 
@@ -127,43 +144,43 @@ const OnboardedCustomers: React.FC = () => {
       <div className="w-full lg:w-[85%]">
       <h1 className="text-2xl font-semibold mb-6">Onboarded Customers</h1>
 
-      {loading ? (
-        <div className="text-center py-10">
-          <span>Loading...</span>
-        </div>
-      ) : (
-        <div>
-          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {consumers.length === 0 ? (
-             <p className="col-span-full text-center text-gray-600">
-             No consumers found.
-           </p>
-            ) : (
-              consumers.map((consumer) => (
-                <div key={consumer.id} className="bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                  <div className="mb-4 text-sm sm:text-base">
-                    <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerId}</p>
-                    <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
-                    <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.govIdName}</p>
-                    <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.emailAddress}</p>
-                    <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-  <div className="flex gap-2">
-    <button
-      onClick={() => handleViewConsumer(consumer)}
-      className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-2/5"
-    >
-      View Details
-    </button>
-    <button
-      onClick={() => handleGenerateDocuments(consumer)}
-      className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-3/5"
-    >
-      Generate Documents
-    </button>
-                </div>
-                    <button
+      <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
+
+        {loading ? (
+          <div className="text-center py-10">
+            <span>Loading...</span>
+          </div>
+        ) : (
+          <div>
+            <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {filteredConsumers.length === 0 ? (
+                <p className="col-span-full text-center text-gray-600">No consumers found.</p>
+              ) : (
+                filteredConsumers.map((consumer) => (
+                  <div key={consumer.id} className="bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <div className="mb-4 text-sm sm:text-base">
+                      <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerId}</p>
+                      <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
+                      <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.govIdName}</p>
+                      <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.emailAddress}</p>
+                      <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewConsumer(consumer)}
+                          className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-2/5"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleGenerateDocuments(consumer)}
+                          className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-3/5"
+                        >
+                          Generate Documents
+                        </button>
+                      </div>
+<button
                         onClick={() =>
                           materialsMap[consumer.id]
                             ? handleViewMaterialDetails(consumer)
@@ -174,20 +191,19 @@ const OnboardedCustomers: React.FC = () => {
                           focus:outline-none`}
                       >
                         {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
-                      </button>
-                </div>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-                </div>
-              ))
-            )}
+            <div className="flex justify-center items-center mt-6 space-x-2 flex-wrap">
+              {renderPagination()}
+            </div>
           </div>
-
-          <div className="flex justify-center items-center mt-6 space-x-2 flex-wrap">
-            {renderPagination()}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   );
 };
