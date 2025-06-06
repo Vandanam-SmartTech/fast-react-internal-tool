@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getInstallationByConsumerId, updateInstallationSpaceDetails, fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -24,6 +25,10 @@ export const EditInstallation = () => {
 
   const [installation, setInstallation] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Installation Details");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
     const tabs = [
     "Customer Details",
@@ -91,7 +96,6 @@ export const EditInstallation = () => {
               descriptionOfInstallation: selectedInstallation.descriptionOfInstallation || '',
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
-              // spaceType: selectedInstallation.spaceType || 'Slab',
               spaceType: Object.keys(installationSpaceTypeMapping).find(key => installationSpaceTypeMapping[key] === selectedInstallation.installationSpaceTypeId) || "Slab",
               installationSpaceTitle: selectedInstallation.installationSpaceTitle || '',
             });
@@ -113,46 +117,46 @@ export const EditInstallation = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  e.preventDefault();   
 
-  const confirmUpdate = window.confirm("Do you want to update the installation details?");
-  if (!confirmUpdate) {
-    // Rollback to original formData without touching ID
-    setFormData({
-      acWireLengthFt: installation.acWireLengthFt || 0,
-      dcWireLengthFt: installation.dcWireLengthFt || 0,
-      earthingWireLengthFt: installation.earthingWireLengthFt || 0,
-      numberOfGpPipes: installation.numberOfGpPipes || 0,
-      descriptionOfInstallation: installation.descriptionOfInstallation || '',
-      availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
-      availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
-      spaceType: Object.keys(installationSpaceTypeMapping).find(key => installationSpaceTypeMapping[key] === selectedInstallation.installationSpaceTypeId) || "Slab",
-      installationSpaceTitle: installation.installationSpaceTitle || '',
-    });
-    return;
-  }
-
-  try {
-    if (installationId) {
-      await updateInstallationSpaceDetails(installationId, {
-        ...formData,
-        installationSpaceTypeId: installationSpaceTypeMapping[formData.spaceType],
-      });
-      alert("Installation details updated successfully!");
-      navigate(`/view-installation/${installationId}`, {
-        state: {
-          consumerId,
-          connectionId,
-          installationId,
-          customerId,
-          selectedRepresentative,
-        },
-      });
-    }
-  } catch (error) {
-    console.error("Update failed", error);
-    alert("Failed to update installation.");
-  }
+  const installationData = {
+    connectionId,
+    customerId,
+    installationSpaceTypeId: installationSpaceTypeMapping[formData.spaceType],
+    acWireLengthFt: formData.acWireLengthFt || 0,
+    dcWireLengthFt: formData.dcWireLengthFt || 0,
+    earthingWireLengthFt: formData.earthingWireLengthFt || 0,
+    numberOfGpPipes: formData.numberOfGpPipes || 0,
+    descriptionOfInstallation: formData.descriptionOfInstallation || '',
+    availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || 0,
+    availableEastWestLengthFt: formData.availableEastWestLengthFt || 0,
+    installationSpaceTitle: formData.installationSpaceTitle || '',
+  };
+  setDialogType("confirm");
+        setDialogMessage("Do you want to update the installation details?");
+        setDialogAction(() => async () => {
+          try {
+            if (installationId) {
+              await updateInstallationSpaceDetails(Number(installationId), installationData);
+              setDialogType("success");
+              setDialogMessage("Installation updated successfully!");
+              setDialogAction(() => () => {
+                navigate(`/view-installation/${installationId}`, {
+                  state: {
+                    consumerId, connectionId, installationId, customerId, selectedRepresentative,
+                  },  
+                 });
+              });
+              setDialogOpen(true);
+            }
+          } catch (error) {
+            setDialogType("error");
+            setDialogMessage("Failed to update installation.");
+            setDialogAction(null);
+            setDialogOpen(true);
+          }
+        });
+        setDialogOpen(true);
 };
 
   
@@ -249,7 +253,7 @@ export const EditInstallation = () => {
 
 
       <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-        Installation Space Details
+        Installation Details
       </h2>
   
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -392,6 +396,84 @@ export const EditInstallation = () => {
           </button>
         </div>
       </form>
+
+              <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                ? "error"
+                : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          {dialogType === "confirm" ? (
+            <>
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  // Cancel = reset data
+                   if (installation) {
+                     setFormData({
+      
+          spaceType: Object.keys(installationSpaceTypeMapping).find(
+            key => installationSpaceTypeMapping[key] === installation.installationSpaceTypeId
+          ) || "",
+        acWireLengthFt: installation.acWireLengthFt || 0,
+        dcWireLengthFt: installation.dcWireLengthFt || 0,
+        earthingWireLengthFt: installation.earthingWireLengthFt || 0,
+        numberOfGpPipes: installation.numberOfGpPipes || 0,
+        descriptionOfInstallation: installation.descriptionOfInstallation || '',
+        availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
+        availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
+        installationSpaceTitle: installation.installationSpaceTitle || '',
+      });
+      
+                }}
+              }
+              >
+                No
+              </Button>
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                Yes
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction();
+              }}
+              autoFocus
+            >
+              OK
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

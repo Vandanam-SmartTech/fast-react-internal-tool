@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchOnboardedConsumers } from "../services/api";
+import { fetchOnboardedConsumers , getMaterialsByConnectionId} from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 interface Consumer {
@@ -18,6 +18,7 @@ const OnboardedCustomers: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
 
   const handleViewConsumer = (consumer: Consumer) => {
     navigate(`/view-connection/${consumer.id}`, {
@@ -33,20 +34,50 @@ const OnboardedCustomers: React.FC = () => {
     navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
   };
 
-  const handleMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form/${consumer.id}`, { state: { consumer,connectionId:consumer.id  } });
-  };
+  // const handleMaterialDetails = (consumer: Consumer) => {
+  //   navigate(`/material-form/${consumer.id}`, { state: { consumer,connectionId:consumer.id  } });
+  // };
+  
+  
   const loadOnboardedConsumers = async (page: number) => {
     try {
       setLoading(true);
       const data = await fetchOnboardedConsumers(page);
       setConsumers(data.content);
       setTotalPages(data.totalPages);
+
+            // Fetch materials for all consumers in parallel
+      const materialChecks = await Promise.all(
+        data.content.map((consumer: Consumer) =>
+          getMaterialsByConnectionId(consumer.id).then((materials) => ({
+            id: consumer.id,
+            exists: materials.length > 0,
+          }))
+        )
+      );
+
+      const map: Record<number, boolean> = {};
+      materialChecks.forEach(({ id, exists }) => {
+        map[id] = exists;
+      });
+      setMaterialsMap(map);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+    const handleMaterialDetails = (consumer: Consumer) => {
+    navigate(`/material-form/${consumer.id}`, {
+      state: { consumer, connectionId: consumer.id },
+    });
+  };
+
+  const handleViewMaterialDetails = (consumer: Consumer) => {
+    navigate(`/material-form/${consumer.id}`, {
+      state: { consumer, connectionId: consumer.id },
+    });
   };
 
 
@@ -131,14 +162,20 @@ const OnboardedCustomers: React.FC = () => {
     >
       Generate Documents
     </button>
-  </div>
-  <button
-   onClick={() => handleMaterialDetails(consumer)}
-    className="px-2 h-9 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none w-full"
-  >
-    Add Material Details
-  </button>
-</div>
+                </div>
+                    <button
+                        onClick={() =>
+                          materialsMap[consumer.id]
+                            ? handleViewMaterialDetails(consumer)
+                            : handleMaterialDetails(consumer)
+                        }
+                        className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full 
+                          ${materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"} 
+                          focus:outline-none`}
+                      >
+                        {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
+                      </button>
+                </div>
 
                 </div>
               ))

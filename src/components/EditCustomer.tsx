@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getCustomerById, updateConsumerPersonalDetails,fetchClaims } from "../services/api";
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
+
 import {
   UserCircleIcon,
   BoltIcon,
@@ -28,6 +30,11 @@ export const EditCustomer = () => {
   const customerId = location.state?.customerId;
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab] = useState("Customer Details");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
 
   const tabs = [
     "Customer Details",
@@ -101,45 +108,54 @@ export const EditCustomer = () => {
     setConfirmEmailAddress(e.target.value);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
-    if (formData.mobileNumber !== confirmMobileNumber) {
-      alert("Mobile numbers do not match");
-      return;
-    }
-  
-    if (formData.emailAddress !== confirmEmailAddress) {
-      alert("Email addresses do not match");
-      return;
-    }
-  
-    const confirmUpdate = window.confirm("Do you want to update the customer details?");
-    if (!confirmUpdate) {
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-      if (customer) {
-        setFormData({
-          govIdName: customer.govIdName || "",
-          preferredName: customer.preferredName || "",
-          mobileNumber: customer.mobileNumber || "",
-          emailAddress: customer.emailAddress || "",
-        });
-        setConfirmMobileNumber(customer.mobileNumber || "");
-        setConfirmEmailAddress(customer.emailAddress || "");
-      }
-      return;
-    }
-  
+  if (formData.mobileNumber !== confirmMobileNumber) {
+    setDialogType("error");
+    setDialogMessage("Mobile number and Confirm Mobile number do not match.");
+    setDialogAction(null);
+    setDialogOpen(true);
+    return;
+  }
+
+  if (formData.emailAddress !== confirmEmailAddress) {
+    setDialogType("error");
+    setDialogMessage("Email and Confirm Email do not match.");
+    setDialogAction(null);
+    setDialogOpen(true);
+    return;
+  }
+
+  // Show confirm dialog
+  setDialogType("confirm");
+  setDialogMessage("Do you want to update the customer details?");
+  setDialogAction(() => async () => {
     try {
       if (customerId) {
         await updateConsumerPersonalDetails(Number(customerId), formData);
-        alert("Customer updated successfully!");
-        navigate(`/view-customer/${customerId}`, { state: { customerId: customerId, selectedRepresentative:selectedRepresentative } }); 
+        setDialogType("success");
+        setDialogMessage("Customer updated successfully!");
+        setDialogAction(() => () => {
+          navigate(`/view-customer/${customerId}`, {
+            state: {
+              customerId,
+              selectedRepresentative,
+            },
+          });
+        });
+        setDialogOpen(true);
       }
     } catch (error) {
-      alert("Failed to update customer.");
+      setDialogType("error");
+      setDialogMessage("Failed to update customer.");
+      setDialogAction(null);
+      setDialogOpen(true);
     }
-  };
+  });
+  setDialogOpen(true);
+};
+
   
 
   return (
@@ -298,7 +314,7 @@ export const EditCustomer = () => {
           value={formData.emailAddress}
           onChange={handleChange}
           placeholder="johndoe@example.com"
-          maxLength={35}
+          maxLength={50}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           title="Enter a valid email address"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -313,7 +329,7 @@ export const EditCustomer = () => {
           value={confirmEmailAddress}
           onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
-          maxLength={35}
+          maxLength={50}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           title="Re-enter the same email"
@@ -332,6 +348,79 @@ export const EditCustomer = () => {
           </button>
         </div>
       </form>
+
+<Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle id="alert-dialog-title">
+    {dialogType === "success" && "Success"}
+    {dialogType === "error" && "Error"}
+    {dialogType === "confirm" && "Confirm"}
+  </DialogTitle>
+  <DialogContent dividers>
+    <Alert
+      severity={
+        dialogType === "success"
+          ? "success"
+          : dialogType === "error"
+          ? "error"
+          : "info"
+      }
+    >
+      {dialogMessage}
+    </Alert>
+  </DialogContent>
+  <DialogActions>
+    {dialogType === "confirm" ? (
+      <>
+        <Button
+          onClick={() => {
+            setDialogOpen(false);
+            // Cancel = reset data
+            if (customer) {
+              setFormData({
+                govIdName: customer.govIdName || "",
+                preferredName: customer.preferredName || "",
+                mobileNumber: customer.mobileNumber || "",
+                emailAddress: customer.emailAddress || "",
+              });
+              setConfirmMobileNumber(customer.mobileNumber || "");
+              setConfirmEmailAddress(customer.emailAddress || "");
+            }
+          }}
+        >
+          No
+        </Button>
+        <Button
+          onClick={() => {
+            setDialogOpen(false);
+            if (dialogAction) dialogAction();
+          }}
+          autoFocus
+        >
+          Yes
+        </Button>
+      </>
+    ) : (
+      <Button
+        onClick={() => {
+          setDialogOpen(false);
+          if (dialogAction) dialogAction();
+        }}
+        autoFocus
+      >
+        OK
+      </Button>
+    )}
+  </DialogActions>
+</Dialog>
+
+
     </div>
   );
 };

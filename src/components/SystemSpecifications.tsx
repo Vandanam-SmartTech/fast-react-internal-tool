@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, uploadFileToOneDrive, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
-import { generateQuotationPDF } from '../services/api';
+import { generateQuotationPDF, previewQuotationPDF } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -42,6 +43,12 @@ export const SystemSpecifications = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [govIdName, setGovIdName] = useState("");
   const selectedRepresentative = location.state?.selectedRepresentative;
+  const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
 
   const [activeTab, setActiveTab] = useState("System Specifications");
 
@@ -180,115 +187,141 @@ useEffect(() => {
 //   }
 // }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!connectionId) return;
+useEffect(() => {
+  const fetchData = async () => {
+    if (!connectionId) return;
 
-      try {
-        const recommendation = await fetchRecommendedDetails(connectionId);
+    setIsFetchingRecommendations(true);
 
-        console.log("Recommended Data:",recommendation);
-        const recommendedKW = recommendation.recommendedKW || "";
+    try {
+      const recommendation = await fetchRecommendedDetails(connectionId);
+      console.log("Recommended Data:", recommendation);
 
-        setFormData((prev) => ({
-          ...prev,
-          installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
-          installationStructureType: recommendation.recommendedInstallationStructureType || "",
-          Kw: recommendedKW,
-          numberOfGpPipes: recommendation.numberOfGpPipes || 0,
-          dcrNonDcrType:
+      const recommendedKW = recommendation.recommendedKW || "";
+
+      setFormData((prev) => ({
+        ...prev,
+        installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
+        installationStructureType: recommendation.recommendedInstallationStructureType || "",
+        Kw: recommendedKW,
+        numberOfGpPipes: recommendation.numberOfGpPipes || 0,
+        dcrNonDcrType:
           recommendation.dcrNonDcrType?.toLowerCase() === "nondcr"
-          ? "Non-DCR"
-          : "DCR",
-          panelBrand: recommendation.panelBrand || "",
-        }));
-        setConnectionType(recommendation.connectionType || "");
-        setPhaseType(recommendation.phaseType || "");
+            ? "Non-DCR"
+            : "DCR",
+        panelBrand: recommendation.panelBrand || "",
+      }));
 
-        if (recommendation.phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
-          const wattages = await fetchPanelWattages(connectionId, recommendation.phaseType, recommendation.dcrNonDcrType, recommendation.panelBrand);
-          const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
+      setConnectionType(recommendation.connectionType || "");
+      setPhaseType(recommendation.phaseType || "");
+
+      if (recommendation.phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
+        const wattages = await fetchPanelWattages(
+          connectionId,
+          recommendation.phaseType,
+          recommendation.dcrNonDcrType,
+          recommendation.panelBrand
+        );
+        const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
         setPanelWattages([recommendedKW, ...uniqueWattages]);
-        }
-
-      } catch (error) {
-        console.error("Error fetching recommended details:", error);
       }
-    };
+    } catch (error: any) {
+      console.error("Error fetching recommended details:", error);
+      setDialogType("error");
+      setDialogMessage("Failed to fetch recommended details. Please try again later.");
+      setDialogOpen(true);
+    } finally {
+      setIsFetchingRecommendations(false);
+    }
+  };
 
-    fetchData();
-  }, [connectionId]);
+  fetchData();
+}, [connectionId]);
+
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  const { name, value, type, checked } = e.target;
 
-    setFormData((prev) => {
-        const updatedData = { 
-            ...prev, 
-            [name]: value,
-          
-        };
-        updatedData.totalCost = 
-            (Number(updatedData.solarSystemCost) || 0) + 
-            (Number(updatedData.fabricationCost) || 0);
+  let updatedFormData: any;
 
-            if (name === "installationSpaceType") {
-              const selectedSpace = availableSpaceTypes.find((space: any) => space.installationSpaceType === value);
-        
-              if (selectedSpace) {
-                updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0; 
-              }
-            }
+  setFormData((prev) => {
+    const updatedData = {
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    };
 
-        // Correct dcrNonDcrType based on recommendation.phaseType
-        if (name === "panelBrand") {
-            updatedData.dcrNonDcrType =   value === "En-Icon"
-                ? "Non-DCR"
-                : "DCR"; // Default to "DCR"
-        }
+    // Auto-update totalCost
+    updatedData.totalCost =
+      (Number(updatedData.solarSystemCost) || 0) +
+      (Number(updatedData.fabricationCost) || 0);
 
-        return updatedData;
-    });
-
-    setIsCustomSpecs(true);
-    //////
-    setIsSpecsSaved(false);
-    //////
-
-    
-    // Fetch panel wattages when relevant fields change
-    if (["panelBrand", "dcrNonDcrType"].includes(name)) {
-      try {
-          const dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-          const panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-  
-          console.log("Fetching panel wattages with:");
-          console.log("Connection ID:", connectionId);
-          console.log("Phase Type:", phaseType);
-          console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-          console.log("Panel Brand:", panelBrandValue);
-  
-          const wattages = await fetchPanelWattages(
-              connectionId,
-              phaseType,  
-              dcrNonDcrValue,
-              panelBrandValue
-          );
-  
-          console.log("Fetched Wattages:", wattages);
-          setPanelWattages(wattages);
-
-          if (!wattages.includes(formData.Kw)) {
-            setFormData((prev) => ({
-              ...prev,
-              Kw: wattages[0] || "", // fallback to first available
-            }));
-          }
-      } catch (error) {
-          console.error("Error fetching panel wattages:", error);
+    // Update numberOfGpPipes based on installation space
+    if (name === "installationSpaceType") {
+      const selectedSpace = availableSpaceTypes.find(
+        (space: any) => space.installationSpaceType === value
+      );
+      if (selectedSpace) {
+        updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
       }
+    }
+
+    // Interdependent panelBrand <-> dcrNonDcrType
+    if (name === "panelBrand") {
+      updatedData.dcrNonDcrType = value === "En-Icon" ? "Non-DCR" : "DCR";
+    }
+
+    if (name === "dcrNonDcrType") {
+      updatedData.panelBrand = value === "Non-DCR" ? "En-Icon" : "Sova";
+    }
+
+    updatedFormData = updatedData; // assign to outer variable
+    return updatedData;
+  });
+
+  setIsCustomSpecs(true);
+  setIsSpecsSaved(false);
+
+  // Wait a bit for formData to update before fetching wattages
+  if (["panelBrand", "dcrNonDcrType"].includes(name)) {
+    const dcrNonDcrValue =
+      name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+    const panelBrandValue =
+      name === "panelBrand"
+        ? value
+        : name === "dcrNonDcrType"
+        ? value === "Non-DCR"
+          ? "En-Icon"
+          : "Sova"
+        : formData.panelBrand;
+
+    try {
+      console.log("Fetching panel wattages with:");
+      console.log("Connection ID:", connectionId);
+      console.log("Phase Type:", phaseType);
+      console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+      console.log("Panel Brand:", panelBrandValue);
+
+      const wattages = await fetchPanelWattages(
+        connectionId,
+        phaseType,
+        dcrNonDcrValue,
+        panelBrandValue
+      );
+
+      console.log("Fetched Wattages:", wattages);
+      setPanelWattages(wattages);
+
+      // Ensure Kw is valid
+      if (!wattages.includes(formData.Kw)) {
+        setFormData((prev) => ({
+          ...prev,
+          Kw: wattages[0] || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching panel wattages:", error);
+    }
   }
-    // Fetch panel wattages when relevant fields change
 };
 
 
@@ -369,12 +402,18 @@ useEffect(() => {
 
     try {
         await saveCustomerSpecs(connectionId, requestData);
-        alert("System specifications saved successfully!");
+        //alert("System specifications saved successfully!");
+      setDialogType("success");
+      setDialogMessage("System specifications saved successfully!");
+      setDialogOpen(true);
         //////
         setIsSpecsSaved(true);
         ///////
     } catch (error) {
-        alert(error.message || "An error occurred while saving.");
+        //alert(error.message || "An error occurred while saving.");
+        setDialogType("error");
+      setDialogMessage("An error occurred while saving.");
+      setDialogOpen(true);
     }
 };
 
@@ -430,7 +469,7 @@ const handleGenerateQuotation = async () => {
   
       console.log("Fetching PDF for Connection ID:", connectionId);
       
-      const pdfBlob = await generateQuotationPDF(connectionId);
+      const pdfBlob = await previewQuotationPDF(connectionId);
   
       const pdfUrl = URL.createObjectURL(pdfBlob);
   
@@ -565,6 +604,36 @@ const handleGenerateQuotation = async () => {
 </div>
 
 
+{isFetchingRecommendations && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
+    <div className="flex flex-col items-center space-y-4">
+      <svg
+        className="animate-spin h-10 w-10 text-blue-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      <span className="text-gray-700 text-lg font-medium">Fetching Recommendation Details...</span>
+    </div>
+  </div>
+)}
+
+
+
 
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -656,6 +725,47 @@ const handleGenerateQuotation = async () => {
               </select>
         </div>
 
+<div className="col-span-full space-y-6">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
+    <label className="flex items-center space-x-3">
+      <input
+        type="checkbox"
+        name="waterSprinkler"
+        checked={formData.waterSprinkler || false}
+        onChange={handleChange}
+        className="h-5 w-5 text-blue-600"
+      />
+      <span className="text-base text-gray-800">Water Sprinkler System</span>
+    </label>
+
+    <label className="flex items-center space-x-3">
+      <input
+        type="checkbox"
+        name="heavyRamp"
+        checked={formData.heavyRamp || false}
+        onChange={handleChange}
+        className="h-5 w-5 text-blue-600"
+      />
+      <span className="text-base text-gray-800">Heavy Duty Ramp</span>
+    </label>
+
+    <label className="flex items-center space-x-3">
+      <input
+        type="checkbox"
+        name="heavyStairs"
+        checked={formData.heavyStairs || false}
+        onChange={handleChange}
+        className="h-5 w-5 text-blue-600"
+      />
+      <span className="text-base text-gray-800">Heavy Duty Stairs</span>
+    </label>
+  </div>
+</div>
+
+
+
+
+
         {/* <div className="col-span-full">
         <button
           type="button"
@@ -667,7 +777,7 @@ const handleGenerateQuotation = async () => {
         </button>
       </div> */}
 
-          <div className="col-span-full space-y-6">
+          <div className="col-span-full space-y-6 mt-6">
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -726,6 +836,38 @@ const handleGenerateQuotation = async () => {
 
           
       </form>
+
+      <Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle>
+    {dialogType === "success" && "Success"}
+    {dialogType === "error" && "Error"}
+    {dialogType === "confirm" && "Confirm"}
+  </DialogTitle>
+  <DialogContent dividers>
+    <Alert
+      severity={
+        dialogType === "success"
+          ? "success"
+          : dialogType === "error"
+          ? "error"
+          : "info"
+      }
+    >
+      {dialogMessage}
+    </Alert>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setDialogOpen(false)} autoFocus>
+      OK
+    </Button>
+  </DialogActions>
+</Dialog>
+
     </div>
   );
 };

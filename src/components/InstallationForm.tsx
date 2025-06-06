@@ -5,6 +5,9 @@ import { saveInstallation, fetchClaims, fetchInstallationSpaceTypesNames} from "
 import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -22,6 +25,12 @@ export const InstallationForm = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
+
+  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState('');
+  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+  const [createdInstallationId, setCreatedInstallationId] = useState<number | null>(null);
 
   // const installationSpaceTypeMapping = {
   //   'Slab': 1,
@@ -123,7 +132,11 @@ export const InstallationForm = () => {
     console.log("Received customerId:", customerId);
 
     if (!connectionId || !consumerId) {
-        alert("Connection ID and Consumer ID are required!");
+        // alert("Connection ID and Consumer ID are required!");
+        toast.error("Connection ID and Consumer ID are required!",{
+          autoClose:1000,
+          hideProgressBar:true,
+        });
         return;
     }
 
@@ -152,16 +165,42 @@ export const InstallationForm = () => {
 
     try {
         console.log("Saving new installation...");
-        const installationId = await saveInstallation(installationData);
-        if (installationId) {
-            console.log("New Installation saved with ID:", installationId);
-            navigate(`/view-installation/${installationId}`, {
-                state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
-            });
+        const result = await saveInstallation(installationData);
+        if (result.id) {
+            // console.log("New Installation saved with ID:", result.id);
+            // navigate(`/view-installation/${installationId}`, {
+            //     state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
+            // });
+            setCreatedInstallationId(result.id); 
+            setNavigateAfterClose(true);     
+            
+            toast.success(result.message || "Installation data saved successfully!", {
+              autoClose: 1000,
+              hideProgressBar: true,
+          });
+          navigate(`/view-installation/${result.id}`, {
+        state: {
+        customerId,connectionId,consumerId,
+        selectedRepresentative: selectedRepresentative,installationId: result.id
+      },
+    });
+
+    setNavigateAfterClose(false);
+    setCreatedInstallationId(null);
         }
+        else {
+            toast.error("Failed to save installation data.",{
+              autoClose:1000,
+              hideProgressBar:true,
+            })
+    }
     } catch (error) {
         console.error("Error in installation process:", error);
-        alert("Failed to process installation. Please try again.");
+        // alert("Failed to process installation. Please try again.");
+        toast.error("Failed to save installation. Please try again.",{
+          autoClose:1000,
+          hideProgressBar:true,
+        });
     }
     /////////////
     localStorage.removeItem('myFormData');
@@ -268,7 +307,7 @@ return (
 
 
     <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-      Installation Space Details
+      Installation Details
     </h2>
 
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -290,12 +329,13 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
+        <label className="block text-sm font-medium text-gray-700">Installation Space Title <span className="text-red-500">*</span></label>
         <input
           type="text"
           name="installationSpaceTitle"
           value={formData.installationSpaceTitle}
           onChange={handleChange}
+          required
           placeholder="e.g. South-West side of space type"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
@@ -332,7 +372,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">AC Wire Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">Required AC Wire Length (Feet)</label>
         <input
           type="number"
           id="acWireLengthFt"
@@ -347,7 +387,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">DC Wire Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">Required DC Wire Length (Feet)</label>
         <input
           type="number"
           id="dcWireLengthFt"
@@ -362,7 +402,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Earthing Wire Length (Feet)</label>
+        <label className="block text-sm font-medium text-gray-700">Required Earthing Wire Length (Feet)</label>
         <input
           type="number"
           id="earthingWireLengthFt"
@@ -377,7 +417,7 @@ return (
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Number of GP Pipes</label>
+        <label className="block text-sm font-medium text-gray-700">Required Number of GP Pipes</label>
         <input
           type="number"
           id="numberOfGpPipes"
@@ -414,6 +454,7 @@ return (
         </button>
       </div>
     </form>
+
   </div>
 );
 

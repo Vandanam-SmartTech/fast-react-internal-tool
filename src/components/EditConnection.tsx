@@ -4,6 +4,7 @@ import { getConnectionByConsumerId, updateConsumerConnectionDetails, fetchClaims
 import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -81,6 +82,10 @@ export const EditConnection = () => {
     const [roles, setRoles] = useState<string[]>([]);
     const selectedRepresentative = location.state?.selectedRepresentative;
     const [activeTab, setActiveTab] = useState("Connection Details");
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+    const [dialogMessage, setDialogMessage] = useState("");
+    const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
     const tabs = [
     "Customer Details",
@@ -321,8 +326,10 @@ export const EditConnection = () => {
     console.log("Received CustomerId:", customerId);
   
     if (!customerId) {
-      alert("Customer ID is missing!");
-      return;
+    setDialogType("error");
+    setDialogMessage("Customer ID is missing.");
+    setDialogAction(null);
+    setDialogOpen(true);
     }
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
@@ -359,26 +366,33 @@ export const EditConnection = () => {
       isOnboardedCustomers: formData.isOnboardedCustomers,
     };
   
-    const confirmUpdate = window.confirm(
-      "Do you want to update the connection details?"
-    );
-    if (!confirmUpdate) {
-      // Optional: Reset form or preserve as per your UX decision
-      return;
-    }
-  
-    try {
-      if (connectionId) {
-        await updateConsumerConnectionDetails(Number(connectionId), connectionData);
-        alert("Connection updated successfully!");
-        navigate(`/view-connection/${connectionId}`, {
-          state: { connectionId, consumerId:formData.consumerId, customerId , selectedRepresentative:selectedRepresentative},
-        });
-      }
-    } catch (error) {
-      console.error("Error updating connection:", error);
-      alert("Failed to update connection.");
-    }
+    setDialogType("confirm");
+      setDialogMessage("Do you want to update the connection details?");
+      setDialogAction(() => async () => {
+        try {
+          if (connectionId) {
+            await updateConsumerConnectionDetails(Number(connectionId), connectionData);
+            setDialogType("success");
+            setDialogMessage("Connection updated successfully!");
+            setDialogAction(() => () => {
+              navigate(`/view-connection/${connectionId}`, {
+                state: {
+                  customerId,
+                  connectionId,consumerId:formData.consumerId,
+                  selectedRepresentative:selectedRepresentative,
+                },
+              });
+            });
+            setDialogOpen(true);
+          }
+        } catch (error) {
+          setDialogType("error");
+          setDialogMessage("Failed to update connection.");
+          setDialogAction(null);
+          setDialogOpen(true);
+        }
+      });
+      setDialogOpen(true);
   };
   
   
@@ -813,6 +827,106 @@ export const EditConnection = () => {
   
           
         </form>
+
+        <Dialog
+  open={dialogOpen}
+  onClose={() => setDialogOpen(false)}
+  aria-labelledby="alert-dialog-title"
+  aria-describedby="alert-dialog-description"
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle id="alert-dialog-title">
+    {dialogType === "success" && "Success"}
+    {dialogType === "error" && "Error"}
+    {dialogType === "confirm" && "Confirm"}
+  </DialogTitle>
+  <DialogContent dividers>
+    <Alert
+      severity={
+        dialogType === "success"
+          ? "success"
+          : dialogType === "error"
+          ? "error"
+          : "info"
+      }
+    >
+      {dialogMessage}
+    </Alert>
+  </DialogContent>
+  <DialogActions>
+    {dialogType === "confirm" ? (
+      <>
+        <Button
+          onClick={() => {
+            setDialogOpen(false);
+            // Cancel = reset data
+             if (connection) {
+               setFormData({
+  consumerId: connection.consumerId || "",
+  isMsebConnection: connection.isMsebConnection ? "Yes" : "No",
+  phase:
+    Object.keys(phaseTypeMapping).find(
+      key => phaseTypeMapping[key] === connection.phaseTypeId
+    ) || "Single-Phase",
+  connectionType:
+    Object.keys(connectionTypeMapping).find(
+      key => connectionTypeMapping[key] === connection.connectionTypeId
+    ) || "Residential",
+  addressType:
+    Object.keys(addressTypeMapping).find(
+      key => addressTypeMapping[key] === connection.addressTypeId
+    ) || "Home",
+  correctionType:
+    Object.keys(correctionTypeMapping).find(
+      key => correctionTypeMapping[key] === connection.correctionTypeId
+    ) || "",
+  isNameCorrection: connection.isNameCorrectionRequired ? "Yes" : "No",
+  monthlyAvgConsumptionUnits: connection.monthlyAvgConsumptionUnits || "",
+  gstIn: connection.gstIn || "",
+  billedTo: connection.billedTo || "",
+  addressLine1: connection.addressLine1 || "",
+  addressLine2: connection.addressLine2 || "",
+  sectionId: connection.sectionId || "",
+  districtCode: connection.districtCode || "",
+  talukaCode: connection.talukaCode || "",
+  villageCode: connection.villageCode || "",
+  pincode: connection.postalCode || "",
+  latitude: connection.latitude || "",
+  longitude: connection.longitude || "",
+  isOnboardedCustomers: connection.isOnboardedCustomers ?? false,
+  discomId: connection.discomId || "",
+});
+
+          }}
+        }
+        >
+          No
+        </Button>
+        <Button
+          onClick={() => {
+            setDialogOpen(false);
+            if (dialogAction) dialogAction();
+          }}
+          autoFocus
+        >
+          Yes
+        </Button>
+      </>
+    ) : (
+      <Button
+        onClick={() => {
+          setDialogOpen(false);
+          if (dialogAction) dialogAction();
+        }}
+        autoFocus
+      >
+        OK
+      </Button>
+    )}
+  </DialogActions>
+</Dialog>
+
       </div>
     );
 };

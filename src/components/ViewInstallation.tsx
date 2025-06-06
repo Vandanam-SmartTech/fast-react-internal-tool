@@ -201,7 +201,7 @@ export const ViewInstallation = () => {
 </div>
 
 
-      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Installation Space Details</h2>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Installation Details</h2>
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
@@ -246,7 +246,7 @@ export const ViewInstallation = () => {
 
 
 <div className="flex items-center min-h-[20vh] px-2">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-4xl">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
     {/* Row 1 */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
       <div>
