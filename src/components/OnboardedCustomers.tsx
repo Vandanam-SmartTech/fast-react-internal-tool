@@ -191,7 +191,7 @@ const OnboardedCustomers: React.FC = () => {
                           focus:outline-none`}
                       >
                         {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
-                      </button>
+              </button>
                     </div>
                   </div>
                 ))

@@ -1167,6 +1167,34 @@ export const getCustomerStats = async () => {
   return response.data; 
 };
 
+export const validateUser = async (query: string): Promise<string> => {
+  const { data } = await axios.post<string>(
+    'http://localhost:9090/auth/valid-user',
+    { query }
+  );
+  return data;
+};
+
+export const sendOtpToEmail = async (email: string): Promise<void> => {
+  await axios.post('http://localhost:5555/api/otp/send', { email });
+};
+
+
+export const verifyOtp = async (email: string, otp: string): Promise<void> => {
+  await axios.post('http://localhost:5555/api/otp/verify', { email, otp });
+};
+
+export const verifyAndChangePassword = async (
+  emailAddress: string,
+  newPassword: string
+): Promise<void> => {
+  await API.post(
+    'http://localhost:9090/auth/update-password',
+    { emailAddress, newPassword }
+  );
+};
+
+
 
 
 
