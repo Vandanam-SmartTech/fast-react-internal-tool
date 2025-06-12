@@ -1,25 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import bgImage from '../assets/Solar_Image.jpg';
 import logo from '../assets/Vandanam_Logo.png';
-import { verifyOtp } from '../services/api';
+import { verifyOtp, sendOtpToEmail } from '../services/api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Verification: React.FC = () => {
-  const [otp, setOtp] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
+  const [otp, setOtp] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const email = (location.state as { email: string })?.email || '';
 
-  //const email = localStorage.getItem('resetEmail') || '';
-
+  // Redirect if email not found
   useEffect(() => {
-    if (!email) {
-      navigate('/PasswordReset');
-    }
+    if (!email) navigate('/PasswordReset');
   }, [email, navigate]);
+
+  // Countdown timer
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,11 +47,30 @@ const Verification: React.FC = () => {
     try {
       await verifyOtp(email, otp);
       setMessage('OTP verified successfully.');
+      toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar:true });
       setTimeout(() => navigate('/ChangePassword', { state: { email } }), 1000);
-    } catch (err) {
+    } catch {
       setError('Invalid or expired OTP.');
     }
   };
+
+  const handleResend = async () => {
+    try {
+      await sendOtpToEmail(email);
+      toast.success('OTP resent successfully!', { autoClose: 1000, hideProgressBar:true });
+      setCountdown(300); 
+    } catch {
+      toast.error('Failed to resend OTP. Please try again.');
+    }
+  };
+
+  // const formatTime = (seconds: number) => {
+  //   const m = Math.floor(seconds / 60)
+  //     .toString()
+  //     .padStart(2, '0');
+  //   const s = (seconds % 60).toString().padStart(2, '0');
+  //   return `${m}:${s}`;
+  // };
 
   return (
     <div
@@ -64,32 +96,33 @@ const Verification: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-<div className="mb-4 text-center">
-  <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-4">
-    Enter the 6-digit OTP
-  </label>
+          <div className="mb-4 text-center">
+            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-4">
+              Enter the 6-digit OTP
+            </label>
 
-  <div className="flex justify-center gap-x-4">
-    <OtpInput
-      value={otp}
-      onChange={setOtp}
-      numInputs={6}
-      isInputNum
-      shouldAutoFocus
-      renderInput={(props) => (
-        <input
-          {...props}
-          type="password"
-          //className="w-20 h-16 text-center text-2xl border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          //className="mx-2 h-10 text-center text-2xl border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          className="mx-2 w-10 h-10 text-center text-xl border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style={{ aspectRatio: '1 / 1' }}
-        />
-      )}
-    />
-  </div>
-</div>
+            <div className="flex justify-center gap-x-4">
+              <OtpInput
+                value={otp}
+                onChange={setOtp}
+                numInputs={6}
+                isInputNum
+                shouldAutoFocus
+                renderInput={(props) => (
+                  <input
+                    {...props}
+                    type="password"
+                    className="mx-1 w-10 h-10 text-center text-xl border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ aspectRatio: '1 / 1' }}
+                  />
+                )}
+              />
+            </div>
+          </div>
 
+          {/* <p className="text-center text-sm text-gray-600 mb-4">
+            OTP expires in <span className="font-semibold text-blue-700">{formatTime(countdown)}</span>
+          </p> */}
 
           <button
             type="submit"
@@ -97,6 +130,16 @@ const Verification: React.FC = () => {
           >
             Verify OTP
           </button>
+
+          <div className="text-right mb-3 mt-2 text-center">
+            <button
+              type="button"
+              onClick={handleResend}
+              className="text-sm font-medium text-blue-600 hover:underline"
+            >
+              Resend OTP
+            </button>
+          </div>
         </form>
       </div>
     </div>
