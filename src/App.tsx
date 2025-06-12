@@ -14,7 +14,9 @@ import { InstallationForm } from './components/InstallationForm';
 import { ViewInstallation } from './components/ViewInstallation';
 import { SystemSpecifications } from './components/SystemSpecifications';
 import  OnboardedCustomers  from './components/OnboardedCustomers';
-
+import  PasswordReset  from './components/PasswordReset'; 
+import ChangePassword from './components/ChangePassword';
+import  Verification  from './components/Verification';
 import  RepresentativeDashboard  from './components/RepresentativeDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import { EditCustomer } from './components/EditCustomer';
@@ -28,7 +30,8 @@ const AppContent: React.FC = () => {
 
   // Show Navbar only on specific routes
  // const showNavbar = location.pathname !== '/login';
- const showSidebar = location.pathname !== '/login';
+ const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword';
+
   
 
   return (
@@ -47,6 +50,12 @@ const AppContent: React.FC = () => {
           
           {/* Login Page */}
           <Route path="/login" element={<Login />} />
+
+          <Route path="/PasswordReset" element={<PasswordReset />} />
+
+          <Route path="/Verification" element={<Verification />} />
+
+          <Route path="/ChangePassword" element={<ChangePassword />} />
           
           {/* Protected Quotation Form */}
           <Route

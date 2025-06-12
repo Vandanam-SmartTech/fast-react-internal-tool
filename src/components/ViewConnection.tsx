@@ -665,21 +665,36 @@ const handleNo = async () => {
   </button>
 </div>
 
-{roles.includes("ROLE_ADMIN") && (
+{roles.includes("ROLE_ADMIN") && connection && (
   <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
-    <button
-      onClick={() => {
-        setDialogType("confirm");
-        setDialogMessage("Do you want to onboard the customer?");
-        setDialogAction(() => handleYes); // `handleYes` is the confirmation action
-        setDialogOpen(true);
-      }}
-      className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
-    >
-      Do you want to Onboard the Customer?
-    </button>
+    {connection.isOnboardedCustomers === true ? (
+      <button
+        onClick={() => {
+          setDialogType("confirm");
+          setDialogMessage("Do you want to offboard the customer?");
+          setDialogAction(() => handleNo); 
+          setDialogOpen(true);
+        }}
+        className="py-3 px-6 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 mx-2"
+      >
+        Do you want to Offboard the Customer?
+      </button>
+    ) : (
+      <button
+        onClick={() => {
+          setDialogType("confirm");
+          setDialogMessage("Do you want to onboard the customer?");
+          setDialogAction(() => handleYes); 
+          setDialogOpen(true);
+        }}
+        className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+      >
+        Do you want to Onboard the Customer?
+      </button>
+    )}
   </div>
 )}
+
 
 
 

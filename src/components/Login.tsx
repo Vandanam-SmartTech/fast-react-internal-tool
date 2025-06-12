@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login, setAuthToken, fetchClaims } from '../services/api';
 import bgImage from '../assets/Solar_Image.jpg';
 import logo from '../assets/Vandanam_Logo.png';
@@ -100,12 +100,24 @@ const Login = () => {
             </div>
           </div>
 
+                    <div className="text-left mb-3 sm:mb-4">
+              <button
+                  type="button"
+                  onClick={() => navigate('/PasswordReset')}
+                  className="text-sm text-blue-600 font-medium hover:underline"
+                >
+              Forgot Password?
+              </button>
+          </div>
+
+
           <button
             type="submit"
             className="w-full py-2 sm:py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
           >
             Login
           </button>
+
         </form>
       </div>
     </div>

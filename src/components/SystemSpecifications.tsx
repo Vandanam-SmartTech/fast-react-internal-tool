@@ -87,6 +87,9 @@ export const SystemSpecifications = () => {
     panelBrand:"",
     Kw:"",
     numberOfGpPipes: 0,
+    waterSprinklerSystem: false,       
+    heavyDutyRamp: false,        
+    heavyDutyStairs: false       
   });
 
 
@@ -340,6 +343,9 @@ useEffect(() => {
           dcrNonDcrType: formData.dcrNonDcrType,
           connectionType,
           numberOfGpPipes: formData.numberOfGpPipes || 0,
+          waterSprinklerSystem:formData.waterSprinklerSystem,
+          heavyDutyRamp:formData.heavyDutyRamp,
+          heavyDutyStairs:formData.heavyDutyStairs,
         };
   
         console.log("Request Data:", requestData);
@@ -369,7 +375,7 @@ useEffect(() => {
       formData.panelBrand &&
       formData.dcrNonDcrType &&
       phaseType &&
-      connectionType
+      connectionType 
     ) {
       handleGetPrice();
     }
@@ -381,6 +387,9 @@ useEffect(() => {
     formData.dcrNonDcrType,
     phaseType,
     connectionType,
+    formData.waterSprinklerSystem,        
+    formData.heavyDutyRamp,         
+    formData.heavyDutyStairs  
   ]);
   
 
@@ -398,6 +407,9 @@ useEffect(() => {
         solarSystemCost: formData.solarSystemCost,
         fabricationCost: formData.fabricationCost,
         totalCost: formData.totalCost,
+        waterSprinklerSystem: formData.waterSprinklerSystem,
+        heavyDutyRamp: formData.heavyDutyRamp,
+        heavyDutyStairs: formData.heavyDutyStairs,
     };
 
     try {
@@ -730,8 +742,8 @@ const handleGenerateQuotation = async () => {
     <label className="flex items-center space-x-3">
       <input
         type="checkbox"
-        name="waterSprinkler"
-        checked={formData.waterSprinkler || false}
+        name="waterSprinklerSystem"
+        checked={formData.waterSprinklerSystem || false}
         onChange={handleChange}
         className="h-5 w-5 text-blue-600"
       />
@@ -741,8 +753,8 @@ const handleGenerateQuotation = async () => {
     <label className="flex items-center space-x-3">
       <input
         type="checkbox"
-        name="heavyRamp"
-        checked={formData.heavyRamp || false}
+        name="heavyDutyRamp"
+        checked={formData.heavyDutyRamp || false}
         onChange={handleChange}
         className="h-5 w-5 text-blue-600"
       />
@@ -752,8 +764,8 @@ const handleGenerateQuotation = async () => {
     <label className="flex items-center space-x-3">
       <input
         type="checkbox"
-        name="heavyStairs"
-        checked={formData.heavyStairs || false}
+        name="heavyDutyStairs"
+        checked={formData.heavyDutyStairs || false}
         onChange={handleChange}
         className="h-5 w-5 text-blue-600"
       />
