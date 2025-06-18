@@ -10,6 +10,7 @@ import {
   HomeModernIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
 
 export const EditInstallation = () => {
   const location = useLocation();
@@ -138,22 +139,24 @@ export const EditInstallation = () => {
           try {
             if (installationId) {
               await updateInstallationSpaceDetails(Number(installationId), installationData);
-              setDialogType("success");
-              setDialogMessage("Installation updated successfully!");
-              setDialogAction(() => () => {
+              toast.success("Installation details updated successfully!", { 
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
                 navigate(`/view-installation/${installationId}`, {
                   state: {
                     consumerId, connectionId, installationId, customerId, selectedRepresentative,
                   },  
                  });
-              });
-              setDialogOpen(true);
+
+
             }
           } catch (error) {
-            setDialogType("error");
-            setDialogMessage("Failed to update installation.");
-            setDialogAction(null);
-            setDialogOpen(true);
+             toast.error("Failed to update installation details.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
           }
         });
         setDialogOpen(true);

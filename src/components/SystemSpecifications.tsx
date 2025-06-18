@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, uploadFileToOneDrive, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
@@ -7,6 +6,7 @@ import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { toast } from "react-toastify";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -89,7 +89,8 @@ export const SystemSpecifications = () => {
     numberOfGpPipes: 0,
     waterSprinklerSystem: false,       
     heavyDutyRamp: false,        
-    heavyDutyStairs: false       
+    heavyDutyStairs: false,
+    wattage:0,       
   });
 
 
@@ -190,6 +191,22 @@ useEffect(() => {
 //   }
 // }, []);
 
+const getWattageForBrand = (brand: string): number => {
+  switch (brand) {
+    case "Sova":
+      return 550;
+    case "En-Icon":
+      return 590;
+    case "Adani":
+      return 575;
+    default:
+      return 0;
+  }
+};
+
+
+let hasShownError = false;
+
 useEffect(() => {
   const fetchData = async () => {
     if (!connectionId) return;
@@ -213,6 +230,7 @@ useEffect(() => {
             ? "Non-DCR"
             : "DCR",
         panelBrand: recommendation.panelBrand || "",
+        wattage: getWattageForBrand(recommendation.panelBrand || ""),
       }));
 
       setConnectionType(recommendation.connectionType || "");
@@ -230,9 +248,13 @@ useEffect(() => {
       }
     } catch (error: any) {
       console.error("Error fetching recommended details:", error);
-      setDialogType("error");
-      setDialogMessage("Failed to fetch recommended details. Please try again later.");
-      setDialogOpen(true);
+            if (!hasShownError) {
+        hasShownError = true;
+        toast.error("Failed to fetch recommended details. Please try again later.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+      }
     } finally {
       setIsFetchingRecommendations(false);
     }
@@ -269,13 +291,15 @@ useEffect(() => {
     }
 
     // Interdependent panelBrand <-> dcrNonDcrType
-    if (name === "panelBrand") {
-      updatedData.dcrNonDcrType = value === "En-Icon" ? "Non-DCR" : "DCR";
+if (name === "panelBrand") {
+      updatedData.dcrNonDcrType = value === "En-Icon" ? "Non-DCR" : "Non-DCR";
+      updatedData.wattage = getWattageForBrand(value);
     }
 
     if (name === "dcrNonDcrType") {
       updatedData.panelBrand = value === "Non-DCR" ? "En-Icon" : "Sova";
     }
+
 
     updatedFormData = updatedData; // assign to outer variable
     return updatedData;
@@ -410,22 +434,25 @@ useEffect(() => {
         waterSprinklerSystem: formData.waterSprinklerSystem,
         heavyDutyRamp: formData.heavyDutyRamp,
         heavyDutyStairs: formData.heavyDutyStairs,
+        panelCapacity: formData.wattage,
     };
 
     try {
         await saveCustomerSpecs(connectionId, requestData);
         //alert("System specifications saved successfully!");
-      setDialogType("success");
-      setDialogMessage("System specifications saved successfully!");
-      setDialogOpen(true);
+      toast.success("System specifications saved successfully.",{
+        autoClose:1000,
+        hideProgressBar: true,
+      });
         //////
         setIsSpecsSaved(true);
         ///////
     } catch (error) {
         //alert(error.message || "An error occurred while saving.");
-        setDialogType("error");
-      setDialogMessage("An error occurred while saving.");
-      setDialogOpen(true);
+        toast.error("Erroe while saving specifications.",{
+          autoClose:1000,
+          hideProgressBar: true,
+        });
     }
 };
 
@@ -736,6 +763,12 @@ const handleGenerateQuotation = async () => {
                    ))}
               </select>
         </div>
+
+        <div>
+                <label className="block text-sm font-medium text-gray-700">Wattage-wp</label>
+                <input type="number" name="wattage" value={formData.wattage} onChange={handleChange} 
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+         </div>
 
 <div className="col-span-full space-y-6">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">

@@ -4,6 +4,8 @@ import { getCustomerById, updateConsumerPersonalDetails,fetchClaims } from "../s
 import { Stepper, Step } from "react-form-stepper";
 import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { toast } from "react-toastify";
 
 import {
   UserCircleIcon,
@@ -34,6 +36,12 @@ export const EditCustomer = () => {
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
+  const [showMobile, setShowMobile] = useState(false);
+  const handleToggleMobile = () => setShowMobile(!showMobile);
+
+  const [showEmail, setShowEmail] = useState(false);
+  const handleToggleEmail = () => setShowEmail(!showEmail);
 
 
   const tabs = [
@@ -112,48 +120,53 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (formData.mobileNumber !== confirmMobileNumber) {
-    setDialogType("error");
-    setDialogMessage("Mobile number and Confirm Mobile number do not match.");
-    setDialogAction(null);
-    setDialogOpen(true);
+    toast.error("Mobile number and Confirm Mobile number do not match.",{
+      autoClose:1000,
+      hideProgressBar:true,
+    });
     return;
   }
 
   if (formData.emailAddress !== confirmEmailAddress) {
-    setDialogType("error");
-    setDialogMessage("Email and Confirm Email do not match.");
-    setDialogAction(null);
-    setDialogOpen(true);
+    toast.error("Email and Confirm Email do not match.",{
+      autoClose: 1000,
+      hideProgressBar:true,
+    });
     return;
   }
 
   // Show confirm dialog
   setDialogType("confirm");
-  setDialogMessage("Do you want to update the customer details?");
-  setDialogAction(() => async () => {
-    try {
-      if (customerId) {
-        await updateConsumerPersonalDetails(Number(customerId), formData);
-        setDialogType("success");
-        setDialogMessage("Customer updated successfully!");
-        setDialogAction(() => () => {
-          navigate(`/view-customer/${customerId}`, {
-            state: {
-              customerId,
-              selectedRepresentative,
-            },
-          });
+setDialogMessage("Do you want to update the customer details?");
+setDialogAction(() => async () => {
+  try {
+    if (customerId) {
+      await updateConsumerPersonalDetails(Number(customerId), formData);
+
+      toast.success("Customer details updated successfully!", { 
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+
+        navigate(`/view-customer/${customerId}`, {
+          state: {
+            customerId,
+            selectedRepresentative,
+          },
         });
-        setDialogOpen(true);
-      }
-    } catch (error) {
-      setDialogType("error");
-      setDialogMessage("Failed to update customer.");
-      setDialogAction(null);
-      setDialogOpen(true);
+
     }
-  });
-  setDialogOpen(true);
+  } catch (error) {
+    toast.error("Failed to update customer details.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+  } finally {
+    setDialogOpen(false); // Optional: close dialog after action
+  }
+});
+setDialogOpen(true);
 };
 
   
@@ -265,23 +278,36 @@ const handleSubmit = async (e: React.FormEvent) => {
           />
         </div>
 
-        <div>
+<div>
   <label className="block text-sm font-medium text-gray-700">Enter Mobile Number <span className="text-red-500">*</span></label>
-  <input
-    type="password"
-    name="mobileNumber"
-    value={formData.mobileNumber}
-    onChange={handleChange}
-    placeholder="1234567890"
-    maxLength={10}
-    pattern="[6-9]{1}[0-9]{9}"
-    required
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    title="Enter a valid 10-digit mobile number starting with 6-9"
-  />
-  {formData.mobileNumber.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
+
+  <div className="relative">
+    <input
+      type={showMobile ? 'text' : 'password'}
+      inputMode="numeric"
+      pattern="[6-9]{1}[0-9]{9}"
+      maxLength={10}
+      name="mobileNumber"
+      value={formData.mobileNumber}
+      onChange={handleChange}
+      placeholder="9567023456"
+      required
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      title="Enter a valid 10-digit mobile number starting with 6-9"
+    />
+    
+    <span
+      onClick={handleToggleMobile}
+      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+    >
+      {showMobile ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+
+  {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
     <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
   )}
+
 </div>
 
 {/* Confirm Mobile Number */}
@@ -307,19 +333,31 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
-        <input
-          type="password"
-          name="emailAddress"
-          value={formData.emailAddress}
-          onChange={handleChange}
-          placeholder="johndoe@example.com"
-          maxLength={50}
-          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-          title="Enter a valid email address"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+  <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
+
+  <div className="relative">
+    <input
+      type={showEmail ? 'text' : 'password'}
+      name="emailAddress"
+      value={formData.emailAddress}
+      onChange={handleChange}
+      placeholder="johndoe@example.com"
+      maxLength={50}
+      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+      title="Enter a valid email address"
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+
+    <span
+      onClick={handleToggleEmail}
+      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+    >
+      {showEmail ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+
+  
+</div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Confirm Email Address <span className="text-red-500">*</span></label>

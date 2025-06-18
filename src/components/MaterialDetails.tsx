@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, fetchBrandCapacityDetails, getMaterialsByConnectionId } from "../services/api";
+import { postMaterialData, fetchBrandCapacityDetails, getMaterialsByConnectionId, updateMaterialData } from "../services/api";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { toast } from "react-toastify";
 
 export interface Consumer{
   id:number,
@@ -131,9 +132,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!connectionId) {
-    setMessageBoxContent("Connection ID is missing from URL!");
-    setMessageBoxSeverity("error");
-    setMessageBoxOpen(true);
+    toast.error("Connection Id is missing",{
+      autoClose:1000,
+      hideProgressBar:true,
+    });
     return;
   }
 
@@ -153,16 +155,29 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
 try {
-    const response = await postMaterialData(connectionId, dataToSubmit);
-    setMessageBoxContent(
-      existingMaterialData ? "Material data updated successfully!" : "Material data saved successfully!"
-    );
-    setMessageBoxSeverity("success");
-    setMessageBoxOpen(true);
+    if (existingMaterialData) {
+      await updateMaterialData(connectionId, dataToSubmit);
+      toast.success("Material data updated successfully!", { 
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } else {
+      await postMaterialData(connectionId, dataToSubmit);
+       toast.success("Material data saved successfully!", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    
+    }
+
+navigate("/OnboardedCustomers");
   } catch (error) {
-    setMessageBoxContent("Failed to submit data.");
-    setMessageBoxSeverity("error");
-    setMessageBoxOpen(true);
+    console.error("Material submission error:", error);
+     toast.error("Failed to submit the data", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
   }
 };
 
@@ -253,15 +268,11 @@ const handleDialogClose = () => {
     className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
   >
     <option value="">Select Make of Module</option>
-    <option value="Vikram Solar">Vikram Solar</option>
-    <option value="Waaree Energies">Waaree Energies</option>
-    <option value="Tata Power Solar">Tata Power Solar</option>
-    <option value="Adani Solar">Adani Solar</option>
-    <option value="RenewSys">RenewSys</option>
-    <option value="Goldi Solar">Goldi Solar</option>
-    <option value="Saatvik Green">Saatvik Green</option>
-    <option value="Jakson Group">Jakson Group</option>
-    <option value="Premier Energies">Premier Energies</option>
+    <option value="Sova">Sova</option>
+    <option value="En-Icon">En-Icon</option>
+    <option value="Tata">Tata</option>
+    <option value="Adani">Adani</option>
+    <option value="Waree">Waree</option>
     <option value="Other">Other</option>
   </select>
 

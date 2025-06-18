@@ -438,7 +438,7 @@ useEffect(() => {
   
     try {
       console.log("Saving new connection...");
-      console.log("Hello");
+      
       const result = await saveConnection(connectionData);
       if (result.id) {
         // console.log("New connection saved with ID:", connectionId);

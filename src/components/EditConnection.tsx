@@ -11,6 +11,7 @@ import {
   HomeModernIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
 
 interface District {
     code: number;
@@ -326,10 +327,11 @@ export const EditConnection = () => {
     console.log("Received CustomerId:", customerId);
   
     if (!customerId) {
-    setDialogType("error");
-    setDialogMessage("Customer ID is missing.");
-    setDialogAction(null);
-    setDialogOpen(true);
+    toast.error("Customer Id is missing",{
+      autoClose:1000,
+      hideProgressBar:true,
+    });
+    return;
     }
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
@@ -372,9 +374,11 @@ export const EditConnection = () => {
         try {
           if (connectionId) {
             await updateConsumerConnectionDetails(Number(connectionId), connectionData);
-            setDialogType("success");
-            setDialogMessage("Connection updated successfully!");
-            setDialogAction(() => () => {
+            toast.success("Connection details updated successfully!", { 
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
               navigate(`/view-connection/${connectionId}`, {
                 state: {
                   customerId,
@@ -382,14 +386,14 @@ export const EditConnection = () => {
                   selectedRepresentative:selectedRepresentative,
                 },
               });
-            });
-            setDialogOpen(true);
+
+            
           }
         } catch (error) {
-          setDialogType("error");
-          setDialogMessage("Failed to update connection.");
-          setDialogAction(null);
-          setDialogOpen(true);
+          toast.error("Failed to update connection details.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
         }
       });
       setDialogOpen(true);
