@@ -292,13 +292,24 @@ useEffect(() => {
 
     // Interdependent panelBrand <-> dcrNonDcrType
 if (name === "panelBrand") {
-      updatedData.dcrNonDcrType = value === "En-Icon" ? "Non-DCR" : "Non-DCR";
-      updatedData.wattage = getWattageForBrand(value);
-    }
+  updatedData.wattage = getWattageForBrand(value);
 
-    if (name === "dcrNonDcrType") {
-      updatedData.panelBrand = value === "Non-DCR" ? "En-Icon" : "Sova";
-    }
+  if (value === "En-Icon") {
+    updatedData.dcrNonDcrType = "Non-DCR";
+  }
+}
+
+if (name === "dcrNonDcrType") {
+
+  if (value === "Non-DCR") {
+    updatedData.panelBrand = "En-Icon";
+  }
+}
+
+
+    // if (name === "dcrNonDcrType") {
+    //   updatedData.panelBrand = value === "Non-DCR" ? "En-Icon" : "Sova";
+    // }
 
 
     updatedFormData = updatedData; // assign to outer variable
