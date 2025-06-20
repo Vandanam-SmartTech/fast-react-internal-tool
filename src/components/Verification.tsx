@@ -11,8 +11,6 @@ const Verification: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,16 +21,6 @@ const Verification: React.FC = () => {
     if (!email) navigate('/PasswordReset');
   }, [email, navigate]);
 
-  // Countdown timer
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,13 +52,8 @@ const Verification: React.FC = () => {
     }
   };
 
-  // const formatTime = (seconds: number) => {
-  //   const m = Math.floor(seconds / 60)
-  //     .toString()
-  //     .padStart(2, '0');
-  //   const s = (seconds % 60).toString().padStart(2, '0');
-  //   return `${m}:${s}`;
-  // };
+
+
 
   return (
     <div
@@ -126,20 +109,29 @@ const Verification: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-2 sm:py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+            className="w-full py-1 sm:py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
           >
             Verify OTP
           </button>
 
-          <div className="text-right mb-3 mt-2 text-center">
-            <button
-              type="button"
-              onClick={handleResend}
-              className="text-sm font-medium text-blue-600 hover:underline"
-            >
-              Resend OTP
-            </button>
-          </div>
+<div className="flex justify-center items-center gap-x-52 mt-2 mb-3 text-sm text-blue-600 font-medium">
+  <button
+    type="button"
+    onClick={() => navigate('/')}
+    className="hover:underline"
+  >
+    Back to Login
+  </button>
+  <button
+    type="button"
+    onClick={handleResend}
+    className="hover:underline"
+  >
+    Resend OTP
+  </button>
+</div>
+
+
         </form>
       </div>
     </div>

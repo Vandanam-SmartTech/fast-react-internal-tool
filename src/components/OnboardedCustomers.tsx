@@ -173,24 +173,31 @@ const OnboardedCustomers: React.FC = () => {
                         >
                           View Details
                         </button>
-                        <button
-                          onClick={() => handleGenerateDocuments(consumer)}
-                          className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-3/5"
-                        >
-                          Generate Documents
-                        </button>
+                            <div
+                                className="w-3/5"
+                                title={!materialsMap[consumer.id] ? "Please fill material details to generate documents" : ""}
+                              >
+                            <button
+                                onClick={() => handleGenerateDocuments(consumer)}
+                                disabled={!materialsMap[consumer.id]}
+                                className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full bg-blue-500 hover:bg-blue-600 focus:outline-none
+                                ${!materialsMap[consumer.id] ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                           Generate Documents
+                          </button>
+                        </div>
                       </div>
-<button
-                        onClick={() =>
-                          materialsMap[consumer.id]
-                            ? handleViewMaterialDetails(consumer)
-                            : handleMaterialDetails(consumer)
-                        }
-                        className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full 
-                          ${materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"} 
-                          focus:outline-none`}
-                      >
-                        {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
+              <button
+                  onClick={() =>
+                  materialsMap[consumer.id]
+                  ? handleViewMaterialDetails(consumer)
+                 : handleMaterialDetails(consumer)
+                  }
+                    className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full 
+                    ${materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"} 
+                    focus:outline-none`}
+                    >
+                    {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
               </button>
                     </div>
                   </div>

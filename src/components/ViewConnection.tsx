@@ -612,6 +612,11 @@ const handleNo = async () => {
       {installations.map((installation, index) => (
         <div key={installation.id} className="bg-white p-4 rounded-lg shadow-md border">
           <h3 className="text-lg font-semibold">Installation {index + 1}</h3>
+          <p className="text-lg text-gray-600">
+    {installation.installationSpaceTitle && (
+      <span>({installation.installationSpaceTitle})</span>
+    )}
+  </p>
           <p className="text-sm text-gray-600">
             <strong>Space Type:</strong> {installationSpaceTypeMapping[installation.installationSpaceTypeId] || "Unknown"}
           </p>

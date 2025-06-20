@@ -110,8 +110,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3 sm:mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-              Enter your registered email or phone
+            <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1 sm:mb-1">
+              Reset Password
+            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-1 sm:mb-2">
+              Enter the email or phone number and we'll email you the verification code to reset your password.
             </label>
             <input
               id="email"

@@ -208,6 +208,7 @@ const getWattageForBrand = (brand: string): number => {
 let hasShownError = false;
 
 useEffect(() => {
+  
   const fetchData = async () => {
     if (!connectionId) return;
 
@@ -305,11 +306,6 @@ if (name === "dcrNonDcrType") {
     updatedData.panelBrand = "En-Icon";
   }
 }
-
-
-    // if (name === "dcrNonDcrType") {
-    //   updatedData.panelBrand = value === "Non-DCR" ? "En-Icon" : "Sova";
-    // }
 
 
     updatedFormData = updatedData; // assign to outer variable

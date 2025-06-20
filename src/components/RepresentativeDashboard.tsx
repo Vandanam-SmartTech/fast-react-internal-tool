@@ -21,19 +21,19 @@ const RepresentativeDashboard = () => {
  
    const [data, setData] = useState([]);
  
-   useEffect(() => {
-     const client = new Client({
-       webSocketFactory: () => new SockJS('http://localhost:8585/ws'),
-       onConnect: () => {
-         client.subscribe('/topic/customer-stats', (message) => {
-           const newData = JSON.parse(message.body);
-           setData(newData);
-         });
-       }
-     });
-     client.activate();
-     return () => client.deactivate();
-   }, []);
+  //  useEffect(() => {
+  //    const client = new Client({
+  //      webSocketFactory: () => new SockJS('http://localhost:8585/ws'),
+  //      onConnect: () => {
+  //        client.subscribe('/topic/customer-stats', (message) => {
+  //          const newData = JSON.parse(message.body);
+  //          setData(newData);
+  //        });
+  //      }
+  //    });
+  //    client.activate();
+  //    return () => client.deactivate();
+  //  }, []);
  
    useEffect(() => {
      getCustomerStats().then(setData).catch(console.error);
