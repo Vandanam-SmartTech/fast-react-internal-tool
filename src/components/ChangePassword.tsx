@@ -73,7 +73,7 @@ const Verification: React.FC = () => {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password
+              Enter New Password
             </label>
             <input
               type="password"
@@ -81,7 +81,7 @@ const Verification: React.FC = () => {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              placeholder="Enter new password"
+              placeholder="New password"
             />
           </div>
 
@@ -95,7 +95,7 @@ const Verification: React.FC = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              placeholder="Confirm new password"
+              placeholder="Confirm password"
             />
           </div>
 
@@ -103,9 +103,9 @@ const Verification: React.FC = () => {
             <strong>Note</strong>
             <ul className="list-disc ml-5">
               <li>Minimum 8 characters</li>
-              <li>At least 1 uppercase letter (A–Z)</li>
-              <li>At least 1 lowercase letter (a–z)</li>
-              <li>At least 1 number (0–9)</li>
+              <li>At least 1 uppercase letter (A-Z)</li>
+              <li>At least 1 lowercase letter (a-z)</li>
+              <li>At least 1 number (0-9)</li>
               <li>At least 1 special character (!@#$…)</li>
             </ul>
           </div>
@@ -116,6 +116,16 @@ const Verification: React.FC = () => {
           >
            Submit
           </button>
+
+                    <div className="text-left mb-3 mt-2 sm:mb-3">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-sm text-blue-600 font-medium hover:underline"
+            >
+              Back to Login
+            </button>
+          </div>
         </form>
       </div>
     </div>

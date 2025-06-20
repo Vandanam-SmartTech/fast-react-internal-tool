@@ -16,10 +16,52 @@ const Verification: React.FC = () => {
   const location = useLocation();
   const email = (location.state as { email: string })?.email || '';
 
+  const OTP_EXPIRY_KEY = 'otpExpiryTime';
+
+  const RESEND_ENABLE_KEY = 'resendEnableTime';
+
+  const [resendCountdown, setResendCountdown] = useState<number>(0);
+
+  const [resending, setResending] = useState(false);
+
+
+
+  const [countdown, setCountdown] = useState<number>(0);
+  const countdownInterval = useRef<NodeJS.Timeout | null>(null);
+
+
+
   // Redirect if email not found
   useEffect(() => {
     if (!email) navigate('/PasswordReset');
   }, [email, navigate]);
+
+useEffect(() => {
+  const expiryTime = parseInt(localStorage.getItem(OTP_EXPIRY_KEY) || '0');
+  const resendTime = parseInt(localStorage.getItem(RESEND_ENABLE_KEY) || '0');
+  const now = Date.now();
+
+  const otpTimeLeft = Math.floor((expiryTime - now) / 1000);
+  const resendTimeLeft = Math.floor((resendTime - now) / 1000);
+
+  setCountdown(otpTimeLeft > 0 ? otpTimeLeft : 0);
+  setResendCountdown(resendTimeLeft > 0 ? resendTimeLeft : 0);
+
+  countdownInterval.current = setInterval(() => {
+    setCountdown(prev => {
+      if (prev <= 1) return 0;
+      return prev - 1;
+    });
+
+    setResendCountdown(prev => {
+      if (prev <= 1) return 0;
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(countdownInterval.current!);
+}, []);
+
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,23 +78,47 @@ const Verification: React.FC = () => {
       await verifyOtp(email, otp);
       setMessage('OTP verified successfully.');
       toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar:true });
+
+      localStorage.removeItem('otpExpiryTime');
+      localStorage.removeItem('resendEnableTime');
+
       setTimeout(() => navigate('/ChangePassword', { state: { email } }), 1000);
     } catch {
       setError('Invalid or expired OTP.');
     }
   };
 
-  const handleResend = async () => {
-    try {
-      await sendOtpToEmail(email);
-      toast.success('OTP resent successfully!', { autoClose: 1000, hideProgressBar:true });
-      setCountdown(300); 
-    } catch {
-      toast.error('Failed to resend OTP. Please try again.');
-    }
+const handleResend = async () => {
+  setResending(true); // disable button immediately
+
+  try {
+    await sendOtpToEmail(email);
+
+    const now = Date.now();
+    const newExpiry = now + 5 * 60 * 1000; // 5 minutes
+    const enableResendAt = now + 60 * 1000; // 1 minute
+
+    localStorage.setItem(OTP_EXPIRY_KEY, newExpiry.toString());
+    localStorage.setItem(RESEND_ENABLE_KEY, enableResendAt.toString());
+
+    setCountdown(300);
+    setResendCountdown(60);
+
+    toast.success('OTP resent successfully!', { autoClose: 1000, hideProgressBar: true });
+  } catch {
+    toast.error('Failed to resend OTP. Please try again.');
+  } finally {
+    setResending(false); // enable button again regardless of success/failure
+  }
+};
+
+
+
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
-
-
 
 
   return (
@@ -81,7 +147,7 @@ const Verification: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-center">
             <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-4">
-              Enter the 6-digit OTP
+              Enter the OTP
             </label>
 
             <div className="flex justify-center gap-x-4">
@@ -103,9 +169,6 @@ const Verification: React.FC = () => {
             </div>
           </div>
 
-          {/* <p className="text-center text-sm text-gray-600 mb-4">
-            OTP expires in <span className="font-semibold text-blue-700">{formatTime(countdown)}</span>
-          </p> */}
 
           <button
             type="submit"
@@ -114,7 +177,11 @@ const Verification: React.FC = () => {
             Verify OTP
           </button>
 
-<div className="flex justify-center items-center gap-x-52 mt-2 mb-3 text-sm text-blue-600 font-medium">
+          <p className="text-center mb-2 text-sm text-gray-600">
+  {countdown > 0 ? `OTP expires in: ${formatCountdown(countdown)}` : 'OTP expired. Please resend OTP.'}
+</p>
+
+<div className="flex justify-between items-center flex-wrap gap-2 mt-2 mb-3 text-sm text-blue-600 font-medium">
   <button
     type="button"
     onClick={() => navigate('/')}
@@ -122,13 +189,22 @@ const Verification: React.FC = () => {
   >
     Back to Login
   </button>
-  <button
-    type="button"
-    onClick={handleResend}
-    className="hover:underline"
-  >
-    Resend OTP
-  </button>
+
+<button
+  type="button"
+  onClick={handleResend}
+  className={`hover:underline ${
+    resendCountdown > 0 || resending ? 'text-gray-400 pointer-events-none' : 'text-blue-600'
+  }`}
+  disabled={resendCountdown > 0 || resending}
+>
+  {resending
+    ? 'Sending...'
+    : resendCountdown > 0
+    ? `Resend in ${resendCountdown}s`
+    : 'Resend OTP'}
+</button>
+
 </div>
 
 

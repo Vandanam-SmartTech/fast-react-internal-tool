@@ -53,6 +53,16 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   try {
     const userEmail = await validateUser(emailInput); // gets plain string
     await sendOtpToEmail(userEmail);
+
+    const expiryTime = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const resendTime = Date.now() + 60 * 1000;     // 1 minute
+
+    localStorage.setItem('otpExpiryTime', expiryTime.toString());
+    localStorage.setItem('resendEnableTime', resendTime.toString()); 
+
+
+
+
     toast.success('OTP Sent Successfully!', { autoClose: 1000, hideProgressBar: true });
     
     setTimeout(() => {
@@ -109,33 +119,37 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3 sm:mb-4">
-            <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1 sm:mb-1">
-              Reset Password
-            </label>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-1 sm:mb-2">
-              Enter the email or phone number and we'll email you the verification code to reset your password.
-            </label>
-            <input
-              id="email"
-              type="text"
-              value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
-              required
-              disabled={loading}
-              className="w-full p-2 border rounded-lg focus:ring-blue-300"
-              placeholder="Email or phone"
-            />
-          </div>
+
+              <div>
+      <h3 className="text-xl font-semibold text-gray-700 mb-1">Reset Password</h3>
+      <p className="text-sm text-gray-500 mb-2">
+        Enter your email or phone number. We'll send you a verification code to reset your password.
+      </p>
+    </div>
+    <div>
+      <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-3">
+        Email or Phone
+      </label>
+      <input
+        id="email"
+        type="text"
+        value={emailInput}
+        onChange={e => setEmailInput(e.target.value)}
+        required
+        disabled={loading}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition mb-3"
+        placeholder="Email or Phone"
+      />
+    </div>
 
           <button
             type="submit"
-            className={`w-full py-2 sm:py-3 text-white rounded-lg font-medium transition ${
+            className={`w-full px-2 py-2 text-white rounded-lg font-medium transition ${
               loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
             }`}
             disabled={loading}  
           >
-            Send OTP
+            {loading ? 'Sending OTP...' : 'Send OTP'}
           </button>
 
           <div className="text-right mb-3 mt-2 sm:mb-4">
