@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
-import { generateQuotationPDF, previewQuotationPDF } from '../services/api';
+import { generateQuotationPDF, previewQuotationPDF, uploadDocuments } from '../services/api';
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
@@ -507,22 +507,12 @@ const handleGenerateQuotation = async () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-      // await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
-      // console.log("Quotation uploaded to OneDrive successfully");
+      const fileName = `quotation_${connectionId}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
-    //   const fileName = `quotation_${connectionId}.pdf`;
-    //   const quotationFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
-    // // Step 4: Upload to OneDrive
-    // const uploadResponse = await uploadDocuments(
-    //   connectionId,
-    //   "Quotation Document", // sessionName
-    //   [quotationFile]
-    // );
-
-    // console.log("Quotation uploaded to OneDrive:", uploadResponse.message);
-    // alert("Quotation uploaded to OneDrive successfully!");
-
+      await uploadDocuments(connectionId, "quotation document", [pdfFile]);
+      console.log("PDF uploaded to OneDrive successfully");
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
