@@ -1,8 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login';
-import { QuotationForm } from './components/QuotationForm';
 import PrivateRoute from './components/PrivateRoute';
-//import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import ListOfConsumers from './components/ListOfConsumers';
 import GenerateDocuments from './components/GenerateDocuments';
@@ -28,27 +26,19 @@ import { ToastContainer } from 'react-toastify';
 const AppContent: React.FC = () => {
   const location = useLocation();
 
-  // Show Navbar only on specific routes
- // const showNavbar = location.pathname !== '/login';
  const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword';
-
-  
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Conditionally Render Navbar */}
-      {/* {showNavbar && <Navbar />} */}
       {showSidebar && <Sidebar />}
 
       <ToastContainer position="top-right" autoClose={1000} />
 
-
       <div className="py-12">
         <Routes>
-          {/* Redirect to login */}
+
           <Route path="/" element={<Navigate to="/login" />} />
           
-          {/* Login Page */}
           <Route path="/login" element={<Login />} />
 
           <Route path="/PasswordReset" element={<PasswordReset />} />
@@ -57,30 +47,11 @@ const AppContent: React.FC = () => {
 
           <Route path="/ChangePassword" element={<ChangePassword />} />
           
-          {/* Protected Quotation Form */}
-          <Route
-            path="/quotationform"
-            element={
-              <PrivateRoute>
-                <QuotationForm />
-              </PrivateRoute>
-            }
-          />
-          
-          {/* Protected List of Consumers */}
           <Route
             path="/list-of-consumers"
             element={
               <PrivateRoute>
                 <ListOfConsumers />
-              </PrivateRoute>
-            }
-          />
-          <Route
-              path="/quotationform/:id"
-              element={
-              <PrivateRoute>
-                <QuotationForm />
               </PrivateRoute>
             }
           />

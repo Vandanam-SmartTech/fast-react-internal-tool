@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { fetchOnboardedConsumers, searchCustomers , getMaterialsByConnectionId} from "../services/api";
+import { fetchOnboardedConsumers , getMaterialsByConnectionId} from "../services/api";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../components/SearchBar"; 
+import SearchBar from "../components/SearchBar";
+import { Mail, Phone, User, Zap } from "lucide-react";
+
 
 interface Consumer {
   id: number;
@@ -157,50 +159,88 @@ const OnboardedCustomers: React.FC = () => {
                 <p className="col-span-full text-center text-gray-600">No consumers found.</p>
               ) : (
                 filteredConsumers.map((consumer) => (
-                  <div key={consumer.id} className="bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <div className="mb-4 text-sm sm:text-base">
-                      <p className="truncate"><span className="font-medium">Consumer Number:</span> {consumer.consumerId}</p>
-                      <p className="break-words"><span className="font-medium">Connection Type:</span> {consumer.connectionType}</p>
-                      <p className="break-words"><span className="font-medium">Consumer Name:</span> {consumer.govIdName}</p>
-                      <p className="truncate"><span className="font-medium">Email Address:</span> {consumer.emailAddress}</p>
-                      <p className="truncate"><span className="font-medium">Mobile Number:</span> {consumer.mobileNumber}</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewConsumer(consumer)}
-                          className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-2/5"
-                        >
-                          View Details
-                        </button>
-                            <div
-                                className="w-3/5"
-                                title={!materialsMap[consumer.id] ? "Please fill material details to generate documents" : ""}
-                              >
-                            <button
-                                onClick={() => handleGenerateDocuments(consumer)}
-                                disabled={!materialsMap[consumer.id]}
-                                className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full bg-blue-500 hover:bg-blue-600 focus:outline-none
-                                ${!materialsMap[consumer.id] ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
-                           Generate Documents
-                          </button>
-                        </div>
-                      </div>
-              <button
-                  onClick={() =>
-                  materialsMap[consumer.id]
-                  ? handleViewMaterialDetails(consumer)
-                 : handleMaterialDetails(consumer)
-                  }
-                    className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full 
-                    ${materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"} 
-                    focus:outline-none`}
-                    >
-                    {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
-              </button>
-                    </div>
-                  </div>
+<div
+  key={consumer.id}
+  className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 space-y-3"
+>
+  {/* Consumer Name at the top */}
+  <h2 className="text-lg font-semibold text-gray-800 truncate">
+    {consumer.govIdName}
+  </h2>
+
+  {/* Info with Icons */}
+  <div className="space-y-2 text-sm sm:text-base text-gray-700">
+
+<div className="flex items-center gap-2">
+  <Mail className="w-4 h-4 text-gray-500 shrink-0" />
+  <span className="truncate max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-gray-700">
+    {consumer.emailAddress}
+  </span>
+</div>
+
+    <div className="flex items-center gap-2">
+      <Phone className="w-4 h-4 text-gray-500" />
+      <span>{consumer.mobileNumber}</span>
+    </div>
+
+
+    <div className="flex items-center gap-2">
+      <User className="w-4 h-4 text-gray-500" />
+      <span className="break-all">
+        <span className="font-medium">Consumer No:</span> {consumer.consumerId}
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <Zap className="w-4 h-4 text-gray-500" />
+      <span className="break-words">
+        <span className="font-medium">Connection Type:</span> {consumer.connectionType}
+      </span>
+    </div>
+
+  </div>
+
+  {/* Buttons */}
+  <div className="flex flex-col gap-2 pt-2">
+    <div className="flex gap-2">
+      <button
+        onClick={() => handleViewConsumer(consumer)}
+        className="px-2 h-9 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none w-2/5"
+      >
+        View Details
+      </button>
+
+      <div
+        className="w-3/5"
+        title={!materialsMap[consumer.id] ? "Please fill material details to generate documents" : ""}
+      >
+        <button
+          onClick={() => handleGenerateDocuments(consumer)}
+          disabled={!materialsMap[consumer.id]}
+          className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full bg-blue-500 hover:bg-blue-600 focus:outline-none ${
+            !materialsMap[consumer.id] ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          Generate Documents
+        </button>
+      </div>
+    </div>
+
+    <button
+      onClick={() =>
+        materialsMap[consumer.id]
+          ? handleViewMaterialDetails(consumer)
+          : handleMaterialDetails(consumer)
+      }
+      className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full ${
+        materialsMap[consumer.id] ? "bg-green-500 hover:bg-green-600" : "bg-green-500 hover:bg-green-600"
+      } focus:outline-none`}
+    >
+      {materialsMap[consumer.id] ? "View Material Details" : "Add Material Details"}
+    </button>
+  </div>
+</div>
+
                 ))
               )}
             </div>

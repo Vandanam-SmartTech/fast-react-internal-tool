@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getCustomerById, updateConsumerPersonalDetails,fetchClaims } from "../services/api";
-import { Stepper, Step } from "react-form-stepper";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
-import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from "react-toastify";
 
@@ -15,7 +13,6 @@ import {
 } from "@heroicons/react/24/solid"
 
 export const EditCustomer = () => {
-  const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [customer, setCustomer] = useState<any>(null);
   const [formData, setFormData] = useState<any>({
@@ -27,11 +24,10 @@ export const EditCustomer = () => {
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [existingCustomer, setExistingCustomer] = useState(false);
-  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const customerId = location.state?.customerId;
   const selectedRepresentative = location.state?.selectedRepresentative;
-  const [activeTab, setActiveTab] = useState("Customer Details");
+  const [activeTab] = useState("Customer Details");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
   const [dialogMessage, setDialogMessage] = useState("");
@@ -67,12 +63,6 @@ export const EditCustomer = () => {
       getClaims();
     }, []);
 
-    // useEffect(() => {
-    //   const storedRep = localStorage.getItem("selectedRepresentative");
-    //   if (storedRep) {
-    //     setSelectedRepresentative(JSON.parse(storedRep));
-    //   }
-    // }, []);
 
 
 
@@ -137,8 +127,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   // Show confirm dialog
   setDialogType("confirm");
-setDialogMessage("Do you want to update the customer details?");
-setDialogAction(() => async () => {
+  setDialogMessage("Do you want to update the customer details?");
+  setDialogAction(() => async () => {
   try {
     if (customerId) {
       await updateConsumerPersonalDetails(Number(customerId), formData);
@@ -163,7 +153,7 @@ setDialogAction(() => async () => {
       hideProgressBar: true,
     });
   } finally {
-    setDialogOpen(false); // Optional: close dialog after action
+    setDialogOpen(false); 
   }
 });
 setDialogOpen(true);
@@ -183,18 +173,7 @@ setDialogOpen(true);
         )}
 
   </div>
-      {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-        <Stepper
-          activeStep={-1}
-          styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-          className="min-w-max sm:w-full"
-        >
-          <Step label="Customer Details" />
-          <Step label="Connection Details" />
-          <Step label="Installation Space Details" />
-          <Step label="System Specifications" />
-        </Stepper>
-      </div> */}
+
 
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -203,7 +182,7 @@ setDialogOpen(true);
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =

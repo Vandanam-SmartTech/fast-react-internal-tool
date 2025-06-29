@@ -3,46 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import bgImage from '../assets/Solar_Image.jpg';
 import logo from '../assets/Vandanam_Logo.png';
 import { validateUser, sendOtpToEmail } from '../services/api';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
 const PasswordReset: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);  // loading state
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState('');
 
-// const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-//   e.preventDefault();
-//   setMessage('');
-//   setError('');
-//   setLoading(true);
 
-//   try {
-//     await sendOtpToEmail(email);
-//     toast.success("OTP Sent Successfully!", { 
-//       autoClose: 1000,
-//       hideProgressBar: true,
-//     });
-//     localStorage.setItem('resetEmail', email);
-
-//     setTimeout(() => {
-//       setLoading(false);
-//       navigate('/Verification');
-//     }, 1000);
-
-//   } catch (err) {
-//     setLoading(false);
-//     toast.error("Failed to send OTP. Please try again.", {
-//       autoClose: 2000,
-//       hideProgressBar: true,
-//     });
-//     setError('Failed to send OTP. Please try again.');
-//   }
-// };
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -60,11 +32,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     localStorage.setItem('otpExpiryTime', expiryTime.toString());
     localStorage.setItem('resendEnableTime', resendTime.toString()); 
 
-
-
-
     toast.success('OTP Sent Successfully!', { autoClose: 1000, hideProgressBar: true });
-    
+
     setTimeout(() => {
       setLoading(false);
       navigate('/Verification', { state: { email: userEmail } });

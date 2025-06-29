@@ -103,14 +103,42 @@ export default function GenerateDocuments() {
   
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+  <div className="max-w-4xl mx-auto p-6 space-y-6">
+
+    {/* Aligned Content Wrapper */}
+    <div className="max-w-3xl mx-auto space-y-4">
+
+      {/* Consumer Details Card */}
       {consumer && (
-        <p className="mb-4 text-lg font-medium text-center">
-          Generating Documents for:{" "}
-          <span className="font-semibold">{consumer.govIdName} ({consumer.consumerId})</span>
-        </p>
+        <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
+            <div>
+              <span className="font-medium text-gray-700">Consumer Name:</span>
+              <span className="ml-1 text-gray-800">{consumer.govIdName || "—"}</span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Consumer Number:</span>
+              <span className="ml-1 text-gray-800">{consumer.consumerId || "—"}</span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Mobile Number:</span>
+              <span className="ml-1 text-gray-800">{consumer.mobileNumber || "—"}</span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Email Address:</span>
+              <span className="ml-1 text-gray-800">{consumer.emailAddress || "—"}</span>
+            </div>
+          </div>
+        </div>
       )}
-      <div className="bg-white p-4 rounded-lg shadow-lg max-w-3xl mx-auto">
+
+      {/* Generate Documents Heading */}
+      <p className="text-lg font-semibold text-gray-900 text-left">
+        Generate Documents
+      </p>
+
+      {/* Document List with Buttons */}
+      <div className="bg-white p-4 rounded-lg shadow-lg">
         {documents.map((doc, index) => (
           <div
             key={index}
@@ -119,25 +147,27 @@ export default function GenerateDocuments() {
             <span className="text-lg font-medium text-center sm:text-left">{doc}</span>
 
             <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
-            <button
-                //className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              <button
                 className="hidden md:block w-full sm:w-auto px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 onClick={() => handlePreview(doc)}
-                disabled={loadingPreviewDoc === doc} // Disable only the button being clicked
+                disabled={loadingPreviewDoc === doc}
               >
                 {loadingPreviewDoc === doc ? "Previewing..." : "Preview Document"}
               </button>
               <button
-                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-                    onClick={() => handleGenerate(doc)}
-                    disabled={loadingGenerateDoc === doc}
-            >
-        {loadingGenerateDoc === doc ? "Generating..." : "Generate Document"}
-          </button>
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                onClick={() => handleGenerate(doc)}
+                disabled={loadingGenerateDoc === doc}
+              >
+                {loadingGenerateDoc === doc ? "Generating..." : "Generate Document"}
+              </button>
             </div>
           </div>
         ))}
       </div>
     </div>
-  );
+  </div>
+);
+
+
 }

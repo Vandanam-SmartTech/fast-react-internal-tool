@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import bgImage from '../assets/Solar_Image.jpg';
 import logo from '../assets/Vandanam_Logo.png';
@@ -20,6 +20,8 @@ const Verification: React.FC = () => {
     return passwordRegex.test(pw);
   };
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -40,8 +42,10 @@ const Verification: React.FC = () => {
     try {
       await verifyAndChangePassword(email, newPassword);
       setSuccess('Password changed successfully!');
+
       setTimeout(() => navigate('/'), 1500);
-    } catch (err) {
+    } catch (error) {
+      console.error('Password change failed:', error);
       setError('Failed to change password. Try again.');
     }
   };

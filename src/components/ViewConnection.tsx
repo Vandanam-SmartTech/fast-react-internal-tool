@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { fetchClaims,fetchUploadedDocuments, fetchConsumerNumber, uploadDocuments, getCustomerById, getConnectionByConsumerId, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
+import { useNavigate } from "react-router-dom";
+import { fetchClaims,fetchUploadedFilesBySession, fetchInstallationSpaceTypesNames, downloadDocumentById, fetchConsumerNumber, uploadDocuments, getCustomerById, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
 import { useLocation } from "react-router-dom";
-import { ArrowLeft, Upload, FileUp } from "lucide-react";
-import { Stepper, Step } from "react-form-stepper";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
+import { ArrowLeft, FileUp, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
@@ -25,8 +23,6 @@ export const ViewConnection = () => {
   const [villageName, setVillageName] = useState<string>("");
   const navigate = useNavigate();
   const [installations, setInstallations] = useState<any[]>([]);
-  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
-  const [showDialog, setShowDialog] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [govIdName, setGovIdName] = useState("");
@@ -39,23 +35,37 @@ export const ViewConnection = () => {
   const [passbookFile, setPassbookFile] = useState<File | null>(null);
   const [billFile, setBillFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
+  //const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("Connection Details");
-  //const [activeDocumentTab, setActiveDocumentTab] = useState("Aadhar");
-  const [activeDocTab, setActiveDocTab] = useState<"Aadhar" | "Passbook" | "Electricity">("Aadhar");
-  const [file, setFile] = useState<File | null>(null);
+  const [activeDocTab, setActiveDocTab] = useState<SessionKey>("Aadhar");
+  //const [activeDocTab, setActiveDocTab] = useState<"Aadhar Card" | "Bank Passbook" | "Electricity Bill">("Aadhar Card");
+
+  const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
   const [messageBoxOpen, setMessageBoxOpen] = useState(false);
   const [messageBoxContent, setMessageBoxContent] = useState('');
   const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"success" | "error" | "confirm">("confirm");
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
-  
+const sessionMap = {
+  Aadhar: "Aadhar Card",
+  Passbook: "Bank Passbook",
+  Electricity: "Electricity Bill",
+} as const;
+
+type SessionKey = keyof typeof sessionMap;
+type SessionName = (typeof sessionMap)[SessionKey];
+
+const [sessionFiles, setSessionFiles] = useState<{
+  [key in SessionKey]?: File[];
+}>({});
+const [uploadedFiles, setUploadedFiles] = useState<{
+  [key in SessionKey]?: UploadedFile[];
+}>({});
 
   const tabs = [
     "Customer Details",
@@ -64,44 +74,16 @@ export const ViewConnection = () => {
     "System Specifications",
   ];
 
+  // const installationSpaceTypeMapping: { [key: number]: string } = {
+  //   1: "Slab",
+  //   2: "Metal Sheets",
+  //   3: "Plastic Sheets",
+  //   4: "Clay Tiles",
+  //   5: "Bathroom Slab",
+  //   6: "Cement Sheets",
+  //   7: "On Ground",
+  // };
 
-
-
-  const installationSpaceTypeMapping: { [key: number]: string } = {
-    1: "Slab",
-    2: "Metal Sheets",
-    3: "Plastic Sheets",
-    4: "Clay Tiles",
-    5: "Bathroom Slab",
-    6: "Cement Sheets",
-    7: "On Ground",
-  };
-
-
-  const handleFileUpload = async () => {
-    setIsLoading(true);
-    
-    try {
-      const result = await uploadDocuments(
-        consumerId,
-        districtName,
-        talukaName,
-        villageName,
-        govIdName,
-        aadharFile,
-        passbookFile,
-        billFile
-      );
-
-      alert("" + result.message);
-      setModalOpen(false);
-    } catch (error: any) {
-      alert("Upload failed: " + error.response?.data?.message || error.message);
-    }
-    finally {
-      setIsLoading(false);
-  }
-  };
 
   useEffect(() => {
   const fetchConnection = async () => {
@@ -133,29 +115,6 @@ export const ViewConnection = () => {
 }, [customerId, connectionId]);
 
 
-const fetchAndSetUploadedFiles = async () => {
-  try {
-    const files = await fetchUploadedDocuments(
-      consumerId,
-      districtName,
-      talukaName,
-      villageName,
-      govIdName
-    );
-
-    const fileMap: { [key: string]: string } = {};
-    files.forEach((file: any) => {
-      const fileName = file.name.toLowerCase();
-      if (fileName.includes("aadhar")) fileMap["Aadhar"] = file.downloadUrl;
-      else if (fileName.includes("passbook")) fileMap["Passbook"] = file.downloadUrl;
-      else if (fileName.includes("electricity")) fileMap["Electricity"] = file.downloadUrl;
-    });
-
-    setUploadedFiles(fileMap);
-  } catch (error: any) {
-    console.error("Error fetching uploaded files:", error);
-  }
-};
 
   useEffect(() => {
     if (modalOpen) {
@@ -167,40 +126,62 @@ const fetchAndSetUploadedFiles = async () => {
   setMessageBoxOpen(false);
   };
 
-  const handleSingleFileUpload = async () => {
-  if (!file) {
-    alert("Please select a file before uploading.");
+
+const fetchAndSetUploadedFiles = async () => {
+  const connectionId = location.state?.connectionId;
+
+  const fileMap: { [key in SessionKey]?: UploadedFile[] } = {};
+
+  await Promise.all(
+    (Object.entries(sessionMap) as [SessionKey, SessionName][]).map(
+      async ([key, sessionName]) => {
+        const files = await fetchUploadedFilesBySession(connectionId, sessionName);
+        fileMap[key] = files;
+      }
+    )
+  );
+
+  setUploadedFiles(fileMap);
+};
+
+
+
+const handleSingleFileUpload = async (files: File[]) => {
+  if (!files || files.length === 0) {
+    alert("Please select files to upload.");
     return;
   }
 
   setIsLoading(true);
-
   try {
-    const result = await uploadDocuments(
-      consumerId,
-      districtName,
-      talukaName,
-      villageName,
-      govIdName,
-      activeDocTab === "Aadhar" ? file : null,
-      activeDocTab === "Passbook" ? file : null,
-      activeDocTab === "Electricity" ? file : null
-    );
-
-    alert(`${activeDocTab} uploaded successfully: ${result.message}`);
-    setFile(null);
-
-    await fetchAndSetUploadedFiles(); // Refresh the file links after upload
+    const connectionId = location.state?.connectionId;
+    const result = await uploadDocuments(connectionId, sessionMap[activeDocTab], files);
+    alert(`${sessionMap[activeDocTab]} uploaded successfully`);
+    await fetchAndSetUploadedFiles();
+    setSessionFiles((prev) => ({ ...prev, [activeDocTab]: [] }));
   } catch (error: any) {
-    alert(`${activeDocTab} upload failed: ${error.response?.data?.message || error.message}`);
+    alert(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`);
   } finally {
     setIsLoading(false);
   }
 };
-  
-  
-  
-  
+
+const handleDownload = async (fileId: string, fileName: string) => {
+  try {
+    const blob = await downloadDocumentById(fileId);
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download file.");
+  }
+};
 
   useEffect(() => {
         const fetchCustomer = async () => {
@@ -226,13 +207,6 @@ const fetchAndSetUploadedFiles = async () => {
       getClaims();
     }, []);
 
-    // useEffect(() => {
-    //   const storedRep = localStorage.getItem("selectedRepresentative");
-    //   if (storedRep) {
-    //     setSelectedRepresentative(JSON.parse(storedRep));
-    //   }
-    // }, []);
-
 
   useEffect(() => {
     const fetchInstallations = async () => {
@@ -245,6 +219,23 @@ const fetchAndSetUploadedFiles = async () => {
 
     fetchInstallations();
   }, [consumerId]);
+
+    useEffect(() => {
+    const loadSpaceTypes = async () => {
+      try {
+        const types = await fetchInstallationSpaceTypesNames();
+        setSpaceTypes(types);
+      } catch (error) {
+        console.error("Failed to load space types", error);
+      }
+    };
+
+    loadSpaceTypes();
+  }, []);
+
+  const getSpaceTypeName = (id: number) => {
+    return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
+  };
 
   const handleYes = async () => {
   if (!connection?.id) return;
@@ -341,66 +332,105 @@ const handleNo = async () => {
           Upload Required Documents
         </h3>
 
+        {/* Tabs */}
         <div className="flex justify-around mb-4">
-          {[
-            { label: "Aadhar Card", key: "Aadhar" },
-            { label: "Bank Passbook", key: "Passbook" },
-            { label: "Electricity Bill", key: "Electricity" }
-          ].map(({ label, key }) => (
+          {(Object.keys(sessionMap) as SessionKey[]).map((key) => (
             <button
               key={key}
-              onClick={() => {
-                setActiveDocTab(key as "Aadhar" | "Passbook" | "Electricity");
-                setFile(null);
-              }}
+              onClick={() => setActiveDocTab(key)}
               className={`px-4 py-2 rounded-t ${
                 activeDocTab === key
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-800 hover:bg-gray-300"
               }`}
             >
-              {label}
+              {sessionMap[key]}
             </button>
           ))}
         </div>
 
+        {/* File Upload */}
         <div>
           <label className="block font-medium text-gray-700 mb-1">
-            Upload {activeDocTab} File
+            Upload {sessionMap[activeDocTab]} File(s)
           </label>
-<div className="flex items-center gap-2 mb-2">
-  <input
-    type="file"
-    className="hidden"
-    id="fileUpload"
-    onChange={(e) => setFile(e.target.files?.[0] || null)}
-  />
-  <label
-    htmlFor="fileUpload"
-    className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
-  >
-    Choose File
-  </label>
-  {file && (
-    <span className="text-sm text-gray-600 truncate max-w-[200px]">
-      {file.name}
-    </span>
-  )}
-</div>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="file"
+              id="fileUpload"
+              className="hidden"
+              multiple
+              onChange={(e) => {
+                const newFiles = Array.from(e.target.files || []);
+                setSessionFiles((prev) => {
+                  const existing = prev[activeDocTab] || [];
+                  const updated = [...existing];
+                  newFiles.forEach((file) => {
+                    if (!existing.find((f) => f.name === file.name)) {
+                      updated.push(file);
+                    }
+                  });
+                  return { ...prev, [activeDocTab]: updated };
+                });
+                e.target.value = "";
+              }}
+            />
 
-
-          {uploadedFiles[activeDocTab] && (
-            <a
-              href={uploadedFiles[activeDocTab]}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-green-600 underline mb-4 inline-block"
+            <label
+              htmlFor="fileUpload"
+              className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
             >
-              View Uploaded {activeDocTab}
-            </a>
+              Choose Files
+            </label>
+          </div>
+
+          {/* Selected Files */}
+          {sessionFiles[activeDocTab]?.length > 0 && (
+            <ul className="text-sm text-gray-700 mb-4">
+              {sessionFiles[activeDocTab].map((file, idx) => (
+                <li
+                  key={file.name + idx}
+                  className="flex justify-between items-center border px-2 py-1 rounded mb-1 bg-gray-50"
+                >
+                  <span className="truncate max-w-[80%]">{file.name}</span>
+                  <button
+                    onClick={() => {
+                      setSessionFiles((prev) => {
+                        const updated = (prev[activeDocTab] || []).filter(
+                          (_, index) => index !== idx
+                        );
+                        return { ...prev, [activeDocTab]: updated };
+                      });
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
+
+          {/* Uploaded Files */}
+          {uploadedFiles[activeDocTab]?.length > 0 && (
+  <div className="text-sm text-green-600 mb-4 space-y-1">
+    {uploadedFiles[activeDocTab].map((file) => (
+      <div key={file.fileId} className="flex items-center gap-2">
+        <button
+          onClick={() => handleDownload(file.fileId, file.fileName)}
+          className="underline text-left text-green-600 hover:text-green-900"
+        >
+          {file.fileName}
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
+
         </div>
 
+        {/* Buttons */}
         <div className="flex justify-between mt-6">
           <button
             onClick={() => setModalOpen(false)}
@@ -409,17 +439,18 @@ const handleNo = async () => {
             Cancel
           </button>
           <button
-            onClick={handleSingleFileUpload}
-            disabled={isLoading || !file}
+            onClick={() => handleSingleFileUpload(sessionFiles[activeDocTab] || [])}
+            disabled={isLoading || !(sessionFiles[activeDocTab]?.length > 0)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
           >
-            {isLoading ? "Uploading..." : `Upload ${activeDocTab}`}
+            {isLoading ? "Uploading..." : `Upload ${sessionMap[activeDocTab]}`}
           </button>
         </div>
       </div>
     </div>
   )}
 </div>
+
 
 
 </div>
@@ -432,7 +463,7 @@ const handleNo = async () => {
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =
@@ -582,12 +613,9 @@ const handleNo = async () => {
       {connection.isNameCorrectionRequired && (
   <div>
     <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-    <p className="mt-1 text-base text-gray-800">Spell Correction</p>
+    <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
   </div>
 )}
-
-
-
     </div>
   </div>
 </div>
@@ -612,14 +640,15 @@ const handleNo = async () => {
       {installations.map((installation, index) => (
         <div key={installation.id} className="bg-white p-4 rounded-lg shadow-md border">
           <h3 className="text-lg font-semibold">Installation {index + 1}</h3>
-          <p className="text-lg text-gray-600">
-    {installation.installationSpaceTitle && (
-      <span>({installation.installationSpaceTitle})</span>
-    )}
-  </p>
+          <p className="text-lg text-gray-600 break-words">
+  {installation.installationSpaceTitle && (
+    <span>({installation.installationSpaceTitle})</span>
+  )}
+</p>
+
           <p className="text-sm text-gray-600">
-            <strong>Space Type:</strong> {installationSpaceTypeMapping[installation.installationSpaceTypeId] || "Unknown"}
-          </p>
+      <strong>Space Type:</strong> {getSpaceTypeName(installation.installationSpaceTypeId)}
+    </p>
           <p className="text-sm text-gray-600">
             <strong>East-West Length:</strong> {installation.availableEastWestLengthFt} ft
           </p>

@@ -77,6 +77,7 @@ useEffect(() => {
     try {
       await verifyOtp(email, otp);
       setMessage('OTP verified successfully.');
+      localStorage.setItem('otpVerified', 'true');
       toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar:true });
 
       localStorage.removeItem('otpExpiryTime');

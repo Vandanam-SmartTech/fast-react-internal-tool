@@ -1,43 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchClaims, getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../services/api';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UserCheck,Users } from 'lucide-react';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
 const RepresentativeDashboard = () => {
-   const [name, setName] = useState('');
    const [preferredName, setPreferredName] = useState('');
    const [greeting, setGreeting] = useState('');
    const navigate = useNavigate();
-   const location = useLocation();
    const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
-   const [count, setCount] = useState<Number | null>(null);
+   const [count, setCount] = useState<number | null>(null);
  
    const [animatedCount, setAnimatedCount] = useState(0);
    const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
  
    const [data, setData] = useState([]);
+
  
   //  useEffect(() => {
-  //    const client = new Client({
-  //      webSocketFactory: () => new SockJS('http://localhost:8585/ws'),
-  //      onConnect: () => {
-  //        client.subscribe('/topic/customer-stats', (message) => {
-  //          const newData = JSON.parse(message.body);
-  //          setData(newData);
-  //        });
-  //      }
-  //    });
-  //    client.activate();
-  //    return () => client.deactivate();
+  //    getCustomerStats().then(setData).catch(console.error);
   //  }, []);
- 
-   useEffect(() => {
-     getCustomerStats().then(setData).catch(console.error);
-   }, []);
+
+    useEffect(() => {
+  getCustomerStats()
+    .then((rawData) => {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const filtered = rawData.filter((entry: any) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= oneYearAgo;
+      });
+
+      setData(filtered);
+    })
+    .catch(console.error);
+}, []);
+
  
    const goToListOfConsumers = () => {
      navigate("/list-of-consumers");

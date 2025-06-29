@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
 import Logo from "../assets/Vandanam_SmartTech_Logo.png"; // Adjust path if needed
-import { Home, UserPlus, Users, UserRoundCheck, UserCog, LogOut } from "lucide-react";
+import { Home, UserPlus, Users, UserRoundCheck, LogOut } from "lucide-react";
 import { fetchClaims } from "../services/api";
 
 

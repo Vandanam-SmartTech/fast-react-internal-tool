@@ -2,11 +2,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveInstallation, fetchClaims, fetchInstallationSpaceTypesNames} from "../services/api";
-import { Stepper, Step } from "react-form-stepper";
 import { ArrowLeft } from "lucide-react";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
-import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import {
   UserCircleIcon,
@@ -21,26 +17,14 @@ export const InstallationForm = () => {
   const connectionId = location.state?.connectionId || null;
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
-  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
-  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
-  const [messageBoxContent, setMessageBoxContent] = useState('');
-  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdInstallationId, setCreatedInstallationId] = useState<number | null>(null);
 
-  // const installationSpaceTypeMapping = {
-  //   'Slab': 1,
-  //   'Metal Sheets': 2,
-  //   'Plastic Sheets': 3,
-  //   'Clay Tiles': 4,
-  //   'Bathroom Slab': 5,
-  //   'Cement Sheets': 6,
-  //   'On Ground': 7,
-  // };
 
   const [activeTab, setActiveTab] = useState("Installation Details");
 
@@ -50,9 +34,6 @@ export const InstallationForm = () => {
     "Installation Details",
     "System Specifications",
   ];
-
-
-  
 
 
   const [formData, setFormData] = useState({
@@ -102,13 +83,6 @@ export const InstallationForm = () => {
       getInstallationSpaceTypesNames();
     }, []);
 
-  // useEffect(() => {
-  //   const storedRep = localStorage.getItem("selectedRepresentative");
-  //   if (storedRep) {
-  //     setSelectedRepresentative(JSON.parse(storedRep));
-  //   }
-  // }, []);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -140,13 +114,6 @@ export const InstallationForm = () => {
         return;
     }
 
-    // Ensure space type ID mapping is correct
-    //const installationSpaceTypeId = installationSpaceTypeMapping[formData.spaceType] || null;
-    // if (!installationSpaceTypeId) {
-    //     alert("Invalid installation space type.");
-    //     return;
-    // }
-
     // Construct installation data object
     const installationData = {
         customerId: customerId || null,
@@ -167,10 +134,7 @@ export const InstallationForm = () => {
         console.log("Saving new installation...");
         const result = await saveInstallation(installationData);
         if (result.id) {
-            // console.log("New Installation saved with ID:", result.id);
-            // navigate(`/view-installation/${installationId}`, {
-            //     state: { consumerId, connectionId, installationId, customerId ,selectedRepresentative:selectedRepresentative},
-            // });
+
             setCreatedInstallationId(result.id); 
             setNavigateAfterClose(true);     
             
@@ -247,7 +211,7 @@ return (
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =

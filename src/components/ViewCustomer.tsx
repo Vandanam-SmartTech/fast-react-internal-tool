@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, useLocation} from "react-router-dom";
 import { getCustomerById, fetchConsumerNumber, fetchClaims } from "../services/api";
-import { Stepper, Step } from "react-form-stepper";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -42,14 +40,6 @@ export const ViewCustomer = () => {
     getClaims();
   }, []);
 
-  // useEffect(() => {
-  //   const storedRep = localStorage.getItem("selectedRepresentative");
-  //   if (storedRep) {
-  //     setSelectedRepresentative(JSON.parse(storedRep));
-  //   }
-  // }, []);
-
-
   useEffect(() => {
     console.log("Fetch Consumer Number API is used");
     const fetchCustomer = async () => {
@@ -87,20 +77,6 @@ export const ViewCustomer = () => {
 
   </div>
 
-
-          {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-      <Stepper 
-        activeStep={0} 
-        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-        className="min-w-max sm:w-full"
-      >
-        <Step label="Customer Details" />
-        <Step label="Connection Details" />
-        <Step label="Installation Space Details" />
-        <Step label="System Specifications" />
-      </Stepper>
-    </div> */}
-
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
@@ -108,7 +84,7 @@ export const ViewCustomer = () => {
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =

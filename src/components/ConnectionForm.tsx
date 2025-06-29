@@ -2,12 +2,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection  } from "../services/api";
-import { getDistrictNameByCode, getTalukaNameByCode, checkConsumerNumberExists, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
-import { Stepper, Step } from "react-form-stepper";
+import { getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
-import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import {
   UserCircleIcon,
@@ -32,28 +28,6 @@ interface Village {
   pincode: string;
 }
 
-// const phaseTypeMapping = {
-//   "Single-Phase": 1,
-//   "Three-Phase": 2,
-// };
-
-// const connectionTypeMapping = {
-//   Residential: 1,
-//   Commercial: 2,
-//   Industrial: 3,
-//   PWW: 4,
-// };
-
-// const addressTypeMapping = {
-//   Home: 1,
-//   Hotel: 2,
-//   Office: 3,
-//   Charitable: 4,
-//   Non_Commercial_Education: 5,
-//   Street_Light: 6,
-//   Construction: 7,
-//   Public_Water_Works: 8,
-// };
 
 const correctionTypeMapping = {
   'Spell Correction': 1,
@@ -79,15 +53,13 @@ export const ConnectionForm = () => {
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
-  const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
-  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab ] = useState("Connection Details");
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
-  const [phaseTypes, setPhaseTypes] = useState<{ id: Number; nameEn: string }[]>([]);
-  const [addressTypes, setAddressTypes] = useState<{ id: Number; nameEn: string }[]>([]);
+  const [phaseTypes, setPhaseTypes] = useState<{ id: number; nameEn: string }[]>([]);
+  const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
 
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
@@ -95,11 +67,8 @@ export const ConnectionForm = () => {
   const [showConsumerNumber, setShowConsumerNumber] = useState(false);
   const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
-  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
-  const [messageBoxContent, setMessageBoxContent] = useState('');
-  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-  const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
+     const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+     const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
 
 
 
@@ -160,12 +129,6 @@ useEffect(() => {
   getClaims();
 }, []);
 
-// useEffect(() => {
-//   const storedRep = localStorage.getItem("selectedRepresentative");
-//   if (storedRep) {
-//     setSelectedRepresentative(JSON.parse(storedRep));
-//   }
-// }, []);
 
 useEffect(() => {
   if (govIdName) {
@@ -191,8 +154,8 @@ useEffect(() => {
       try {
         const districtData = await fetchDistricts();
         setDistricts(districtData);
-      } catch (err) {
-        console.error('Error fetching districts:', err);
+      } catch (error) {
+        console.error('Error fetching districts:', error);
       }
     };
     fetchDistrictsData();
@@ -345,7 +308,9 @@ useEffect(() => {
       const value = parseInt(e.target.value, 10);
       setPincode(value);
       setFormData((prev) => ({ ...prev, pincode: value }));
+      console.log("Current state pincode:", pincode);
     };
+
 
     const handleNameCorrection = (e) => {
       const { value } = e.target;
@@ -393,8 +358,6 @@ useEffect(() => {
     }
 
     if (formData.consumerId !== confirmConsumerNumber) {
-      // alert("Consumer number and Confirm Consumer number do not match.");
-      // return;
       toast.error("Consumer number and Confirm Consumer number do not match.",{
         autoClose:1000,
         hideProgressBar:true,
@@ -441,15 +404,7 @@ useEffect(() => {
       
       const result = await saveConnection(connectionData);
       if (result.id) {
-        // console.log("New connection saved with ID:", connectionId);
-        // navigate(`/view-connection/${connectionId}`, {
-        //   state: {
-        //     consumerId: formData.consumerId,
-        //     customerId,
-        //     connectionId: connectionId,
-        //     selectedRepresentative: selectedRepresentative
-        //   },
-        // });
+
         setCreatedConnectionId(result.id);
         setNavigateAfterClose(true);
         
@@ -501,18 +456,7 @@ useEffect(() => {
           </div>
         )}
   </div>
-      {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-      <Stepper 
-        activeStep={0} 
-        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-        className="min-w-max sm:w-full"
-      >
-        <Step label="Customer Details" />
-        <Step label="Connection Details" />
-        <Step label="Installation Space Details" />
-        <Step label="System Specifications" />
-      </Stepper>
-    </div> */}
+
 
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -521,7 +465,7 @@ useEffect(() => {
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =
@@ -642,7 +586,7 @@ useEffect(() => {
       placeholder="e.g. 987654321000"
       required
       disabled={formData.isMsebConnection === "No"}
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
       title="Enter a valid 12-digit consumer number"
     />
     

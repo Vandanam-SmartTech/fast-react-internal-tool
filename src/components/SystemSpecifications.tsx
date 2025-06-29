@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCustomerById, uploadFileToOneDrive, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
-import { generateQuotationPDF, previewQuotationPDF } from '../services/api';
-import { Stepper, Step } from "react-form-stepper";
+import { getCustomerById, fetchPanelWattages, fetchRecommendedDetails, getPriceDetails,getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchClaims, saveCustomerSpecs, getConnectionByConsumerId } from '../services/api';
+import { generateQuotationPDF, previewQuotationPDF, uploadDocuments } from '../services/api';
 import { ArrowLeft } from "lucide-react";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
 import {
@@ -20,24 +18,20 @@ export const SystemSpecifications = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [showCostDetails, setShowCostDetails] = useState(false);
+  const [setShowCostDetails] = useState(false);
   const [isSpecsSaved, setIsSpecsSaved] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSystemSpecificationDetails, setShowSystemSpecificationDetails] = useState(false);
-  const [installationSpaceType, setInstallationSpaceType] = useState("");
-  const [installationStructureType, setInstallationStructureType] = useState("");
   const [Kw, setKw] = useState("");
   const [dcrNonDcrType, setDcrNonDcrType] = useState("");
+  const [inversionType, setInversionType] = useState("");
   const [panelBrand, setPanelBrand] = useState("");
   const [phaseType, setPhaseType] = useState("");
   const [connectionType, setConnectionType] = useState("");
   const [panelWattages, setPanelWattages] = useState([]);
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
-  //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [connection, setConnection] = useState<any>(null);
-  const [customer, setCustomer] = useState<any>(null)
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
@@ -47,7 +41,9 @@ export const SystemSpecifications = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
   const [dialogMessage, setDialogMessage] = useState("");
-  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedSpace, setSelectedSpace] = useState(null);
+
 
 
   const [activeTab, setActiveTab] = useState("System Specifications");
@@ -90,7 +86,8 @@ export const SystemSpecifications = () => {
     waterSprinklerSystem: false,       
     heavyDutyRamp: false,        
     heavyDutyStairs: false,
-    wattage:0,       
+    wattage:0,
+    inversionType:"On Grid",     
   });
 
 
@@ -184,12 +181,6 @@ useEffect(() => {
   getClaims();
 }, []);
 
-// useEffect(() => {
-//   const storedRep = localStorage.getItem("selectedRepresentative");
-//   if (storedRep) {
-//     setSelectedRepresentative(JSON.parse(storedRep));
-//   }
-// }, []);
 
 const getWattageForBrand = (brand: string): number => {
   switch (brand) {
@@ -227,7 +218,7 @@ useEffect(() => {
         Kw: recommendedKW,
         numberOfGpPipes: recommendation.numberOfGpPipes || 0,
         dcrNonDcrType:
-          recommendation.dcrNonDcrType?.toLowerCase() === "nondcr"
+          recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr"
             ? "Non-DCR"
             : "DCR",
         panelBrand: recommendation.panelBrand || "",
@@ -270,11 +261,24 @@ useEffect(() => {
 
   let updatedFormData: any;
 
+
+
   setFormData((prev) => {
     const updatedData = {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     };
+
+    const matchedSpace = availableSpaceTypes.find(
+    (space) => space.installationSpaceType === value
+  );
+
+  
+
+  if (matchedSpace) {
+    setSelectedSpace(matchedSpace);
+    setShowModal(true);
+  }
 
     // Auto-update totalCost
     updatedData.totalCost =
@@ -295,15 +299,29 @@ useEffect(() => {
 if (name === "panelBrand") {
   updatedData.wattage = getWattageForBrand(value);
 
-  if (value === "En-Icon") {
+  // if (value === "En-Icon") {
+  //   updatedData.dcrNonDcrType = "Non-DCR";
+  // }
+}
+
+if (name === "panelBrand") {
+
+    if (value === "En-Icon") {
     updatedData.dcrNonDcrType = "Non-DCR";
-  }
+   }
 }
 
 if (name === "dcrNonDcrType") {
 
   if (value === "Non-DCR") {
     updatedData.panelBrand = "En-Icon";
+  }
+}
+
+if (name === "dcrNonDcrType") {
+
+  if (value === "DCR") {
+    updatedData.panelBrand = "Sova";
   }
 }
 
@@ -317,8 +335,18 @@ if (name === "dcrNonDcrType") {
 
   // Wait a bit for formData to update before fetching wattages
   if (["panelBrand", "dcrNonDcrType"].includes(name)) {
+    // const dcrNonDcrValue =
+    //   name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+
     const dcrNonDcrValue =
-      name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+      name === "dcrNonDcrType"
+        ? value
+        : name === "panelBrand"
+        ? value === "En-Icon"
+          ? "Non-DCR"
+          : "DCR"
+        : formData.dcrNonDcrType;
+
     const panelBrandValue =
       name === "panelBrand"
         ? value
@@ -433,8 +461,7 @@ if (name === "dcrNonDcrType") {
         dcrNonDcrType: formData.dcrNonDcrType,
         phaseType: phaseType,
         connectionType: connectionType,
-        inversionType: "On-Grid",
-        inverterWattage: 6.4,
+        inversionType: formData.inversionType,
         solarSystemCost: formData.solarSystemCost,
         fabricationCost: formData.fabricationCost,
         totalCost: formData.totalCost,
@@ -480,8 +507,21 @@ const handleGenerateQuotation = async () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-      await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
-      console.log("Quotation uploaded to OneDrive successfully");
+      // await uploadFileToOneDrive(pdfBlob, consumerId, govIdName, districtName, talukaName, villageName);
+      // console.log("Quotation uploaded to OneDrive successfully");
+
+      const fileName = `quotation_${connectionId}.pdf`;
+      const quotationFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+    // Step 4: Upload to OneDrive
+    const uploadResponse = await uploadDocuments(
+      connectionId,
+      "Quotation Document", // sessionName
+      [quotationFile]
+    );
+
+    console.log("Quotation uploaded to OneDrive:", uploadResponse.message);
+    alert("Quotation uploaded to OneDrive successfully!");
 
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -495,6 +535,7 @@ const handleGenerateQuotation = async () => {
 
       console.log("Quotation PDF downloaded successfully");
 
+      
     
 
   } catch (error) {
@@ -684,7 +725,7 @@ const handleGenerateQuotation = async () => {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-  <label className="block text-sm font-medium text-gray-700">Installation Space Type</label>
+  <label className="block text-sm font-medium text-gray-700">Installation Space</label>
   <select
     id="installationSpaceType"
     name="installationSpaceType"
@@ -697,24 +738,133 @@ const handleGenerateQuotation = async () => {
     ) : (
       availableSpaceTypes.map((space) => (
         <option key={space.id} value={space.installationSpaceType}>
-          {space.installationSpaceType}
+          On {space.installationSpaceType} ({space.installationSpaceTitle})
         </option>
       ))
     )}
   </select>
+
+  {/* Display selected space card */}
+{showModal && selectedSpace && (
+  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
+      <button
+        className="absolute top-2 right-4 text-gray-500 hover:text-gray-700"
+        onClick={() => setShowModal(false)}
+      >
+        ✖
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4">
+        Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
+      </h2>
+
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+        {/* Square Diagram */}
+{(() => {
+  const ew = selectedSpace.availableEastWestLengthFt;
+  const sn = selectedSpace.availableSouthNorthLengthFt;
+
+  let shapeClass = "w-16 h-16";
+  if (ew > sn * 1.3) shapeClass = "w-24 h-16";
+  else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
+
+  return (
+    <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
+      
+
+      {/* Top - North Indicator with side arrow */}
+      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
+        <span className="mr-1">N</span>
+        <span className="text-base">↑</span>
+      </div>
+
+      {/* Right - East Indicator with arrow below */}
+      <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
+        <span className="mb-[2px]">E</span>
+        <span className="text-base">→</span>
+      </div>
+
+      {/* Shape Box */}
+      <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
+  <span className="text-[10px] text-gray-800 font-semibold">
+     {ew * sn} ft²
+  </span>
 </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Structure Type</label>
-          <input
-            id="installationStructureType"
-            name="installationStructureType"
-            value={formData.installationStructureType}
-            //onChange={handleChange}
+
+      {/* Bottom - East-West Available Length */}
+      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
+        <span className="mr-1">←</span>
+        <span>{ew} Ft</span>
+        <span className="ml-1">→</span>
+      </div>
+
+      {/* Left - South-North Available Length */}
+      <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
+        <span>↑</span>
+        <span>{sn} Ft</span>
+        <span>↓</span>
+      </div>
+    </div>
+  );
+})()}
+
+
+
+
+
+        {/* Installation Details */}
+        <div className="text-s text-gray-600 space-y-2">
+          <div><span className="text-lg">🔌</span> <strong>Required AC Wire Length:</strong> {selectedSpace.acWireLengthFt} ft</div>
+          <div><span className="text-lg">⚡</span> <strong>Required DC Wire Length:</strong> {selectedSpace.dcWireLengthFt} ft</div>
+          <div><span className="text-lg">🧰</span> <strong>Required Earthing Wire Length:</strong> {selectedSpace.earthingWireLengthFt} ft</div>
+          <div><span className="text-lg">🛠️</span> <strong>Required GP Pipes:</strong> {selectedSpace.numberOfGpPipes ?? "....."}</div>
+          <div><span className="text-lg">📝</span> <strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
+</div>
+
+
+
+
+                <div>
+          <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
+          <select
+            id="inversionType"
+            name="inversionType"
+            value={formData.inversionType}
+            onChange={(e) => {
+              setInversionType(e.target.value); // Update local state
+              handleChange(e); // Also update formData
+            }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          
-          
+          >
+            <option value="On-Grid">On-Grid</option>
+            <option value="Hybird">Hybrid</option>
+          </select>
+        </div>
+
+                <div>
+          <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
+          <select
+            id="dcrNonDcrType"
+            name="dcrNonDcrType"
+            value={formData.dcrNonDcrType}
+            onChange={(e) => {
+              setDcrNonDcrType(e.target.value); // Update local state
+              handleChange(e); // Also update formData
+            }}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="DCR">DCR</option>
+            <option value="Non-DCR">Non-DCR</option>
+          </select>
         </div>
 
         <div>
@@ -735,22 +885,6 @@ const handleGenerateQuotation = async () => {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
-          <select
-            id="dcrNonDcrType"
-            name="dcrNonDcrType"
-            value={formData.dcrNonDcrType}
-            onChange={(e) => {
-              setDcrNonDcrType(e.target.value); // Update local state
-              handleChange(e); // Also update formData
-            }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="DCR">DCR</option>
-            <option value="Non-DCR">Non-DCR</option>
-          </select>
-        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">KW</label>
@@ -771,11 +905,11 @@ const handleGenerateQuotation = async () => {
               </select>
         </div>
 
-        <div>
+        {/* <div>
                 <label className="block text-sm font-medium text-gray-700">Wattage-wp</label>
                 <input type="number" name="wattage" value={formData.wattage} onChange={handleChange} 
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-         </div>
+         </div> */}
 
 <div className="col-span-full space-y-6">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
@@ -814,20 +948,6 @@ const handleGenerateQuotation = async () => {
   </div>
 </div>
 
-
-
-
-
-        {/* <div className="col-span-full">
-        <button
-          type="button"
-          onClick={handleGetPrice}
-          className="w-64 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-
-        >
-          Get Price
-        </button>
-      </div> */}
 
           <div className="col-span-full space-y-6 mt-6">
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>

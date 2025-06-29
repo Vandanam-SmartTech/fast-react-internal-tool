@@ -8,11 +8,11 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   define: {
-    global: 'window', // <--- ADD THIS LINE
+    global: 'window', 
   },
   server: {
-    host: '0.0.0.0', // Allow access from any device on the network
-    port: 5173, // or any port you're using
+    host: '0.0.0.0', 
+    port: 3000, 
   },
   
 });

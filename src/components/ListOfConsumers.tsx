@@ -16,7 +16,6 @@ interface Consumer {
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
   const [consumers, setConsumers] = useState<Consumer[]>([]);
-  const [filteredConsumers, setFilteredConsumers] = useState<Consumer[]>([]);
   const [consumerNumbers, setConsumerNumbers] = useState<{ [key: number]: number | string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
@@ -114,32 +113,6 @@ const ListOfConsumers: React.FC = () => {
     }
   };
 
-  //  useEffect(() => {
-  //   const stompClient = createStompClient();
-
-  //   stompClient.onConnect = () => {
-  //     console.log("Connected to WebSocket");
-
-
-  //     stompClient.subscribe('/topic/customerAdded', (message: Message) => {
-  //       console.log("Received customerAdded message:", message.body);
-  //       loadConsumers(0);  // Reload consumers on new customer addition
-  //     });
-
-  //     stompClient.subscribe('/topic/connection', (message: Message) => {
-  //       console.log("Received connection update message:", message.body);
-  //       const consumerIds = consumers.map((consumer) => consumer.id);
-  //       fetchConsumerNumbers(consumerIds);  // Refresh consumer numbers
-  //     });
-  //   };
-
-  //   stompClient.activate();
-
-  //   return () => {
-  //     stompClient.deactivate();
-  //   };
-  // }, [consumers]);
-
 
   useEffect(() => {
     loadConsumers(currentPage);
@@ -213,7 +186,7 @@ const ListOfConsumers: React.FC = () => {
           </div>
         ) : (
           <div>
-            {searchQuery.trim() !== "" ? ( // if searching, display search results
+            {searchQuery.trim() !== "" ? ( 
               <div>
                 {searchResults.length === 0 ? (
                   <p className="col-span-full text-center text-gray-600">
@@ -237,9 +210,9 @@ const ListOfConsumers: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                          <h2 className="text-lg font-semibold text-gray-800">
-                            {consumer.govIdName}
-                          </h2>
+                              <h2 className="text-lg font-semibold text-gray-800 truncate overflow-hidden text-ellipsis whitespace-nowrap max-w-[calc(100%-40px)]">
+                                    {consumer.govIdName}
+                              </h2>
 
                           <div className="flex items-center space-x-2 text-gray-700 text-sm">
                             <Mail className="w-4 h-4 text-gray-500" />
@@ -322,9 +295,10 @@ const ListOfConsumers: React.FC = () => {
                             </div>
 
                             <div className="space-y-3">
-                              <h2 className="text-lg font-semibold text-gray-800">
-                                {consumer.govIdName}
+                              <h2 className="text-lg font-semibold text-gray-800 truncate overflow-hidden text-ellipsis whitespace-nowrap max-w-[calc(100%-40px)]">
+                                    {consumer.govIdName}
                               </h2>
+
 
                               <div className="flex items-center space-x-2 text-gray-700 text-sm">
                                 <Mail className="w-4 h-4 text-gray-500" />

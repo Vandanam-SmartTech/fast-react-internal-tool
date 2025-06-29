@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { saveCustomer } from "../services/api";
-import { Stepper, Step } from "react-form-stepper";
 import { fetchClaims, fetchRepresentatives, checkMobileNumberExists, checkEmailAddressExists } from '../services/api';
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
-import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 
 
@@ -19,7 +15,6 @@ import {
 } from "@heroicons/react/24/solid";
 
 export const CustomerForm = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const [roles, setRoles] = useState<string[]>([]);
 
@@ -38,16 +33,11 @@ export const CustomerForm = () => {
 
   const [activeTab, setActiveTab] = useState("Customer Details");
 
-  const [messageBoxOpen, setMessageBoxOpen] = useState(false);
-  const [messageBoxContent, setMessageBoxContent] = useState('');
-  const [messageBoxSeverity, setMessageBoxSeverity] = useState<'success' | 'error'>('success');
+
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
 
 
-// const handleMessageBoxClose = () => {
-//   setMessageBoxOpen(false);
-// };
 
   const tabs = [
     "Customer Details",
@@ -61,7 +51,8 @@ export const CustomerForm = () => {
     govIdName: "",
     emailAddress: "",
     mobileNumber: "",
-    preferredName: "", 
+    preferredName: null, 
+    isActive: true,
   });
 
   const getUserIdFromToken = () => {
@@ -268,20 +259,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 
 
-// const handleMessageBoxClose = () => {
-//   setMessageBoxOpen(false);
-
-//   if (messageBoxSeverity === 'success' && navigateAfterClose && createdCustomerId) {
-//     navigate(`/view-customer/${createdCustomerId}`, {
-//       state: {
-//         customerId: createdCustomerId,
-//         selectedRepresentative: selectedRepresentative || "",
-//       },
-//     });
-//     setNavigateAfterClose(false); // reset
-//     setCreatedCustomerId(null);   // reset
-//   }
-// };
 
   return (
   <div className="max-w-4xl mx-auto p-4 sm:p-6">
@@ -293,7 +270,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 {roles.includes("ROLE_ADMIN") && (
   <div className="flex items-center gap-2 sm:ml-auto">
-    <div className="relative w-full sm:w-64">
+    <div className="relative w-full sm:w-70">
       <select
         name="representative"
         value={selectedRepresentative?.userId || ""}
@@ -342,20 +319,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 </div>
 
-    
-    {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-      <Stepper 
-        activeStep={-1} 
-        styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-        className="min-w-max sm:w-full"
-      >
-        <Step label="Customer Details" />
-        <Step label="Connection Details" />
-        <Step label="Installation Space Details" />
-        <Step label="System Specifications" />
-      </Stepper>
-    </div> */}
-
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
@@ -363,7 +326,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =

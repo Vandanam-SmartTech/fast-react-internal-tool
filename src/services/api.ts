@@ -1,17 +1,13 @@
-
-import SockJS from 'sockjs-client';
-import { QuotationData, District, Taluka, Village } from '../types/quotation';
 import axios from 'axios';
-import { Client } from '@stomp/stompjs';
 
-const API_BASE_URL = 'http://192.168.116.162:7575/api';
+/*<--------------------------------------------JWT Service APIs------------------------------------------------------>*/
 
 const API = axios.create({
-  baseURL: 'http://192.168.116.162:9090',
+  baseURL: 'http://localhost:9090',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Automatically set the Authorization header if jwtToken exists in localStorage
+
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('jwtToken');
   if (token) {
@@ -20,12 +16,12 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const login = async (credentials) => {
+export const login = async (credentials: { username: string; password: string; }) => {
   const response = await API.post('/auth/login', credentials);
   return response.data;
 };
 
-export const setAuthToken = (token) => {
+export const setAuthToken = (token: string) => {
   if (token) {
     localStorage.setItem('jwtToken', token);
     API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -38,9 +34,8 @@ export const setAuthToken = (token) => {
 const getAuthToken = () => localStorage.getItem('jwtToken');
 
 export const fetchClaims = async () => {
-  //const token = localStorage.getItem('jwtToken');
   try{
-  const response = await fetch('http://192.168.116.162:9090/jwt/claims', {
+  const response = await fetch('http://localhost:9090/jwt/claims', {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getAuthToken()}`,
@@ -59,7 +54,7 @@ export const fetchClaims = async () => {
 
 export const fetchRepresentatives = async () => {
   try {
-    const response = await fetch("http://192.168.116.162:9090/api/users/all", {
+    const response = await fetch("http://localhost:9090/api/users/all", {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getAuthToken()}`,
@@ -67,10 +62,9 @@ export const fetchRepresentatives = async () => {
     });
     const data = await response.json();
 
-    // Filter users with the role "ROLE_REPRESENTATIVE"
     return data
-      .filter(user => user.roles.some(role => role.name === "ROLE_REPRESENTATIVE"))
-      .map(user => ({
+      .filter((user: { roles: any[]; }) => user.roles.some(role => role.name === "ROLE_REPRESENTATIVE"))
+      .map((user: { userId: any; nameAsPerGovId: any; representativeCode: any; mobileNumber: any; emailAddress: any; }) => ({
         userId: user.userId,
         name: user.nameAsPerGovId, 
         representativeCode: user.representativeCode,
@@ -83,64 +77,31 @@ export const fetchRepresentatives = async () => {
   }
 };
 
-
-export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
-  try {
-    if (!connectionId) {
-      throw new Error("Connection ID is missing");
-    }
-
-    const apiUrl = `http://192.168.116.162:8080/api/quotation/generating-pdf/${connectionId}`;
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to generate PDF");
-    }
-
-    return await response.blob();
-  } catch (error) {
-    console.error("API Error:", error);
-    throw new Error("Failed to generate PDF from server");
-  }
+export const validateUser = async (query: string): Promise<string> => {
+  const { data } = await axios.post<string>(
+    'http://localhost:9090/auth/valid-user',
+    { query }
+  );
+  return data;
 };
 
-export const previewQuotationPDF = async (connectionId: number): Promise<Blob> => {
-  try {
-    if (!connectionId) {
-      throw new Error("Connection ID is missing");
-    }
-
-    const apiUrl = `http://192.168.116.162:8080/api/preview-quotation/${connectionId}`;
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to generate PDF");
-    }
-
-    return await response.blob();
-  } catch (error) {
-    console.error("API Error:", error);
-    throw new Error("Failed to generate PDF from server");
-  }
+export const verifyAndChangePassword = async (
+  emailAddress: string,
+  newPassword: string
+): Promise<void> => {
+  await API.post(
+    'http://localhost:9090/auth/update-password',
+    { emailAddress, newPassword }
+  );
 };
 
+
+/*<--------------------------------------------------CRS APIs-------------------------------------------------------->*/
 
 
 export const saveCustomer = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/customers', {
+    const response = await fetch('http://localhost:8585/api/customers', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -163,30 +124,9 @@ export const saveCustomer = async (data: Record<string, any>): Promise<{ id: num
   }
 };
 
-
-// export const createStompClient = () => {
-//   const stompClient = new Client({
-//     webSocketFactory: () => new SockJS('http://192.168.116.162:8585/ws'), // Correct SockJS usage
-//     debug: (str) => console.log(str),
-//     reconnectDelay: 5000,
-//     // connectHeaders: {
-//     //   Authorization: `Bearer ${getAuthToken()}`
-//     // },
-//     onConnect: () => {
-//       console.log('Connected to WebSocket');
-//     },
-//     onStompError: (frame) => {
-//       console.error('Broker reported error: ' + frame.headers['message']);
-//       console.error('Additional details: ' + frame.body);
-//     },
-//   });
-
-//   return stompClient;
-// };
-
 export const checkMobileNumberExists = async (mobileNumber: string): Promise<boolean> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/customers/check-mobile?mobileNumber=${mobileNumber}`, {
+    const response = await fetch(`http://localhost:8585/api/customers/check-mobile?mobileNumber=${mobileNumber}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -203,13 +143,13 @@ export const checkMobileNumberExists = async (mobileNumber: string): Promise<boo
     return data;
   } catch (error) {
     console.error('Error checking mobile number', error);
-    return false; // Default to false if error occurs
+    return false; 
   }
 };
 
 export const checkEmailAddressExists = async (emailAddress: string): Promise<boolean> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/customers/check-email?emailAddress=${emailAddress}`, {
+    const response = await fetch(`http://localhost:8585/api/customers/check-email?emailAddress=${emailAddress}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -226,13 +166,13 @@ export const checkEmailAddressExists = async (emailAddress: string): Promise<boo
     return data;
   } catch (error) {
     console.error('Error checking email address', error);
-    return false; // Default to false if error occurs
+    return false; 
   }
 };
 
 export const checkConsumerNumberExists = async (consumerId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/connections/check-consumerId?consumerId=${consumerId}`, {
+    const response = await fetch(`http://localhost:8585/api/connections/check-consumerId?consumerId=${consumerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -249,13 +189,13 @@ export const checkConsumerNumberExists = async (consumerId: string): Promise<boo
     return data;
   } catch (error) {
     console.error('Error checking consumer number', error);
-    return false; // Default to false if error occurs
+    return false; 
   }
 };
 
 export const saveConnection = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/connections', {
+    const response = await fetch('http://localhost:8585/api/connections', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -266,30 +206,27 @@ export const saveConnection = async (data: Record<string, any>): Promise<{ id: n
 
     // Parse the response JSON
     const responseData = await response.json();
-    console.log('API response data:', responseData); // Debug: check the full response
+    console.log('API response data:', responseData); 
 
-    // Check if the response is OK and the id exists
     if (response.ok && responseData.id) {
       return { id: responseData.id, message: 'Connection data saved successfully' };
-      // alert('Connection data saved successfully!');
-      // return responseData.id;
+
 
     } else {
-      // alert(responseData.message || 'Failed to save connection data.');
-      // return null;
+
       return { id: null, message: responseData.message || 'Failed to save connection data. '};
     }
   } catch (error: any) {
-    //alert('An error occurred while saving connection data.');
+
     console.error('Error details:', error);
-    // return null;
+
     return { id: null, message: 'An error occurred while saving connection data' };
   }
 };
 
 export const saveInstallation = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/installations', {
+    const response = await fetch('http://localhost:8585/api/installations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -304,56 +241,23 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 
     
     if (response.ok && responseData.id) {
-      // alert('Installation data saved successfully!');
-      // return responseData.id; 
+
       return { id: responseData.id, message: 'Installation data saved successfully! '};
     } else {
-      // alert(responseData.message || 'Failed to save installation data.');
-      // return null;
+
       return { id: null, message: responseData.message || 'Failed to save installation data. '};
     }
   } catch (error: any) {
-    // alert('An error occurred while saving installation data.');
+
     console.error('Error details:', error);
-    // return null;
+
     return { id: null, message: 'An error occurred while saving installation data. '};
   }
 };
 
-
-export const fetchPanelWattages = async (
-  connectionId: string,
-  phaseType: string,
-  dcrNonDcrType: string,
-  brand: string
-): Promise<number[]> => {
-  try {
-    console.log('Fetching panel wattages...');
-    const response = await fetch(`http://192.168.116.162:8080/api/panelWattages/${connectionId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-      body: JSON.stringify({ phase: phaseType, dcrNonDcr: dcrNonDcrType, customerSelectedBrand: brand }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch panel wattages');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw new Error('Failed to fetch panel wattages from server');
-  }
-};
-
-
-
 export const fetchDistricts = async (): Promise<District[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/masters/district/27', {
+    const response = await fetch('http://localhost:8585/masters/district/27', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -368,7 +272,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
 
 export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/masters/taluka/${districtCode}`, {
+    const response = await fetch(`http://localhost:8585/masters/taluka/${districtCode}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -383,7 +287,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
 
 export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/masters/village/${talukaCode}`, {
+    const response = await fetch(`http://localhost:8585/masters/village/${talukaCode}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -398,7 +302,7 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
 
 export const fetchConnectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/connectionType', {
+    const response = await fetch('http://localhost:8585/api/connectionType', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -413,7 +317,7 @@ export const fetchConnectionType = async (): Promise<{ id: number; nameEn: strin
 
 export const fetchPhaseType = async (): Promise<{ id: number; nameEn: string }[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/phaseType', {
+    const response = await fetch('http://localhost:8585/api/phaseType', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -428,7 +332,7 @@ export const fetchPhaseType = async (): Promise<{ id: number; nameEn: string }[]
 
 export const fetchAddressType = async (): Promise<{ id: number; nameEn: string }[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/addressType', {
+    const response = await fetch('http://localhost:8585/api/addressType', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -443,7 +347,7 @@ export const fetchAddressType = async (): Promise<{ id: number; nameEn: string }
 
 export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/correctionType', {
+    const response = await fetch('http://localhost:8585/api/correctionType', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -458,7 +362,7 @@ export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: strin
 
 export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; nameEnglish: string }[]> => {
   try {
-    const response = await fetch('http://192.168.116.162:8585/api/installationSpaceTypes', {
+    const response = await fetch('http://localhost:8585/api/installationSpaceTypes', {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -475,7 +379,7 @@ export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; 
 
 export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<number[]> => {
   try {
-      const response = await fetch(`http://192.168.116.162:8585/api/installations/consumer/${consumerId}`, {
+      const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
           method: "GET",
           headers: {
               Authorization: `Bearer ${getAuthToken()}`,
@@ -489,7 +393,7 @@ export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<n
 
       const data = await response.json();
 
-      // Extract unique installationSpaceTypeIds
+
       return data;
   } catch (error) {
       console.error("Error fetching installation space types:", error);
@@ -499,7 +403,7 @@ export const fetchInstallationSpaceTypes = async (consumerId: number): Promise<n
 
 export const getCustomerById = async (customerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/customers/${customerId}`, {
+    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -520,7 +424,7 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
 
 export const getConnectionByConsumerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/connections/${consumerId}`, {
+    const response = await fetch(`http://localhost:8585/api/connections/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -541,7 +445,7 @@ export const getConnectionByConsumerId = async (consumerId: number): Promise<any
 
 export const getInstallationByConsumerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/installations/consumer/${consumerId}`, {
+    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -560,30 +464,11 @@ export const getInstallationByConsumerId = async (consumerId: number): Promise<a
   }
 };
 
-// export const getConnectionsByCustomerId = async (customerId: number): Promise<any> => {
-//   try {
-//     const response = await fetch(`http://192.168.116.162:8585/api/connections/customer/${customerId}`, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${getAuthToken()}`,
-//       },
-//     });
 
-//     if (!response.ok) {
-//       throw new Error("Failed to fetch connection details");
-//     }
-
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Error fetching connection details:", error);
-//     return null;
-//   }
-// };
 
 export const fetchConsumerNumber = async (customerId: number) => {
   try {
-    const response = await API.get(`http://192.168.116.162:8585/api/connections/by-customer/${customerId}`, {
+    const response = await API.get(`http://localhost:8585/api/connections/by-customer/${customerId}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -603,7 +488,7 @@ export const fetchConsumerNumber = async (customerId: number) => {
 
 export const getInstallationsByCustomerId = async (consumerId: number): Promise<any> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/installations/consumer/${consumerId}`, {
+    const response = await fetch(`http://localhost:8585/api/installations/consumer/${consumerId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -624,7 +509,7 @@ export const getInstallationsByCustomerId = async (consumerId: number): Promise<
 
 export const fetchConsumers = async (page = 0) => {
   try {
-    const response = await API.get(`http://192.168.116.162:8585/api/customers/paginated`, {
+    const response = await API.get(`http://localhost:8585/api/customers/paginated`, {
       params: { page },
       headers: {
         "Content-Type": "application/json",
@@ -646,7 +531,7 @@ export const fetchConsumers = async (page = 0) => {
 
 export const fetchOnboardedConsumers = async (page = 0) => {
   try {
-    const response = await API.get(`http://192.168.116.162:8585/api/customers/onboarded/by-representative/paginated`, {
+    const response = await API.get(`http://localhost:8585/api/customers/onboarded/by-representative/paginated`, {
       params: { page },
       headers: {
         "Content-Type": "application/json",
@@ -667,8 +552,8 @@ export const fetchOnboardedConsumers = async (page = 0) => {
 };
 
 
-export const getOnboardedCustomerCount = async() :Promise<Number> => {
-  const response = await fetch("http://192.168.116.162:8585/api/customers/onboarded-count",{
+export const getOnboardedCustomerCount = async() :Promise<number> => {
+  const response = await fetch("http://localhost:8585/api/customers/onboarded-count",{
     headers:{
       "Content-Type":"application/json",
       "Authorization":`Bearer ${getAuthToken()}`,
@@ -683,8 +568,8 @@ export const getOnboardedCustomerCount = async() :Promise<Number> => {
   return count;
 }
 
-export const getCustomerCount = async() :Promise<Number> => {
-  const response = await fetch("http://192.168.116.162:8585/api/customers/count",{
+export const getCustomerCount = async() :Promise<number> => {
+  const response = await fetch("http://localhost:8585/api/customers/count",{
     headers:{
       "Content-Type":"application/json",
       "Authorization":`Bearer ${getAuthToken()}`,
@@ -700,15 +585,12 @@ export const getCustomerCount = async() :Promise<Number> => {
 
 }
 
-
-
-
 export const updateConsumerPersonalDetails = async (customerId: number, updatedCustomerData: any) => {
   try {
 
     console.log("Sending request to update consumer:", updatedCustomerData);
 
-    const response = await fetch(`http://192.168.116.162:8585/api/customers/${customerId}`, {
+    const response = await fetch(`http://localhost:8585/api/customers/${customerId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -734,7 +616,7 @@ export const updateInstallationSpaceDetails = async (id: number, updatedInstalla
 
     console.log("Sending request to update installation:", updatedInstallationData);
 
-    const response = await fetch(`http://192.168.116.162:8585/api/installations/${id}`, {
+    const response = await fetch(`http://localhost:8585/api/installations/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -760,7 +642,7 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
 
     console.log("Sending request to update consumer:", updatedData);
 
-    const response = await fetch(`http://192.168.116.162:8585/api/connections/${id}`, {
+    const response = await fetch(`http://localhost:8585/api/connections/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -784,7 +666,7 @@ export const updateConsumerConnectionDetails = async (id: number, updatedData: a
 // src/services/districtService.ts
 export const getDistrictNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/masters/district/name/${code}`);
+    const response = await fetch(`http://localhost:8585/masters/district/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch district name");
@@ -799,7 +681,7 @@ export const getDistrictNameByCode = async (code: number): Promise<string> => {
 
 export const getTalukaNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/masters/taluka/name/${code}`);
+    const response = await fetch(`http://localhost:8585/masters/taluka/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch taluka name");
@@ -814,7 +696,7 @@ export const getTalukaNameByCode = async (code: number): Promise<string> => {
 
 export const getVillageNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/masters/village/name/${code}`);
+    const response = await fetch(`http://localhost:8585/masters/village/name/${code}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch village name");
@@ -828,201 +710,9 @@ export const getVillageNameByCode = async (code: number): Promise<string> => {
 };
 
 
-
-
-export const fetchRecommendedDetails = async (connectionId: number) => {
-  try {
-    console.log(`Fetching recommendation for connectionId: ${connectionId}`);
-
-    const response = await fetch(`http://192.168.116.162:8080/api/recommendation/getAndSave/${connectionId}`, {
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch recommendation. Status: ${response.status}, Message: ${errorText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching recommended details:", error);
-    throw error; // Let caller handle it
-  }
-};
-
-
-export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
-  try {
-    const response = await fetch('http://192.168.116.162:8080/api/getPrice', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    // Parse the response JSON
-    const responseData = await response.json();
-    console.log('API response data:', responseData); // Debugging: log the response
-
-    if (response.ok) {
-      return responseData; // Return the price details
-    } else {
-      alert(responseData.message || 'Failed to fetch price details.');
-      return null;
-    }
-  } catch (error: any) {
-    alert('An error occurred while fetching price details.');
-    console.error('Error details:', error);
-    return null;
-  }
-};
-
-export const fetchBrandCapacityDetails = async (connectionId: number) => {
-  try{
-    const response = await fetch(`http://192.168.116.162:8080/api/checkBrandAndCapacity/${connectionId}`, {
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch KW and Brand: ${response.status}, Message: ${errorText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching KW and Brand:", error);
-    alert("Failed to fetch details. Please try again.");
-    return null; // Prevent app crash
-  }
-};
-
-export const fetchPdf = async (id: number, docName: string): Promise<Response> => {
-  let endpoint = "";
-
-  if (docName === "WCR Page-1") {
-    endpoint = `http://192.168.116.162:5050/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
-  }
-  if (docName === "Annexure 1") {
-    endpoint = `http://192.168.116.162:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
-  }
-  if(docName=== "EarthingPageDocument"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/earthingPageController/${id}?download=true`;
-  }
-  if(docName=== "Subsidy Agreement Document-Page-1"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
-  }
-  if(docName=== "Subsidy Agreement Document-Page-2"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
-  }
-  if(docName=== "Vendor Feasibility Document"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/vendorFeasibilityController/${id}?download=true`;
-  }
-  if(docName=== "Netmeter Agreement Document-Page-1"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/netAgreementOne/${id}?download=true`;
-  }
-  if(docName=== "Netmeter Agreement Document-Page-2"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/netAgreementTwo/${id}?download=true`;
-  }
-  if(docName=== "Declaration Page"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/declarationPage/${id}?download=true`;
-  }
-  if(docName=== "Declarartion Document"){
-    endpoint = `http://192.168.116.162:5050/api/pdf/declarationPage/${id}?download=true`;
-  }
-   
-  // Add other documents' API endpoints here if needed
-
-  try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: {
-        "Accept": "application/pdf",
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch document");
-    }
-
-    return response;
-  } catch (error) {
-    console.error("Error fetching document:", error);
-    throw error;
-  }
-};
-
-
-export const saveCustomerSpecs = async (connectionId: string, requestData: any) => {
-  if (!connectionId) {
-      throw new Error("Connection ID is missing!");
-  }
-
-  const apiUrl = `http://192.168.116.162:8080/api/customer-agreed/${connectionId}`;
-
-  try {
-      const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-              'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-          },
-          body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-          throw new Error("Failed to save specifications.");
-      }
-
-      return await response.json();
-  } catch (error) {
-      console.error("Error saving system specs:", error);
-      throw error;
-  }
-};
-
-
-export const uploadFileToOneDrive = async (
-  file: Blob,
-  consumerId: string | number,
-  govIdName: string,
-  districtName: string,
-  talukaName: string,
-  villageName: string
-): Promise<any> => {
-  try {
-    const formData = new FormData();
-    formData.append("files", file, `quotation_${consumerId}.pdf`);
-    formData.append("consumerNumber", String(consumerId));
-    formData.append("customerName", govIdName);
-    formData.append("district", districtName);
-    formData.append("taluka", talukaName);
-    formData.append("village", villageName);
-    formData.append("state", "Maharashtra"); // Default state
-    formData.append("folderType", "Onboarding Documents"); // Default folder
-
-    const response = await axios.post("http://192.168.116.162:3000/api/files/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error("Error uploading file to OneDrive:", error);
-    throw error;
-  }
-};
-
 export const postMaterialData = async (connectionId: any, data: { connectionId: string; systemKw: string; makeOfModule: string; almmModelNo: string; serialNoOfModules: string; wattagePerModule: string; noOfModules: string; totalCapacity: string; warrantyDetails: string; inverterModuleNo: string; inverterMake: string; rating: string; chargeControllerType: string; inverterCapacity: string; earthingRod: string; dateOfInstallation: string; capacityType: string; projectModel: string; reInstalledCapacityRooftop: string; reInstalledCapacityGround: string; reInstalledCapacityTotal: string; }) => {
   
-  const url = `http://192.168.116.162:8585/api/materials/${connectionId}`;
+  const url = `http://localhost:8585/api/materials/${connectionId}`;
   
   try {
     const response = await axios.post(url, data, {
@@ -1041,7 +731,7 @@ export const postMaterialData = async (connectionId: any, data: { connectionId: 
 
 export const updateMaterialData = async (connectionId: any, data: { connectionId: string; systemKw: string; makeOfModule: string; almmModelNo: string; serialNoOfModules: string; wattagePerModule: string; noOfModules: string; totalCapacity: string; warrantyDetails: string; inverterModuleNo: string; inverterMake: string; rating: string; chargeControllerType: string; inverterCapacity: string; earthingRod: string; dateOfInstallation: string; capacityType: string; projectModel: string; reInstalledCapacityRooftop: string; reInstalledCapacityGround: string; reInstalledCapacityTotal: string; }) => {
   
-  const url = `http://192.168.116.162:8585/api/materials/${connectionId}`;
+  const url = `http://localhost:8585/api/materials/${connectionId}`;
   
   try {
     const response = await axios.post(url, data, {
@@ -1061,7 +751,7 @@ export const updateMaterialData = async (connectionId: any, data: { connectionId
 
 export const searchCustomers = async (query: string): Promise<any> => {
   try {
-    const response = await fetch(`http://192.168.116.162:8585/api/customers/searchByAny?query=${query}`, {
+    const response = await fetch(`http://localhost:8585/api/customers/searchByAny?query=${query}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -1097,70 +787,9 @@ export const searchCustomers = async (query: string): Promise<any> => {
   }
 };
 
-
-export const uploadDocuments = async (
-  consumerId: string,
-  districtName: string,
-  talukaName: string,
-  villageName: string,
-  govIdName: string,
-  aadharFile: File | null,
-  passbookFile: File | null,
-  billFile: File | null
-) => {
-  const formData = new FormData();
-
-  formData.append("state", "Maharashtra");
-  formData.append("district", districtName);
-  formData.append("taluka", talukaName);
-  formData.append("village", villageName);
-  formData.append("customerName", govIdName);
-  formData.append("consumerNumber", consumerId);
-  formData.append("folderType", "Onboarding Documents");
-  formData.append("override", "true");
-
-  if (aadharFile) formData.append("files", aadharFile, "Aadhar Card.pdf");
-  if (passbookFile) formData.append("files", passbookFile, "Bank Passbook.pdf");
-  if (billFile) formData.append("files", billFile, "Electricity Bill.pdf");
-
-  const response = await axios.post("http://192.168.116.162:3000/api/files/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  return response.data;
-};
-
-export const fetchUploadedDocuments = async (
-  consumerId: string,
-  districtName: string,
-  talukaName: string,
-  villageName: string,
-  govIdName: string
-) => {
-  try {
-    const response = await axios.get("http://192.168.116.162:3000/api/files/list", {
-      params: {
-        state: "Maharashtra",
-        district: districtName,
-        taluka: talukaName,
-        village: villageName,
-        customerName: govIdName,
-        consumerNumber: consumerId,
-        folderType: "Onboarding Documents"
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching documents", error);
-    return [];
-  }
-};
-
 export const getMaterialsByConnectionId = async (connectionId: number) => {
   try {
-    const response = await API.get(`http://192.168.116.162:8585/api/materials/${connectionId}`, {
+    const response = await API.get(`http://localhost:8585/api/materials/${connectionId}`, {
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -1179,7 +808,7 @@ export const getMaterialsByConnectionId = async (connectionId: number) => {
 };
 
 export const getCustomerStats = async () => {
-  const response = await API.get('http://192.168.116.162:8585/api/customers/stats',{
+  const response = await API.get('http://localhost:8585/api/customers/stats',{
     headers:{
         Authorization: `Bearer ${getAuthToken()}`,
       },
@@ -1187,32 +816,330 @@ export const getCustomerStats = async () => {
   return response.data; 
 };
 
-export const validateUser = async (query: string): Promise<string> => {
-  const { data } = await axios.post<string>(
-    'http://192.168.116.162:9090/auth/valid-user',
-    { query }
-  );
-  return data;
+/*<----------------------------------------------Quotation Service APIs----------------------------------------------->*/
+
+
+export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  try {
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://localhost:8080/api/quotation/generating-pdf/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to generate PDF");
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to generate PDF from server");
+  }
 };
 
+export const previewQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  try {
+    if (!connectionId) {
+      throw new Error("Connection ID is missing");
+    }
+
+    const apiUrl = `http://localhost:8080/api/preview-quotation/${connectionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, // Attach Bearer token if needed
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to generate PDF");
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to generate PDF from server");
+  }
+};
+
+export const fetchPanelWattages = async (
+  connectionId: string,
+  phaseType: string,
+  dcrNonDcrType: string,
+  brand: string
+): Promise<number[]> => {
+  try {
+    console.log('Fetching panel wattages...');
+    const response = await fetch(`http://localhost:8080/api/panelWattages/${connectionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify({ phaseType: phaseType, dcrNonDcrType: dcrNonDcrType, customerSelectedBrand: brand }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch panel wattages');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch panel wattages from server');
+  }
+};
+
+
+export const fetchRecommendedDetails = async (connectionId: number) => {
+  try {
+    console.log(`Fetching recommendation for connectionId: ${connectionId}`);
+
+    const response = await fetch(`http://localhost:8080/api/recommendation/getAndSave/${connectionId}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch recommendation. Status: ${response.status}, Message: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching recommended details:", error);
+    throw error; // Let caller handle it
+  }
+};
+
+
+export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
+  try {
+    const response = await fetch('http://localhost:8080/api/getPrice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Parse the response JSON
+    const responseData = await response.json();
+    console.log('API response data:', responseData); // Debugging: log the response
+
+    if (response.ok) {
+      return responseData; // Return the price details
+    } else {
+      alert(responseData.message || 'Failed to fetch price details.');
+      return null;
+    }
+  } catch (error: any) {
+    alert('An error occurred while fetching price details.');
+    console.error('Error details:', error);
+    return null;
+  }
+};
+
+export const fetchBrandCapacityDetails = async (connectionId: number) => {
+  try{
+    const response = await fetch(`http://localhost:8080/api/checkBrandAndCapacity/${connectionId}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch KW and Brand: ${response.status}, Message: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching KW and Brand:", error);
+    alert("Failed to fetch details. Please try again.");
+    return null; // Prevent app crash
+  }
+};
+
+export const saveCustomerSpecs = async (connectionId: string, requestData: any) => {
+  if (!connectionId) {
+      throw new Error("Connection ID is missing!");
+  }
+
+  const apiUrl = `http://localhost:8080/api/customer-agreed/${connectionId}`;
+
+  try {
+      const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+              'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to save specifications.");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("Error saving system specs:", error);
+      throw error;
+  }
+};
+
+/*<------------------------------------------Document Generation APIs------------------------------------------------->*/
+
+export const fetchPdf = async (id: number, docName: string): Promise<Response> => {
+  let endpoint = "";
+
+  if (docName === "WCR Page-1") {
+    endpoint = `http://localhost:5050/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
+  }
+  if (docName === "Annexure 1") {
+    endpoint = `http://localhost:5050/api/pdf/annexureProformaAConverted/${id}?download=true`;
+  }
+  if(docName=== "EarthingPageDocument"){
+    endpoint = `http://localhost:5050/api/pdf/earthingPageController/${id}?download=true`;
+  }
+  if(docName=== "Subsidy Agreement Document-Page-1"){
+    endpoint = `http://localhost:5050/api/pdf/subsidyagreementpageone/${id}?download=true`;
+  }
+  if(docName=== "Subsidy Agreement Document-Page-2"){
+    endpoint = `http://localhost:5050/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
+  }
+  if(docName=== "Vendor Feasibility Document"){
+    endpoint = `http://localhost:5050/api/pdf/vendorFeasibilityController/${id}?download=true`;
+  }
+  if(docName=== "Netmeter Agreement Document-Page-1"){
+    endpoint = `http://localhost:5050/api/pdf/netAgreementOne/${id}?download=true`;
+  }
+  if(docName=== "Netmeter Agreement Document-Page-2"){
+    endpoint = `http://localhost:5050/api/pdf/netAgreementTwo/${id}?download=true`;
+  }
+  if(docName=== "Declaration Page"){
+    endpoint = `http://localhost:5050/api/pdf/declarationPage/${id}?download=true`;
+  }
+  if(docName=== "Declarartion Document"){
+    endpoint = `http://localhost:5050/api/pdf/declarationPage/${id}?download=true`;
+  }
+   
+  // Add other documents' API endpoints here if needed
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "Accept": "application/pdf",
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch document");
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching document:", error);
+    throw error;
+  }
+};
+
+
+
+/*<---------------------------------------------One Drive Service APIs-------------------------------------------------->*/
+
+
+export const uploadDocuments = async (
+  connectionId: string,
+  sessionName: string,
+  files: File[]
+) => {
+  const formData = new FormData();
+
+  formData.append("connectionId", connectionId);
+  formData.append("folderName", "Onboarding Documents");
+  formData.append("sessionName", sessionName);
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const response = await axios.post("http://localhost:8000/api/onedrive/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "X-Uploaded-By": "prasad@gmail.com",
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+  });
+
+  return response.data;
+};
+
+export const fetchUploadedFilesBySession = async (
+  connectionId: string,
+  session: SessionName
+): Promise<UploadedFile[]> => {
+  try {
+    const response = await axios.get(
+      `http://localhost:8000/api/onedrive/metadata/${connectionId}/${session}`,{
+        headers: {
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+      }
+    );
+    const files = response.data?.data || [];
+
+    return files.map((file: any) => ({
+      fileId: file.fileId,
+      fileName: file.fileName,
+      filePath: file.filePath,
+    }));
+  } catch (error) {
+    console.error(`Error fetching files for ${session}`, error);
+    return [];
+  }
+};
+
+export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
+  const response = await axios.get(
+    `http://localhost:8000/api/onedrive/download/documentId/${fileId}`,
+    {
+      responseType: "blob",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, 
+      },
+    }
+  );
+  return response.data;
+};
+
+
+/*<-----------------------------------------------OTP Service APIs---------------------------------------------------->*/
+
 export const sendOtpToEmail = async (email: string): Promise<void> => {
-  await axios.post('http://192.168.116.162:5555/api/otp/send', { email });
+  await axios.post('http://localhost:5555/api/otp/send', { email });
 };
 
 
 export const verifyOtp = async (email: string, otp: string): Promise<void> => {
-  await axios.post('http://192.168.116.162:5555/api/otp/verify', { email, otp });
+  await axios.post('http://localhost:5555/api/otp/verify', { email, otp });
 };
 
-export const verifyAndChangePassword = async (
-  emailAddress: string,
-  newPassword: string
-): Promise<void> => {
-  await API.post(
-    'http://192.168.116.162:9090/auth/update-password',
-    { emailAddress, newPassword }
-  );
-};
+
 
 
 

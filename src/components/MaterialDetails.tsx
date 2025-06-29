@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, fetchBrandCapacityDetails, getMaterialsByConnectionId, updateMaterialData } from "../services/api";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../services/api";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
 
@@ -40,46 +39,11 @@ export default function MaterialForm() {
   const location = useLocation();
   const navigate = useNavigate();
   const connectionId = location.state?.connectionId;
-  const [scanningIndex, setScanningIndex] = useState(false);
   const [messageBoxOpen, setMessageBoxOpen] = useState(false);
   const [messageBoxContent, setMessageBoxContent] = useState("");
   const [messageBoxSeverity, setMessageBoxSeverity] = useState<"success" | "error">("success");
   const consumer = location.state?.consumer as Consumer;
   const [existingMaterialData, setExistingMaterialData] = useState<any | null>(null);
-
-
-
-  // const handleScan = (scannedValue: string) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     serialNoOfModules: scannedValue,
-  //   }));
-  //   setScanning(false);
-  // };
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (!connectionId) return;
-
-  //     try {
-  //       const data = await fetchBrandCapacityDetails(connectionId);
-
-  //       console.log("Fetched data:", data);
-
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         systemKw: data.customerSelectedKW,
-  //         makeOfModule: data.customerSelectedBrand || "",
-  //       }));
-
-  //     } catch (error) {
-  //       console.error("Error fetching details:", error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [connectionId]);
-
 
 
  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -188,9 +152,6 @@ const handleDialogClose = () => {
     navigate("/OnboardedCustomers");
   }
 };
-
-
-
 
 
   return (
@@ -410,7 +371,7 @@ const handleDialogClose = () => {
               </div>
               {/* <InputField name="earthingRod" label="Earthing Rod" value={formData.earthingRod} handleChange={handleChange} type="number" /> */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Earthing Rod</label>
+                <label className="block text-sm font-medium text-gray-700">Number of Earthing Rod</label>
                 <input
                   type="number"
                   name="earthingRod"

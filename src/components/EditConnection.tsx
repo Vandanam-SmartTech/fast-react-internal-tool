@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getConnectionByConsumerId, updateConsumerConnectionDetails, fetchClaims } from "../services/api";
-import { getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
-import { Stepper, Step } from "react-form-stepper";
-import { Tabs,TabsHeader,TabsBody,Tab,TabPanel } from "@material-tailwind/react";
-import { Dialog, DialogTitle, DialogContent,DialogContentText, DialogActions, Button, Alert } from '@mui/material';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
   BoltIcon,
@@ -62,7 +60,6 @@ export const EditConnection = () => {
   const [connection, setConnection] = useState<any>(null);
 
     const customerId = location.state?.customerId || null;
-    const existingConnection = location.state?.existingConnection || null;
     const connectionId = location.state?.connectionId;
     const consumerId = location.state?.consumerId;
   
@@ -72,13 +69,11 @@ export const EditConnection = () => {
   
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [pincode, setPincode] = useState<string>("");
+    const [setPincode] = useState<string>("");
     const [villageCode, setVillageCode] = useState<number>(0);
     const [districtName, setDistrictName] = useState<string>("");
     const [talukaName, setTalukaName] = useState<string>("");
     const [villageName, setVillageName] = useState<string>("");
-    const [isNameCorrecction, setIsNameCorrection] = useState("No");
-    //const [selectedRepresentative, setSelectedRepresentative] = useState(null);
     const [loading, setLoading] = useState(true);
     const [roles, setRoles] = useState<string[]>([]);
     const selectedRepresentative = location.state?.selectedRepresentative;
@@ -138,12 +133,6 @@ export const EditConnection = () => {
         getClaims();
       }, []);
 
-  // useEffect(() => {
-  //   const storedRep = localStorage.getItem("selectedRepresentative");
-  //   if (storedRep) {
-  //     setSelectedRepresentative(JSON.parse(storedRep));
-  //   }
-  // }, []);
 
 
   useEffect(() => {
@@ -151,7 +140,7 @@ export const EditConnection = () => {
       try {
         const districtData = await fetchDistricts();
         setDistricts(districtData);
-      } catch (err) {
+      } catch (error) {
         console.error('Error fetching districts:', err);
       }
     };
@@ -412,18 +401,6 @@ export const EditConnection = () => {
           </div>
         )}
   </div>
-        {/* <div className="mb-6 sm:mb-8 overflow-x-auto">
-        <Stepper 
-          activeStep={0} 
-          styleConfig={{ activeBgColor: '#3b82f6', completedBgColor: '#3b82f6' }}
-          className="min-w-max sm:w-full"
-        >
-          <Step label="Customer Details" />
-          <Step label="Connection Details" />
-          <Step label="Installation Space Details" />
-          <Step label="System Specifications" />
-        </Stepper>
-      </div> */}
 
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -432,7 +409,7 @@ export const EditConnection = () => {
     <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
 
         const Icon =
@@ -753,17 +730,6 @@ export const EditConnection = () => {
             />
           </div>
 
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
-            <input
-              type="text"
-              name="discomId"
-              value={formData.discomId}
-              onChange={handleChange}
-              placeholder="e.g. 64797718"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
-          </div> */}
   
           <div className="flex flex-col space-y-4">
     {/* Name Correction Question */}
