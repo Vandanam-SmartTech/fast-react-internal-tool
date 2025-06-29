@@ -116,7 +116,7 @@ const RepresentativeDashboard = () => {
          >
            <Users className="w-8 h-8 mb-2" />
            <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-             {count !== null ? animatedCount : ''}
+             {count !== null ? animatedCount : '0'}
            </div>
            <div className="text-sm sm:text-lg font-medium tracking-wide text-center">All Customers</div>
          </button>
@@ -127,7 +127,7 @@ const RepresentativeDashboard = () => {
          >
            <UserCheck className="w-8 h-8 mb-2" />
            <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-             {onboardedCount !== null ? animatedOnboardedCount : ''}
+             {onboardedCount !== null ? animatedOnboardedCount : '0'}
            </div>
            <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Customers</div>
          </button>
