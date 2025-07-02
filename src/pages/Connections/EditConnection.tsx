@@ -70,7 +70,11 @@ export const EditConnection = () => {
   
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
+<<<<<<< HEAD:src/pages/Connections/EditConnection.tsx
     const [pincode, setPincode] = useState<string>("");
+=======
+    const [pincode,setPincode] = useState<string>("");
+>>>>>>> 14abcd969c4bd344e3163a9fdf81b5484ed01518:src/components/EditConnection.tsx
     const [villageCode, setVillageCode] = useState<number>(0);
     const [districtName, setDistrictName] = useState<string>("");
     const [talukaName, setTalukaName] = useState<string>("");
