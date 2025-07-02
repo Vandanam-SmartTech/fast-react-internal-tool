@@ -509,13 +509,8 @@ const handleGenerateQuotation = async () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-
       const fileName = `quotation_${connectionId}.pdf`;
       const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-
-
-      await uploadDocuments(connectionId, "quotation document", [pdfFile]);
-      console.log("PDF uploaded to OneDrive successfully");
 
       await uploadDocuments(connectionId, "quotation document", [pdfFile]);
       console.log("PDF uploaded to OneDrive successfully");
