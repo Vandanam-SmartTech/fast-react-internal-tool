@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers, fetchConsumerNumber, searchCustomers } from "../services/api";
+import { fetchConsumers, fetchConsumerNumber, searchCustomers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { Eye, Mail, Phone, Lightbulb } from "lucide-react";
-import SearchBar from "../components/SearchBar"; // Import SearchBar component
+import SearchBar from "../../components/SearchBar"; // Import SearchBar component
 
 interface Consumer {
 
@@ -20,9 +20,9 @@ const ListOfConsumers: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // existing state
-  const [searchResults, setSearchResults] = useState<Consumer[]>([]); // new state for search results
-  const [isSearching, setIsSearching] = useState<boolean>(false); // new state for search indicator
+  const [searchQuery, setSearchQuery] = useState<string>(""); 
+  const [searchResults, setSearchResults] = useState<Consumer[]>([]); 
+  const [isSearching, setIsSearching] = useState<boolean>(false); 
 
 
   const handleViewConsumer = (consumer: Consumer) => {
@@ -54,7 +54,7 @@ const ListOfConsumers: React.FC = () => {
 
       await Promise.all(
         consumerIds.map(async (id) => {
-          const response = await fetchConsumerNumber(id); // Expecting an array
+          const response = await fetchConsumerNumber(id); 
           if (Array.isArray(response)) {
             consumerNumberMap[id] = response.map((item) => ({
               connectionId: item.id, // Store connectionId
@@ -66,7 +66,7 @@ const ListOfConsumers: React.FC = () => {
         })
       );
 
-      setConsumerNumbers((prev) => ({ ...prev, ...consumerNumberMap })); // Update state correctly
+      setConsumerNumbers((prev) => ({ ...prev, ...consumerNumberMap })); 
     } catch (error) {
       console.error("Error fetching consumer numbers:", error);
     }
@@ -83,7 +83,7 @@ const ListOfConsumers: React.FC = () => {
     setIsSearching(true);
     try {
       const result = await searchCustomers(query);
-      console.log('Search Results:', result); // Inspect API response
+      console.log('Search Results:', result); 
       if (Array.isArray(result)) {
         const filteredResults = result
           .filter((consumer) => consumer !== null && consumer !== undefined)

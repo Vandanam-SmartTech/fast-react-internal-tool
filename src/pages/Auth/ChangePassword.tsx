@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import bgImage from '../assets/Solar_Image.jpg';
-import logo from '../assets/Vandanam_Logo.png';
-import { verifyAndChangePassword } from '../services/api';
+import bgImage from '../../assets/Solar_Image.jpg';
+import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { verifyAndChangePassword } from '../../services/jwtService';
 
 const Verification: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -12,6 +12,8 @@ const Verification: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = (location.state as { email: string })?.email || '';
+  const msg = (location.state as { msg: string })?.msg || '';
+  const msg1 = (location.state as { msg: string })?.msg || '';
 
   // Password validation regex
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -20,6 +22,24 @@ const Verification: React.FC = () => {
     return passwordRegex.test(pw);
   };
 
+//   useEffect(() => {
+//   // const resetDone = localStorage.getItem('OTP sent successfully') === 'true';
+//   // const otpDone = localStorage.getItem('otpVerified') === 'true';
+
+//   if (!resetDone || !otpDone) {
+//     navigate('/PasswordReset');
+//     return;
+//   }
+
+//   // localStorage.removeItem('OTP sent successfully');
+//   // localStorage.removeItem('otpVerified');
+// }, [navigate]);
+
+useEffect(() => {
+  if (!email && !msg && !msg1) {
+    navigate('/Verification',{state:{email, msg, msg1}});
+  }
+}, [email, msg, msg1, navigate]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +63,7 @@ const Verification: React.FC = () => {
       await verifyAndChangePassword(email, newPassword);
       setSuccess('Password changed successfully!');
 
+
       setTimeout(() => navigate('/'), 1500);
     } catch (error) {
       console.error('Password change failed:', error);
@@ -56,9 +77,9 @@ const Verification: React.FC = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="w-full max-w-sm p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-6">
-          <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
-          <h2 className="text-2xl font-bold text-blue-800">Change Password</h2>
+        <div className="flex flex-col items-center justify-center mb-2 sm:mb-1">
+          <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
+          {/* <h2 className="text-2xl font-bold text-blue-800">Change Password</h2> */}
         </div>
 
         {error && (

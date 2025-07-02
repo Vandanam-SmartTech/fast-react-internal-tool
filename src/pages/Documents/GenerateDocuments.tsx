@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { fetchPdf } from '../services/api';
+import { fetchPdf } from '../../services/documentGeneratorService';
 import { useState } from "react";
 
 export interface Consumer{
@@ -14,8 +14,8 @@ export interface Consumer{
 }
 export default function GenerateDocuments() {
   const location = useLocation();
-  const consumer = location.state?.consumer as Consumer; // Retrieve consumer data
-  const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null); // Track loading per document
+  const consumer = location.state?.consumer as Consumer; 
+  const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null); 
   const [loadingGenerateDoc, setLoadingGenerateDoc] = useState<string | null>(null);
 
   console.log("Consumer Data:", consumer);
@@ -32,83 +32,76 @@ export default function GenerateDocuments() {
     "Declarartion Document",
   ];
 
-  const handleGenerate = async (doc: string) => {
-    console.log("Document Generating")
-    if (!consumer || !consumer.id) {
-      console.error("Consumer data missing");
-      return;
-    }
+const handleGenerate = async (doc: string) => {
+  if (!consumer || !consumer.id) {
+    console.error("Consumer data missing");
+    return;
+  }
 
-    setLoadingGenerateDoc(doc);
-  
-    try {
-      const response = await fetchPdf(consumer.id, doc);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-  
-      // Create a temporary link to trigger download
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${doc.replace(/\s/g, "_")}_${consumer.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-  
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error generating document:", error);
-    }
-    finally {
-      setLoadingGenerateDoc(null); // Reset loading state after completion
-    }
-  };
+  setLoadingGenerateDoc(doc);
+
+  try {
+    const blob = await fetchPdf(consumer.id, doc); // Axios already gives blob
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc.replace(/\s/g, "_")}_${consumer.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error generating document:", error);
+  } finally {
+    setLoadingGenerateDoc(null);
+  }
+};
+
 
   const handlePreview = async (docName: string) => {
-    if (!consumer?.id) {
-      console.error("Consumer ID is missing!");
-      return;
+  if (!consumer?.id) {
+    console.error("Consumer ID is missing!");
+    return;
+  }
+
+  setLoadingPreviewDoc(docName);
+
+  try {
+    const blob = await fetchPdf(consumer.id, docName); // Axios already gives blob
+    const pdfUrl = URL.createObjectURL(blob);
+
+    const popupWindow = window.open("", "_blank", "width=800,height=600");
+    if (popupWindow) {
+      popupWindow.document.write(`
+        <html>
+          <head><title>Document Preview</title></head>
+          <body style="margin:0">
+            <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" />
+          </body>
+        </html>
+      `);
+    } else {
+      console.error("Popup blocked. Please allow popups and try again.");
     }
+  } catch (error) {
+    console.error("Failed to preview the document:", error);
+  } finally {
+    setLoadingPreviewDoc(null);
+  }
+};
 
-    setLoadingPreviewDoc(docName); // Set loading for the specific button
-
-    try {
-      const response = await fetchPdf(consumer.id, docName);
-      const pdfBlob = await response.blob();
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Open in a new tab for preview
-      const popupWindow = window.open("", "_blank", "width=800,height=600");
-      if (popupWindow) {
-        popupWindow.document.write(`
-          <html>
-            <head>
-              <title>Document Preview</title>
-            </head>
-            <body>
-              <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" />
-            </body>
-          </html>
-        `);
-      } else {
-        console.error("Popup blocked. Please allow popups and try again.");
-      }
-    } catch (error) {
-      console.error("Failed to preview the document:", error);
-    } finally {
-      setLoadingPreviewDoc(null); // Reset loading state after completion
-    }
-  };
   
   
 
   return (
   <div className="max-w-4xl mx-auto p-6 space-y-6">
 
-    {/* Aligned Content Wrapper */}
+    
     <div className="max-w-3xl mx-auto space-y-4">
 
-      {/* Consumer Details Card */}
+
       {consumer && (
         <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
@@ -132,12 +125,12 @@ export default function GenerateDocuments() {
         </div>
       )}
 
-      {/* Generate Documents Heading */}
+
       <p className="text-lg font-semibold text-gray-900 text-left">
         Generate Documents
       </p>
 
-      {/* Document List with Buttons */}
+
       <div className="bg-white p-4 rounded-lg shadow-lg">
         {documents.map((doc, index) => (
           <div

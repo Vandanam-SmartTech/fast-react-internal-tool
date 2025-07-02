@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
-import bgImage from '../assets/Solar_Image.jpg';
-import logo from '../assets/Vandanam_Logo.png';
-import { verifyOtp, sendOtpToEmail } from '../services/api';
+import bgImage from '../../assets/Solar_Image.jpg';
+import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { verifyOtp, sendOtpToEmail } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -15,6 +15,7 @@ const Verification: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = (location.state as { email: string })?.email || '';
+  const msg = (location.state as { msg: string })?.msg || '';
 
   const OTP_EXPIRY_KEY = 'otpExpiryTime';
 
@@ -32,9 +33,12 @@ const Verification: React.FC = () => {
 
 
   // Redirect if email not found
-  useEffect(() => {
-    if (!email) navigate('/PasswordReset');
-  }, [email, navigate]);
+useEffect(() => {
+  if (!email && !msg) {
+    navigate('/PasswordReset');
+  }
+}, [email, msg, navigate]);
+
 
 useEffect(() => {
   const expiryTime = parseInt(localStorage.getItem(OTP_EXPIRY_KEY) || '0');
@@ -77,13 +81,15 @@ useEffect(() => {
     try {
       await verifyOtp(email, otp);
       setMessage('OTP verified successfully.');
-      localStorage.setItem('otpVerified', 'true');
       toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar:true });
+
+      //localStorage.setItem('otpVerified', 'true');
+
 
       localStorage.removeItem('otpExpiryTime');
       localStorage.removeItem('resendEnableTime');
 
-      setTimeout(() => navigate('/ChangePassword', { state: { email } }), 1000);
+      setTimeout(() => navigate('/ChangePassword', { state: { email, msg, msg1:'Otp verified successfully' } }), 1000);
     } catch {
       setError('Invalid or expired OTP.');
     }
@@ -128,9 +134,9 @@ const handleResend = async () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-4 sm:mb-6">
-          <img src={logo} alt="Vandanam SmartTech Logo" className="h-6 w-6 sm:h-8 sm:w-8 mr-2" />
-          <h2 className="text-xl sm:text-2xl font-bold text-blue-800">OTP Verification</h2>
+        <div className="flex items-center justify-center mb-2 sm:mb-1">
+          <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
+          {/* <h2 className="text-xl sm:text-2xl font-bold text-blue-800">OTP Verification</h2> */}
         </div>
 
         {message && (
@@ -148,7 +154,7 @@ const handleResend = async () => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-center">
             <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-4">
-              Enter the OTP
+              Enter Verification Code
             </label>
 
             <div className="flex justify-center gap-x-4">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCustomerById, updateConsumerPersonalDetails,fetchClaims } from "../services/api";
+import { getCustomerById, updateConsumerPersonalDetails } from "../../services/customerRequisitionService";
+import { fetchClaims } from "../../services/jwtService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from "react-toastify";

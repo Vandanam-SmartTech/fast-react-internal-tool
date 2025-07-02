@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getConnectionByConsumerId, updateConsumerConnectionDetails, fetchClaims } from "../services/api";
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../services/api';
+import { getConnectionByConsumerId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
+import { fetchClaims } from "../../services/jwtService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
@@ -69,7 +70,7 @@ export const EditConnection = () => {
   
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [setPincode] = useState<string>("");
+    const [pincode, setPincode] = useState<string>("");
     const [villageCode, setVillageCode] = useState<number>(0);
     const [districtName, setDistrictName] = useState<string>("");
     const [talukaName, setTalukaName] = useState<string>("");
@@ -114,6 +115,7 @@ export const EditConnection = () => {
     monthlyAvgConsumptionUnits: NaN,
     isOnboardedCustomers:false,
     discomId: "",
+    isActive:true,
   });
 
   
@@ -355,6 +357,7 @@ export const EditConnection = () => {
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
       isOnboardedCustomers: formData.isOnboardedCustomers,
+      isActive: formData.isActive,
     };
   
     setDialogType("confirm");

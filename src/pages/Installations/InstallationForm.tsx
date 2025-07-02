@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveInstallation, fetchClaims, fetchInstallationSpaceTypesNames} from "../services/api";
+import { saveInstallation, fetchInstallationSpaceTypesNames} from "../../services/customerRequisitionService";
+import { fetchClaims } from "../../services/jwtService";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import {

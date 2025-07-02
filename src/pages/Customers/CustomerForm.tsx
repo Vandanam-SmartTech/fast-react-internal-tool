@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveCustomer } from "../services/api";
-import { fetchClaims, fetchRepresentatives, checkMobileNumberExists, checkEmailAddressExists } from '../services/api';
+import { saveCustomer } from "../../services/customerRequisitionService";
+import { checkMobileNumberExists, checkEmailAddressExists } from '../../services/customerRequisitionService';
+import { fetchClaims, fetchRepresentatives } from '../../services/jwtService'
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";

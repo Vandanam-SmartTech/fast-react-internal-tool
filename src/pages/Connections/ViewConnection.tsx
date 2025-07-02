@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchClaims,fetchUploadedFilesBySession, fetchInstallationSpaceTypesNames, downloadDocumentById, fetchConsumerNumber, uploadDocuments, getCustomerById, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../services/api"; // Import API functions
+import { fetchInstallationSpaceTypesNames,  fetchConsumerNumber,  getCustomerById, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService"; // Import API functions
 import { useLocation } from "react-router-dom";
+import { fetchClaims } from "../../services/jwtService";
+import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft, FileUp, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
@@ -596,7 +598,7 @@ const handleNo = async () => {
       </div>
 
       <div>
-          <h3 className="text-sm font-medium text-gray-500">longitude</h3>
+          <h3 className="text-sm font-medium text-gray-500">Longitude</h3>
           <p className="mt-1 text-base text-gray-800">{connection.longitude || "....."}</p>
       </div>
 
@@ -711,7 +713,7 @@ const handleNo = async () => {
         }}
         className="py-3 px-6 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 mx-2"
       >
-        Do you want to Offboard the Customer?
+        Do you want to Offboard the Consumer?
       </button>
     ) : (
       <button
@@ -723,7 +725,7 @@ const handleNo = async () => {
         }}
         className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
       >
-        Do you want to Onboard the Customer?
+        Do you want to Onboard the Consumer?
       </button>
     )}
   </div>

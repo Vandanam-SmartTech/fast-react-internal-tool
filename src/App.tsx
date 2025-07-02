@@ -1,32 +1,47 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Login from './components/Login';
-import PrivateRoute from './components/PrivateRoute';
+import { useEffect } from "react";
+
+import Login from './pages/Auth/Login';
+import PrivateRoute from './routes/PrivateRoute';
+import RoleProtectedRoute from './routes/RoleProtectedRoute';
+import HomeRedirect from './pages/HomeRedirect';
 import Sidebar from './components/Sidebar';
-import ListOfConsumers from './components/ListOfConsumers';
-import GenerateDocuments from './components/GenerateDocuments';
-import { CustomerForm } from './components/CustomerForm';
-import { ViewCustomer } from './components/ViewCustomer';
-import { ConnectionForm } from './components/ConnectionForm';
-import { ViewConnection } from './components/ViewConnection';
-import { InstallationForm } from './components/InstallationForm';
-import { ViewInstallation } from './components/ViewInstallation';
-import { SystemSpecifications } from './components/SystemSpecifications';
-import  OnboardedCustomers  from './components/OnboardedCustomers';
-import  PasswordReset  from './components/PasswordReset'; 
-import ChangePassword from './components/ChangePassword';
-import  Verification  from './components/Verification';
-import  RepresentativeDashboard  from './components/RepresentativeDashboard';
-import AdminDashboard from './components/AdminDashboard';
-import { EditCustomer } from './components/EditCustomer';
-import { EditConnection } from './components/EditConnection';
-import { EditInstallation } from './components/EditInstallation';
-import MaterialDetails from './components/MaterialDetails';
+import ListOfConsumers from './pages/ConsumerList/ListOfConsumers';
+import GenerateDocuments from './pages/Documents/GenerateDocuments';
+import { CustomerForm } from './pages/Customers/CustomerForm';
+import { ViewCustomer } from './pages/Customers/ViewCustomer';
+import { ConnectionForm } from './pages/Connections/ConnectionForm';
+import { ViewConnection } from './pages/Connections/ViewConnection';
+import { InstallationForm } from './pages/Installations/InstallationForm';
+import { ViewInstallation } from './pages/Installations/ViewInstallation';
+import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
+import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
+import  PasswordReset  from './pages/Auth/PasswordReset'; 
+import ChangePassword from './pages/Auth/ChangePassword';
+import  Verification  from './pages/Auth/Verification';
+import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
+import { EditCustomer } from './pages/Customers/EditCustomer';
+import { EditConnection } from './pages/Connections/EditConnection';
+import { EditInstallation } from './pages/Installations/EditInstallation';
+import MaterialDetails from './pages/Materials/MaterialDetails';
 import { ToastContainer } from 'react-toastify';
+import PageNotFound from './pages/PageNotFound';
+
+
+
 
 const AppContent: React.FC = () => {
   const location = useLocation();
 
- const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword';
+ const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
+
+//  useEffect(() => {
+//     const publicPaths = ['/login', '/PasswordReset', '/Verification', '/ChangePassword'];
+//     if (publicPaths.includes(location.pathname)) {
+//       localStorage.removeItem('jwtToken'); 
+//     }
+//   }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -37,7 +52,9 @@ const AppContent: React.FC = () => {
       <div className="py-12">
         <Routes>
 
-          <Route path="/" element={<Navigate to="/login" />} />
+          
+
+          <Route path="/" element={<HomeRedirect />} />
           
           <Route path="/login" element={<Login />} />
 
@@ -46,6 +63,9 @@ const AppContent: React.FC = () => {
           <Route path="/Verification" element={<Verification />} />
 
           <Route path="/ChangePassword" element={<ChangePassword />} />
+
+          <Route path="*" element={<PageNotFound />} />
+
           
           <Route
             path="/list-of-consumers"
@@ -68,9 +88,18 @@ const AppContent: React.FC = () => {
           <Route
             path="/AdminDashboard"
             element={
-              <PrivateRoute>
-                <AdminDashboard />
-              </PrivateRoute>
+                <RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+                  <AdminDashboard />
+                </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/RepresentativeDashboard"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_REPRESENTATIVE']}>
+                  <RepresentativeDashboard />
+                </RoleProtectedRoute>
             }
           />
 
@@ -182,10 +211,10 @@ const AppContent: React.FC = () => {
           />
 
           <Route
-              path="/OnboardedCustomers"
+              path="/OnboardedConsumers"
               element={
               <PrivateRoute>
-                <OnboardedCustomers />
+                <OnboardedConsumers />
               </PrivateRoute>
             }
           />
@@ -207,7 +236,7 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
+    <Router basename="/internal-tool">
       <AppContent />
     </Router>
   );

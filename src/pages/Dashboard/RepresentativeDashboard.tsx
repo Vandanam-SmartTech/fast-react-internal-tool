@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchClaims, getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../services/api';
+import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
+import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from "react-router-dom";
 import { UserCheck,Users } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
@@ -133,7 +134,7 @@ const RepresentativeDashboard = () => {
          </button>
        </div>
  
-       <div className="bg-white rounded-xl shadow-md p-4">
+       {count !== 0 && (<div className="bg-white rounded-xl shadow-md p-4">
          <h2 className="text-xl font-semibold mb-4">Customer Trend</h2>
          <ResponsiveContainer width="100%" height={300}>
    <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
@@ -170,6 +171,7 @@ const RepresentativeDashboard = () => {
  
  
        </div>
+       )}
      </div>
    );
  };

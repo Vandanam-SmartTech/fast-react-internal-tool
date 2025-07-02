@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
-import { getCustomerById, fetchConsumerNumber, fetchClaims } from "../services/api";
+import { redirectToDashboard } from '../../routes/DashboardRoute'
+import { getCustomerById, fetchConsumerNumber } from "../../services/customerRequisitionService";
+import { fetchClaims } from "../../services/jwtService";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -18,6 +20,12 @@ export const ViewCustomer = () => {
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [roles, setRoles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Customer Details");
+
+useEffect(() => {
+    if (!location.state) {
+      redirectToDashboard(navigate);
+    }
+  }, [location, navigate]);
 
   const tabs = [
     "Customer Details",

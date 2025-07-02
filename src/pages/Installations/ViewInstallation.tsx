@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, fetchClaims, fetchInstallationSpaceTypesNames } from "../services/api";
+import { getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { fetchClaims } from "../../services/jwtService";
 
 import {
   UserCircleIcon,

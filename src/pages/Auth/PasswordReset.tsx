@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import bgImage from '../assets/Solar_Image.jpg';
-import logo from '../assets/Vandanam_Logo.png';
-import { validateUser, sendOtpToEmail } from '../services/api';
+import bgImage from '../../assets/Solar_Image.jpg';
+import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { validateUser } from '../../services/jwtService';
+import { sendOtpToEmail } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -26,7 +27,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const userEmail = await validateUser(emailInput); // gets plain string
     await sendOtpToEmail(userEmail);
 
-    const expiryTime = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const expiryTime = Date.now() + 3 * 60 * 1000; // 5 minutes
     const resendTime = Date.now() + 60 * 1000;     // 1 minute
 
     localStorage.setItem('otpExpiryTime', expiryTime.toString());
@@ -34,9 +35,12 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
     toast.success('OTP Sent Successfully!', { autoClose: 1000, hideProgressBar: true });
 
+    // localStorage.setItem('OTP sent successfully', 'true');
+
+
     setTimeout(() => {
       setLoading(false);
-      navigate('/Verification', { state: { email: userEmail } });
+      navigate('/Verification', { state: { email: userEmail, msg: 'OTP sent successfully', } });
     }, 1000);
   } catch (err: any) {
     setLoading(false);
@@ -64,9 +68,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     >
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
         {/* Logo and Title */}
-        <div className="flex items-center justify-center mb-4 sm:mb-6">
-          <img src={logo} alt="Vandanam SmartTech Logo" className="h-6 w-6 sm:h-8 sm:w-8 mr-2" />
-          <h2 className="text-xl sm:text-2xl font-bold text-blue-800">Vandanam SmartTech</h2>
+        <div className="flex items-center justify-center mb-2 sm:mb-1">
+          <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
+          {/* <h2 className="text-xl sm:text-2xl font-bold text-blue-800">Vandanam SmartTech</h2> */}
         </div>
 
         {/* {loading && (
@@ -92,7 +96,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <div>
       <h3 className="text-xl font-semibold text-gray-700 mb-1">Reset Password</h3>
       <p className="text-sm text-gray-500 mb-2">
-        Enter your email or phone number. We'll send you a verification code to reset your password.
+        Enter your email or phone number. We'll send you a verification code to respective email to reset your password.
       </p>
     </div>
     <div>

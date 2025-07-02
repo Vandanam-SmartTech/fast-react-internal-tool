@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { fetchOnboardedConsumers , getMaterialsByConnectionId} from "../services/api";
+import { fetchOnboardedConsumers , getMaterialsByConnectionId} from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "../../components/SearchBar";
 import { Mail, Phone, User, Zap } from "lucide-react";
 
 
@@ -15,7 +15,7 @@ interface Consumer {
   connectionType: string;
 }
 
-const OnboardedCustomers: React.FC = () => {
+const OnboardedConsumers: React.FC = () => {
   const navigate = useNavigate();
   const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -144,7 +144,7 @@ const OnboardedCustomers: React.FC = () => {
   return (
     <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="w-full lg:w-[85%]">
-      <h1 className="text-2xl font-semibold mb-6">Onboarded Customers</h1>
+      <h1 className="text-2xl font-semibold mb-6">Onboarded Consumers</h1>
 
       <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
 
@@ -255,4 +255,4 @@ const OnboardedCustomers: React.FC = () => {
   );
 };
 
-export default OnboardedCustomers;
+export default OnboardedConsumers;

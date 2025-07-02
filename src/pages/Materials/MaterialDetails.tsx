@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../services/api";
+import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
 
@@ -135,7 +135,7 @@ try {
     
     }
 
-navigate("/OnboardedCustomers");
+navigate("/OnboardedConsumers");
   } catch (error) {
     console.error("Material submission error:", error);
      toast.error("Failed to submit the data", {
@@ -149,7 +149,7 @@ const handleDialogClose = () => {
   setMessageBoxOpen(false);
 
   if (messageBoxSeverity === "success") {
-    navigate("/OnboardedCustomers");
+    navigate("/OnboardedConsumers");
   }
 };
 

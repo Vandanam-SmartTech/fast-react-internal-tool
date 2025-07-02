@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
-import Logo from "../assets/Vandanam_SmartTech_Logo.png"; // Adjust path if needed
+import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
 import { Home, UserPlus, Users, UserRoundCheck, LogOut } from "lucide-react";
-import { fetchClaims } from "../services/api";
+import { fetchClaims } from "../services/jwtService";
 
 
 const Sidebar: React.FC = () => {
@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarOpen");
-    setIsOpen(storedState === "true"); // If not present, will default to false
+    setIsOpen(storedState === "true"); 
   }, []);
 
   useEffect(() => {
@@ -55,8 +55,8 @@ const Sidebar: React.FC = () => {
     navigate("/list-of-consumers");
   };
 
-  const goToOnboardedCustomers = () => {
-    navigate("/OnboardedCustomers");
+  const goToOnboardedConsumers = () => {
+    navigate("/OnboardedConsumers");
   };
 
   const goToCustomerForm = () => {
@@ -160,15 +160,15 @@ const Sidebar: React.FC = () => {
 </button>
 
   <button
-    onClick={goToOnboardedCustomers}
+    onClick={goToOnboardedConsumers}
     className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/OnboardedCustomers"
+      location.pathname === "/OnboardedConsumers"
         ? "text-blue-600 font-semibold"
         : "text-black"
     }`}
   >
     <UserRoundCheck size={18} />
-    Onboarded Customers
+    Onboarded Consumers
   </button>
 
   {/* {roles.includes("ROLE_ADMIN") && (

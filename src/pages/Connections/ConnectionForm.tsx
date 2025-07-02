@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveConnection  } from "../services/api";
-import { getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages,fetchClaims, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../services/api';
+import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../../services/customerRequisitionService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { fetchClaims } from "../../services/jwtService";
 import { toast } from "react-toastify";
 import {
   UserCircleIcon,
@@ -53,6 +53,7 @@ export const ConnectionForm = () => {
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
+  const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
@@ -100,6 +101,7 @@ export const ConnectionForm = () => {
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
     discomId: "",
+    isActive: true,
   });
 
 ///////////////////////////////////////////////////////////
@@ -246,6 +248,10 @@ useEffect(() => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    if (name === "isMsebConnection" && value === "No") {
+    setConfirmConsumerNumber(""); // <-- clear confirmConsumerNumber too
+  }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -253,7 +259,13 @@ useEffect(() => {
 
     }));
         ///////////////
-        localStorage.setItem('myFormData', JSON.stringify(formData));
+        setTimeout(() => {
+    localStorage.setItem("myFormData", JSON.stringify({
+      ...formData,
+      [name]: value,
+      ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+    }));
+  }, 0);
         //////////////
   };
 
@@ -397,12 +409,15 @@ useEffect(() => {
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
       discomId:formData.discomId,
+      isActive:formData.isActive,
     };
   
     try {
       console.log("Saving new connection...");
       
       const result = await saveConnection(connectionData);
+      console.log("Received result:", result);
+
       if (result.id) {
 
         setCreatedConnectionId(result.id);
@@ -415,7 +430,7 @@ useEffect(() => {
 
       navigate(`/view-connection/${result.id}`, {
           state: {
-                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative: selectedRepresentative
+                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative,
       },
     });
     setNavigateAfterClose(false);
