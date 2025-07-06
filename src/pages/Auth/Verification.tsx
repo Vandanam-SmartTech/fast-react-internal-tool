@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+  import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import bgImage from '../../assets/Solar_Image.jpg';
@@ -102,7 +102,7 @@ const handleResend = async () => {
     await sendOtpToEmail(email);
 
     const now = Date.now();
-    const newExpiry = now + 5 * 60 * 1000; // 5 minutes
+    const newExpiry = now + 3 * 60 * 1000; // 5 minutes
     const enableResendAt = now + 60 * 1000; // 1 minute
 
     localStorage.setItem(OTP_EXPIRY_KEY, newExpiry.toString());
