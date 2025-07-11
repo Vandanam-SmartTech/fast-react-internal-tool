@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getConnectionByConsumerId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import MapPreview from '../../components/MapPreview'; 
 import {
   UserCircleIcon,
   BoltIcon,
@@ -28,33 +30,10 @@ interface District {
     pincode: string;
   }
   
-  const phaseTypeMapping = {
-    "Single-Phase": 1,
-    "Three-Phase": 2,
-  };
-  
-  const connectionTypeMapping = {
-    Residential: 1,
-    Commercial: 2,
-    Industrial: 3,
-    PWW: 4,
-  };
-  
-  const addressTypeMapping = {
-    Home: 1,
-    Hotel: 2,
-    Office: 3,
-    Charitable: 4,
-    Non_Commercial_Education: 5,
-    Street_Light: 6,
-    Construction: 7,
-    Public_Water_Works: 8,
-  };
-  
-  const correctionTypeMapping = {
-    'Spell Correction': 1,
-    'Transfer Ownership': 2,
-  };
+  // const correctionTypeMapping = {
+  //   'Spell Correction': 1,
+  //   'Transfer Ownership': 2,
+  // };
 
 export const EditConnection = () => {
   const location = useLocation();
@@ -67,6 +46,12 @@ export const EditConnection = () => {
     const [districts, setDistricts] = useState<District[]>([]);
     const [talukas, setTalukas] = useState<Taluka[]>([]);
     const [villages, setVillages] = useState<Village[]>([]);
+
+    const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
+    const [phaseTypes, setPhaseTypes] = useState<{ id: number; nameEn: string }[]>([]);
+    const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
+
+    const [correctionTypeMap, setCorrectionTypeMap] = useState<Record<string, number>>({});
   
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
@@ -84,6 +69,12 @@ export const EditConnection = () => {
     const [dialogMessage, setDialogMessage] = useState("");
     const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
+    const [confirmConsumerNumber,setConfirmConsumerNumber] = useState("");
+    const [showConsumerNumber, setShowConsumerNumber] = useState(false);
+    const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
+
+    const [showMapPreview, setShowMapPreview] = useState(false);
+
     const tabs = [
     "Customer Details",
     "Connection Details",
@@ -96,9 +87,9 @@ export const EditConnection = () => {
   const [formData, setFormData] = useState<any>({
     consumerId: "",
     isMsebConnection: "Yes",
-    phase: "Single-Phase",
-    connectionType: "Residential",
-    addressType: "Home",
+    phaseTypeId: 1,
+    connectionTypeId: 1,
+    addressTypeId: 1,
     latitude: "",
     longitude: "",
     gstIn: "",
@@ -189,6 +180,70 @@ export const EditConnection = () => {
     fetchVillagesData();
   }, [talukaCode]);
 
+    useEffect(() => {
+      const getConnectionTypes = async () => {
+        try {
+          const data = await fetchConnectionType();
+          setConnectionTypes(data);
+        } catch (error) {
+          console.error("Failed to fetch connection types", error);
+        }
+      };
+    
+      getConnectionTypes();
+    }, []);
+
+      useEffect(() => {
+        const getPhaseTypes = async () => {
+          try {
+            const data = await fetchPhaseType();
+            setPhaseTypes(data);
+          } catch (error) {
+            console.error("Failed to fetch phase types", error);
+          }
+        };
+      
+        getPhaseTypes();
+      }, []);
+
+      useEffect(() => {
+          const getAddressTypes = async () => {
+            try {
+              const data = await fetchAddressType();
+              setAddressTypes(data);
+            } catch (error) {
+              console.error("Failed to fetch address types", error);
+            }
+          };
+        
+          getAddressTypes();
+        }, []);
+
+      useEffect(() => {
+          const loadCorrectionTypes = async () => {
+          try {
+             const types = await fetchCorrectionType();
+             const map: Record<string, number> = {};
+                types.forEach((type) => {
+               map[type.correctionName] = type.id;
+            });
+           setCorrectionTypeMap(map);
+          } catch (err) {
+          console.error('Failed to load correction types', err);
+          }
+         };
+
+        loadCorrectionTypes();
+      }, []);
+
+    const reverseCorrectionTypeMap: Record<number, string> = Object.entries(correctionTypeMap).reduce(
+        (acc, [name, id]) => {
+            acc[id] = name;
+            return acc;
+          },
+        {} as Record<number, string>
+        );
+
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
@@ -265,10 +320,10 @@ export const EditConnection = () => {
           ...formData,
           consumerId: data.consumerId,
           isMsebConnection: data.isMsebConnection ? "Yes" : "No",
-          phase: Object.keys(phaseTypeMapping).find(key => phaseTypeMapping[key] === data.phaseTypeId) || "Single-Phase",
-          connectionType: Object.keys(connectionTypeMapping).find(key => connectionTypeMapping[key] === data.connectionTypeId) || "Residential",
-          addressType: Object.keys(addressTypeMapping).find(key => addressTypeMapping[key] === data.addressTypeId) || "Home",
-          correctionType: Object.keys(correctionTypeMapping).find(key => correctionTypeMapping[key] === data.correctionTypeId) || "",
+          phaseTypeId: data.phaseTypeId,
+          connectionTypeId: data.connectionTypeId,
+          addressTypeId: data.addressTypeId,
+          correctionType : reverseCorrectionTypeMap[data.correctionTypeId] || "",
           isNameCorrection: data.isNameCorrectionRequired ? "Yes" : "No",
           monthlyAvgConsumptionUnits: data.monthlyAvgConsumptionUnits,
           gstIn: data.gstIn,
@@ -289,6 +344,7 @@ export const EditConnection = () => {
         setTalukaCode(data.talukaCode);
         setVillageCode(data.villageCode);
         setPincode(data.postalCode);
+        setConfirmConsumerNumber(data.consumerId || "");
         
         setLoading(false);
       }
@@ -310,12 +366,24 @@ export const EditConnection = () => {
       
   };
 
+    const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmConsumerNumber(e.target.value);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
     console.log("Received connectionId:", connectionId);
     console.log("Received CustomerId:", customerId);
+
+    if (formData.consumerId !== confirmConsumerNumber) {
+    toast.error("Consumer number and Confirm Consumer number do not match.",{
+      autoClose:1000,
+      hideProgressBar:true,
+    });
+    return;
+  }
   
     if (!customerId) {
     toast.error("Customer Id is missing",{
@@ -326,23 +394,24 @@ export const EditConnection = () => {
     }
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
-    const isNameCorrectionRequired =
-      formData.isNameCorrection === "Yes"
-        ? correctionTypeMapping[formData.correctionType] // 1 or 2
-        : false;
+const isNameCorrectionRequired =
+  formData.isNameCorrection === "Yes" && correctionTypeMap[formData.correctionType]
+    ? true
+    : false;
+
   
     const connectionData = {
       customerId,
       consumerId: formData.consumerId,
       isMsebConnection,
       isNameCorrectionRequired,
-      phaseTypeId: phaseTypeMapping[formData.phase],
-      addressTypeId: addressTypeMapping[formData.addressType],
-      connectionTypeId: connectionTypeMapping[formData.connectionType],
+      phaseTypeId: formData.phaseTypeId,
+      addressTypeId: formData.addressTypeId,
+      connectionTypeId: formData.connectionTypeId,
       correctionTypeId:
         formData.isNameCorrection === "Yes"
-          ? correctionTypeMapping[formData.correctionType]
-          : null,
+    ? correctionTypeMap[formData.correctionType] || null
+    : null,
       monthlyAvgConsumptionUnits: formData.monthlyAvgConsumptionUnits,
       districtCode: formData.districtCode,
       talukaCode: formData.talukaCode,
@@ -504,7 +573,7 @@ export const EditConnection = () => {
           </div>
     
           {/* Two-Column Layout for Other Fields */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Consumer Number <span className="text-red-500">*</span></label>
             <input
               type="text"
@@ -518,6 +587,50 @@ export const EditConnection = () => {
               disabled={formData.isMsebConnection === "No"}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm disabled:bg-gray-200"
             />
+          </div> */}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Consumer Number <span className="text-red-500">*</span></label>
+          
+            <div className="relative">
+              <input
+                type={showConsumerNumber ? 'text' : 'password'}
+                inputMode="numeric"
+                maxLength={12}
+                name="consumerId"
+                value={formData.consumerId}
+                onChange={handleChange}
+                placeholder="e.g. 987654321000"
+                required
+                disabled={formData.isMsebConnection === "No"}
+                className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              
+              <span
+                onClick={handleToggleConsumerNumber}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+              >
+                {showConsumerNumber ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>      
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number <span className="text-red-500">*</span></label>
+            <input
+              type="tel"
+              name="confirmConsumerNumber"
+              value={confirmConsumerNumber}
+              onChange={handleConfirmConsumerNumberChange}
+              placeholder="Confirm consumer number"
+              maxLength={12}
+              required
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+            {confirmConsumerNumber &&
+              confirmConsumerNumber !== formData.consumerId && (
+                <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
+            )}
           </div>
   
           <div>
@@ -638,33 +751,39 @@ export const EditConnection = () => {
             />
           </div>
   
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
-            <select
-              name="addressType"
-              value={formData.addressType}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            >
-              {Object.keys(addressTypeMapping).map((key) => (
-                <option key={key} value={key}>{key}</option>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
+          <select
+            name="addressTypeId"
+            value={formData.addressTypeId}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          >
+            {addressTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
               ))}
-            </select>
-          </div>
-  
-          <div>
+          </select>
+        </div>
+
+
+        <div>
             <label className="block text-sm font-medium text-gray-700">Connection Type <span className="text-red-500">*</span></label>
             <select
-              name="connectionType"
-              value={formData.connectionType}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+                name="connectionTypeId"
+                value={formData.connectionTypeId}
+                onChange={handleChange}
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             >
-              {Object.keys(connectionTypeMapping).map((key) => (
-                <option key={key} value={key}>{key}</option>
+              {connectionTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
               ))}
-            </select>
-          </div>
+             </select>
+        </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units <span className="text-red-500">*</span></label>
@@ -681,19 +800,21 @@ export const EditConnection = () => {
           </div>
   
   
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Phase Type <span className="text-red-500">*</span></label>
-            <select
-              name="phase"
-              value={formData.phase}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            >
-              {Object.keys(phaseTypeMapping).map((key) => (
-                <option key={key} value={key}>{key}</option>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Phase Type <span className="text-red-500">*</span></label>
+          <select
+            name="phaseTypeId"
+            value={formData.phaseTypeId}
+            onChange={handleChange}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+          >
+            {phaseTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEn}
+              </option>
               ))}
-            </select>
-          </div>
+          </select>
+        </div>
     
   
     
@@ -721,6 +842,40 @@ export const EditConnection = () => {
             />
           </div>
 
+          <div className="col-span-1 md:col-span-2">
+        {formData.latitude &&
+  formData.longitude &&
+  !isNaN(Number(formData.latitude)) &&
+  !isNaN(Number(formData.longitude)) && (
+    <div className="col-span-2 mt-2">
+      <button
+        type="button"
+        onClick={() => setShowMapPreview((prev) => !prev)}
+        className="mb-3 px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+      >
+        {showMapPreview ? 'Close Map' : 'View Location on Map'}
+      </button>
+
+{showMapPreview && (
+  <>
+    {/* <h3 className="text-md font-semibold text-gray-700 mb-2">Preview Location on Map</h3> */}
+    <MapPreview
+  latitude={parseFloat(formData.latitude)}
+  longitude={parseFloat(formData.longitude)}
+  onLocationChange={(newLat, newLng) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: newLat.toFixed(6),
+      longitude: newLng.toFixed(6),
+    }));
+  }}
+/>
+  </>
+)}
+    </div>
+)}
+</div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Section ID</label>
             <input
@@ -729,6 +884,18 @@ export const EditConnection = () => {
               value={formData.sectionId}
               onChange={handleChange}
               placeholder="e.g. 7137"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+            <input
+              type="text"
+              name="discomId"
+              value={formData.discomId}
+              onChange={handleChange}
+              placeholder="e.g. 64797718"
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
@@ -791,7 +958,7 @@ export const EditConnection = () => {
     <div className="self-start mt-6">
       <button
         type="submit"
-        className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+        className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
       >
         Update Connection
       </button>
@@ -838,22 +1005,10 @@ export const EditConnection = () => {
                setFormData({
   consumerId: connection.consumerId || "",
   isMsebConnection: connection.isMsebConnection ? "Yes" : "No",
-  phase:
-    Object.keys(phaseTypeMapping).find(
-      key => phaseTypeMapping[key] === connection.phaseTypeId
-    ) || "Single-Phase",
-  connectionType:
-    Object.keys(connectionTypeMapping).find(
-      key => connectionTypeMapping[key] === connection.connectionTypeId
-    ) || "Residential",
-  addressType:
-    Object.keys(addressTypeMapping).find(
-      key => addressTypeMapping[key] === connection.addressTypeId
-    ) || "Home",
-  correctionType:
-    Object.keys(correctionTypeMapping).find(
-      key => correctionTypeMapping[key] === connection.correctionTypeId
-    ) || "",
+  phaseTypeId: connection.phaseTypeId,
+  connectionTypeId:connection.connectionTypeId,
+  addressTypeId: connection.addressTypeId,
+  correctionType:reverseCorrectionTypeMap[connection.correctionTypeId] || "",
   isNameCorrection: connection.isNameCorrectionRequired ? "Yes" : "No",
   monthlyAvgConsumptionUnits: connection.monthlyAvgConsumptionUnits || "",
   gstIn: connection.gstIn || "",

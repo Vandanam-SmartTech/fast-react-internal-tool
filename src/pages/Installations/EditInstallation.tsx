@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, updateInstallationSpaceDetails } from "../../services/customerRequisitionService";
+import { getInstallationByConsumerId, updateInstallationSpaceDetails, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
@@ -29,22 +29,14 @@ export const EditInstallation = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
+  const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
+
     const tabs = [
     "Customer Details",
     "Connection Details",
     "Installation Details",
     "System Specifications",
   ];
-
-  const installationSpaceTypeMapping = {
-    'Slab': 1,
-    'Metal Sheets': 2,
-    'Plastic Sheets': 3,
-    'Clay Tiles': 4,
-    'Bathroom Slab': 5,
-    'Cement Sheets': 6,
-    'On Ground': 7,
-  };
 
   const [formData, setFormData] = useState<any>({
     acWireLengthFt: NaN,
@@ -54,8 +46,9 @@ export const EditInstallation = () => {
     descriptionOfInstallation: '',
     availableSouthNorthLengthFt: NaN,
     availableEastWestLengthFt: NaN,
-    spaceType: 'Slab',
+    installationSpaceTypeId:1,
     installationSpaceTitle:'',
+    customInstallationSpaceTitle:'',
   });
 
   useEffect(() => {
@@ -70,6 +63,19 @@ export const EditInstallation = () => {
     
       getClaims();
     }, []);
+
+      useEffect(() => {
+          const getInstallationSpaceTypesNames = async () => {
+            try {
+              const data = await fetchInstallationSpaceTypesNames();
+              setInstallationSpaceTypes(data);
+            } catch (error) {
+              console.error("Failed to fetch connection types", error);
+            }
+          };
+        
+          getInstallationSpaceTypesNames();
+        }, []);
   
 
   useEffect(() => {
@@ -81,16 +87,32 @@ export const EditInstallation = () => {
           if (selectedInstallation) {
             setInstallation(selectedInstallation);
             console.log("selected installation:",selectedInstallation);
+
+             // Define known options
+          const knownTitles = [
+            "At center",
+            "At SW corner",
+            "At SE corner",
+            "At NW corner",
+            "At NE corner",
+            "At East side",
+            "At West side",
+            "At North side",
+            "At South side",
+          ];
+
+          const isCustomTitle = !knownTitles.includes(selectedInstallation.installationSpaceTitle);
             setFormData({
-              acWireLengthFt: selectedInstallation.acWireLengthFt || 0,
-              dcWireLengthFt: selectedInstallation.dcWireLengthFt || 0,
-              earthingWireLengthFt: selectedInstallation.earthingWireLengthFt || 0,
-              numberOfGpPipes: selectedInstallation.numberOfGpPipes || 0,
+              acWireLengthFt: selectedInstallation.acWireLengthFt || '',
+              dcWireLengthFt: selectedInstallation.dcWireLengthFt || '',
+              earthingWireLengthFt: selectedInstallation.earthingWireLengthFt || '',
+              numberOfGpPipes: selectedInstallation.numberOfGpPipes || '',
               descriptionOfInstallation: selectedInstallation.descriptionOfInstallation || '',
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
-              spaceType: Object.keys(installationSpaceTypeMapping).find(key => installationSpaceTypeMapping[key] === selectedInstallation.installationSpaceTypeId) || "Slab",
-              installationSpaceTitle: selectedInstallation.installationSpaceTitle || '',
+              installationSpaceTypeId: selectedInstallation.installationSpaceTypeId,
+              installationSpaceTitle: isCustomTitle ? 'Other' : selectedInstallation.installationSpaceTitle,
+            customInstallationSpaceTitle: isCustomTitle ? selectedInstallation.installationSpaceTitle : '',
             });
           }
         }
@@ -115,7 +137,7 @@ export const EditInstallation = () => {
   const installationData = {
     connectionId,
     customerId,
-    installationSpaceTypeId: installationSpaceTypeMapping[formData.spaceType],
+    installationSpaceTypeId: formData.installationSpaceTypeId,
     acWireLengthFt: formData.acWireLengthFt || 0,
     dcWireLengthFt: formData.dcWireLengthFt || 0,
     earthingWireLengthFt: formData.earthingWireLengthFt || 0,
@@ -123,7 +145,10 @@ export const EditInstallation = () => {
     descriptionOfInstallation: formData.descriptionOfInstallation || '',
     availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || 0,
     availableEastWestLengthFt: formData.availableEastWestLengthFt || 0,
-    installationSpaceTitle: formData.installationSpaceTitle || '',
+    installationSpaceTitle:
+            formData.installationSpaceTitle === 'Other'
+              ? formData.customInstallationSpaceTitle
+              : formData.installationSpaceTitle,
   };
   setDialogType("confirm");
         setDialogMessage("Do you want to update the installation details?");
@@ -241,32 +266,79 @@ export const EditInstallation = () => {
   
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Fields */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
-          <select
-            name="spaceType"
-            value={formData.spaceType}
-            onChange={handleChange}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            {Object.keys(installationSpaceTypeMapping).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
+        <select
+          name="installationSpaceTypeId"
+          value={formData.installationSpaceTypeId}
+          onChange={handleChange}
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          {installationSpaceTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nameEnglish}
+              </option>
+              ))}
+        </select>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Installation Space Title</label>
-          <input
-            type="text"
-            id="installationSpaceTitle"
-            name="installationSpaceTitle"
-            value={formData.installationSpaceTitle}
-            onChange={handleChange}
-            placeholder="e.g. South-West side of space type"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Installation Space Title <span className="text-red-500">*</span>
+  </label>
+
+<select
+  name="installationSpaceTitle"
+  value={formData.installationSpaceTitle}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value === 'Other') {
+      // Keep value as 'Other' so the select reflects it
+      setFormData((prev) => ({
+        ...prev,
+        installationSpaceTitle: 'Other',
+        customInstallationSpaceTitle: '', // introduce a new field
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        installationSpaceTitle: value,
+        customInstallationSpaceTitle: '', // clear if previously typed
+      }));
+    }
+  }}
+  required
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  <option value="" disabled>Select Installation Title</option>
+  <option value="At center">At center</option>
+  <option value="At SW corner">At SW corner</option>
+  <option value="At SE corner">At SE corner</option>
+  <option value="At NW corner">At NW corner</option>
+  <option value="At NE corner">At NE corner</option>
+  <option value="At East side">At East side</option>
+  <option value="At West side">At West side</option>
+  <option value="At North side">At North side</option>
+  <option value="At South side">At South side</option>
+  <option value="Other">Other</option>
+</select>
+
+
+  {/* Show input only when "Other" is selected */}
+{formData.installationSpaceTitle === 'Other' && (
+  <input
+    type="text"
+    name="customInstallationSpaceTitle"
+    value={formData.customInstallationSpaceTitle || ''}
+    onChange={handleChange}
+    required
+    placeholder="Specify installation space title"
+    className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+)}
+
+</div>
+
   
         <div>
           <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
@@ -373,7 +445,7 @@ export const EditInstallation = () => {
         <div className="sm:col-span-2 flex justify-center sm:justify-start mt-4">
           <button
             type="submit"
-            className="w-full sm:w-auto py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition"
+            className="w-full sm:w-auto py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
           >
             Update Installation
           </button>
@@ -416,9 +488,7 @@ export const EditInstallation = () => {
                    if (installation) {
                      setFormData({
       
-          spaceType: Object.keys(installationSpaceTypeMapping).find(
-            key => installationSpaceTypeMapping[key] === installation.installationSpaceTypeId
-          ) || "",
+        installationSpaceTypeId:installation.installationSpaceTypeId,
         acWireLengthFt: installation.acWireLengthFt || 0,
         dcWireLengthFt: installation.dcWireLengthFt || 0,
         earthingWireLengthFt: installation.earthingWireLengthFt || 0,

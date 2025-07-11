@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType } from '../../services/customerRequisitionService';
+import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { fetchClaims } from "../../services/jwtService";
 import { toast } from "react-toastify";
+import MapPreview from '../../components/MapPreview'; 
+
 import {
   UserCircleIcon,
   BoltIcon,
@@ -28,15 +30,6 @@ interface Village {
   pincode: string;
 }
 
-
-const correctionTypeMapping = {
-  'Spell Correction': 1,
-  'Transfer Ownership': 2,
-};
-
-
-
-
 export const ConnectionForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,9 +51,12 @@ export const ConnectionForm = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab ] = useState("Connection Details");
+  
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [phaseTypes, setPhaseTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
+
+  const [correctionTypeMap, setCorrectionTypeMap] = useState<Record<string, number>>({});
 
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
@@ -68,8 +64,11 @@ export const ConnectionForm = () => {
   const [showConsumerNumber, setShowConsumerNumber] = useState(false);
   const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
-     const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-     const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
+  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
+  const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
+
+  const [showMapPreview, setShowMapPreview] = useState(false);
+
 
 
 
@@ -241,6 +240,23 @@ useEffect(() => {
   
     getAddressTypes();
   }, []);
+
+  useEffect(() => {
+  const loadCorrectionTypes = async () => {
+    try {
+      const types = await fetchCorrectionType();
+      const map: Record<string, number> = {};
+      types.forEach((type) => {
+        map[type.correctionName] = type.id;
+      });
+      setCorrectionTypeMap(map);
+    } catch (err) {
+      console.error('Failed to load correction types', err);
+    }
+  };
+
+  loadCorrectionTypes();
+}, []);
   
   
   
@@ -249,7 +265,11 @@ useEffect(() => {
     const { name, value } = e.target;
     
     if (name === "isMsebConnection" && value === "No") {
-    setConfirmConsumerNumber(""); // <-- clear confirmConsumerNumber too
+    setConfirmConsumerNumber(""); 
+  }
+
+  if(name === 'consumerId' && value=== ''){
+    setConfirmConsumerNumber('');
   }
 
     setFormData((prev) => ({
@@ -379,10 +399,10 @@ useEffect(() => {
   
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
-    const isNameCorrectionRequired =
-      formData.isNameCorrection === "Yes"
-        ? correctionTypeMapping[formData.correctionType]
-        : false;
+const isNameCorrectionRequired =
+  formData.isNameCorrection === "Yes" && correctionTypeMap[formData.correctionType]
+    ? correctionTypeMap[formData.correctionType]
+    : false;
   
     const connectionData = {
       customerId,
@@ -393,9 +413,10 @@ useEffect(() => {
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
       correctionTypeId:
-        formData.isNameCorrection === "Yes"
-          ? correctionTypeMapping[formData.correctionType]
-          : null,
+  formData.isNameCorrection === "Yes"
+    ? correctionTypeMap[formData.correctionType] || null
+    : null,
+
       monthlyAvgConsumptionUnits: formData.monthlyAvgConsumptionUnits,
       districtCode: formData.districtCode,
       talukaCode: formData.talukaCode,
@@ -603,6 +624,9 @@ useEffect(() => {
       disabled={formData.isMsebConnection === "No"}
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
       title="Enter a valid 12-digit consumer number"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
     />
     
     <span
@@ -640,6 +664,9 @@ useEffect(() => {
   disabled={!(
      /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
   )}
+  onCopy={(e) => e.preventDefault()}
+  onCut={(e) => e.preventDefault()}
+  onPaste={(e) => e.preventDefault()}
 
 />
   {confirmConsumerNumber &&
@@ -835,6 +862,7 @@ useEffect(() => {
               ))}
           </select>
         </div>
+
   
   
         <div>
@@ -860,15 +888,49 @@ useEffect(() => {
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           />
         </div>
+<div className="col-span-1 md:col-span-2">
+        {formData.latitude &&
+  formData.longitude &&
+  !isNaN(Number(formData.latitude)) &&
+  !isNaN(Number(formData.longitude)) && (
+    <div className="col-span-2">
+      <button
+        type="button"
+        onClick={() => setShowMapPreview((prev) => !prev)}
+        className="mb-3 px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+      >
+        {showMapPreview ? 'Close Map' : 'View Location on Map'}
+      </button>
+
+{showMapPreview && (
+  <>
+    {/* <h3 className="text-md font-semibold text-gray-700 mb-2">Preview Location on Map</h3> */}
+    <MapPreview
+  latitude={parseFloat(formData.latitude)}
+  longitude={parseFloat(formData.longitude)}
+  onLocationChange={(newLat, newLng) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: newLat.toFixed(6),
+      longitude: newLng.toFixed(6),
+    }));
+  }}
+/>
+  </>
+)}
+    </div>
+)}
+</div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Section ID</label>
+          <label className="block text-sm font-medium text-gray-700">Section ID <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="sectionId"
             value={formData.sectionId}
             onChange={handleChange}
             placeholder="e.g. 7137"
+            required
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           />
         </div>
@@ -942,7 +1004,7 @@ useEffect(() => {
   <div className="self-start mt-6">
     <button
       type="submit"
-      className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+      className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
     >
       Save Connection
     </button>

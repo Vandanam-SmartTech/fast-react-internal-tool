@@ -53,6 +53,9 @@ export const ViewConnection = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
+  const [installationsByConsumer, setInstallationsByConsumer] = useState({});
+
+
 const sessionMap = {
   Aadhar: "Aadhar Card",
   Passbook: "Bank Passbook",
@@ -75,16 +78,6 @@ const [uploadedFiles, setUploadedFiles] = useState<{
     "Installation Details",
     "System Specifications",
   ];
-
-  // const installationSpaceTypeMapping: { [key: number]: string } = {
-  //   1: "Slab",
-  //   2: "Metal Sheets",
-  //   3: "Plastic Sheets",
-  //   4: "Clay Tiles",
-  //   5: "Bathroom Slab",
-  //   6: "Cement Sheets",
-  //   7: "On Ground",
-  // };
 
 
   useEffect(() => {
@@ -210,17 +203,21 @@ const handleDownload = async (fileId: string, fileName: string) => {
     }, []);
 
 
-  useEffect(() => {
-    const fetchInstallations = async () => {
-      if (!consumerId) return;
-      const installationsData = await getInstallationByConsumerId(Number(consumerId));
-      if (installationsData) {
-        setInstallations(installationsData);
-      }
-    };
+useEffect(() => {
+  const fetchInstallations = async () => {
+    if (!consumerId) return;
+    const installationsData = await getInstallationByConsumerId(Number(consumerId));
+    if (installationsData) {
+      setInstallationsByConsumer(prev => ({
+        ...prev,
+        [consumerId]: installationsData,
+      }));
+    }
+  };
 
-    fetchInstallations();
-  }, [consumerId]);
+  fetchInstallations();
+}, [consumerId]);
+
 
     useEffect(() => {
     const loadSpaceTypes = async () => {
@@ -249,12 +246,12 @@ const handleDownload = async (fileId: string, fileName: string) => {
     };
 
     const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
-    setMessageBoxContent("Customer onboarded successfully!");
+    setMessageBoxContent("Consumer onboarded successfully!");
     setMessageBoxSeverity("success");
     setMessageBoxOpen(true);
     console.log("Updated connection:", response);
   } catch (error) {
-    setMessageBoxContent("Failed to onboard customer. Please try again.");
+    setMessageBoxContent("Failed to onboard consumer. Please try again.");
     setMessageBoxSeverity("error");
     setMessageBoxOpen(true);
     console.error("Onboarding failed:", error);
@@ -271,12 +268,12 @@ const handleNo = async () => {
     };
 
     const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
-    setMessageBoxContent("Customer NOT onboarded.");
+    setMessageBoxContent("Consumer NOT onboarded.");
     setMessageBoxSeverity("error");
     setMessageBoxOpen(true);
     console.log("Updated connection:", response);
   } catch (error) {
-    setMessageBoxContent("Failed to update customer onboarding status. Please try again.");
+    setMessageBoxContent("Failed to update consumer onboarding status. Please try again.");
     setMessageBoxSeverity("error");
     setMessageBoxOpen(true);
     console.error("Onboarding status update failed:", error);
@@ -429,7 +426,6 @@ const handleNo = async () => {
   </div>
 )}
 
-
         </div>
 
         {/* Buttons */}
@@ -521,163 +517,201 @@ const handleNo = async () => {
   
 
 <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-28">
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
-          <p className="mt-1 text-base text-gray-800">Yes</p>
-      </div>
-      
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.consumerId || "......"}</p>
-      </div>
+  <div className="bg-white shadow-lg rounded-lg p-6 w-full mx-auto max-w-3xl">
+    <h3 className="text-xl font-semibold text-gray-800 mb-2">Connection Details</h3>
+    <div className="border-b border-gray-200 mb-4" />
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
 
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Address Line 1</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.addressLine1 || "....."}</p>
-      </div>
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Address Line 2</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.addressLine2 || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Village Name</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.villageName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Taluka Name</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.talukaName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">District Name</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.districtName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Monthly Average Consumption Units</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Latitude</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.latitude || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Longitude</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.longitude || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
-      </div>
-
-      <div>
-          <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
-          <p className="mt-1 text-base text-gray-800">{connection.discomId || "....."}</p>
-      </div>
-
-      {connection.isNameCorrectionRequired && (
-  <div>
-    <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-    <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
-  </div>
-)}
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
+      <p className="mt-1 text-base text-gray-800">Yes</p>
     </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.consumerId || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+    </div>
+     
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
+    </div>
+
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
+    </div>
+
+
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Address</h3>
+      <p className="mt-1 text-base text-gray-800">
+        {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
+      </p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
+    </div>
+
+    {connection.isNameCorrectionRequired && (
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
+        <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
+      </div>
+    )}
+  </div>
+
+
   </div>
 </div>
 
+<div className="col-span-1 md:col-span-2 flex space-x-14">
+<div className="flex justify-start px-8 ml-2">
 
-  
-      {/* Edit Connection Button (Before Installations) */}
-      <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
-        <button
-          onClick={() => navigate(`/edit-connection/${connectionId}`, { state: { connectionId: connectionId, consumerId, customerId, selectedRepresentative:selectedRepresentative} })}
-          className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+  <button
+    onClick={() =>
+      navigate(`/edit-connection/${connectionId}`, {
+        state: {
+          connectionId,
+          consumerId,
+          customerId,
+          selectedRepresentative,
+        },
+      })
+    }
+    className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+  >
+    Edit Connection
+  </button>
+
+</div>
+</div>
+
+
+<div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-6">
+  {(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
+    <details
+      key={installation.id}
+      className="group w-full max-w-3xl rounded-xl border border-gray-200 bg-white shadow-lg"
+    >
+      <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
+        <span>
+          Installation {idx + 1} - On {getSpaceTypeName(installation.installationSpaceTypeId)} (
+          {installation.installationSpaceTitle || "....."})
+        </span>
+        <svg
+          className="w-3 h-3 text-gray-500 transition-transform duration-300 group-open:rotate-180"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          Edit Connection
-        </button>
-      </div>
-  
-      {/* Installation Cards */}
-      {installations.length > 0 ? (
-  <>
-    <h2 className="text-2xl font-semibold text-gray-700 mt-6 col-span-1 md:col-span-2">Installations</h2>
-    <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-      {installations.map((installation, index) => (
-        <div key={installation.id} className="bg-white p-4 rounded-lg shadow-md border">
-          <h3 className="text-lg font-semibold">Installation {index + 1}</h3>
-          <p className="text-lg text-gray-600 break-words">
-  {installation.installationSpaceTitle && (
-    <span>({installation.installationSpaceTitle})</span>
-  )}
-</p>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </summary>
 
-          <p className="text-sm text-gray-600">
-      <strong>Space Type:</strong> {getSpaceTypeName(installation.installationSpaceTypeId)}
-    </p>
-          <p className="text-sm text-gray-600">
-            <strong>East-West Length:</strong> {installation.availableEastWestLengthFt} ft
-          </p>
-          <p className="text-sm text-gray-600">
-            <strong>South-North Length:</strong> {installation.availableSouthNorthLengthFt} ft
-          </p>
+      {/* Installation Info Block */}
+      <div className="px-6 pb-6 text-sm text-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
+            <p className="mt-1">{getSpaceTypeName(installation.installationSpaceTypeId)}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
+            <p className="mt-1">{installation.installationSpaceTitle || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">East-West Length (Feet)</h3>
+            <p className="mt-1">{installation.availableEastWestLengthFt || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">South-North Length (Feet)</h3>
+            <p className="mt-1">{installation.availableSouthNorthLengthFt || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
+            <p className="mt-1">{installation.acWireLengthFt || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">DC Wire Length (Feet)</h3>
+            <p className="mt-1">{installation.dcWireLengthFt || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Earthing Wire Length (Feet)</h3>
+            <p className="mt-1">{installation.earthingWireLengthFt || "....."}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Number of GP Pipes</h3>
+            <p className="mt-1">{installation.numberOfGpPipes || "....."}</p>
+          </div>
+          <div className="md:col-span-2">
+            <h3 className="text-sm font-medium text-gray-500">Description</h3>
+            <p className="mt-1 whitespace-pre-line">{installation.descriptionOfInstallation || "....."}</p>
+          </div>
+        </div>
+
+        {/* Edit Button */}
+        <div className="flex justify-start mt-6">
           <button
             onClick={() =>
-              navigate(`/view-installation/${installation.id}`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,installationId: installation.id,selectedRepresentative:selectedRepresentative } })
+              navigate(`/edit-installation/${installation.id}`, {
+                state: {
+                  installationId: installation.id,
+                  connectionId,
+                  consumerId: connection.consumerId,
+                  customerId,
+                  selectedRepresentative,
+                },
+              })
             }
-            className="mt-2 py-1 px-3 bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-600"
+            className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            View
+            Edit Installation
           </button>
         </div>
-      ))}
-    </div>
-  </>
-) : (
-  <p className="text-gray-500">No installations found.</p>
-)}
+      </div>
+    </details>
+  ))}
+</div>
 
 
-
-  
-      {/* Add New Installation Button (After Installations) */}
-      <div className="col-span-1 md:col-span-2 flex justify-center mt-6 space-x-14">
+<div className="col-span-1 md:col-span-2 flex space-x-16">
+<div className="flex gap-4 justify-start px-8 ml-2">
   <button
     onClick={() => {
       console.log("Navigating with connectionId:", connectionId);
@@ -689,29 +723,32 @@ const handleNo = async () => {
       }
       navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId, selectedRepresentative:selectedRepresentative } });
     }}
-    className="py-3 px-4 sm:px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
+    className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700"
   >
     Add New Installation
   </button>
-  <button
+
+          <button
     onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
-          className="py-3 px-4 sm:px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
   >
     Get Recommendation
   </button>
-</div>
+  </div>
 
+</div>
+  
 {roles.includes("ROLE_ADMIN") && connection && (
-  <div className="col-span-1 md:col-span-2 flex justify-start mt-6">
+  <div className="col-span-1 md:col-span-2 flex justify-start px-8 mt-6">
     {connection.isOnboardedCustomers === true ? (
       <button
         onClick={() => {
           setDialogType("confirm");
-          setDialogMessage("Do you want to offboard the customer?");
+          setDialogMessage("Do you want to offboard the consumer?");
           setDialogAction(() => handleNo); 
           setDialogOpen(true);
         }}
-        className="py-3 px-6 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 mx-2"
+        className="py-2 px-6 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 mx-2"
       >
         Do you want to Offboard the Consumer?
       </button>
@@ -719,11 +756,11 @@ const handleNo = async () => {
       <button
         onClick={() => {
           setDialogType("confirm");
-          setDialogMessage("Do you want to onboard the customer?");
+          setDialogMessage("Do you want to onboard the consumer?");
           setDialogAction(() => handleYes); 
           setDialogOpen(true);
         }}
-        className="py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+        className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
       >
         Do you want to Onboard the Consumer?
       </button>

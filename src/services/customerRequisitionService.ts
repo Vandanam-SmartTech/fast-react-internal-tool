@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 
 const crsAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_CRS_API}`,
+  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_CRS_PROD_API_PORT}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,7 +37,7 @@ export const checkMobileNumberExists = async (
   mobileNumber: string
 ): Promise<boolean> => {
   try {
-    const response = await crsAPI.get('/api/customers/check-mobile', {
+    const response = await crsAPI.get('/api/customers/mobile-exist', {
       params: { mobileNumber },
     });
 
@@ -52,7 +52,7 @@ export const checkEmailAddressExists = async (
   emailAddress: string
 ): Promise<boolean> => {
   try {
-    const response = await crsAPI.get('/api/customers/check-email', {
+    const response = await crsAPI.get('/api/customers/email-exist', {
       params: { emailAddress },
     });
 
@@ -67,7 +67,7 @@ export const checkConsumerNumberExists = async (
   consumerId: string
 ): Promise<boolean> => {
   try {
-    const response = await crsAPI.get('/api/connections/check-consumerId', {
+    const response = await crsAPI.get('/api/connections/consumerId-exist', {
       params: { consumerId },
     });
 
@@ -135,7 +135,7 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 
 export const fetchDistricts = async (): Promise<District[]> => {
   try {
-    const response = await crsAPI.get('/masters/district/27');
+    const response = await crsAPI.get('/api/district/27');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching districts:', error);
@@ -147,7 +147,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
 
 export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   try {
-    const response = await crsAPI.get(`/masters/taluka/${districtCode}`);
+    const response = await crsAPI.get(`/api/taluka/${districtCode}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching talukas:', error);
@@ -159,7 +159,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
 
 export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
   try {
-    const response = await crsAPI.get(`/masters/village/${talukaCode}`);
+    const response = await crsAPI.get(`/api/village/${talukaCode}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching villages:', error);
@@ -294,17 +294,17 @@ export const fetchConsumerNumber = async (customerId: number) => {
 };
 
 
-export const getInstallationsByCustomerId = async (
-  consumerId: number
-): Promise<any> => {
-  try {
-    const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching installation details:', error);
-    return null;
-  }
-};
+// export const getInstallationsByCustomerId = async (
+//   consumerId: number
+// ): Promise<any> => {
+//   try {
+//     const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
+//     return response.data;
+//   } catch (error: any) {
+//     console.error('Error fetching installation details:', error);
+//     return null;
+//   }
+// };
 
 export const fetchConsumers = async (page = 0) => {
   try {
@@ -417,7 +417,7 @@ export const updateConsumerConnectionDetails = async (
 // src/services/districtService.ts
 export const getDistrictNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await crsAPI.get(`/masters/district/name/${code}`, {
+    const response = await crsAPI.get(`/api/district/name/${code}`, {
       responseType: 'text', // important for plain text responses
     });
 
@@ -430,7 +430,7 @@ export const getDistrictNameByCode = async (code: number): Promise<string> => {
 
 export const getTalukaNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await crsAPI.get(`/masters/taluka/name/${code}`, {
+    const response = await crsAPI.get(`/api/taluka/name/${code}`, {
       responseType: 'text', // Axios will treat the response as plain text
     });
 
@@ -443,7 +443,7 @@ export const getTalukaNameByCode = async (code: number): Promise<string> => {
 
 export const getVillageNameByCode = async (code: number): Promise<string> => {
   try {
-    const response = await crsAPI.get(`/masters/village/name/${code}`, {
+    const response = await crsAPI.get(`/api/village/name/${code}`, {
       responseType: 'text', // Axios will treat the response as plain text
     });
 
@@ -528,7 +528,7 @@ export const updateMaterialData = async (
 
 export const searchCustomers = async (query: string): Promise<any[]> => {
   try {
-    const response = await crsAPI.get(`/api/customers/searchByAny`, {
+    const response = await crsAPI.get(`/api/customers/search`, {
       params: { query },
     });
 
@@ -578,4 +578,15 @@ export const getCustomerStats = async () => {
     throw new Error('Failed to fetch customer stats');
   }
 };
+
+// // services/geocode.ts
+// export const geocodeLocation = async (query: string): Promise<[number, number]> => {
+//   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+//   const response = await fetch(url);
+//   const data = await response.json();
+//   if (data && data.length > 0) {
+//     return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+//   }
+//   throw new Error("Location not found");
+// };
 

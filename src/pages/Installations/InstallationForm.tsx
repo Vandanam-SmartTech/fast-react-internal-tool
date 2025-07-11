@@ -47,6 +47,7 @@ export const InstallationForm = () => {
     availableEastWestLengthFt: NaN,
     installationSpaceTypeId: 1,
     installationSpaceTitle:'',
+    customInstallationSpaceTitle:'',
   });
 
   ///////////////////////////////////////////////////////////
@@ -128,7 +129,10 @@ export const InstallationForm = () => {
         earthingWireLengthFt: formData.earthingWireLengthFt,
         descriptionOfInstallation: formData.descriptionOfInstallation,
         numberOfGpPipes: formData.numberOfGpPipes,
-        installationSpaceTitle: formData.installationSpaceTitle,
+        installationSpaceTitle:
+    formData.installationSpaceTitle === 'Other'
+      ? formData.customInstallationSpaceTitle
+      : formData.installationSpaceTitle,
     };
 
     try {
@@ -293,18 +297,63 @@ return (
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Title <span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          name="installationSpaceTitle"
-          value={formData.installationSpaceTitle}
-          onChange={handleChange}
-          required
-          placeholder="e.g. South-West side of space type"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Installation Space Title <span className="text-red-500">*</span>
+  </label>
+
+<select
+  name="installationSpaceTitle"
+  value={formData.installationSpaceTitle}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value === 'Other') {
+      // Keep value as 'Other' so the select reflects it
+      setFormData((prev) => ({
+        ...prev,
+        installationSpaceTitle: 'Other',
+        customInstallationSpaceTitle: '', // introduce a new field
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        installationSpaceTitle: value,
+        customInstallationSpaceTitle: '', // clear if previously typed
+      }));
+    }
+  }}
+  required
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  <option value="" disabled>Select Installation Title</option>
+  <option value="At center">At center</option>
+  <option value="At SW corner">At SW corner</option>
+  <option value="At SE corner">At SE corner</option>
+  <option value="At NW corner">At NW corner</option>
+  <option value="At NE corner">At NE corner</option>
+  <option value="At East side">At East side</option>
+  <option value="At West side">At West side</option>
+  <option value="At North side">At North side</option>
+  <option value="At South side">At South side</option>
+  <option value="Other">Other</option>
+</select>
+
+
+  {/* Show input only when "Other" is selected */}
+{formData.installationSpaceTitle === 'Other' && (
+  <input
+    type="text"
+    name="customInstallationSpaceTitle"
+    value={formData.customInstallationSpaceTitle || ''}
+    onChange={handleChange}
+    required
+    placeholder="Specify installation space title"
+    className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+)}
+
+</div>
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
@@ -413,7 +462,7 @@ return (
       <div className="sm:col-span-2 flex justify-center sm:justify-start mt-4">
         <button
           type="submit"
-          className="w-full sm:w-auto py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition"
+          className="w-full sm:w-auto py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
         >
           Save Installation
         </button>

@@ -20,6 +20,14 @@ const Login = () => {
       const claims = await fetchClaims();
       if (!claims || !claims.roles) return;
 
+      const isPasswordChanged = claims.is_password_changed;
+
+      if (!isPasswordChanged) {
+    
+      navigate('/PasswordReset');
+      return;
+      }
+
       if (claims.roles.includes('ROLE_ADMIN')) {
         navigate('/AdminDashboard');
       } else if (claims.roles.includes('ROLE_REPRESENTATIVE')) {
@@ -44,6 +52,13 @@ const Login = () => {
       const claims = await fetchClaims();
 
       const roles = claims.roles;
+      const isPasswordChanged = claims.is_password_changed;
+
+      if (!isPasswordChanged) {
+    
+      navigate('/PasswordReset');
+      return;
+      }
 
       if (roles.includes('ROLE_REPRESENTATIVE')) {
           navigate('/RepresentativeDashboard');
@@ -128,7 +143,7 @@ const Login = () => {
 
         <button
           type="submit"
-          className="w-full py-2 sm:py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+          className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
         >
           Login
         </button>

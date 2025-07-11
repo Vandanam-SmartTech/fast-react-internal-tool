@@ -25,16 +25,6 @@ export const ViewInstallation = () => {
   const [spaceTypes, setSpaceTypes] = useState([]);
 
 
-
-  const installationSpaceTypeMapping: { [key: number]: string } = {
-    1: "Slab",
-    2: "Metal Sheets",
-    3: "Plastic Sheets",
-    4: "Clay Tiles",
-    5: "Bathroom Slab",
-    6: "Cement Sheets",
-    7: "On Ground",
-  };
   const [activeTab, setActiveTab] = useState("Installation Details");
 
     const tabs = [
@@ -63,7 +53,7 @@ export const ViewInstallation = () => {
         try {
           const [installations, spaceTypeList] = await Promise.all([
             getInstallationByConsumerId(Number(consumerId)),
-            fetchInstallationSpaceTypesNames(), // <-- fetch space types dynamically
+            fetchInstallationSpaceTypesNames(), 
           ]);
   
           if (Array.isArray(installations)) {
@@ -74,7 +64,7 @@ export const ViewInstallation = () => {
           }
   
           if (Array.isArray(spaceTypeList)) {
-            setSpaceTypes(spaceTypeList); // <-- new state to hold space types
+            setSpaceTypes(spaceTypeList); 
           }
         } catch (error) {
           console.error("Error fetching installation or space types", error);
@@ -183,12 +173,10 @@ export const ViewInstallation = () => {
   </div>
 </div>
 
-
-      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Installation Details</h2>
-
-<div className="flex items-center min-h-[20vh] px-2">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl">
-    {/* Row 1 */}
+<div className="flex items-center min-h-[20vh] px-4">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full mx-auto max-w-3xl">
+    <h3 className="text-xl font-semibold text-gray-800 mb-2">Installation Details</h3>
+    <div className="border-b border-gray-200 mb-4" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
       <div>
         <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
@@ -216,7 +204,6 @@ export const ViewInstallation = () => {
       </div>
     </div>
 
-    {/* Row 2 */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
       <div>
         <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
@@ -262,7 +249,7 @@ export const ViewInstallation = () => {
         state: { installationId, connectionId, consumerId ,customerId,selectedRepresentative:selectedRepresentative},
       })
     }
-    className="w-full sm:w-auto max-w-xs py-3 px-6 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    className="w-full sm:w-auto max-w-xs py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
   >
     Edit Installation
   </button>
@@ -273,7 +260,7 @@ export const ViewInstallation = () => {
         state: { consumerId, customerId, connectionId ,selectedRepresentative:selectedRepresentative},
       })
     }
-    className="w-full sm:w-auto max-w-xs py-3 px-6 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+    className="w-full sm:w-auto max-w-xs py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
   >
     Done
   </button>

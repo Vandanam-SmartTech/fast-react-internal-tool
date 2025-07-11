@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import { redirectToDashboard } from '../../routes/DashboardRoute'
-import { getCustomerById, fetchConsumerNumber } from "../../services/customerRequisitionService";
+import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 import {
   UserCircleIcon,
@@ -20,6 +20,9 @@ export const ViewCustomer = () => {
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [roles, setRoles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Customer Details");
+  const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
+  const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
+
 
 useEffect(() => {
     if (!location.state) {
@@ -48,6 +51,42 @@ useEffect(() => {
     getClaims();
   }, []);
 
+useEffect(() => {
+  const fetchAllInstallations = async () => {
+    if (!connections || connections.length === 0) return;
+
+    const newInstallationsMap: Record<string, any[]> = {};
+
+    for (const connection of connections) {
+      if (!connection.consumerId) continue;
+
+      const data = await getInstallationByConsumerId(Number(connection.consumerId));
+      newInstallationsMap[connection.consumerId] = data || [];
+    }
+
+    setInstallationsByConsumer(newInstallationsMap);
+  };
+
+  fetchAllInstallations();
+}, [connections]);
+
+    useEffect(() => {
+    const loadSpaceTypes = async () => {
+      try {
+        const types = await fetchInstallationSpaceTypesNames();
+        setSpaceTypes(types);
+      } catch (error) {
+        console.error("Failed to load space types", error);
+      }
+    };
+
+    loadSpaceTypes();
+  }, []);
+
+  const getSpaceTypeName = (id: number) => {
+    return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
+  };
+
   useEffect(() => {
     console.log("Fetch Consumer Number API is used");
     const fetchCustomer = async () => {
@@ -74,8 +113,9 @@ useEffect(() => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">View Customer Details</h2>
+      <h2 className="text-2xl font-semibold text-gray-700 mb-4 ml-6">View Customer Details</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
           <div className="sm:ml-auto text-sm text-gray-600">
@@ -84,6 +124,7 @@ useEffect(() => {
         )}
 
   </div>
+
 
 <div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
@@ -136,125 +177,326 @@ useEffect(() => {
 </div>
 
 
-<h2 className="text-2xl font-semibold text-gray-700 mb-8">Customer Details</h2>
-<div className="flex items-start px-2 mt-4">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl overflow-hidden">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
+
+
+{/* Customer Card */}
+<div className="px-2 mt-4">
+  <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mx-auto">
+    <h3 className="text-xl font-semibold text-gray-800 mb-2">Customer Details</h3>
+    <div className="border-b border-gray-200 mb-4" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
       <div className="break-words">
-        <h3 className="text-sm font-medium text-gray-500">Gov ID Name</h3>
-        <p className="mt-1 text-base text-gray-800 break-words">{customer.govIdName || "....."}</p>
+        <h3 className="text-sm font-medium text-gray-500">Name as per Gov ID</h3>
+        <p className="mt-1 text-base text-gray-800">{customer.govIdName || "....."}</p>
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-        <p className="mt-1 text-base text-gray-800 break-words">{customer.mobileNumber || "....."}</p>
+        <p className="mt-1 text-base text-gray-800">{customer.mobileNumber || "....."}</p>
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
-        <p className="mt-1 text-base text-gray-800 break-words">{customer.preferredName || "....."}</p>
+        <p className="mt-1 text-base text-gray-800">{customer.preferredName || "....."}</p>
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
-        <p className="mt-1 text-base text-gray-800 break-words">{customer.emailAddress || "....."}</p>
+        <p className="mt-1 text-base text-gray-800">{customer.emailAddress || "....."}</p>
       </div>
     </div>
   </div>
-</div>
 
-  
-      {/* Update Customer Button - Placed before connections */}
-      <div className="flex flex-col sm:flex-row justify-start mt-8 sm:gap-16 gap-4">
-  <button
-    onClick={() =>
-      navigate(`/edit-customer/${customerId}`, {
-        state: {
-          customerId: customerId,
-          selectedRepresentative: selectedRepresentative,
-        },
-      })
-    }
-    className="py-3 px-10 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
-  >
-    Edit Customer
-  </button>
-
-  {connections.length === 0 && (
+  <div className="flex gap-4 justify-start mt-6 max-w-3xl mx-auto">
     <button
       onClick={() =>
-        navigate(`/ConnectionForm`, {
+        navigate(`/edit-customer/${customerId}`, {
           state: {
-            customerId: customerId,
-            selectedRepresentative: selectedRepresentative,
-            govIdName: customer.govIdName,
+            customerId,
+            selectedRepresentative,
           },
         })
       }
-      className="py-3 px-10 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 w-full sm:w-auto"
+      className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition"
     >
-      Add New Connection
+      Edit Customer
     </button>
-  )}
+
+    {connections.length === 0 && (
+      <button
+        onClick={() =>
+          navigate(`/ConnectionForm`, {
+            state: {
+              customerId,
+              selectedRepresentative,
+              govIdName: customer.govIdName,
+            },
+          })
+        }
+        className="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition"
+      >
+        Add New Connection
+      </button>
+    )}
+  </div>
 </div>
 
 
-{/* Only show Connections section if there are connections */}
-{connections.length > 0 && (
-  <>
-    <h2 className="text-xl font-semibold text-gray-700 mt-8">Connections</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-      {connections.map((connection, index) => (
-        <div
-          key={connection.id}
-          className="border rounded-lg shadow p-4 bg-white"
-        >
-          <h3 className="text-lg font-medium text-gray-900">
-            Connection {index + 1}
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            <span className="font-semibold">Consumer Number:</span>{" "}
-            {connection.consumerId}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">
-            <span className="font-semibold">Consumer Name:</span>{" "}
-            {customer.govIdName || ""}
-          </p>
-          <div className="flex gap-4 mt-3">
-            <button
-              onClick={() =>
-                navigate(`/view-connection/${connection.id}`, {
-                  state: {
-                    consumerId: connection.consumerId,
-                    connectionId: connection.id,
-                    customerId: customerId,
-                    selectedRepresentative: selectedRepresentative,
-                  },
-                })
-              }
-              className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              View
-            </button>
 
-            <button
-              onClick={() =>
-                navigate(`/edit-connection/${connection.id}`, {
-                  state: {
-                    consumerId: connection.consumerId,
-                    connectionId: connection.id,
-                    customerId: customerId,
-                    selectedRepresentative: selectedRepresentative,
-                  },
-                })
-              }
-              className="mt-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+{connections.length > 0 && (
+  <div className="mt-6 px-2">
+    <div className="max-w-3xl mx-auto space-y-6">
+
+    <div className="space-y-6">
+      {connections.map((connection, index) => (
+        <details
+          key={connection.id}
+          className="group rounded-xl border border-gray-200 bg-white shadow-lg"
+        >
+          <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
+            <span>Connection {index + 1} </span>
+            <svg
+              className="w-3 h-3 text-gray-500 transition-transform duration-300 group-open:rotate-180"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Edit
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </summary>
+
+          <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
+      <p className="mt-1 text-base text-gray-800">Yes</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.consumerId || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+    </div>
+     
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
+    </div>
+
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
+    </div>
+
+
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Address</h3>
+      <p className="mt-1 text-base text-gray-800">
+        {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
+      </p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
+    </div>
+
+    <div>
+      <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
+    </div>
+
+    {connection.isNameCorrectionRequired && (
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
+        <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
+      </div>
+    )}
+  </div>
+
+    {/* View/Edit Buttons */}
+  <div className="flex gap-4 mt-4">
+
+    <button
+      onClick={() =>
+        navigate(`/edit-connection/${connection.id}`, {
+          state: {
+            consumerId: connection.consumerId,
+            connectionId: connection.id,
+            customerId: customerId,
+            selectedRepresentative: selectedRepresentative,
+          },
+        })
+      }
+      className="py-2 px-6 sm:px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+    >
+      Edit Connection
+    </button>
+
+          <button
+    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
+          className="py-2 px-6 sm:px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+  >
+    Get Recommendation
+  </button>
+  </div>
+
+
+  {/* Nested Installations */}
+{(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
+  <details key={installation.id} className="group bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
+    <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group">
+  <span>
+    Installation {idx + 1} - On {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."} ({installation.installationSpaceTitle})
+  </span>
+  <svg
+    className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open:rotate-180"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+</summary>
+
+
+    {/* Full Installation Info Block */}
+    <div className="mt-4">
+      <div className="p-6 w-full">
+        {/* Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.installationSpaceTitle || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">East-West-Length (Feet)</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.availableEastWestLengthFt || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">South-North-Length (Feet)</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.availableSouthNorthLengthFt || "....."}
+            </p>
           </div>
         </div>
+
+        {/* Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.acWireLengthFt || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">DC Wire Length (Feet)</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.dcWireLengthFt || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Earthing Wire Length (Feet)</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.earthingWireLengthFt || "....."}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Number of GP Pipes</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.numberOfGpPipes || "....."}
+            </p>
+          </div>
+          <div className="md:col-span-2">
+            <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
+            <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+              {installation.descriptionOfInstallation || "....."}
+            </p>
+          </div>
+        </div>
+
+        {/* Optional Edit Button */}
+        <div className="flex mt-6">
+          <button
+            onClick={() =>
+              navigate(`/edit-installation/${installation.id}`, {
+                state: {
+                  installationId: installation.id,
+                  connectionId:connection.id,
+                  consumerId: connection.consumerId,
+                  customerId,
+                  selectedRepresentative,
+                }
+              })
+            }
+            className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            Edit Installation
+          </button>
+        </div>
+      </div>
+    </div>
+  </details>
+))}
+
+  <button
+    onClick={() => {
+      navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId, selectedRepresentative:selectedRepresentative } });
+    }}
+    className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+  >
+    Add New Installation
+  </button>
+
+
+
+</div>
+
+        </details>
       ))}
     </div>
 
-    {/* Show Add Connection button only when there are connections */}
+    {/* Add New Connection button below the collapsibles */}
     <div className="flex justify-start mt-6">
       <button
         onClick={() =>
@@ -266,13 +508,15 @@ useEffect(() => {
             },
           })
         }
-        className="py-3 px-10 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+        className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
       >
         Add New Connection
       </button>
     </div>
-  </>
+  </div>
+  </div>
 )}
+
 
     </div>
   );

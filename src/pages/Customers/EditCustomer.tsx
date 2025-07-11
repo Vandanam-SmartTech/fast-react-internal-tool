@@ -20,7 +20,7 @@ export const EditCustomer = () => {
     govIdName: "",
     preferredName: "",
     mobileNumber: "",
-    emailAddress: "",
+    emailAddress: null,
   });
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
@@ -76,12 +76,12 @@ export const EditCustomer = () => {
           govIdName: data.govIdName || "",
           preferredName: data.preferredName || "",
           mobileNumber: data.mobileNumber || "",
-          emailAddress: data.emailAddress || "",
+          emailAddress: data.emailAddress || null,
 
         });
 
         setConfirmMobileNumber(data.mobileNumber || "");
-        setConfirmEmailAddress(data.emailAddress || "");
+        setConfirmEmailAddress(data.emailAddress || null);
 
         setExistingCustomer(true);
       }
@@ -118,7 +118,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  if (formData.emailAddress !== confirmEmailAddress) {
+  if (formData.emailAddress && formData.emailAddress !== confirmEmailAddress) {
     toast.error("Email and Confirm Email do not match.",{
       autoClose: 1000,
       hideProgressBar:true,
@@ -243,6 +243,9 @@ setDialogOpen(true);
             title="Please enter only your first and last name (e.g., John Doe)"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
+          {formData.govIdName && !/^[A-Za-z\s]*$/.test(formData.govIdName) && (
+  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+)}
         </div>
 
         <div>
@@ -256,10 +259,13 @@ setDialogOpen(true);
             maxLength={50}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
+          {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
+  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+)}
         </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -274,6 +280,9 @@ setDialogOpen(true);
       required
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       title="Enter a valid 10-digit mobile number starting with 6-9"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
     />
     
     <span
@@ -304,8 +313,11 @@ setDialogOpen(true);
     required
     className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
     title="Re-enter the same 10-digit mobile number"
+    onCopy={(e) => e.preventDefault()}
+    onCut={(e) => e.preventDefault()}
+    onPaste={(e) => e.preventDefault()}
   />
-  {confirmMobileNumber &&
+  {formData.mobileNumber && confirmMobileNumber &&
     confirmMobileNumber !== formData.mobileNumber && (
       <p className="text-red-600 text-sm mt-1">Mobile numbers do not match</p>
   )}
@@ -313,7 +325,7 @@ setDialogOpen(true);
 
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">Email Address</label>
 
   <div className="relative">
     <input
@@ -326,6 +338,9 @@ setDialogOpen(true);
       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
       title="Enter a valid email address"
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
     />
 
     <span
@@ -340,7 +355,7 @@ setDialogOpen(true);
 </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Email Address <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
         <input
           type="email"
           name="confirmEmailAddress"
@@ -351,8 +366,11 @@ setDialogOpen(true);
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           title="Re-enter the same email"
+          onCopy={(e) => e.preventDefault()}
+          onCut={(e) => e.preventDefault()}
+          onPaste={(e) => e.preventDefault()}
         />
-        {confirmEmailAddress &&
+        {formData.emailAddress && confirmEmailAddress &&
     confirmEmailAddress !== formData.emailAddress && (
       <p className="text-red-600 text-sm mt-1">Email Address do not match</p>)}
       </div>
@@ -360,7 +378,7 @@ setDialogOpen(true);
         <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
           <button
             type="submit"
-            className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             Update Customer
           </button>
@@ -405,10 +423,10 @@ setDialogOpen(true);
                 govIdName: customer.govIdName || "",
                 preferredName: customer.preferredName || "",
                 mobileNumber: customer.mobileNumber || "",
-                emailAddress: customer.emailAddress || "",
+                emailAddress: customer.emailAddress || null,
               });
               setConfirmMobileNumber(customer.mobileNumber || "");
-              setConfirmEmailAddress(customer.emailAddress || "");
+              setConfirmEmailAddress(customer.emailAddress || null);
             }
           }}
         >

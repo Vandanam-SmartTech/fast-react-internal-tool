@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
 import { verifyAndChangePassword } from '../../services/jwtService';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Verification: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -14,6 +15,8 @@ const Verification: React.FC = () => {
   const email = (location.state as { email: string })?.email || '';
   const msg = (location.state as { msg: string })?.msg || '';
   const msg1 = (location.state as { msg: string })?.msg || '';
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Password validation regex
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -62,9 +65,9 @@ useEffect(() => {
     try {
       await verifyAndChangePassword(email, newPassword);
       setSuccess('Password changed successfully!');
+      localStorage.removeItem("jwtToken");
 
-
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
       console.error('Password change failed:', error);
       setError('Failed to change password. Try again.');
@@ -96,33 +99,49 @@ useEffect(() => {
 
         <form onSubmit={handleSubmit}>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Enter New Password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              placeholder="New password"
-            />
-          </div>
+<div className="mb-4 relative">
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Enter New Password <span className="text-red-500">*</span>
+  </label>
+  <input
+    type={showNewPassword ? 'text' : 'password'}
+    value={newPassword}
+    onChange={(e) => setNewPassword(e.target.value)}
+    required
+    className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+    placeholder="New password"
+  />
+  <button
+    type="button"
+    onClick={() => setShowNewPassword(!showNewPassword)}
+    className="absolute top-9 right-3 text-gray-500"
+  >
+    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+  </button>
+</div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              placeholder="Confirm password"
-            />
-          </div>
+
+<div className="mb-4 relative">
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Confirm New Password <span className="text-red-500">*</span>
+  </label>
+  <input
+    type={showConfirmPassword ? 'text' : 'password'}
+    value={confirmPassword}
+    onChange={(e) => setConfirmPassword(e.target.value)}
+    required
+    className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+    placeholder="Confirm password"
+  />
+  <button
+    type="button"
+    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+    className="absolute top-9 right-3 text-gray-500"
+  >
+    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+  </button>
+</div>
+
 
           <div className="mb-4 text-sm text-gray-600">
             <strong>Note</strong>
@@ -137,7 +156,7 @@ useEffect(() => {
 
           <button
             type="submit"
-            className="py-1 px-16 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+            className="py-1 px-16 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
           >
            Submit
           </button>

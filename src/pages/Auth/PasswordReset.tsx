@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
-import { validateUser } from '../../services/jwtService';
+import { validateUser, fetchClaims } from '../../services/jwtService';
 import { sendOtpToEmail } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -15,7 +15,25 @@ const PasswordReset: React.FC = () => {
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState('');
 
+  const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null);
 
+  useEffect(() => {
+  const checkPasswordChangeStatus = async () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) return;
+
+    try {
+      const claims = await fetchClaims();
+      if (claims && typeof claims.is_password_changed !== 'undefined') {
+        setIsFirstLogin(!claims.is_password_changed);
+      }
+    } catch (err) {
+      console.error('Error fetching claims:', err);
+    }
+  };
+
+  checkPasswordChangeStatus();
+}, []);
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -27,7 +45,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const userEmail = await validateUser(emailInput); // gets plain string
     await sendOtpToEmail(userEmail);
 
-    const expiryTime = Date.now() + 3 * 60 * 1000; // 5 minutes
+    const expiryTime = Date.now() + 3 * 60 * 1000; 
     const resendTime = Date.now() + 60 * 1000;     // 1 minute
 
     localStorage.setItem('otpExpiryTime', expiryTime.toString());
@@ -70,14 +88,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         {/* Logo and Title */}
         <div className="flex items-center justify-center mb-2 sm:mb-1">
           <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
-          {/* <h2 className="text-xl sm:text-2xl font-bold text-blue-800">Vandanam SmartTech</h2> */}
         </div>
 
-        {/* {loading && (
-          <div className="bg-blue-100 text-blue-700 border border-blue-200 rounded-lg p-2 sm:p-3 mb-4 text-center">
-            Sending OTP...
-          </div>
-        )} */}
 
         {message && !loading && (
           <div className="bg-green-100 text-green-700 border border-green-200 rounded-lg p-2 sm:p-3 mb-4 text-center">
@@ -90,6 +102,14 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             {error}
           </div>
         )}
+
+{isFirstLogin && (
+  <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-lg p-2 sm:p-3 mb-4 text-center text-sm">
+    Let's get you started! Change your password to keep your account secure before proceeding. 
+  </div>
+)}
+
+
 
         <form onSubmit={handleSubmit}>
 
@@ -117,8 +137,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
           <button
             type="submit"
-            className={`w-full px-2 py-2 text-white rounded-lg font-medium transition ${
-              loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+            className={`w-full px-2 py-2 text-white rounded-lg font-semibold transition ${
+              loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
             }`}
             disabled={loading}  
           >

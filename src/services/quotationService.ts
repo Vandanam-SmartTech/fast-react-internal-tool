@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 
 const quotationAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_QUOTATION_API}`,
+  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_QUOTATION_PROD_API_PORT}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -72,6 +72,26 @@ export const fetchPanelWattages = async (
   }
 };
 
+export const fetchInverterWattages = async (
+  connectionId: string,
+  phaseType: string,
+  inverterBrand: string
+): Promise<number[]> => {
+  try {
+    console.log('Fetching inverter wattages...');
+
+    const response = await quotationAPI.post(`/api/inverterCapacity/${connectionId}`, {
+      phaseType,
+      inverterBrand,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch inverter wattages from server');
+  }
+};
+
 export const fetchRecommendedDetails = async (connectionId: number) => {
   try {
     console.log(`Fetching recommendation for connectionId: ${connectionId}`);
@@ -86,6 +106,22 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
     throw new Error(`Failed to fetch recommendation. Status: ${status}, Message: ${message}`);
   }
 };
+
+export const fetchCustomerAgreedDetails = async (connectionId: number) => {
+  try {
+    console.log(`Fetching customer-agreed data for connectionId: ${connectionId}`);
+
+    const response = await quotationAPI.get(`/api/customer-agreed/${connectionId}`);
+
+    return response.data;
+  } catch (error: any) {
+    const status = error.response?.status;
+    const message = error.response?.data || error.message;
+    console.error(`Error fetching customer-agreed details. Status: ${status}, Message: ${message}`);
+    return { success: false }; 
+  }
+};
+
 
 export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
   try {

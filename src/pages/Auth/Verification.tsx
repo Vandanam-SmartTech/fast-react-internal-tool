@@ -102,7 +102,7 @@ const handleResend = async () => {
     await sendOtpToEmail(email);
 
     const now = Date.now();
-    const newExpiry = now + 3 * 60 * 1000; // 5 minutes
+    const newExpiry = now + 3 * 60 * 1000; 
     const enableResendAt = now + 60 * 1000; // 1 minute
 
     localStorage.setItem(OTP_EXPIRY_KEY, newExpiry.toString());
@@ -179,7 +179,7 @@ const handleResend = async () => {
 
           <button
             type="submit"
-            className="w-full py-1 sm:py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+            className="w-full py-1 sm:py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
           >
             Verify OTP
           </button>

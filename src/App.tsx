@@ -27,7 +27,7 @@ import { EditInstallation } from './pages/Installations/EditInstallation';
 import MaterialDetails from './pages/Materials/MaterialDetails';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
-
+import 'leaflet/dist/leaflet.css';
 
 
 
@@ -76,14 +76,14 @@ const AppContent: React.FC = () => {
             }
           />
 
-          <Route
+          {/* <Route
             path="/RepresentativeDashboard"
             element={
               <PrivateRoute>
                 <RepresentativeDashboard />
               </PrivateRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/AdminDashboard"

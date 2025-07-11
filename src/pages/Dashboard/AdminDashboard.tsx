@@ -45,7 +45,7 @@ const AdminDashboard = () => {
   };
 
   const goToOnboardedCustomers = () => {
-    navigate("/OnboardedCustomers");
+    navigate("/OnboardedConsumers");
   };
 
   useEffect(() => {
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
           <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
             {onboardedCount !== null ? animatedOnboardedCount : '0'}
           </div>
-          <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Customers</div>
+          <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Consumers</div>
         </button>
       </div>
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchConsumers, fetchConsumerNumber, searchCustomers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { Eye, Mail, Phone, Lightbulb } from "lucide-react";
-import SearchBar from "../../components/SearchBar"; // Import SearchBar component
+import SearchBar from "../../components/SearchBar"; 
 
 interface Consumer {
 
@@ -216,7 +216,7 @@ const ListOfConsumers: React.FC = () => {
 
                           <div className="flex items-center space-x-2 text-gray-700 text-sm">
                             <Mail className="w-4 h-4 text-gray-500" />
-                            <span className="break-all">{consumer.emailAddress}</span>
+                            <span className="break-all">{consumer.emailAddress ? consumer.emailAddress : "NA"}</span>
                           </div>
 
                           <div className="flex items-center space-x-2 text-gray-700 text-sm">
@@ -302,7 +302,7 @@ const ListOfConsumers: React.FC = () => {
 
                               <div className="flex items-center space-x-2 text-gray-700 text-sm">
                                 <Mail className="w-4 h-4 text-gray-500" />
-                                <span className="break-all">{consumer.emailAddress}</span>
+                                <span className="break-all">{consumer.emailAddress ? consumer.emailAddress : "NA"}</span>
                               </div>
 
                               <div className="flex items-center space-x-2 text-gray-700 text-sm">

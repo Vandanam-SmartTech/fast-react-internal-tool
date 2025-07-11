@@ -6,6 +6,14 @@ export const redirectToDashboard = async (navigate: any, setError?: (msg: string
     const claims = await fetchClaims(); 
     const roles = claims.roles;
 
+    const isPasswordChanged = claims.is_password_changed;
+
+      if (!isPasswordChanged) {
+    
+      navigate('/PasswordReset');
+      return;
+      }
+
     if (roles.includes("ROLE_REPRESENTATIVE")) {
       navigate("/RepresentativeDashboard");
     } else if (roles.includes("ROLE_ADMIN")) {

@@ -174,7 +174,7 @@ const OnboardedConsumers: React.FC = () => {
 <div className="flex items-center gap-2">
   <Mail className="w-4 h-4 text-gray-500 shrink-0" />
   <span className="truncate max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-gray-700">
-    {consumer.emailAddress}
+    {consumer.emailAddress ? consumer.emailAddress : "NA"}
   </span>
 </div>
 

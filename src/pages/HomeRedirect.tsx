@@ -23,6 +23,14 @@ const HomeRedirect: React.FC = () => {
 
       const roles = claims.roles;
 
+      const isPasswordChanged = claims.is_password_changed;
+
+      if (!isPasswordChanged) {
+    
+      setRedirectPath('/PasswordReset');
+      return;
+      }
+
       if (roles.includes('ROLE_ADMIN')) {
         setRedirectPath('/AdminDashboard');
       } else if (roles.includes('ROLE_REPRESENTATIVE')) {

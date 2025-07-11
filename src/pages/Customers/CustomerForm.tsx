@@ -50,9 +50,9 @@ export const CustomerForm = () => {
 
   const [formData, setFormData] = useState({
     govIdName: "",
-    emailAddress: "",
+    emailAddress: null,
     mobileNumber: "",
-    preferredName: null, 
+    preferredName: "", 
     isActive: true,
   });
 
@@ -75,7 +75,6 @@ useEffect(() => {
   const savedFormData = localStorage.getItem("myFormData");
   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
-  //const savedRepresentative = localStorage.getItem("selectedRepresentative");
 
   if (savedFormData) {
     setFormData(JSON.parse(savedFormData));
@@ -141,7 +140,19 @@ useEffect(() => {
 
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const { name, value } = e.target;
+
   const updatedFormData = { ...formData, [e.target.name]: e.target.value };
+
+  if (name === 'mobileNumber' && value === '') {
+    setConfirmMobileNumber('');
+  }
+
+  if(name === 'emailAddress' && value === ''){
+    setConfirmEmailAddress('');
+  }
+
   setFormData(updatedFormData);
   localStorage.setItem('myFormData', JSON.stringify(updatedFormData));
 };
@@ -198,7 +209,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  if (formData.emailAddress !== confirmEmailAddress) {
+  if (formData.emailAddress && formData.emailAddress !== confirmEmailAddress) {
     toast.error("Email and Confirm Email do not match.",{
       autoClose: 1000,
       hideProgressBar:true,
@@ -387,6 +398,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           title="Please enter only your first and last name (e.g., John Doe)"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
+                {formData.govIdName && !/^[A-Za-z\s]*$/.test(formData.govIdName) && (
+  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+)}
       </div>
 
       <div>
@@ -400,10 +414,14 @@ const handleSubmit = async (e: React.FormEvent) => {
           maxLength={50}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
+        {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
+  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+)}
+
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Mobile Number <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -418,6 +436,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       required
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       title="Enter a valid 10-digit mobile number starting with 6-9"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
     />
     
     <span
@@ -454,6 +475,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       disabled={!(
     /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
   )}
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
 
 />
   {confirmMobileNumber &&
@@ -464,7 +488,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Email Address <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">Email Address</label>
 
   <div className="relative">
     <input
@@ -477,6 +501,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
       title="Enter a valid email address"
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
     />
 
     <span
@@ -493,7 +520,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Confirm Email Address <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
         <input
           type="email"
           name="confirmEmailAddress"
@@ -507,16 +534,23 @@ const handleSubmit = async (e: React.FormEvent) => {
           disabled={!(
             /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(formData.emailAddress) && !emailExists
           )}
+          onCopy={(e) => e.preventDefault()}
+          onCut={(e) => e.preventDefault()}
+          onPaste={(e) => e.preventDefault()}
         />
-        {confirmEmailAddress &&
-    confirmEmailAddress !== formData.emailAddress && (
-      <p className="text-red-600 text-sm mt-1">Email Address do not match</p>)}
+{formData.emailAddress &&
+  confirmEmailAddress &&
+  confirmEmailAddress !== formData.emailAddress && (
+    <p className="text-red-600 text-sm mt-1">Email Address do not match</p>
+)}
+
+
       </div>
 
-      <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
+      <div className="flex justify-center sm:justify-start mt-2">
         <button
           type="submit"
-          className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Save Customer
         </button>
