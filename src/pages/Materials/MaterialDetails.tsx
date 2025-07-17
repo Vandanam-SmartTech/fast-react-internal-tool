@@ -159,7 +159,7 @@ const handleDialogClose = () => {
       <div className="w-full lg:w-[85%]">
 
         {consumer && (
-  <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-4 w-full max-w-3xl">
+  <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-6 w-full max-w-3xl">
     {/*<h3 className="text-base font-semibold text-gray-800 mb-3">Consumer Details</h3>*/}
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
       <div>
@@ -183,7 +183,7 @@ const handleDialogClose = () => {
 )}
 
 
-        <h2 className="text-2xl font-semibold mb-6">Material Details</h2>
+        <h2 className="text-2xl font-semibold mb-4 mt-2">Material Details</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <fieldset>
@@ -540,7 +540,7 @@ const handleDialogClose = () => {
             <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
 <button
   type="submit"
-  className="py-3 px-6 w-full sm:w-auto bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+  className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
 >
   {existingMaterialData ? "Update Material Data" : "Save Material Data"}
 </button>

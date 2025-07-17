@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
  
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/internal-tool/', // Required for sub-path hosting
+  base: '/SolarPro/', // Required for sub-path hosting
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],

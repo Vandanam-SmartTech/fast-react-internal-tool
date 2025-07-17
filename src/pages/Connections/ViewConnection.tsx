@@ -6,6 +6,7 @@ import { fetchClaims } from "../../services/jwtService";
 import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft, FileUp, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { toast } from "react-toastify";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -143,7 +144,10 @@ const fetchAndSetUploadedFiles = async () => {
 
 const handleSingleFileUpload = async (files: File[]) => {
   if (!files || files.length === 0) {
-    alert("Please select files to upload.");
+    toast.error("Please select files to upload.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
     return;
   }
 
@@ -151,11 +155,17 @@ const handleSingleFileUpload = async (files: File[]) => {
   try {
     const connectionId = location.state?.connectionId;
     const result = await uploadDocuments(connectionId, sessionMap[activeDocTab], files);
-    alert(`${sessionMap[activeDocTab]} uploaded successfully`);
+    toast.success(`${sessionMap[activeDocTab]} uploaded successfully`, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
     await fetchAndSetUploadedFiles();
     setSessionFiles((prev) => ({ ...prev, [activeDocTab]: [] }));
   } catch (error: any) {
-    alert(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`);
+    toast.error(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
   } finally {
     setIsLoading(false);
   }
@@ -288,8 +298,9 @@ const handleNo = async () => {
   
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4 w-full">
+    
+    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-1 sm:pt-1 pr-4 pl-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 w-full">
 
   <div className="flex items-center w-full md:w-auto">
     <button
@@ -318,11 +329,13 @@ const handleNo = async () => {
 
 <div className="mt-2 md:mt-0 md:ml-auto">
   <button
-    onClick={() => setModalOpen(true)}
-    className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
-  >
-    <FileUp className="w-6 h-6 text-gray-700" />
-  </button>
+  onClick={() => setModalOpen(true)}
+  className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 hover:bg-blue-200"
+>
+  <FileUp className="w-5 h-5 text-gray-700" />
+  <span className="text-gray-700 text-sm font-medium">Upload/View Documents</span>
+</button>
+
 
   {modalOpen && (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -454,7 +467,7 @@ const handleNo = async () => {
 </div>
 
 
-<div className="col-span-1 md:col-span-2 mb-6 sm:mb-8 w-full max-w-4xl mx-auto overflow-x-auto">
+<div className="col-span-1 md:col-span-2 mb-2 w-full max-w-4xl mx-auto overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -517,7 +530,7 @@ const handleNo = async () => {
   
 
 <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
-  <div className="bg-white shadow-lg rounded-lg p-6 w-full mx-auto max-w-3xl">
+  <div className="bg-white shadow-lg rounded-lg p-6 w-full mx-auto max-w-4xl">
     <h3 className="text-xl font-semibold text-gray-800 mb-2">Connection Details</h3>
     <div className="border-b border-gray-200 mb-4" />
   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
@@ -601,7 +614,7 @@ const handleNo = async () => {
 </div>
 
 <div className="col-span-1 md:col-span-2 flex space-x-14">
-<div className="flex justify-start px-8 ml-2">
+<div className="flex justify-start px-2 ml-2">
 
   <button
     onClick={() =>
@@ -627,7 +640,7 @@ const handleNo = async () => {
   {(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
     <details
       key={installation.id}
-      className="group w-full max-w-3xl rounded-xl border border-gray-200 bg-white shadow-lg"
+      className="group w-full max-w-4xl rounded-xl border border-gray-200 bg-white shadow-lg"
     >
       <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
         <span>
@@ -711,7 +724,7 @@ const handleNo = async () => {
 
 
 <div className="col-span-1 md:col-span-2 flex space-x-16">
-<div className="flex gap-4 justify-start px-8 ml-2">
+<div className="flex gap-4 justify-start px-2 ml-2">
   <button
     onClick={() => {
       console.log("Navigating with connectionId:", connectionId);
@@ -739,7 +752,7 @@ const handleNo = async () => {
 </div>
   
 {roles.includes("ROLE_ADMIN") && connection && (
-  <div className="col-span-1 md:col-span-2 flex justify-start px-8 mt-6">
+  <div className="col-span-1 md:col-span-2 flex justify-start px-4 mt-6">
     {connection.isOnboardedCustomers === true ? (
       <button
         onClick={() => {
@@ -748,7 +761,7 @@ const handleNo = async () => {
           setDialogAction(() => handleNo); 
           setDialogOpen(true);
         }}
-        className="py-2 px-6 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 mx-2"
+        className="py-2 px-6 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
       >
         Do you want to Offboard the Consumer?
       </button>
@@ -760,7 +773,7 @@ const handleNo = async () => {
           setDialogAction(() => handleYes); 
           setDialogOpen(true);
         }}
-        className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 mx-2"
+        className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
       >
         Do you want to Onboard the Consumer?
       </button>
@@ -849,6 +862,7 @@ const handleNo = async () => {
 
 
     </div>
+
   );
   
 };

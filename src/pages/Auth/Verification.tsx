@@ -6,6 +6,7 @@ import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
 import { verifyOtp, sendOtpToEmail } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const Verification: React.FC = () => {
   const [otp, setOtp] = useState('');
@@ -30,6 +31,7 @@ const Verification: React.FC = () => {
   const [countdown, setCountdown] = useState<number>(0);
   const countdownInterval = useRef<NodeJS.Timeout | null>(null);
 
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
 
 
   // Redirect if email not found
@@ -48,6 +50,7 @@ useEffect(() => {
   const otpTimeLeft = Math.floor((expiryTime - now) / 1000);
   const resendTimeLeft = Math.floor((resendTime - now) / 1000);
 
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
   setCountdown(otpTimeLeft > 0 ? otpTimeLeft : 0);
   setResendCountdown(resendTimeLeft > 0 ? resendTimeLeft : 0);
 
@@ -216,6 +219,16 @@ const handleResend = async () => {
 
 
         </form>
+
+        {/* {envLabel !== 'Production' && (
+          <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+            <FaExclamationTriangle className="text-red-700 text-2xl" />
+            <div className="text-center">
+              <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+              <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+            </div>
+          </div>
+        )} */}
       </div>
     </div>
   );

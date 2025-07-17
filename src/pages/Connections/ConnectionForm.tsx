@@ -482,9 +482,9 @@ const isNameCorrectionRequired =
 
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add Connection Details</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Add Connection Details</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
           <div className="sm:ml-auto text-sm text-gray-600">
@@ -494,7 +494,7 @@ const isNameCorrectionRequired =
   </div>
 
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -555,8 +555,8 @@ const isNameCorrectionRequired =
   </div>
 </div>
 
-      <h2 className="text-2xl font-semibold text-gray-700 mb-8">Connection Details</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Connection Details</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         
         {/* MSEB Connection Question - Full Width */}
         <div className="col-span-1 md:col-span-2">
@@ -888,7 +888,7 @@ const isNameCorrectionRequired =
             className="mt-1 block w-full p-2 border rounded-md shadow-sm"
           />
         </div>
-<div className="col-span-1 md:col-span-2">
+
         {formData.latitude &&
   formData.longitude &&
   !isNaN(Number(formData.latitude)) &&
@@ -920,7 +920,7 @@ const isNameCorrectionRequired =
 )}
     </div>
 )}
-</div>
+
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Section ID <span className="text-red-500">*</span></label>

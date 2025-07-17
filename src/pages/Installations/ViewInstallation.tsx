@@ -79,8 +79,8 @@ export const ViewInstallation = () => {
   if (!installation) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-2">
   {/* Backward Arrow Button (Before Title on Mobile) */}
   <div className="flex items-center w-full md:w-auto">
     <button
@@ -108,7 +108,7 @@ export const ViewInstallation = () => {
         )}
 </div>
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -174,7 +174,7 @@ export const ViewInstallation = () => {
 </div>
 
 <div className="flex items-center min-h-[20vh] px-4">
-  <div className="bg-white shadow-md rounded-lg p-6 w-full mx-auto max-w-3xl">
+  <div className="bg-white shadow-md rounded-lg p-6 w-full mx-auto max-w-4xl">
     <h3 className="text-xl font-semibold text-gray-800 mb-2">Installation Details</h3>
     <div className="border-b border-gray-200 mb-4" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">

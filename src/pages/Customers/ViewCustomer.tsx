@@ -112,10 +112,10 @@ useEffect(() => {
   if (!customer) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4 ml-6">View Customer Details</h2>
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">View Customer Details</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
           <div className="sm:ml-auto text-sm text-gray-600">
@@ -126,7 +126,7 @@ useEffect(() => {
   </div>
 
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -181,7 +181,7 @@ useEffect(() => {
 
 {/* Customer Card */}
 <div className="px-2 mt-4">
-  <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mx-auto">
+  <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-4xl mx-auto">
     <h3 className="text-xl font-semibold text-gray-800 mb-2">Customer Details</h3>
     <div className="border-b border-gray-200 mb-4" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
@@ -204,7 +204,7 @@ useEffect(() => {
     </div>
   </div>
 
-  <div className="flex gap-4 justify-start mt-6 max-w-3xl mx-auto">
+  <div className="flex gap-4 justify-start mt-6 max-w-4xl mx-auto">
     <button
       onClick={() =>
         navigate(`/edit-customer/${customerId}`, {
@@ -242,7 +242,7 @@ useEffect(() => {
 
 {connections.length > 0 && (
   <div className="mt-6 px-2">
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
 
     <div className="space-y-6">
       {connections.map((connection, index) => (

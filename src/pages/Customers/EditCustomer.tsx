@@ -163,9 +163,10 @@ setDialogOpen(true);
   
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Customer</h2>
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Update Customer</h2>
 
       {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
           <div className="sm:ml-auto text-sm text-gray-600">
@@ -176,7 +177,7 @@ setDialogOpen(true);
   </div>
 
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}

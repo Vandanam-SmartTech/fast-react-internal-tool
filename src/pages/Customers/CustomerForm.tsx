@@ -6,6 +6,7 @@ import { fetchClaims, fetchRepresentatives } from '../../services/jwtService'
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
+import { FaExclamationTriangle } from "react-icons/fa";
 
 
 import {
@@ -33,7 +34,7 @@ export const CustomerForm = () => {
   const handleToggleEmail = () => setShowEmail(!showEmail);
 
   const [activeTab, setActiveTab] = useState("Customer Details");
-
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
 
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
@@ -273,7 +274,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
   return (
-  <div className="max-w-4xl mx-auto p-4 sm:p-6">
+  <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
   <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">
@@ -331,7 +332,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 </div>
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -556,6 +557,15 @@ const handleSubmit = async (e: React.FormEvent) => {
         </button>
       </div>
     </form>
+    {/* {envLabel !== 'Production' && (
+  <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+    <FaExclamationTriangle className="text-red-700 text-2xl" />
+    <div className="text-center">
+      <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+      <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+    </div>
+  </div>
+)} */}
 
 
   </div>

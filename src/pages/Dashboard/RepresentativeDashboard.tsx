@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { UserCheck,Users } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const RepresentativeDashboard = () => {
    const [preferredName, setPreferredName] = useState('');
@@ -17,6 +18,7 @@ const RepresentativeDashboard = () => {
    const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
  
    const [data, setData] = useState([]);
+   const envLabel = import.meta.env.VITE_ENV_LABEL;
 
  
   //  useEffect(() => {
@@ -105,58 +107,62 @@ const RepresentativeDashboard = () => {
    };
  
    return (
-     <div className="max-w-4xl mx-auto p-4 sm:p-6">
-       <div className="text-2xl font-semibold mb-10">
-         {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
-       </div>
- 
-       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-10">
-         <button 
-           onClick={goToListOfConsumers}
-           className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-blue-300 transition-all h-36 sm:h-48"
-         >
-           <Users className="w-8 h-8 mb-2" />
-           <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-             {count !== null ? animatedCount : '0'}
-           </div>
-           <div className="text-sm sm:text-lg font-medium tracking-wide text-center">All Customers</div>
-         </button>
- 
-         <button 
-           onClick={goToOnboardedCustomers}
-           className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-md hover:bg-green-300 transition-all h-36 sm:h-48"
-         >
-           <UserCheck className="w-8 h-8 mb-2" />
-           <div className="text-3xl sm:text-5xl font-extrabold mb-1 sm:mb-2">
-             {onboardedCount !== null ? animatedOnboardedCount : '0'}
-           </div>
-           <div className="text-sm sm:text-lg font-medium tracking-wide text-center">Onboarded Consumers</div>
-         </button>
-       </div>
- 
-       {count !== 0 && (<div className="bg-white rounded-xl shadow-md p-4">
-         <h2 className="text-xl font-semibold mb-4">Customer Trend</h2>
-         <ResponsiveContainer width="100%" height={300}>
-   <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-     <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
-         <XAxis
-       dataKey="date"
-       tickFormatter={(dateStr) => format(parseISO(dateStr), 'MMM yyyy')}
-       tick={{ fontSize: 12 }}
-       angle={-45}
-       textAnchor="end"
-       height={60}
-       label={{ value: 'Month & Year', position: 'insideBottom', offset: -10 }}
-     />
-     <YAxis
-       allowDecimals={false}
-       tick={{ fontSize: 12 }}
-       label={{ value: 'Customer Count', angle: -90, position: 'insideLeft', offset: 10 }}
-     />
-     <Tooltip
-       formatter={(value: number) => [`${value} customers`, 'Count']}
-       labelFormatter={(label: string) => `Date: ${label}`}
-     />
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+
+       <div className="text-2xl font-semibold mb-4">
+        {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
+      </div>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-10">
+  <button 
+    onClick={goToListOfConsumers}
+    className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-5 sm:py-7 rounded-xl sm:rounded-2xl shadow-md hover:bg-blue-300 transition-all h-32 sm:h-40"
+  >
+    <Users className="w-7 h-7 mb-1" />
+    <div className="text-3xl sm:text-5xl font-extrabold mb-1">
+      {count !== null ? animatedCount : '0'}
+    </div>
+    <div className="text-sm sm:text-base font-medium tracking-wide text-center">All Customers</div>
+  </button>
+
+  <button 
+    onClick={goToOnboardedCustomers}
+    className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-5 sm:py-7 rounded-xl sm:rounded-2xl shadow-md hover:bg-green-300 transition-all h-32 sm:h-40"
+  >
+    <UserCheck className="w-7 h-7 mb-1" />
+    <div className="text-3xl sm:text-5xl font-extrabold mb-1">
+      {onboardedCount !== null ? animatedOnboardedCount : '0'}
+    </div>
+    <div className="text-sm sm:text-base font-medium tracking-wide text-center">Onboarded Consumers</div>
+  </button>
+</div>
+
+
+
+      {count !== 0 && (<div className="bg-white rounded-xl shadow-md p-4">
+        <h2 className="text-xl font-semibold mb-4">Customer Trend</h2>
+        <ResponsiveContainer width="100%" height={300}>
+  <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+    <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
+    <XAxis
+  dataKey="date"
+  tickFormatter={(dateStr) => format(parseISO(dateStr), 'MMM yyyy')}
+  tick={{ fontSize: 12 }}
+  angle={-45}
+  textAnchor="end"
+  height={60}
+  label={{ value: 'Month & Year', position: 'insideBottom', offset: -10 }}
+/>
+
+    <YAxis
+      allowDecimals={false}
+      tick={{ fontSize: 12 }}
+      label={{ value: 'Customer Count', angle: -90, position: 'insideLeft', offset: 10 }}
+    />
+    <Tooltip
+      formatter={(value: number) => [`${value} customers`, 'Count']}
+      labelFormatter={(label: string) => `Date: ${label}`}
+    />
      <Line
   type="monotone"
   dataKey="count"
@@ -165,15 +171,23 @@ const RepresentativeDashboard = () => {
   dot={false}
   activeDot={{ r: 6 }}
 />
+  </LineChart>
+</ResponsiveContainer>
 
-   </LineChart>
- </ResponsiveContainer>
- 
- 
-       </div>
-       )}
-     </div>
-   );
+
+      </div>
+      )}
+      {/* {envLabel !== 'Production' && (
+  <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+    <FaExclamationTriangle className="text-red-700 text-2xl" />
+    <div className="text-center">
+      <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+      <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+    </div>
+  </div>
+)} */}
+    </div>
+  );
  };
 
 export default RepresentativeDashboard;

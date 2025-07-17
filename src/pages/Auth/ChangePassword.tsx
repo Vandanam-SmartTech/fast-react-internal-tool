@@ -4,6 +4,7 @@ import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
 import { verifyAndChangePassword } from '../../services/jwtService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const Verification: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -18,6 +19,7 @@ const Verification: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
   // Password validation regex
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
@@ -171,6 +173,16 @@ useEffect(() => {
             </button>
           </div>
         </form>
+
+        {/* {envLabel !== 'Production' && (
+          <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+            <FaExclamationTriangle className="text-red-700 text-2xl" />
+            <div className="text-center">
+              <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+              <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+            </div>
+          </div>
+        )} */}
       </div>
     </div>
   );

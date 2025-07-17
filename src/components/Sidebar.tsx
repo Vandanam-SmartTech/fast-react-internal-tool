@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
 import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
-import { Home, UserPlus, Users, UserRoundCheck, LogOut } from "lucide-react";
+import { Home, UserPlus, Users, UserRoundCheck, LogOut, UserCog, UsersRound } from "lucide-react";
 import { fetchClaims } from "../services/jwtService";
 
 
@@ -61,6 +61,14 @@ const Sidebar: React.FC = () => {
 
   const goToCustomerForm = () => {
     navigate("/CustomerForm");
+  };
+
+  const goToUserForm = () => {
+    navigate("/UserForm");
+  };
+
+  const goToListOfUsers = () => {
+    navigate("/list-of-users");
   };
 
   const handleHomeClick = () => {
@@ -171,10 +179,35 @@ const Sidebar: React.FC = () => {
     Onboarded Consumers
   </button>
 
-  {/* {roles.includes("ROLE_ADMIN") && (
-              <button className="flex items-center gap-2 px-2 py-1 text-black whitespace-nowrap">
-                <UserCog className="h-7 w-7" />
-                Manage Representatives
+{/* {roles.includes("ROLE_ADMIN") && (
+  <button 
+    onClick={goToUserForm}
+    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap overflow-hidden ${
+      location.pathname === "/UserForm"
+        ? "text-blue-600 font-semibold"
+        : "text-black"
+    }`}
+  >
+    <UserCog size={18} />
+    <span className="truncate w-full text-left">
+      Add New Representative
+    </span>
+  </button>
+)}
+
+
+
+{roles.includes("ROLE_ADMIN") && (
+              <button 
+              onClick={goToListOfUsers}
+              className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+               location.pathname === "/ListOfUsers"
+                  ? "text-blue-600 font-semibold"
+                  : "text-black"
+      }`}
+    >
+                <UsersRound size={18} />
+                List of Representatives
               </button>
             )} */}
 

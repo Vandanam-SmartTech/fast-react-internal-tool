@@ -52,7 +52,8 @@ export const EditConnection = () => {
     const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
 
     const [correctionTypeMap, setCorrectionTypeMap] = useState<Record<string, number>>({});
-  
+    const [reverseCorrectionTypeMap, setReverseCorrectionTypeMap] = useState<Record<number, string>>({});
+
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
     const [pincode, setPincode] = useState<string>("");
@@ -220,29 +221,36 @@ export const EditConnection = () => {
         }, []);
 
       useEffect(() => {
-          const loadCorrectionTypes = async () => {
-          try {
-             const types = await fetchCorrectionType();
-             const map: Record<string, number> = {};
-                types.forEach((type) => {
-               map[type.correctionName] = type.id;
-            });
-           setCorrectionTypeMap(map);
-          } catch (err) {
-          console.error('Failed to load correction types', err);
-          }
-         };
+  const loadCorrectionTypes = async () => {
+    try {
+      const types = await fetchCorrectionType();
+      const map: Record<string, number> = {};
+      const reverseMap: Record<number, string> = {};
 
-        loadCorrectionTypes();
-      }, []);
+      types.forEach((type) => {
+        map[type.correctionName] = type.id;
+        reverseMap[type.id] = type.correctionName;
+      });
 
-    const reverseCorrectionTypeMap: Record<number, string> = Object.entries(correctionTypeMap).reduce(
-        (acc, [name, id]) => {
-            acc[id] = name;
-            return acc;
-          },
-        {} as Record<number, string>
-        );
+      setCorrectionTypeMap(map);
+      setReverseCorrectionTypeMap(reverseMap); // <-- You need to define this using useState
+
+    } catch (err) {
+      console.error('Failed to load correction types', err);
+    }
+  };
+
+  loadCorrectionTypes();
+}, []);
+
+
+    // const reverseCorrectionTypeMap: Record<number, string> = Object.entries(correctionTypeMap).reduce(
+    //     (acc, [name, id]) => {
+    //         acc[id] = name;
+    //         return acc;
+    //       },
+    //     {} as Record<number, string>
+    //     );
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -350,7 +358,7 @@ export const EditConnection = () => {
       }
     };
     fetchConnection();
-  }, [consumerId]);
+  }, [consumerId, reverseCorrectionTypeMap]);
   
   if (loading) {
     return <div>Loading connection details...</div>;
@@ -842,7 +850,6 @@ const isNameCorrectionRequired =
             />
           </div>
 
-          <div className="col-span-1 md:col-span-2">
         {formData.latitude &&
   formData.longitude &&
   !isNaN(Number(formData.latitude)) &&
@@ -874,7 +881,7 @@ const isNameCorrectionRequired =
 )}
     </div>
 )}
-</div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Section ID</label>

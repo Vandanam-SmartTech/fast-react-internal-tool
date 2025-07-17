@@ -6,7 +6,7 @@ import { validateUser, fetchClaims } from '../../services/jwtService';
 import { sendOtpToEmail } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const PasswordReset: React.FC = () => {
   const [message, setMessage] = useState<string>('');
@@ -15,6 +15,7 @@ const PasswordReset: React.FC = () => {
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState('');
 
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
   const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -42,19 +43,16 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   setMessage('');
 
   try {
-    const userEmail = await validateUser(emailInput); // gets plain string
+    const userEmail = await validateUser(emailInput); 
     await sendOtpToEmail(userEmail);
 
     const expiryTime = Date.now() + 3 * 60 * 1000; 
-    const resendTime = Date.now() + 60 * 1000;     // 1 minute
+    const resendTime = Date.now() + 60 * 1000;     
 
     localStorage.setItem('otpExpiryTime', expiryTime.toString());
     localStorage.setItem('resendEnableTime', resendTime.toString()); 
 
     toast.success('OTP Sent Successfully!', { autoClose: 1000, hideProgressBar: true });
-
-    // localStorage.setItem('OTP sent successfully', 'true');
-
 
     setTimeout(() => {
       setLoading(false);
@@ -103,11 +101,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </div>
         )}
 
-{isFirstLogin && (
-  <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-lg p-2 sm:p-3 mb-4 text-center text-sm">
-    Let's get you started! Change your password to keep your account secure before proceeding. 
-  </div>
-)}
+      {isFirstLogin && (
+          <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded-lg p-2 sm:p-3 mb-4 text-center text-sm">
+              Let's get you started! Change your password to keep your account secure before proceeding. 
+          </div>
+      )}
 
 
 
@@ -156,6 +154,16 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </button>
           </div>
         </form>
+
+        {/* {envLabel !== 'Production' && (
+  <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+    <FaExclamationTriangle className="text-red-700 text-2xl" />
+    <div className="text-center">
+      <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+      <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+    </div>
+  </div>
+)} */}
       </div>
     </div>
   );

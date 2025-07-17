@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 
 const crsAPI = axios.create({
-  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_CRS_PROD_API_PORT}`,
+  baseURL: `${import.meta.env.VITE_CRS_API}`,
   headers: {
     'Content-Type': 'application/json',
   },

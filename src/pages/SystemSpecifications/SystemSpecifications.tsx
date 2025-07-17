@@ -191,18 +191,18 @@ useEffect(() => {
 }, []);
 
 
-const getWattageForBrand = (brand: string): number => {
-  switch (brand) {
-    case "Sova":
-      return 550;
-    case "En-Icon":
-      return 590;
-    case "Adani":
-      return 575;
-    default:
-      return 0;
-  }
-};
+// const getWattageForBrand = (brand: string): number => {
+//   switch (brand) {
+//     case "Sova":
+//       return 550;
+//     case "En-Icon":
+//       return 590;
+//     case "Adani":
+//       return 575;
+//     default:
+//       return 0;
+//   }
+// };
 
 
 let hasShownError = false;
@@ -224,6 +224,14 @@ useEffect(() => {
 
         const recommendedKW = recommendation.recommendedKW || "";
 
+        const inverterWattages = await fetchInverterWattages(
+            connectionId,
+            recommendation.phaseType,
+            recommendation.inverterBrand
+        );
+        const selectedInverterKw = inverterWattages[0] || "";
+
+
         setFormData((prev) => ({
           ...prev,
           installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
@@ -234,6 +242,7 @@ useEffect(() => {
             recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
           panelBrand: recommendation.panelBrand || "",
           inverterBrand: recommendation.inverterBrand || "",
+          inverterKw: selectedInverterKw,
         }));
 
         setConnectionType(recommendation.connectionType || "");
@@ -265,15 +274,18 @@ useEffect(() => {
         setIsCustomSpecs(true);
         setIsSpecsSaved(true);
 
+        const customerSelectedKW = customerData.customerSelectedKW || "";
+        const inverterCapacity = customerData.inverterCapacity || "";
+
         setFormData((prev) => ({
           ...prev,
           installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
           installationStructureType: customerData.customerSelectedInstallationStructureType || "",
-          Kw: customerData.customerSelectedKW?.toString() || "",
+          Kw: customerSelectedKW,
           panelBrand: customerData.customerSelectedBrand || "",
           dcrNonDcrType: customerData.dcrNonDcrType || "",
           inverterBrand: customerData.inverterBrand || "",
-          inverterKw: customerData.inverterCapacity?.toString() || "",
+          inverterKw: inverterCapacity,
           solarSystemCost: customerData.solarSystemCost || 0,
           fabricationCost: customerData.fabricationCost || 0,
           totalCost: customerData.totalCost || 0,
@@ -292,7 +304,8 @@ useEffect(() => {
             customerData.dcrNonDcrType,
             customerData.customerSelectedBrand
           );
-          setPanelWattages(wattages);
+          const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
+          setPanelWattages([customerSelectedKW, ...uniqueWattages]);
         }
 
         if (customerData.inverterBrand && customerData.phaseType) {
@@ -301,7 +314,8 @@ useEffect(() => {
             customerData.phaseType,
             customerData.inverterBrand
           );
-          setInverterWattages(inverterWattages);
+          const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
+          setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
         }
       }
     } catch (error) {
@@ -659,10 +673,10 @@ const handleGenerateQuotation = async () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
     
 
-<div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-4">
+<div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-2">
   {/* Backward Arrow Button (Before Title on Mobile) */}
   <div className="flex items-center w-full md:w-auto">
     <button
@@ -690,7 +704,7 @@ const handleGenerateQuotation = async () => {
         )}
 </div>
 
-<div className="w-full max-w-4xl mx-auto mb-14 mt-10 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -944,9 +958,9 @@ const handleGenerateQuotation = async () => {
                   handleChange(e); 
                 }}
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {inverterWattages.map((inverterWattage) => (
-                    <option key={inverterWattage} value={inverterWattage}>
-                    {inverterWattage}
+                {inverterWattages.map((inverterWattages) => (
+                    <option key={inverterWattages} value={inverterWattages}>
+                    {inverterWattages}
                       </option>
                    ))}
               </select>
@@ -959,8 +973,8 @@ const handleGenerateQuotation = async () => {
             name="dcrNonDcrType"
             value={formData.dcrNonDcrType}
             onChange={(e) => {
-              setDcrNonDcrType(e.target.value); // Update local state
-              handleChange(e); // Also update formData
+              setDcrNonDcrType(e.target.value); 
+              handleChange(e); 
             }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { getAuthToken } from './jwtService';
+import { getAuthToken, fetchClaims } from './jwtService';
 
 const oneDriveAPI = axios.create({
-  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_ONE_DRIVE_PROD_API_PORT}`,
+  baseURL: `${import.meta.env.VITE_ONEDRIVE_API}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -21,6 +21,14 @@ export const uploadDocuments = async (
   sessionName: string,
   files: File[]
 ) => {
+
+  const claims = await fetchClaims();
+
+  if (!claims?.email_address) {
+    throw new Error("Unable to fetch uploader email from claims.");
+  }
+
+
   const formData = new FormData();
 
   formData.append("connectionId", connectionId);
@@ -34,7 +42,7 @@ export const uploadDocuments = async (
   const response = await oneDriveAPI.post("/api/onedrive/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      "X-Uploaded-By": "prasad@gmail.com", 
+      "X-Uploaded-By": claims.email_address, 
     },
   });
 

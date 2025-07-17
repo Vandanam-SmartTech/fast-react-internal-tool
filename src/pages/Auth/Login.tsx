@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { FaExclamationTriangle } from "react-icons/fa";
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -11,6 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const envLabel = import.meta.env.VITE_ENV_LABEL;
 
     useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
@@ -77,7 +79,10 @@ const Login = () => {
     className="fixed top-0 left-0 w-full h-full bg-cover bg-center flex justify-center items-center px-4"
     style={{ backgroundImage: `url(${bgImage})` }}
   >
-    <div className="w-full max-w-sm sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
+
+
+
+    <div className="w-full max-w-sm sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg mt-4">
       {/* Logo and Title */}
       <div className="flex flex-col items-center justify-center mb-2 sm:mb-1">
         <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
@@ -148,9 +153,23 @@ const Login = () => {
           Login
         </button>
       </form>
+
+{/* {envLabel !== 'Production' && (
+  <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
+    <FaExclamationTriangle className="text-red-700 text-2xl" />
+    <div className="text-center">
+      <div className="text-base font-semibold leading-tight mr-4">You are in</div>
+      <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
+    </div>
+  </div>
+)} */}
+
+
+
     </div>
   </div>
 );
+
 
 };
 

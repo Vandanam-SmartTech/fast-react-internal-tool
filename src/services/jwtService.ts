@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const jwtAPI = axios.create({
-  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_JWT_PROD_API_PORT}`,
+  baseURL: `${import.meta.env.VITE_JWT_API}`,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -28,6 +28,8 @@ export const setAuthToken = (token: string) => {
     delete jwtAPI.defaults.headers.common['Authorization'];
   }
 };
+
+
 
 export const getAuthToken = () => localStorage.getItem('jwtToken');
 
@@ -76,4 +78,15 @@ export const verifyAndChangePassword = async (
   newPassword: string
 ): Promise<void> => {
   await jwtAPI.post('/auth/update-password', { emailAddress, newPassword });
+};
+
+export const validateJwtToken = async (): Promise<string[] | null> => {
+  try {
+    const response = await jwtAPI.get('/jwt/validate');
+    return response.data.roles;
+  } catch (error) {
+    console.error('JWT validation failed:', error);
+    localStorage.removeItem('jwtToken');
+    return null;
+  }
 };

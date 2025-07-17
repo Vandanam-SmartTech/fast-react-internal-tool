@@ -16,6 +16,7 @@ import { InstallationForm } from './pages/Installations/InstallationForm';
 import { ViewInstallation } from './pages/Installations/ViewInstallation';
 import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
 import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
+import ListOfUsers from './pages/Users/ListOfUsers';
 import  PasswordReset  from './pages/Auth/PasswordReset'; 
 import ChangePassword from './pages/Auth/ChangePassword';
 import  Verification  from './pages/Auth/Verification';
@@ -24,9 +25,11 @@ import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import { EditCustomer } from './pages/Customers/EditCustomer';
 import { EditConnection } from './pages/Connections/EditConnection';
 import { EditInstallation } from './pages/Installations/EditInstallation';
+import  UserForm  from './pages/Users/UserForm';
 import MaterialDetails from './pages/Materials/MaterialDetails';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
+import EnvBanner from './components/EnvBanner';
 import 'leaflet/dist/leaflet.css';
 
 
@@ -36,6 +39,7 @@ const AppContent: React.FC = () => {
 
  const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
 
+ const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
 //  useEffect(() => {
 //     const publicPaths = ['/login', '/PasswordReset', '/Verification', '/ChangePassword'];
 //     if (publicPaths.includes(location.pathname)) {
@@ -48,6 +52,8 @@ const AppContent: React.FC = () => {
       {showSidebar && <Sidebar />}
 
       <ToastContainer position="top-right" autoClose={1000} />
+      
+      <EnvBanner envLabel={envLabel} />
 
       <div className="py-12">
         <Routes>
@@ -72,6 +78,15 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <ListOfConsumers />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/list-of-users"
+            element={
+              <PrivateRoute>
+                <ListOfUsers />
               </PrivateRoute>
             }
           />
@@ -183,6 +198,7 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
           <Route
               path="/ConnectionForm"
               element={
@@ -206,6 +222,15 @@ const AppContent: React.FC = () => {
               element={
               <PrivateRoute>
                 <SystemSpecifications />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/UserForm"
+              element={
+              <PrivateRoute>
+                <UserForm />
               </PrivateRoute>
             }
           />
@@ -236,7 +261,7 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router basename="/internal-tool">
+    <Router basename="/SolarPro">
       <AppContent />
     </Router>
   );

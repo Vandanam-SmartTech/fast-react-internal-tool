@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const otpAPI = axios.create({
-  baseURL: `http://${import.meta.env.VITE_DOMAIN_NAME}:${import.meta.env.VITE_OTP_PROD_API_PORT}`,
+  baseURL: `${import.meta.env.VITE_OTP_API}`,
   headers: {
     'Content-Type': 'application/json',
   },

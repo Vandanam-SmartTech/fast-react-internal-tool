@@ -99,7 +99,7 @@ const handleGenerate = async (doc: string) => {
   <div className="max-w-4xl mx-auto p-6 space-y-6">
 
     
-    <div className="max-w-3xl mx-auto space-y-4">
+    <div className="max-w-4xl mx-auto space-y-4">
 
 
       {consumer && (
@@ -126,7 +126,7 @@ const handleGenerate = async (doc: string) => {
       )}
 
 
-      <p className="text-lg font-semibold text-gray-900 text-left">
+      <p className="text-2xl font-semibold text-gray-900 text-left">
         Generate Documents
       </p>
 
@@ -141,14 +141,14 @@ const handleGenerate = async (doc: string) => {
 
             <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
               <button
-                className="hidden md:block w-full sm:w-auto px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="hidden md:block w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 onClick={() => handlePreview(doc)}
                 disabled={loadingPreviewDoc === doc}
               >
                 {loadingPreviewDoc === doc ? "Previewing..." : "Preview Document"}
               </button>
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
                 onClick={() => handleGenerate(doc)}
                 disabled={loadingGenerateDoc === doc}
               >

@@ -142,9 +142,9 @@ const OnboardedConsumers: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="w-full lg:w-[85%]">
-      <h1 className="text-2xl font-semibold mb-6">Onboarded Consumers</h1>
+    <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full lg:w-[87%]">
+      <h1 className="text-2xl font-semibold mb-6 text-center sm:text-left">Onboarded Consumers</h1>
 
       <SearchBar placeholder="Search by name, email, or mobile..." onSearch={handleSearch} />
 
