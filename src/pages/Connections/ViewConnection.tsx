@@ -58,7 +58,7 @@ export const ViewConnection = () => {
 
 
 const sessionMap = {
-  Aadhar: "Aadhar Card",
+  Aadhar: "Aadhaar Card",
   Passbook: "Bank Passbook",
   Electricity: "Electricity Bill",
 } as const;
@@ -128,10 +128,18 @@ const fetchAndSetUploadedFiles = async () => {
 
   const fileMap: { [key in SessionKey]?: UploadedFile[] } = {};
 
+  // SessionKey to backend prefix
+  const sessionIdentifierMap: Record<SessionKey, string> = {
+    Aadhar: "AadhaarCard",
+    Passbook: "BankPassbook",
+    Electricity: "EBill",
+  };
+
   await Promise.all(
     (Object.entries(sessionMap) as [SessionKey, SessionName][]).map(
-      async ([key, sessionName]) => {
-        const files = await fetchUploadedFilesBySession(connectionId, sessionName);
+      async ([key]) => {
+        const backendSessionName = `${sessionIdentifierMap[key]}_${govIdName}`;
+        const files = await fetchUploadedFilesBySession(connectionId, backendSessionName);
         fileMap[key] = files;
       }
     )
@@ -139,6 +147,7 @@ const fetchAndSetUploadedFiles = async () => {
 
   setUploadedFiles(fileMap);
 };
+
 
 
 
@@ -154,7 +163,19 @@ const handleSingleFileUpload = async (files: File[]) => {
   setIsLoading(true);
   try {
     const connectionId = location.state?.connectionId;
-    const result = await uploadDocuments(connectionId, sessionMap[activeDocTab], files);
+    // Map internal session key to session identifier
+const sessionIdentifierMap: Record<SessionKey, string> = {
+  Aadhar: "AadhaarCard",
+  Passbook: "BankPassbook",
+  Electricity: "EBill",
+};
+
+// Construct backend session name
+const backendSessionName = `${sessionIdentifierMap[activeDocTab]}_${govIdName}`;
+
+// Upload with modified session name
+const result = await uploadDocuments(connectionId, backendSessionName, files);
+
     toast.success(`${sessionMap[activeDocTab]} uploaded successfully`, {
       autoClose: 1000,
       hideProgressBar: true,

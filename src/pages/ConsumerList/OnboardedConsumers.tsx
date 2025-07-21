@@ -214,7 +214,7 @@ const OnboardedConsumers: React.FC = () => {
         className="w-3/5"
         title={!materialsMap[consumer.id] ? "Please fill material details to generate documents" : ""}
       >
-        <button
+        {/* <button
           onClick={() => handleGenerateDocuments(consumer)}
           disabled={!materialsMap[consumer.id]}
           className={`px-2 h-9 text-white text-sm font-medium rounded-lg w-full bg-blue-500 hover:bg-blue-600 focus:outline-none ${
@@ -222,7 +222,14 @@ const OnboardedConsumers: React.FC = () => {
           }`}
         >
           Generate Documents
-        </button>
+        </button> */}
+        <button
+  onClick={() => handleGenerateDocuments(consumer)}
+  className="px-2 h-9 text-white text-sm font-medium rounded-lg w-full bg-blue-500 hover:bg-blue-600 focus:outline-none"
+>
+  Generate Documents
+</button>
+
       </div>
     </div>
 

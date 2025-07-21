@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCustomerById, updateConsumerPersonalDetails } from "../../services/customerRequisitionService";
+import { getCustomerById, updateConsumerPersonalDetails, checkMobileNumberExists, checkEmailAddressExists } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -34,6 +34,9 @@ export const EditCustomer = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
+  const [mobileExists, setMobileExists] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+
   const [showMobile, setShowMobile] = useState(false);
   const handleToggleMobile = () => setShowMobile(!showMobile);
 
@@ -64,9 +67,6 @@ export const EditCustomer = () => {
       getClaims();
     }, []);
 
-
-
-
   useEffect(() => {
     const fetchCustomer = async () => {
       if (customerId) {
@@ -90,33 +90,51 @@ export const EditCustomer = () => {
     fetchCustomer();
   }, [customerId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+
+  setFormData((prev: any) => {
+    if (name === 'mobileNumber' && prev.mobileNumber !== value) {
+      setConfirmMobileNumber('');
+    }
+
+    if (name === 'emailAddress' && prev.emailAddress !== value) {
+      setConfirmEmailAddress('');
+    }
+
+    return {
       ...prev,
       [name]: value,
-    }));
-      
-  };
+    };
+  });
+};
 
-  const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmMobileNumber(e.target.value);
-  };
+
+const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setConfirmMobileNumber(e.target.value.trim());
+};
+
 
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmEmailAddress(e.target.value);
+    setConfirmEmailAddress(e.target.value.trim());
   };
+
+
+
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
-  if (formData.mobileNumber !== confirmMobileNumber) {
-    toast.error("Mobile number and Confirm Mobile number do not match.",{
-      autoClose:1000,
-      hideProgressBar:true,
-    });
-    return;
-  }
+if (
+  String(formData.mobileNumber).trim() !== String(confirmMobileNumber).trim()
+) {
+  toast.error("Mobile number and Confirm Mobile number do not match.", {
+    autoClose: 1000,
+    hideProgressBar: true,
+  });
+  return;
+}
+
 
   if (formData.emailAddress && formData.emailAddress !== confirmEmailAddress) {
     toast.error("Email and Confirm Email do not match.",{
@@ -132,6 +150,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setDialogAction(() => async () => {
   try {
     if (customerId) {
+      formData.emailAddress= formData.emailAddress || null;
       await updateConsumerPersonalDetails(Number(customerId), formData);
 
       toast.success("Customer details updated successfully!", { 
@@ -245,8 +264,8 @@ setDialogOpen(true);
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
           {formData.govIdName && !/^[A-Za-z\s]*$/.test(formData.govIdName) && (
-  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
-)}
+              <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+          )}
         </div>
 
         <div>
@@ -297,32 +316,40 @@ setDialogOpen(true);
   {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
     <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
   )}
-
 </div>
 
 {/* Confirm Mobile Number */}
 <div>
   <label className="block text-sm font-medium text-gray-700">Confirm Mobile Number <span className="text-red-500">*</span></label>
   <input
-    type="tel"
-    name="confirmMobileNumber"
-    value={confirmMobileNumber}
-    onChange={handleConfirmMobileChange}
-    placeholder="Confirm mobile number"
-    maxLength={10}
-    pattern="[6-9]{1}[0-9]{9}"
-    required
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    title="Re-enter the same 10-digit mobile number"
-    onCopy={(e) => e.preventDefault()}
-    onCut={(e) => e.preventDefault()}
-    onPaste={(e) => e.preventDefault()}
-  />
-  {formData.mobileNumber && confirmMobileNumber &&
-    confirmMobileNumber !== formData.mobileNumber && (
-      <p className="text-red-600 text-sm mt-1">Mobile numbers do not match</p>
+      type="tel"
+      name="confirmMobileNumber"
+      value={confirmMobileNumber}
+      onChange={handleConfirmMobileChange}
+      placeholder="Confirm mobile number"
+      maxLength={10}
+      pattern="[6-9]{1}[0-9]{9}"
+      required
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+      title="Re-enter the same 10-digit mobile number"
+      disabled={!(
+    /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
   )}
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
+
+/>
+  {confirmMobileNumber &&
+  formData.mobileNumber &&
+  String(confirmMobileNumber).trim() !== String(formData.mobileNumber).trim() && (
+    <p className="text-red-600 text-sm mt-1">
+      Mobile numbers do not match
+    </p>
+)}
+
 </div>
+
 
 
       <div>
@@ -351,7 +378,6 @@ setDialogOpen(true);
       {showEmail ? <FaEyeSlash /> : <FaEye />}
     </span>
   </div>
-
   
 </div>
 
@@ -365,11 +391,14 @@ setDialogOpen(true);
           placeholder="Confirm email address"
           maxLength={50}
           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
           onCopy={(e) => e.preventDefault()}
           onCut={(e) => e.preventDefault()}
           onPaste={(e) => e.preventDefault()}
+          disabled={!(
+            /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(formData.emailAddress) && !emailExists
+          )}
         />
         {formData.emailAddress && confirmEmailAddress &&
     confirmEmailAddress !== formData.emailAddress && (

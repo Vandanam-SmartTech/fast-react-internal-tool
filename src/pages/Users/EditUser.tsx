@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { saveRepresentative, checkEmailAddressExists, checkMobileNumberExists, checkUsernameExists } from '../../services/jwtService';
+import { saveRepresentative, checkEmailAddressExists, checkMobileNumberExists, checkUsernameExists, getUserById } from '../../services/jwtService';
 import { toast } from "react-toastify";
 
 
-export const UserForm = () => {
+export const EditUser = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const userId = location.state?.userId;
+
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
@@ -28,45 +31,119 @@ export const UserForm = () => {
   const [createdRepresentativeId, setCreatedRepresentativeId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
-    nameAsPerGovId: '',
-    roles: [{ "name": "ROLE_REPRESENTATIVE" }],
-    emailAddress: '',
-    mobileNumber: '',
-    representativeCode: '',
-    username: '',
-    preferredName: '',
-    managerName: '',
-    managerEmail: '',
-  });
+  nameAsPerGovId: "",
+  username: "",
+  mobileNumber: "",
+  emailAddress: "",
+  representativeCode: "",
+  preferredName: "",
+  managerName: "",
+  managerEmail: "",
+  roles: [{ "name": "ROLE_REPRESENTATIVE" }],
+});
+
+const [isActive, setIsActive] = useState(false);
+
+
+    // useEffect(() => {
+    //   const checkExists = async () => {
+    //     if (formData.mobileNumber.length === 10) {
+    //       const exists = await checkMobileNumberExists(formData.mobileNumber);
+    //       setMobileExists(exists);
+    //     } else {
+    //       setMobileExists(false);
+    //     }
+    //   };
+    //   checkExists();
+    // }, [formData.mobileNumber]);
 
     useEffect(() => {
-      const checkExists = async () => {
-        if (formData.mobileNumber.length === 10) {
-          const exists = await checkMobileNumberExists(formData.mobileNumber);
-          setMobileExists(exists);
-        } else {
-          setMobileExists(false);
-        }
-      };
-      checkExists();
-    }, [formData.mobileNumber]);
+  const checkExists = async () => {
+    if (formData.mobileNumber === confirmMobileNumber) {
+      setMobileExists(false);
+      return;
+    }
+
+    if (formData.mobileNumber.length === 10) {
+      const exists = await checkMobileNumberExists(formData.mobileNumber);
+      setMobileExists(exists);
+    } else {
+      setMobileExists(false);
+    }
+  };
+  checkExists();
+}, [formData.mobileNumber, confirmMobileNumber]);
+
   
+//   useEffect(() => {
+//     const checkEmailExists = async () => {
+//       const email = formData.emailAddress;
+  
+//       const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+  
+//       if (emailPattern.test(email)) {
+//         const exists = await checkEmailAddressExists(email);
+//         setEmailExists(exists);
+//       } else {
+//         setEmailExists(false);
+//       }
+//     };
+  
+//     checkEmailExists();
+//   }, [formData.emailAddress]);
+
+useEffect(() => {
+  const checkEmailExists = async () => {
+    if (formData.emailAddress === confirmEmailAddress) {
+      setEmailExists(false);
+      return;
+    }
+
+    const email = formData.emailAddress;
+    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+
+    if (emailPattern.test(email)) {
+      const exists = await checkEmailAddressExists(email);
+      setEmailExists(exists);
+    } else {
+      setEmailExists(false);
+    }
+  };
+
+  checkEmailExists();
+}, [formData.emailAddress, confirmEmailAddress]);
+
+
   useEffect(() => {
-    const checkEmailExists = async () => {
-      const email = formData.emailAddress;
-  
-      const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-  
-      if (emailPattern.test(email)) {
-        const exists = await checkEmailAddressExists(email);
-        setEmailExists(exists);
-      } else {
-        setEmailExists(false);
+  const fetchUserData = async () => {
+    if (!userId) return;
+    try {
+      const response = await getUserById(userId); // Your API function
+      if (response.data) {
+        const user = response.data;
+        setFormData({
+          nameAsPerGovId: user.nameAsPerGovId || "",
+          username: user.username || "",
+          mobileNumber: user.mobileNumber || "",
+          emailAddress: user.emailAddress || "",
+          representativeCode: user.representativeCode || "",
+          preferredName: user.preferredName || "",
+          managerName: user.managerName || "",
+          managerEmail: user.managerEmail || "",
+          roles: user.roles || [{ name: "ROLE_REPRESENTATIVE" }],
+        });
+        setConfirmMobileNumber(user.mobileNumber || "");
+        setConfirmEmailAddress(user.emailAddress || "");
+        setIsActive(user.isActive); // For status toggle
       }
-    };
-  
-    checkEmailExists();
-  }, [formData.emailAddress]);
+    } catch (err) {
+      console.error("Failed to fetch user data", err);
+    }
+  };
+
+  fetchUserData();
+}, [userId]);
+
 
   //const [submitted, setSubmitted] = useState(false);
 
@@ -160,7 +237,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Add New Representative</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Edit Representative</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name as per Gov ID */}
@@ -392,6 +469,20 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </div>
       </div>
 
+      <div className="mt-2">
+  <label className="block text-sm font-medium text-gray-700">User Status</label>
+  <div className="flex items-center mt-1">
+    <input
+      type="checkbox"
+      checked={isActive}
+      onChange={(e) => setIsActive(e.target.checked)}
+      className="mr-2"
+    />
+    <span className="text-sm text-gray-800">{isActive ? "Active" : "Inactive"}</span>
+  </div>
+</div>
+
+
       {/* Save Button */}
       <div className="mt-6 text-left">
         <button
@@ -401,7 +492,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
             } text-white px-6 py-2 rounded-md shadow`}
         >
-          {isSubmitting ? "Saving representative..." : "Save Representative"}
+          {isSubmitting ? "Editing representative..." : "Edit Representative"}
           </button>
 
       </div>
@@ -409,4 +500,4 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   );
 };
 
-export default UserForm;
+export default EditUser;

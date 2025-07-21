@@ -52,7 +52,7 @@ export const InstallationForm = () => {
 
   ///////////////////////////////////////////////////////////
   useEffect(() => {
-    const savedForm = localStorage.getItem('myFormData');
+    const savedForm = localStorage.getItem('installationFormData');
     if (savedForm) {
       setFormData(JSON.parse(savedForm));
     }
@@ -95,7 +95,7 @@ export const InstallationForm = () => {
     }));
 
     ///////////////
-    localStorage.setItem('myFormData', JSON.stringify(formData));
+    localStorage.setItem('installationFormData', JSON.stringify(formData));
     //////////////
   };
 
@@ -172,7 +172,7 @@ export const InstallationForm = () => {
         });
     }
     /////////////
-    localStorage.removeItem('myFormData');
+    localStorage.removeItem('installationFormData');
     ////////////
 };
 

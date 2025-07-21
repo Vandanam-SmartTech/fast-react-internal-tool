@@ -90,3 +90,118 @@ export const validateJwtToken = async (): Promise<string[] | null> => {
     return null;
   }
 };
+
+export const checkMobileNumberExists = async (
+  mobileNumber: string
+): Promise<boolean> => {
+  try {
+    const response = await jwtAPI.get('/api/users/mobile-exist', {
+      params: { mobileNumber },
+    });
+
+    return response.data === true;
+  } catch (error) {
+    console.error('Error checking mobile number:', error);
+    return false;
+  }
+};
+
+export const checkEmailAddressExists = async (
+  emailAddress: string
+): Promise<boolean> => {
+  try {
+    const response = await jwtAPI.get('/api/users/email-exist', {
+      params: { emailAddress },
+    });
+
+    return response.data === true;
+  } catch (error) {
+    console.error('Error checking email address:', error);
+    return false;
+  }
+};
+
+export const checkUsernameExists = async (
+  username: string
+): Promise<boolean> => {
+  try {
+    const response = await jwtAPI.get('/api/users/username-exist', {
+      params: { username },
+    });
+
+    return response.data === true;
+  } catch (error) {
+    console.error('Error checking username:', error);
+    return false;
+  }
+};
+
+export const saveRepresentative = async (
+  data: Record<string, any>
+): Promise<{ id: number | null; message?: string }> => {
+  try {
+    const response = await jwtAPI.post('/api/users', data);
+    const responseData = response.data;
+
+    // Extract userId from backend response
+    if (responseData.userId) {
+      return { id: responseData.userId, message: 'User data saved successfully!' };
+    } else {
+      return { id: null, message: responseData.message || 'Failed to save user data.' };
+    }
+  } catch (error: any) {
+    console.error('Error details:', error);
+    return { id: null, message: 'An error occurred while saving user data.' };
+  }
+};
+
+export const getUserById = async (
+  userId: number
+): Promise<{ data: Record<string, any> | null; message?: string }> => {
+  try {
+    const response = await jwtAPI.get(`/api/users/${userId}`);
+    const userData = response.data;
+    console.log('User data from API:', userData);
+
+    if (userData) {
+      return { data: userData, message: 'User fetched successfully!' };
+    } else {
+      return { data: null, message: 'User not found.' };
+    }
+  } catch (error: any) {
+    console.error('Error fetching user:', error);
+    return { data: null, message: 'An error occurred while fetching user data.' };
+  }
+};
+
+export const fetchRepresentativesPaginated = async (page = 0) => {
+  try {
+    const response = await jwtAPI.get('/api/users/representatives/paginated', {
+      params: { page },
+    });
+
+    return {
+      content: response.data.content,
+      totalPages: response.data.totalPages,
+      totalElements: response.data.totalElements,
+      currentPage: response.data.number,
+    };
+  } catch (error) {
+    console.error('Error fetching representatives:', error);
+    throw new Error('Failed to fetch representatives.');
+  }
+};
+
+export const updateUser = async (userId: number, data: any) => {
+  try {
+    const response = await jwtAPI.put(`/api/users/${userId}`, data);
+    return response;
+  } catch (error) {
+    console.error("Update failed", error);
+    return { message: "Update error" };
+  }
+};
+
+
+
+

@@ -26,6 +26,8 @@ import { EditCustomer } from './pages/Customers/EditCustomer';
 import { EditConnection } from './pages/Connections/EditConnection';
 import { EditInstallation } from './pages/Installations/EditInstallation';
 import  UserForm  from './pages/Users/UserForm';
+import ViewUser  from './pages/Users/ViewUser';
+import EditUser from './pages/Users/EditUser';
 import MaterialDetails from './pages/Materials/MaterialDetails';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
@@ -191,6 +193,24 @@ const AppContent: React.FC = () => {
           />
 
           <Route
+              path="/view-user/:id"
+              element={
+              <PrivateRoute>
+                <ViewUser />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/edit-user/:id"
+              element={
+              <PrivateRoute>
+                <EditUser />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
               path="/CustomerForm"
               element={
               <PrivateRoute>
@@ -261,7 +281,7 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router basename="/SolarPro">
+    <Router basename="/solarpro">
       <AppContent />
     </Router>
   );

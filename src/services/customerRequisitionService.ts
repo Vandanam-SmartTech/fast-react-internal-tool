@@ -317,6 +317,7 @@ export const fetchConsumers = async (page = 0) => {
       totalPages: response.data.totalPages,
       totalElements: response.data.totalElements,
       currentPage: response.data.number,
+      size: response.data.size,
     };
   } catch (error) {
     console.error('Error fetching consumers:', error);
@@ -343,9 +344,25 @@ export const fetchOnboardedConsumers = async (page = 0) => {
 };
 
 
-export const getOnboardedCustomerCount = async (): Promise<number> => {
+export const getCustomerCount = async (representativeId?: number): Promise<number> => {
   try {
-    const response = await crsAPI.get('/api/customers/onboarded-count');
+    const url = representativeId
+      ? `/api/customers/count?representativeId=${representativeId}`
+      : `/api/customers/count`;
+    const response = await crsAPI.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching customer count:', error);
+    throw new Error('Failed to fetch customer count');
+  }
+};
+
+export const getOnboardedCustomerCount = async (representativeId?: number): Promise<number> => {
+  try {
+    const url = representativeId
+      ? `/api/customers/onboarded-count?representativeId=${representativeId}`
+      : `/api/customers/onboarded-count`;
+    const response = await crsAPI.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching onboarded customer count:', error);
@@ -353,15 +370,7 @@ export const getOnboardedCustomerCount = async (): Promise<number> => {
   }
 };
 
-export const getCustomerCount = async (): Promise<number> => {
-  try {
-    const response = await crsAPI.get('/api/customers/count');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching customer count:', error);
-    throw new Error('Failed to fetch customer count');
-  }
-};
+
 
 export const updateConsumerPersonalDetails = async (
   customerId: number,

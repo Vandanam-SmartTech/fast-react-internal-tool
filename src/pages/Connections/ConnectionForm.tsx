@@ -105,7 +105,7 @@ export const ConnectionForm = () => {
 
 ///////////////////////////////////////////////////////////
   useEffect(() => {
-    const savedForm = localStorage.getItem('myFormData');
+    const savedForm = localStorage.getItem('connectionFormData');
     const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
     if (savedForm) {
       setFormData(JSON.parse(savedForm));
@@ -270,7 +270,24 @@ useEffect(() => {
 
   if(name === 'consumerId' && value=== ''){
     setConfirmConsumerNumber('');
+    localStorage.removeItem("confirmConsumerNumber")
   }
+
+  if (name === 'consumerId') {
+      if (value !== confirmConsumerNumber) {
+        setConfirmConsumerNumber('');
+        localStorage.removeItem("confirmConsumerNumber");
+      }
+  
+      checkConsumerNumberExists(value).then((exists) => {
+        setConsumerNumberExists(exists);
+  
+        if (exists) {
+          setConfirmConsumerNumber('');
+          localStorage.removeItem("confirmConsumerNumber");
+        }
+      });
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -280,7 +297,7 @@ useEffect(() => {
     }));
         ///////////////
         setTimeout(() => {
-    localStorage.setItem("myFormData", JSON.stringify({
+    localStorage.setItem("connectionFormData", JSON.stringify({
       ...formData,
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
@@ -396,6 +413,12 @@ useEffect(() => {
       });
       return;
     }
+
+    if (formData.isMsebConnection !== "Yes" && formData.isMsebConnection !== "No") {
+  toast.error("Please select whether the customer has an active grid connection.");
+  return;
+}
+
   
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
@@ -473,7 +496,7 @@ const isNameCorrectionRequired =
   }
 
   /////////////
-    localStorage.removeItem('myFormData');
+    localStorage.removeItem('connectionFormData');
     localStorage.removeItem('confirmConsumerNumber');
   ////////////
   };
@@ -714,6 +737,7 @@ const isNameCorrectionRequired =
               id="district"
               value={districtCode}
               onChange={handleDistrictChange}
+              required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             >
               <option value={0}>{districtName || "Select District"}</option>
@@ -732,6 +756,7 @@ const isNameCorrectionRequired =
               id="taluka"
               value={talukaCode}
               onChange={handleTalukaChange}
+              required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             >
               <option value={0}>{talukaName || "Select Taluka"}</option>
@@ -750,6 +775,7 @@ const isNameCorrectionRequired =
               id="village"
               value={villageCode}
               onChange={handleVillageChange}
+              required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             >
               <option value={0}>{villageName || "Select Village"}</option>
@@ -770,6 +796,7 @@ const isNameCorrectionRequired =
               value={formData.pincode || ''}  // Ensure it uses formData.pincode
               onChange={handlepincodeChange}
               placeholder="e.g. 416000"
+              required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>

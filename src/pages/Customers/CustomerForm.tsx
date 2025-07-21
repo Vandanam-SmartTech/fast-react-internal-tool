@@ -51,7 +51,7 @@ export const CustomerForm = () => {
 
   const [formData, setFormData] = useState({
     govIdName: "",
-    emailAddress: null,
+    emailAddress: "",
     mobileNumber: "",
     preferredName: "", 
     isActive: true,
@@ -73,9 +73,10 @@ export const CustomerForm = () => {
 
 ///////////////////////////////////////////////////////////
 useEffect(() => {
-  const savedFormData = localStorage.getItem("myFormData");
+  const savedFormData = localStorage.getItem("customerFormData");
   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
+  const savedRepresentative = localStorage.getItem("selectedRepresentative");
 
   if (savedFormData) {
     setFormData(JSON.parse(savedFormData));
@@ -89,9 +90,9 @@ useEffect(() => {
     setConfirmEmailAddress(savedConfirmEmail);
   }
 
-  // if (savedRepresentative) {
-  //   setSelectedRepresentative(JSON.parse(savedRepresentative));
-  // }
+  if (savedRepresentative) {
+    setSelectedRepresentative(JSON.parse(savedRepresentative));
+  }
 }, []);
 
 ///////////////////////////////////////////////////////////
@@ -141,22 +142,80 @@ useEffect(() => {
 
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
   const { name, value } = e.target;
 
-  const updatedFormData = { ...formData, [e.target.name]: e.target.value };
+  const updatedFormData = { ...formData, [name]: value };
 
   if (name === 'mobileNumber' && value === '') {
     setConfirmMobileNumber('');
+    localStorage.removeItem("confirmMobileNumber");
   }
 
-  if(name === 'emailAddress' && value === ''){
+  if (name === 'emailAddress' && value === '') {
     setConfirmEmailAddress('');
+    localStorage.removeItem("confirmEmailAddress");
+  }
+
+  if (name === 'mobileNumber') {
+    if (value !== confirmMobileNumber) {
+      setConfirmMobileNumber('');
+      localStorage.removeItem("confirmMobileNumber");
+    }
+
+    checkMobileNumberExists(value).then((exists) => {
+      setMobileExists(exists);
+
+      if (exists) {
+        setConfirmMobileNumber('');
+        localStorage.removeItem("confirmMobileNumber");
+      }
+    });
+  }
+
+  if (name === 'emailAddress') {
+    if (value !== confirmEmailAddress) {
+      setConfirmEmailAddress('');
+      localStorage.removeItem("confirmEmailAddress");
+    }
+
+    checkEmailAddressExists(value).then((exists) => {
+      setEmailExists(exists);
+
+      if (exists) {
+        setConfirmEmailAddress('');
+        localStorage.removeItem("confirmEmailAddress");
+      }
+    });
   }
 
   setFormData(updatedFormData);
-  localStorage.setItem('myFormData', JSON.stringify(updatedFormData));
+  localStorage.setItem('customerFormData', JSON.stringify(updatedFormData));
+
+
+  if (name === 'mobileNumber') {
+
+    checkMobileNumberExists(value).then((exists) => {
+      setMobileExists(exists);
+
+      if (exists) {
+        setConfirmMobileNumber('');
+        localStorage.removeItem("confirmMobileNumber");
+      }
+    });
+  }
+
+  if (name === 'emailAddress') {
+    checkEmailAddressExists(value).then((exists) => {
+      setEmailExists(exists);
+
+      if (exists) {
+        setConfirmEmailAddress('');
+        localStorage.removeItem("confirmEmailAddress");
+      }
+    });
+  }
 };
+
 
 
   useEffect(() => {
@@ -227,7 +286,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       ...formData,
       referredByRepresentativeId,
     };
-
+    customerData.emailAddress = formData.emailAddress || null;
     const result = await saveCustomer(customerData);
 
     if (result.id) {
@@ -266,9 +325,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
   }
 
-  localStorage.removeItem("myFormData");
+  localStorage.removeItem("customerFormData");
   localStorage.removeItem("confirmMobileNumber");
   localStorage.removeItem("confirmEmailAddress");
+  localStorage.removeItem("selectedRepresentative");
 };
 
 
@@ -400,8 +460,8 @@ const handleSubmit = async (e: React.FormEvent) => {
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
                 {formData.govIdName && !/^[A-Za-z\s]*$/.test(formData.govIdName) && (
-  <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
-)}
+                    <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+          )}
       </div>
 
       <div>
@@ -544,8 +604,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   confirmEmailAddress !== formData.emailAddress && (
     <p className="text-red-600 text-sm mt-1">Email Address do not match</p>
 )}
-
-
       </div>
 
       <div className="flex justify-center sm:justify-start mt-2">
@@ -557,15 +615,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         </button>
       </div>
     </form>
-    {/* {envLabel !== 'Production' && (
-  <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">
-    <FaExclamationTriangle className="text-red-700 text-2xl" />
-    <div className="text-center">
-      <div className="text-base font-semibold leading-tight mr-4">You are in</div>
-      <div className="text-lg font-bold uppercase tracking-wide underline">{envLabel} Mode</div>
-    </div>
-  </div>
-)} */}
+
 
 
   </div>

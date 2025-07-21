@@ -42,6 +42,8 @@ export const EditConnection = () => {
     const customerId = location.state?.customerId || null;
     const connectionId = location.state?.connectionId;
     const consumerId = location.state?.consumerId;
+
+    const [consumerNumberExists, setConsumerNumberExists] = useState(false);
   
     const [districts, setDistricts] = useState<District[]>([]);
     const [talukas, setTalukas] = useState<Taluka[]>([]);
@@ -365,18 +367,31 @@ export const EditConnection = () => {
   }
 
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: value,
-    }));
-      
-  };
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+
+  setFormData((prev: any) => {
+    let updatedForm = { ...prev, [name]: value };
+
+    // Clear confirmConsumerNumber if consumerId changes
+    if (name === 'consumerId' && prev.consumerId !== value) {
+      setConfirmConsumerNumber('');
+    }
+
+    // If MSEB Connection is "No", clear consumerId and confirmConsumerNumber
+    if (name === 'isMsebConnection' && value === 'No') {
+      updatedForm.consumerId = '';
+      setConfirmConsumerNumber('');
+    }
+
+    return updatedForm;
+  });
+};
+
 
     const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmConsumerNumber(e.target.value);
-  };
+    setConfirmConsumerNumber(e.target.value.trim());
+      };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -385,13 +400,15 @@ export const EditConnection = () => {
     console.log("Received connectionId:", connectionId);
     console.log("Received CustomerId:", customerId);
 
-    if (formData.consumerId !== confirmConsumerNumber) {
-    toast.error("Consumer number and Confirm Consumer number do not match.",{
-      autoClose:1000,
-      hideProgressBar:true,
-    });
-    return;
-  }
+    if (
+  String(formData.consumerId).trim() !== String(confirmConsumerNumber).trim()
+) {
+  toast.error("Consumer number and Confirm consumer number do not match.", {
+    autoClose: 1000,
+    hideProgressBar: true,
+  });
+  return;
+}
   
     if (!customerId) {
     toast.error("Customer Id is missing",{
@@ -611,7 +628,10 @@ const isNameCorrectionRequired =
                 placeholder="e.g. 987654321000"
                 required
                 disabled={formData.isMsebConnection === "No"}
-                className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
               />
               
               <span
@@ -633,12 +653,21 @@ const isNameCorrectionRequired =
               placeholder="Confirm consumer number"
               maxLength={12}
               required
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              disabled={!(
+     /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
+  )}
             />
-            {confirmConsumerNumber &&
-              confirmConsumerNumber !== formData.consumerId && (
-                <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
-            )}
+  {confirmConsumerNumber &&
+  formData.consumerId &&
+  String(confirmConsumerNumber).trim() !== String(formData.consumerId).trim() && (
+    <p className="text-red-600 text-sm mt-1">
+      Consumer numbers do not match
+    </p>
+)}
           </div>
   
           <div>
@@ -884,13 +913,14 @@ const isNameCorrectionRequired =
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Section ID</label>
+            <label className="block text-sm font-medium text-gray-700">Section ID <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="sectionId"
               value={formData.sectionId}
               onChange={handleChange}
               placeholder="e.g. 7137"
+              required
               className="mt-1 block w-full p-2 border rounded-md shadow-sm"
             />
           </div>
