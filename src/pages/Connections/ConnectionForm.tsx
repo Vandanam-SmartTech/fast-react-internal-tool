@@ -270,13 +270,13 @@ useEffect(() => {
 
   if(name === 'consumerId' && value=== ''){
     setConfirmConsumerNumber('');
-    localStorage.removeItem("confirmConsumerNumber")
+    //localStorage.removeItem("confirmConsumerNumber")
   }
 
   if (name === 'consumerId') {
       if (value !== confirmConsumerNumber) {
         setConfirmConsumerNumber('');
-        localStorage.removeItem("confirmConsumerNumber");
+        //localStorage.removeItem("confirmConsumerNumber");
       }
   
       checkConsumerNumberExists(value).then((exists) => {
@@ -284,7 +284,7 @@ useEffect(() => {
   
         if (exists) {
           setConfirmConsumerNumber('');
-          localStorage.removeItem("confirmConsumerNumber");
+          //localStorage.removeItem("confirmConsumerNumber");
         }
       });
     }
@@ -378,7 +378,7 @@ useEffect(() => {
     const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmConsumerNumber(value);
-    localStorage.setItem('confirmConsumerNumber', value);
+    //localStorage.setItem('confirmConsumerNumber', value);
   };
 
 
@@ -497,7 +497,7 @@ const isNameCorrectionRequired =
 
   /////////////
     localStorage.removeItem('connectionFormData');
-    localStorage.removeItem('confirmConsumerNumber');
+    //localStorage.removeItem('confirmConsumerNumber');
   ////////////
   };
   

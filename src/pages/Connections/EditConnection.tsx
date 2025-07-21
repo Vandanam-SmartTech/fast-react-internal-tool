@@ -671,7 +671,7 @@ const isNameCorrectionRequired =
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
+            <label className="block text-sm font-medium text-gray-700">GST Number</label>
             <input
               type="text"
               name="gstIn"

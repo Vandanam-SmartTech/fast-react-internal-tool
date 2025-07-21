@@ -148,18 +148,18 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   if (name === 'mobileNumber' && value === '') {
     setConfirmMobileNumber('');
-    localStorage.removeItem("confirmMobileNumber");
+    //localStorage.removeItem("confirmMobileNumber");
   }
 
   if (name === 'emailAddress' && value === '') {
     setConfirmEmailAddress('');
-    localStorage.removeItem("confirmEmailAddress");
+    //localStorage.removeItem("confirmEmailAddress");
   }
 
   if (name === 'mobileNumber') {
     if (value !== confirmMobileNumber) {
       setConfirmMobileNumber('');
-      localStorage.removeItem("confirmMobileNumber");
+      //localStorage.removeItem("confirmMobileNumber");
     }
 
     checkMobileNumberExists(value).then((exists) => {
@@ -167,7 +167,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmMobileNumber('');
-        localStorage.removeItem("confirmMobileNumber");
+        //localStorage.removeItem("confirmMobileNumber");
       }
     });
   }
@@ -175,7 +175,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (name === 'emailAddress') {
     if (value !== confirmEmailAddress) {
       setConfirmEmailAddress('');
-      localStorage.removeItem("confirmEmailAddress");
+      //localStorage.removeItem("confirmEmailAddress");
     }
 
     checkEmailAddressExists(value).then((exists) => {
@@ -183,7 +183,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmEmailAddress('');
-        localStorage.removeItem("confirmEmailAddress");
+        //localStorage.removeItem("confirmEmailAddress");
       }
     });
   }
@@ -199,7 +199,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmMobileNumber('');
-        localStorage.removeItem("confirmMobileNumber");
+        //localStorage.removeItem("confirmMobileNumber");
       }
     });
   }
@@ -210,7 +210,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmEmailAddress('');
-        localStorage.removeItem("confirmEmailAddress");
+        //localStorage.removeItem("confirmEmailAddress");
       }
     });
   }
@@ -240,7 +240,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedRepresentative(selectedRep);
 
     if (selectedRep) {
-      localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
+      //localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
     }
   };
   
@@ -249,12 +249,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmMobileNumber(value);
-    localStorage.setItem('confirmMobileNumber', value);
+    //localStorage.setItem('confirmMobileNumber', value);
   };
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmEmailAddress(value);
-    localStorage.setItem('confirmEmailAddress', value);
+    //localStorage.setItem('confirmEmailAddress', value);
   };
 
 
