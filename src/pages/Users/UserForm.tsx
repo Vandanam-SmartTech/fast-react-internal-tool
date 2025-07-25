@@ -40,33 +40,33 @@ export const UserForm = () => {
   });
 
     useEffect(() => {
-      const checkExists = async () => {
-        if (formData.mobileNumber.length === 10) {
-          const exists = await checkMobileNumberExists(formData.mobileNumber);
-          setMobileExists(exists);
+        const checkExists = async () => {
+          if (formData.mobileNumber.length === 10) {
+            const exists = await checkMobileNumberExists(formData.mobileNumber);
+            setMobileExists(exists);
+          } else {
+            setMobileExists(false);
+          }
+        };
+        checkExists();
+      }, [formData.mobileNumber]);
+    
+    useEffect(() => {
+      const checkEmailExists = async () => {
+        const email = formData.emailAddress;
+    
+        const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+    
+        if (emailPattern.test(email)) {
+          const exists = await checkEmailAddressExists(email);
+          setEmailExists(exists);
         } else {
-          setMobileExists(false);
+          setEmailExists(false);
         }
       };
-      checkExists();
-    }, [formData.mobileNumber]);
-  
-  useEffect(() => {
-    const checkEmailExists = async () => {
-      const email = formData.emailAddress;
-  
-      const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-  
-      if (emailPattern.test(email)) {
-        const exists = await checkEmailAddressExists(email);
-        setEmailExists(exists);
-      } else {
-        setEmailExists(false);
-      }
-    };
-  
-    checkEmailExists();
-  }, [formData.emailAddress]);
+    
+      checkEmailExists();
+    }, [formData.emailAddress]);
 
   //const [submitted, setSubmitted] = useState(false);
 
@@ -78,28 +78,85 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const updatedFormData = { ...formData, [name]: value };
 
-  if (name === 'mobileNumber' && value === '') {
+if (name === 'mobileNumber' && value === '') {
     setConfirmMobileNumber('');
+    //localStorage.removeItem("confirmMobileNumber");
   }
 
   if (name === 'emailAddress' && value === '') {
     setConfirmEmailAddress('');
+    //localStorage.removeItem("confirmEmailAddress");
+  }
+
+  if (name === 'mobileNumber') {
+    if (value !== confirmMobileNumber) {
+      setConfirmMobileNumber('');
+      //localStorage.removeItem("confirmMobileNumber");
+    }
+
+    checkMobileNumberExists(value).then((exists) => {
+      setMobileExists(exists);
+
+      if (exists) {
+        setConfirmMobileNumber('');
+        //localStorage.removeItem("confirmMobileNumber");
+      }
+    });
+  }
+
+  if (name === 'emailAddress') {
+    if (value !== confirmEmailAddress) {
+      setConfirmEmailAddress('');
+      //localStorage.removeItem("confirmEmailAddress");
+    }
+
+    checkEmailAddressExists(value).then((exists) => {
+      setEmailExists(exists);
+
+      if (exists) {
+        setConfirmEmailAddress('');
+        //localStorage.removeItem("confirmEmailAddress");
+      }
+    });
   }
 
   setFormData(updatedFormData);
   localStorage.setItem('myUserFormData', JSON.stringify(updatedFormData));
+
+  if (name === 'mobileNumber') {
+  
+      checkMobileNumberExists(value).then((exists) => {
+        setMobileExists(exists);
+  
+        if (exists) {
+          setConfirmMobileNumber('');
+          //localStorage.removeItem("confirmMobileNumber");
+        }
+      });
+    }
+  
+    if (name === 'emailAddress') {
+      checkEmailAddressExists(value).then((exists) => {
+        setEmailExists(exists);
+  
+        if (exists) {
+          setConfirmEmailAddress('');
+          //localStorage.removeItem("confirmEmailAddress");
+        }
+      });
+    }
 };
 
 
 const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmMobileNumber(value);
-    localStorage.setItem('confirmMobileNumber', value);
+    //localStorage.setItem('confirmMobileNumber', value);
   };
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmEmailAddress(value);
-    localStorage.setItem('confirmEmailAddress', value);
+    //localStorage.setItem('confirmEmailAddress', value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,7 +207,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       hideProgressBar: true,
     });
   } finally {
-    setIsSubmitting(false); // Stop submitting
+    setIsSubmitting(false); 
     localStorage.removeItem("myUserFormData");
     localStorage.removeItem("confirmMobileNumber");
     localStorage.removeItem("confirmEmailAddress");

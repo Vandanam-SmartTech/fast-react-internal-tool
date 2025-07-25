@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCustomerById, getDistrictNameByCode, getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
+import { getCustomerById, getDistrictNameByCode,  getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
 import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails} from '../../services/quotationService';
 import { uploadDocuments } from "../../services/oneDriveService";
@@ -597,11 +597,11 @@ const handleGenerateQuotation = async () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-      // const fileName = `quotation_${connectionId}.pdf`;
-      // const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+      const fileName = `Quotation_${govIdName}`;
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
-      // await uploadDocuments(connectionId, "quotation document", [pdfFile]);
-      // console.log("PDF uploaded to OneDrive successfully");
+      await uploadDocuments(connectionId, fileName, [pdfFile]);
+      console.log("PDF uploaded to OneDrive successfully");
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");

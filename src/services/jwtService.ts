@@ -174,10 +174,15 @@ export const getUserById = async (
   }
 };
 
-export const fetchRepresentativesPaginated = async (page = 0) => {
+export const fetchRepresentativesPaginated = async (page = 0, role?: string) => {
   try {
-    const response = await jwtAPI.get('/api/users/representatives/paginated', {
-      params: { page },
+    const params: any = { page };
+    if (role) {
+      params.role = role;
+    }
+
+    const response = await jwtAPI.get('/api/users/paginated/by-role', {
+      params,
     });
 
     return {
@@ -191,6 +196,8 @@ export const fetchRepresentativesPaginated = async (page = 0) => {
     throw new Error('Failed to fetch representatives.');
   }
 };
+
+
 
 export const updateUser = async (userId: number, data: any) => {
   try {

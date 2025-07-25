@@ -279,19 +279,27 @@ export const getInstallationByConsumerId = async (
 
 export const fetchConsumerNumber = async (customerId: number) => {
   try {
-    const response = await crsAPI.get(`/api/connections/by-customer/${customerId}`);
-
-    if (!Array.isArray(response.data)) {
-      console.warn(`Unexpected response format for customerId ${customerId}:`, response.data);
+    const response = await crsAPI.get(`/api/connections/customer/${customerId}`);
+    if (response.data?.success === false) {
+      console.warn(`No connections found for customerId ${customerId}: ${response.data.message}`);
       return [];
     }
-
-    return response.data; // Return full array
-  } catch (error) {
-    console.error(`Error fetching details for customerId ${customerId}:`, error);
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    console.warn(`Unexpected format for customerId ${customerId}:`, response.data);
+    return [];
+  } catch (error: any) {
+    
+    if (error.response && error.response.status === 404) {
+      console.info(`Connections not found for customer Id ${customerId}`);
+    } else {
+      console.error(`Error fetching connections for customerId ${customerId}:`, error.message);
+    }
     return [];
   }
 };
+
 
 
 // export const getInstallationsByCustomerId = async (

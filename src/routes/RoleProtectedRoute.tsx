@@ -45,7 +45,7 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
   }
 
   if (authorized === null) {
-    return null; // or a loader/spinner
+    return null; 
   }
 
   return children;

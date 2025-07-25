@@ -58,11 +58,11 @@ export const CustomerForm = () => {
   });
 
   const getUserIdFromToken = () => {
-    const token = localStorage.getItem("authToken"); // Assuming token is stored here
+    const token = localStorage.getItem("authToken"); 
     if (!token) return null;
   
     try {
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const decodedToken = JSON.parse(atob(token.split(".")[1])); 
       return decodedToken.userId || null;
     } catch (error) {
       console.error("Failed to parse token:", error);
@@ -615,8 +615,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         </button>
       </div>
     </form>
-
-
 
   </div>
 );

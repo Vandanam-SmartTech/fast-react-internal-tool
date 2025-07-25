@@ -345,31 +345,40 @@ useEffect(() => {
   </div>
 
     {/* View/Edit Buttons */}
-  <div className="flex gap-4 mt-4">
+<div className="w-full grid grid-cols-2 gap-4 md:flex md:justify-start md:gap-4">
+  <button
+    onClick={() =>
+      navigate(`/edit-connection/${connection.id}`, {
+        state: {
+          consumerId: connection.consumerId,
+          connectionId: connection.id,
+          customerId: customerId,
+          selectedRepresentative: selectedRepresentative,
+        },
+      })
+    }
+    className="w-full md:w-auto py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 flex items-center justify-center"
+  >
+    Edit Connection
+  </button>
 
-    <button
-      onClick={() =>
-        navigate(`/edit-connection/${connection.id}`, {
-          state: {
-            consumerId: connection.consumerId,
-            connectionId: connection.id,
-            customerId: customerId,
-            selectedRepresentative: selectedRepresentative,
-          },
-        })
-      }
-      className="py-2 px-6 sm:px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
-    >
-      Edit Connection
-    </button>
-
-          <button
-    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
-          className="py-2 px-6 sm:px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+  <button
+    onClick={() =>
+      navigate(`/SystemSpecifications`, {
+        state: {
+          connectionId: connection.id,
+          consumerId: connection.consumerId,
+          customerId,
+          selectedRepresentative: selectedRepresentative,
+        },
+      })
+    }
+    className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
   >
     Get Recommendation
   </button>
-  </div>
+</div>
+
 
 
   {/* Nested Installations */}

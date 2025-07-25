@@ -920,7 +920,7 @@ const isNameCorrectionRequired =
   formData.longitude &&
   !isNaN(Number(formData.latitude)) &&
   !isNaN(Number(formData.longitude)) && (
-    <div className="col-span-2">
+    <div className="col-span-1 sm:col-span-2">
       <button
         type="button"
         onClick={() => setShowMapPreview((prev) => !prev)}
@@ -929,22 +929,21 @@ const isNameCorrectionRequired =
         {showMapPreview ? 'Close Map' : 'View Location on Map'}
       </button>
 
-{showMapPreview && (
-  <>
-    {/* <h3 className="text-md font-semibold text-gray-700 mb-2">Preview Location on Map</h3> */}
-    <MapPreview
-  latitude={parseFloat(formData.latitude)}
-  longitude={parseFloat(formData.longitude)}
-  onLocationChange={(newLat, newLng) => {
-    setFormData((prev) => ({
-      ...prev,
-      latitude: newLat.toFixed(6),
-      longitude: newLng.toFixed(6),
-    }));
-  }}
-/>
-  </>
-)}
+      {showMapPreview && (
+        <div className="w-full h-[300px] rounded-md overflow-hidden border shadow-md">
+          <MapPreview
+            latitude={parseFloat(formData.latitude)}
+            longitude={parseFloat(formData.longitude)}
+            onLocationChange={(newLat, newLng) => {
+              setFormData((prev) => ({
+                ...prev,
+                latitude: newLat.toFixed(6),
+                longitude: newLng.toFixed(6),
+              }));
+            }}
+          />
+        </div>
+      )}
     </div>
 )}
 

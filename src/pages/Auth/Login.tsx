@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
-import { FaExclamationTriangle } from "react-icons/fa";
+
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -12,7 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const envLabel = import.meta.env.VITE_ENV_LABEL;
+  
 
     useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
@@ -22,13 +22,13 @@ const Login = () => {
       const claims = await fetchClaims();
       if (!claims || !claims.roles) return;
 
-      const isPasswordChanged = claims.is_password_changed;
+      // const isPasswordChanged = claims.is_password_changed;
 
-      if (!isPasswordChanged) {
+      // if (!isPasswordChanged) {
     
-      navigate('/PasswordReset');
-      return;
-      }
+      // navigate('/PasswordReset');
+      // return;
+      // }
 
       if (claims.roles.includes('ROLE_ADMIN')) {
         navigate('/AdminDashboard');

@@ -744,33 +744,51 @@ const handleNo = async () => {
 </div>
 
 
-<div className="col-span-1 md:col-span-2 flex space-x-16">
-<div className="flex gap-4 justify-start px-2 ml-2">
-  <button
-    onClick={() => {
-      console.log("Navigating with connectionId:", connectionId);
-      console.log("Navigating with consumerId:", consumerId);
-      console.log("Navigating with customerId:",customerId);
-      if (!connectionId || !consumerId) {
-        alert("Connection ID and Consumer Id is missing!");
-        return;
+<div className="col-span-1 md:col-span-2 px-2 ml-2">
+  <div className="grid grid-cols-2 gap-4 md:flex md:justify-start">
+    <button
+      onClick={() => {
+        console.log("Navigating with connectionId:", connectionId);
+        console.log("Navigating with consumerId:", consumerId);
+        console.log("Navigating with customerId:", customerId);
+        if (!connectionId || !consumerId) {
+          alert("Connection ID and Consumer Id is missing!");
+          return;
+        }
+        navigate(`/InstallationForm`, {
+          state: {
+            connectionId: connectionId,
+            consumerId: consumerId,
+            customerId,
+            selectedRepresentative: selectedRepresentative,
+          },
+        });
+      }}
+      className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
+    >
+      Add New Installation
+    </button>
+
+    <button
+      onClick={() =>
+        navigate(`/SystemSpecifications`, {
+          state: {
+            connectionId: connectionId,
+            consumerId: consumerId,
+            customerId,
+            selectedRepresentative: selectedRepresentative,
+          },
+        })
       }
-      navigate(`/InstallationForm`, { state: { connectionId: connectionId, consumerId: consumerId, customerId, selectedRepresentative:selectedRepresentative } });
-    }}
-    className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700"
-  >
-    Add New Installation
-  </button>
-
-          <button
-    onClick={() => navigate(`/SystemSpecifications`, { state: { connectionId: connectionId, consumerId: consumerId, customerId,selectedRepresentative:selectedRepresentative}})}
-          className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
-  >
-    Get Recommendation
-  </button>
+      className="w-full md:w-auto py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 flex items-center justify-center"
+    >
+      Get Recommendation
+    </button>
   </div>
-
 </div>
+
+
+
   
 {roles.includes("ROLE_ADMIN") && connection && (
   <div className="col-span-1 md:col-span-2 flex justify-start px-4 mt-6">

@@ -190,7 +190,7 @@ const Sidebar: React.FC = () => {
   >
     <UserCog size={18} />
     <span className="truncate w-full text-left">
-      Add New Representative
+      Add New User
     </span>
   </button>
 )}
@@ -207,7 +207,7 @@ const Sidebar: React.FC = () => {
       }`}
     >
                 <UsersRound size={18} />
-                List of Representatives
+                List of Users
               </button>
             )} */}
 
