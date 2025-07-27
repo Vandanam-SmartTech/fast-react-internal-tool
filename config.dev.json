@@ -1,0 +1,10 @@
+{
+  "VITE_JWT_API": "http://localhost:9090",
+  "VITE_OTP_API": "http://localhost:8732",
+  "VITE_CRS_API": "http://localhost:8585",
+  "VITE_QUOTATION_API": "http://localhost:8933",
+  "VITE_DOCUMENT_API": "http://localhost:5050",
+  "VITE_ONEDRIVE_API": "http://localhost:8000",
+  "VITE_MODE": "production",
+  "VITE_ENV_LABEL": "Development"
+}

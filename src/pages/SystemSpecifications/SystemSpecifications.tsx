@@ -190,21 +190,6 @@ useEffect(() => {
   getClaims();
 }, []);
 
-
-// const getWattageForBrand = (brand: string): number => {
-//   switch (brand) {
-//     case "Sova":
-//       return 550;
-//     case "En-Icon":
-//       return 590;
-//     case "Adani":
-//       return 575;
-//     default:
-//       return 0;
-//   }
-// };
-
-
 let hasShownError = false;
 
 useEffect(() => {
@@ -948,7 +933,7 @@ const handleGenerateQuotation = async () => {
         </div>
 
                 <div>
-          <label className="block text-sm font-medium text-gray-700">Inverter KW</label>
+          <label className="block text-sm font-medium text-gray-700">Inverter kW</label>
           <select
                 id="inverterKw"
                 name="inverterKw"
@@ -1003,7 +988,7 @@ const handleGenerateQuotation = async () => {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">KW</label>
+          <label className="block text-sm font-medium text-gray-700">System Capacity (kW)</label>
           <select
                 id="Kw"
                 name="Kw"

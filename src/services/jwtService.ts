@@ -1,4 +1,10 @@
 import axios from "axios";
+// import { getConfig } from '../config';
+
+// const jwtAPI = axios.create({
+//   baseURL: getConfig().VITE_JWT_API,
+//   headers: { 'Content-Type': 'application/json' },
+// });
 
 const jwtAPI = axios.create({
   baseURL: `${import.meta.env.VITE_JWT_API}`,

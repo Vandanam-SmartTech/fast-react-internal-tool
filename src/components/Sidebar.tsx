@@ -179,7 +179,7 @@ const Sidebar: React.FC = () => {
     Onboarded Consumers
   </button>
 
-{/* {roles.includes("ROLE_ADMIN") && (
+{roles.includes("ROLE_ADMIN") && (
   <button 
     onClick={goToUserForm}
     className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap overflow-hidden ${
@@ -194,9 +194,7 @@ const Sidebar: React.FC = () => {
     </span>
   </button>
 )}
-
-
-
+  
 {roles.includes("ROLE_ADMIN") && (
               <button 
               onClick={goToListOfUsers}
@@ -209,7 +207,7 @@ const Sidebar: React.FC = () => {
                 <UsersRound size={18} />
                 List of Users
               </button>
-            )} */}
+            )}
 
   <button
     onClick={handleLogout}
