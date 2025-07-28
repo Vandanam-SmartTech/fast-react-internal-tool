@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
-import Logo from "../assets/Vandanam_SmartTech_Logo.png"; // Adjust path if needed
-import { Home, UserPlus, Users, UserRoundCheck, UserCog, LogOut } from "lucide-react";
-import { fetchClaims } from "../services/api";
+import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
+import { Home, UserPlus, Users, UserRoundCheck, LogOut, UserCog, UsersRound } from "lucide-react";
+import { fetchClaims } from "../services/jwtService";
 
 
 const Sidebar: React.FC = () => {
@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarOpen");
-    setIsOpen(storedState === "true"); // If not present, will default to false
+    setIsOpen(storedState === "true"); 
   }, []);
 
   useEffect(() => {
@@ -55,12 +55,20 @@ const Sidebar: React.FC = () => {
     navigate("/list-of-consumers");
   };
 
-  const goToOnboardedCustomers = () => {
-    navigate("/OnboardedCustomers");
+  const goToOnboardedConsumers = () => {
+    navigate("/OnboardedConsumers");
   };
 
   const goToCustomerForm = () => {
     navigate("/CustomerForm");
+  };
+
+  const goToUserForm = () => {
+    navigate("/UserForm");
+  };
+
+  const goToListOfUsers = () => {
+    navigate("/list-of-users");
   };
 
   const handleHomeClick = () => {
@@ -160,21 +168,44 @@ const Sidebar: React.FC = () => {
 </button>
 
   <button
-    onClick={goToOnboardedCustomers}
+    onClick={goToOnboardedConsumers}
     className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/OnboardedCustomers"
+      location.pathname === "/OnboardedConsumers"
         ? "text-blue-600 font-semibold"
         : "text-black"
     }`}
   >
     <UserRoundCheck size={18} />
-    Onboarded Customers
+    Onboarded Consumers
   </button>
 
-  {/* {roles.includes("ROLE_ADMIN") && (
-              <button className="flex items-center gap-2 px-2 py-1 text-black whitespace-nowrap">
-                <UserCog className="h-7 w-7" />
-                Manage Representatives
+{/* {roles.includes("ROLE_ADMIN") && (
+  <button 
+    onClick={goToUserForm}
+    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap overflow-hidden ${
+      location.pathname === "/UserForm"
+        ? "text-blue-600 font-semibold"
+        : "text-black"
+    }`}
+  >
+    <UserCog size={18} />
+    <span className="truncate w-full text-left">
+      Add New User
+    </span>
+  </button>
+)}
+  
+{roles.includes("ROLE_ADMIN") && (
+              <button 
+              onClick={goToListOfUsers}
+              className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+               location.pathname === "/ListOfUsers"
+                  ? "text-blue-600 font-semibold"
+                  : "text-black"
+      }`}
+    >
+                <UsersRound size={18} />
+                List of Users
               </button>
             )} */}
 

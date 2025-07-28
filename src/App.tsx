@@ -1,54 +1,69 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Login from './components/Login';
-import { QuotationForm } from './components/QuotationForm';
-import PrivateRoute from './components/PrivateRoute';
-//import Navbar from './components/Navbar';
+import { useEffect } from "react";
+
+import Login from './pages/Auth/Login';
+import PrivateRoute from './routes/PrivateRoute';
+import RoleProtectedRoute from './routes/RoleProtectedRoute';
+import HomeRedirect from './pages/HomeRedirect';
 import Sidebar from './components/Sidebar';
-import ListOfConsumers from './components/ListOfConsumers';
-import GenerateDocuments from './components/GenerateDocuments';
-import { CustomerForm } from './components/CustomerForm';
-import { ViewCustomer } from './components/ViewCustomer';
-import { ConnectionForm } from './components/ConnectionForm';
-import { ViewConnection } from './components/ViewConnection';
-import { InstallationForm } from './components/InstallationForm';
-import { ViewInstallation } from './components/ViewInstallation';
-import { SystemSpecifications } from './components/SystemSpecifications';
-import  OnboardedCustomers  from './components/OnboardedCustomers';
-import  PasswordReset  from './components/PasswordReset'; 
-import ChangePassword from './components/ChangePassword';
-import  Verification  from './components/Verification';
-import  RepresentativeDashboard  from './components/RepresentativeDashboard';
-import AdminDashboard from './components/AdminDashboard';
-import { EditCustomer } from './components/EditCustomer';
-import { EditConnection } from './components/EditConnection';
-import { EditInstallation } from './components/EditInstallation';
-import MaterialDetails from './components/MaterialDetails';
+import ListOfConsumers from './pages/ConsumerList/ListOfConsumers';
+import GenerateDocuments from './pages/Documents/GenerateDocuments';
+import { CustomerForm } from './pages/Customers/CustomerForm';
+import { ViewCustomer } from './pages/Customers/ViewCustomer';
+import { ConnectionForm } from './pages/Connections/ConnectionForm';
+import { ViewConnection } from './pages/Connections/ViewConnection';
+import { InstallationForm } from './pages/Installations/InstallationForm';
+import { ViewInstallation } from './pages/Installations/ViewInstallation';
+import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
+import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
+import ListOfUsers from './pages/Users/ListOfUsers';
+import  PasswordReset  from './pages/Auth/PasswordReset'; 
+import ChangePassword from './pages/Auth/ChangePassword';
+import  Verification  from './pages/Auth/Verification';
+import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
+import AdminDashboard from './pages/Dashboard/AdminDashboard';
+import { EditCustomer } from './pages/Customers/EditCustomer';
+import { EditConnection } from './pages/Connections/EditConnection';
+import { EditInstallation } from './pages/Installations/EditInstallation';
+import  UserForm  from './pages/Users/UserForm';
+import ViewUser  from './pages/Users/ViewUser';
+import EditUser from './pages/Users/EditUser';
+import MaterialDetails from './pages/Materials/MaterialDetails';
 import { ToastContainer } from 'react-toastify';
+import PageNotFound from './pages/PageNotFound';
+import EnvBanner from './components/EnvBanner';
+import 'leaflet/dist/leaflet.css';
+
+
 
 const AppContent: React.FC = () => {
   const location = useLocation();
 
-  // Show Navbar only on specific routes
- // const showNavbar = location.pathname !== '/login';
- const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword';
+ const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
 
-  
+ const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
+//  useEffect(() => {
+//     const publicPaths = ['/login', '/PasswordReset', '/Verification', '/ChangePassword'];
+//     if (publicPaths.includes(location.pathname)) {
+//       localStorage.removeItem('jwtToken'); 
+//     }
+//   }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Conditionally Render Navbar */}
-      {/* {showNavbar && <Navbar />} */}
       {showSidebar && <Sidebar />}
 
       <ToastContainer position="top-right" autoClose={1000} />
-
+      
+      <EnvBanner envLabel={envLabel} />
 
       <div className="py-12">
         <Routes>
-          {/* Redirect to login */}
-          <Route path="/" element={<Navigate to="/login" />} />
+
           
-          {/* Login Page */}
+
+          <Route path="/" element={<HomeRedirect />} />
+          
           <Route path="/login" element={<Login />} />
 
           <Route path="/PasswordReset" element={<PasswordReset />} />
@@ -56,18 +71,10 @@ const AppContent: React.FC = () => {
           <Route path="/Verification" element={<Verification />} />
 
           <Route path="/ChangePassword" element={<ChangePassword />} />
+
+          <Route path="*" element={<PageNotFound />} />
+
           
-          {/* Protected Quotation Form */}
-          <Route
-            path="/quotationform"
-            element={
-              <PrivateRoute>
-                <QuotationForm />
-              </PrivateRoute>
-            }
-          />
-          
-          {/* Protected List of Consumers */}
           <Route
             path="/list-of-consumers"
             element={
@@ -76,30 +83,40 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
           <Route
-              path="/quotationform/:id"
-              element={
+            path="/list-of-users"
+            element={
               <PrivateRoute>
-                <QuotationForm />
+                <ListOfUsers />
               </PrivateRoute>
             }
           />
 
-          <Route
+          {/* <Route
             path="/RepresentativeDashboard"
             element={
               <PrivateRoute>
                 <RepresentativeDashboard />
               </PrivateRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/AdminDashboard"
             element={
-              <PrivateRoute>
-                <AdminDashboard />
-              </PrivateRoute>
+                <RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+                  <AdminDashboard />
+                </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/RepresentativeDashboard"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_REPRESENTATIVE']}>
+                  <RepresentativeDashboard />
+                </RoleProtectedRoute>
             }
           />
 
@@ -176,6 +193,24 @@ const AppContent: React.FC = () => {
           />
 
           <Route
+              path="/view-user/:id"
+              element={
+              <PrivateRoute>
+                <ViewUser />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/edit-user/:id"
+              element={
+              <PrivateRoute>
+                <EditUser />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
               path="/CustomerForm"
               element={
               <PrivateRoute>
@@ -183,6 +218,7 @@ const AppContent: React.FC = () => {
               </PrivateRoute>
             }
           />
+
           <Route
               path="/ConnectionForm"
               element={
@@ -211,10 +247,19 @@ const AppContent: React.FC = () => {
           />
 
           <Route
-              path="/OnboardedCustomers"
+              path="/UserForm"
               element={
               <PrivateRoute>
-                <OnboardedCustomers />
+                <UserForm />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+              path="/OnboardedConsumers"
+              element={
+              <PrivateRoute>
+                <OnboardedConsumers />
               </PrivateRoute>
             }
           />
@@ -236,7 +281,7 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
+    <Router basename="/solarpro">
       <AppContent />
     </Router>
   );
