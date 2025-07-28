@@ -33,13 +33,13 @@ const ViewUser = () => {
     {/* Header */}
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 w-full max-w-3xl">
       <h2 className="text-xl sm:text-2xl font-semibold text-gray-700">
-        View Representative Details
+        View User Details
       </h2>
     </div>
 
     {/* Representative Card */}
     <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl">
-      <h3 className="text-xl font-semibold text-gray-800 mb-2">Representative Details</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">User Details</h3>
       <div className="border-b border-gray-200 mb-4" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
@@ -56,7 +56,7 @@ const ViewUser = () => {
           <p className="mt-1 text-base text-gray-800 break-words">{user.emailAddress || "....."}</p>
         </div>
         <div>
-          <h3 className="text-sm font-medium text-gray-500">Representative Code</h3>
+          <h3 className="text-sm font-medium text-gray-500">User Code</h3>
           <p className="mt-1 text-base text-gray-800 break-words">{user.representativeCode || "....."}</p>
         </div>
         <div>
@@ -93,7 +93,7 @@ const ViewUser = () => {
     }
     className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition"
   >
-    Edit Representative
+    Edit User
   </button>
 </div>
 

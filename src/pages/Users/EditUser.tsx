@@ -237,7 +237,25 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Edit Representative</h2>
+<div className="flex items-center justify-between mb-6 sm:mb-8">
+  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700">Edit User Details</h2>
+
+  <div className="flex items-center space-x-3">
+    <label className="text-lg font-medium text-gray-700">User Status</label>
+    <input
+      type="checkbox"
+      checked={isActive}
+      onChange={(e) => setIsActive(e.target.checked)}
+      className="scale-125 accent-blue-600 cursor-pointer"
+    />
+    <span className="text-lg font-semibold text-gray-800">
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  </div>
+</div>
+
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name as per Gov ID */}
@@ -414,14 +432,14 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
         {/* Code */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Code <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700">User Code <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="representativeCode"
             value={formData.representativeCode}
             onChange={handleChange}
             required
-            placeholder="Representative Code"
+            placeholder="User Code"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
@@ -469,7 +487,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </div>
       </div>
 
-      <div className="mt-2">
+      {/* <div className="mt-2">
   <label className="block text-sm font-medium text-gray-700">User Status</label>
   <div className="flex items-center mt-1">
     <input
@@ -480,7 +498,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     />
     <span className="text-sm text-gray-800">{isActive ? "Active" : "Inactive"}</span>
   </div>
-</div>
+</div> */}
 
 
       {/* Save Button */}
@@ -492,7 +510,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
             } text-white px-6 py-2 rounded-md shadow`}
         >
-          {isSubmitting ? "Editing representative..." : "Edit Representative"}
+          {isSubmitting ? "Editing User..." : "Edit User"}
           </button>
 
       </div>

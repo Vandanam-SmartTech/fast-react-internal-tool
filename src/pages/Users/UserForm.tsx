@@ -23,13 +23,16 @@ export const UserForm = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [selectedRole, setSelectedRole] = useState("");
+
+
 
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdRepresentativeId, setCreatedRepresentativeId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     nameAsPerGovId: '',
-    roles: [{ "name": "ROLE_REPRESENTATIVE" }],
+    roles: "",
     emailAddress: '',
     mobileNumber: '',
     representativeCode: '',
@@ -182,7 +185,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 
   try {
-    const representativeData = { ...formData };
+    const representativeData = { ...formData,roles: [{ name: formData.roles }] };
     const result = await saveRepresentative(representativeData);
 
     if (result.id) {
@@ -217,7 +220,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Add New Representative</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">Add New User</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name as per Gov ID */}
@@ -378,30 +381,37 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
               {/* Role */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                  <input
-                    type="text"
-                    name="roles"
-                    value= "ROLE_REPRESENTATIVE" 
-                    placeholder="Representative/Staff"
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Role <span className="text-red-500">*</span>
+  </label>
+  <select
+  name="roles"
+  value={formData.roles}
+  onChange={(e) => setFormData({ ...formData, roles: e.target.value })}
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  <option value="">Select Role</option>
+  <option value="ROLE_REPRESENTATIVE">Representative</option>
+  <option value="ROLE_ADMIN">Admin</option>
+  <option value="ROLE_MANAGER">Manager</option>
+  <option value="ROLE_STAFF">Staff</option>
+</select>
+
+</div>
+
 
 
         {/* Code */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Code <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700">User Code <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="representativeCode"
             value={formData.representativeCode}
             onChange={handleChange}
             required
-            placeholder="Representative Code"
+            placeholder="User Code"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
@@ -458,7 +468,7 @@ const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
             } text-white px-6 py-2 rounded-md shadow`}
         >
-          {isSubmitting ? "Saving representative..." : "Save Representative"}
+          {isSubmitting ? "Saving User..." : "Save User"}
           </button>
 
       </div>

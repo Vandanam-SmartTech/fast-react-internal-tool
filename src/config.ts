@@ -13,7 +13,7 @@ export interface AppConfig {
 let config: AppConfig | null = null;
 
 export const loadConfig = async (): Promise<void> => {
-  if (config !== null) return; // prevent double-loading
+  if (config !== null) return; 
 
   const response = await fetch('/config.json');
   if (!response.ok) {
