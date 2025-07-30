@@ -1,6 +1,7 @@
-import { useLocation } from "react-router-dom";
+import { useLocation,useNavigate } from "react-router-dom";
 import { fetchPdf } from '../../services/documentGeneratorService';
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 
 export interface Consumer{
   id:number,
@@ -14,6 +15,7 @@ export interface Consumer{
 }
 export default function GenerateDocuments() {
   const location = useLocation();
+  const navigate = useNavigate();
   const consumer = location.state?.consumer as Consumer; 
   const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null); 
   const [loadingGenerateDoc, setLoadingGenerateDoc] = useState<string | null>(null);
@@ -60,7 +62,7 @@ const handleGenerate = async (doc: string) => {
 };
 
 
-  const handlePreview = async (docName: string) => {
+const handlePreview = async (docName: string) => {
   if (!consumer?.id) {
     console.error("Consumer ID is missing!");
     return;
@@ -69,21 +71,12 @@ const handleGenerate = async (doc: string) => {
   setLoadingPreviewDoc(docName);
 
   try {
-    const blob = await fetchPdf(consumer.id, docName); // Axios already gives blob
+    const blob = await fetchPdf(consumer.id, docName); 
     const pdfUrl = URL.createObjectURL(blob);
 
-    const popupWindow = window.open("", "_blank", "width=800,height=600");
-    if (popupWindow) {
-      popupWindow.document.write(`
-        <html>
-          <head><title>Document Preview</title></head>
-          <body style="margin:0">
-            <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" />
-          </body>
-        </html>
-      `);
-    } else {
-      console.error("Popup blocked. Please allow popups and try again.");
+    const newTab = window.open(pdfUrl, "_blank");
+    if (!newTab) {
+      console.error("Failed to open new tab. Please allow popups.");
     }
   } catch (error) {
     console.error("Failed to preview the document:", error);
@@ -92,14 +85,25 @@ const handleGenerate = async (doc: string) => {
   }
 };
 
-  
-  
-
   return (
-  <div className="max-w-4xl mx-auto p-6 space-y-6">
+  <div className="max-w-4xl mx-auto space-y-6">
 
     
     <div className="max-w-4xl mx-auto space-y-4">
+
+          <div className="flex items-center w-full md:w-auto">
+<button
+  onClick={() => navigate(`/OnboardedConsumers`)}
+  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition"
+>
+  <ArrowLeft className="w-6 h-6 text-gray-700" />
+</button>
+
+
+    <h2 className="text-xl md:text-2xl font-semibold">
+      Generate Documents
+    </h2>
+  </div>
 
 
       {consumer && (
@@ -124,11 +128,6 @@ const handleGenerate = async (doc: string) => {
           </div>
         </div>
       )}
-
-
-      <p className="text-2xl font-semibold text-gray-900 text-left">
-        Generate Documents
-      </p>
 
 
       <div className="bg-white p-4 rounded-lg shadow-lg">

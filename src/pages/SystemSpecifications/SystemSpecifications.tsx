@@ -48,6 +48,8 @@ export const SystemSpecifications = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState(null);
+  const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
+
 
 
 
@@ -116,7 +118,6 @@ useEffect(() => {
       installationSpaceType: installationTypeMap[space.installationSpaceTypeId] || "Unknown",
     }));
 
-    console.log("enriched spaces:", enrichedSpaces);
 
     setAvailableSpaceTypes(enrichedSpaces);
   };
@@ -258,6 +259,7 @@ useEffect(() => {
 
         setIsCustomSpecs(true);
         setIsSpecsSaved(true);
+        setPriceAlreadySetFromCustomerData(true);
 
         const customerSelectedKW = customerData.customerSelectedKW || "";
         const inverterCapacity = customerData.inverterCapacity || "";
@@ -390,6 +392,7 @@ if (name === "inversionType") {
 
   setIsCustomSpecs(true);
   setIsSpecsSaved(false);
+  setPriceAlreadySetFromCustomerData(false);
 
   if (["panelBrand", "dcrNonDcrType", "inverterBrand","inversionType"].includes(name)) {
     const dcrNonDcrValue =
@@ -446,6 +449,8 @@ if (name === "inversionType") {
     );
     console.log("Fetched Inverter Wattages:", inverterWattages);
     setInverterWattages(inverterWattages);
+    
+
 
       setFormData((prev) => ({
         ...prev,
@@ -459,11 +464,6 @@ if (name === "inversionType") {
     }
   }
 };
-
-
-useEffect(() => {
-  console.log("Kw changed:", formData.Kw);
-}, [formData.Kw]);
 
 
 
@@ -504,8 +504,8 @@ useEffect(() => {
       }
     };
   
-    // Check if all required values are set before fetching price
     if (
+      !priceAlreadySetFromCustomerData &&
       formData.installationStructureType &&
       formData.Kw &&
       formData.panelBrand &&
@@ -569,83 +569,72 @@ useEffect(() => {
 
 
 const handleGenerateQuotation = async () => {
+  if (!connectionId) {
+    console.error("Connection ID is missing");
+    return;
+  }
+
+  setIsLoading(true);
+
   try {
-      if (!connectionId) {
-          console.error("Connection ID is missing");
-          return;
-      }
+    console.log("Fetching Quotation PDF for Connection ID:", connectionId);
 
-      setIsLoading(true);
+    const pdfBlob = await generateQuotationPDF(connectionId);
+    console.log('PDF Blob size:', pdfBlob.size);
 
-      console.log("Fetching Quotation PDF for Connection ID:", connectionId);
+    const fileName = `Quotation_${govIdName}`;
+    const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
 
-      const pdfBlob = await generateQuotationPDF(connectionId);
-      console.log('PDF Blob size:', pdfBlob.size);
 
-      const fileName = `Quotation_${govIdName}`;
-      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-
+    try {
       await uploadDocuments(connectionId, fileName, [pdfFile]);
       console.log("PDF uploaded to OneDrive successfully");
+    } catch (uploadError) {
+      console.error("Error uploading to OneDrive:", uploadError);
+    }
 
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = `quotation_${connectionId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(pdfUrl);
+    // Always download the file regardless of upload success
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `quotation_${connectionId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(pdfUrl);
 
-      console.log("Quotation PDF downloaded successfully");
-
-      
-    
+    console.log("Quotation PDF downloaded successfully");
 
   } catch (error) {
-      console.error("Error generating or uploading quotation:", error);
+    console.error("Error generating quotation PDF:", error);
   } finally {
-      setIsLoading(false);
+    setIsLoading(false);
   }
 };
 
+
   
-  const handlePreview = async () => {
-    setIsPreviewLoading(true);
-    try {
-      if (!connectionId) {
-        console.error("Connection ID is missing");
-        return;
-      }
-  
-      console.log("Fetching PDF for Connection ID:", connectionId);
-      
-      const pdfBlob = await previewQuotationPDF(connectionId);
-  
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-  
-      // Open the PDF in a new window
-      const popupWindow = window.open("", "_blank", "width=800,height=600");
-      if (popupWindow) {
-        popupWindow.document.write(`
-          <html>
-            <head>
-              <title>Quotation Preview</title>
-            </head>
-            <body>
-              <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" />
-            </body>
-          </html>
-        `);
-      } else {
-        console.error("Popup blocked. Please allow popups and try again.");
-      }
-    } catch (err) {
-      console.error("Failed to preview the quotation:", err);
-    } finally {
-      setIsPreviewLoading(false);
+const handlePreview = async () => {
+  setIsPreviewLoading(true);
+  try {
+    if (!connectionId) {
+      console.error("Connection ID is missing");
+      return;
     }
-  };
+
+    console.log("Fetching PDF for Connection ID:", connectionId);
+
+    const pdfBlob = await previewQuotationPDF(connectionId);
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    window.open(pdfUrl, "_blank");
+  } catch (err) {
+    console.error("Failed to preview the quotation:", err);
+  } finally {
+    setIsPreviewLoading(false);
+  }
+};
+
   
 
 
@@ -1054,14 +1043,22 @@ const handleGenerateQuotation = async () => {
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Solar Cost System</label>
-                <input type="number" name="solarSystemCost" value={formData.solarSystemCost} onChange={handleChange} 
+                <label className="block text-sm font-medium text-gray-700">Solar System Cost</label>
+                <input type="number" 
+                    min="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="solarSystemCost" 
+                    value={formData.solarSystemCost} 
+                    onChange={handleChange} 
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
-                <input type="number" name="fabricationCost" value={formData.fabricationCost} onChange={handleChange} 
+                <input type="number" 
+                min="0"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="fabricationCost" value={formData.fabricationCost} onChange={handleChange} 
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
               </div>
 

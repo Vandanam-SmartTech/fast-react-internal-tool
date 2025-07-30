@@ -9,6 +9,8 @@ import {
   HomeModernIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/solid"
+import { Eye } from 'lucide-react';
+
 
 export const ViewCustomer = () => {
   
@@ -250,22 +252,45 @@ useEffect(() => {
           key={connection.id}
           className="group rounded-xl border border-gray-200 bg-white shadow-lg"
         >
-          <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
-            <span>Connection {index + 1} </span>
-            <svg
-              className="w-3 h-3 text-gray-500 transition-transform duration-300 group-open:rotate-180"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </summary>
+<summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
+  <span>Connection {index + 1}</span>
+
+  <div className="flex items-center gap-4">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(`/view-connection/${connection.id}`, {
+          state: {
+            consumerId: connection.consumerId,
+            customerId,
+            connectionId: connection.id,
+            selectedRepresentative,
+          },
+        });
+      }}
+      className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 hover:bg-blue-200"
+    >
+      <Eye size={16} className="text-gray-700" />
+      <span className="text-gray-700 text-sm font-medium">View</span>
+    </button>
+
+    <svg
+      className="w-3 h-3 text-gray-500 transition-transform duration-300 group-open:rotate-180"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  </div>
+</summary>
+
+
 
           <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
