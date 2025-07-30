@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
+import { ArrowLeft} from "lucide-react";
 
 export interface Consumer{
   id:number,
@@ -27,14 +28,14 @@ export default function MaterialForm() {
     inverterMake: "",
     rating: "IP65",
     chargeControllerType: "",
-    inverterCapacity: null,
-    earthingRod: null,
+    inverterCapacity: NaN,
+    earthingRod: NaN,
     dateOfInstallation: "",
     capacityType: "Rooftop",
     projectModel: "Capex",
-    reInstalledCapacityRooftop: null,
-    reInstalledCapacityGround: null,
-    reInstalledCapacityTotal: null
+    reInstalledCapacityRooftop: NaN,
+    reInstalledCapacityGround: NaN,
+    reInstalledCapacityTotal: NaN
   });
   const location = useLocation();
   const navigate = useNavigate();
@@ -155,11 +156,27 @@ const handleDialogClose = () => {
 
 
   return (
-    <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="w-full lg:w-[85%]">
 
+        {/* <h2 className="text-2xl font-semibold mb-4">Material Details</h2> */}
+
+          <div className="flex items-center w-full md:w-auto">
+<button
+  onClick={() => navigate(`/OnboardedConsumers`)}
+  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition"
+>
+  <ArrowLeft className="w-6 h-6 text-gray-700" />
+</button>
+
+
+    <h2 className="text-xl md:text-2xl font-semibold">
+      Material Details
+    </h2>
+  </div>
+
         {consumer && (
-  <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-6 w-full max-w-3xl">
+  <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-4 mt-6 w-full max-w-3xl">
     {/*<h3 className="text-base font-semibold text-gray-800 mb-3">Consumer Details</h3>*/}
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
       <div>
@@ -182,15 +199,12 @@ const handleDialogClose = () => {
   </div>
 )}
 
-
-        <h2 className="text-2xl font-semibold mb-4 mt-2">Material Details</h2>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <fieldset>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
               {/* <InputField name="systemKw" label="System KW" value={formData.systemKw} handleChange={handleChange} type="number" /> */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">System KW</label>
+                <label className="block text-sm font-medium text-gray-700">System Capacity(kW)</label>
                 <select
                     name="systemKw"
                     value={formData.systemKw}
@@ -221,7 +235,7 @@ const handleDialogClose = () => {
               </div>
               {/* <InputField name="makeOfModule" label="Make Of Module" value={formData.makeOfModule} handleChange={handleChange} /> */}
               <div>
-  <label className="block text-sm font-medium text-gray-700">Make of Module</label>
+  <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
   <select
     name="makeOfModule"
     value={formData.makeOfModule}
@@ -269,7 +283,7 @@ const handleDialogClose = () => {
 
               {/* <InputField name="wattagePerModule" label="Wattage Per Module" value={formData.wattagePerModule} handleChange={handleChange} type="number" /> */}
              <div>
-  <label className="block text-sm font-medium text-gray-700">Wattage Per Module</label>
+  <label className="block text-sm font-medium text-gray-700">Wattage Per Panel</label>
   <select
     name="wattagePerModule"
     value={formData.wattagePerModule}
@@ -313,6 +327,18 @@ const handleDialogClose = () => {
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+
+              {/* <InputField name="inverterMake" label="Inverter Make" value={formData.inverterMake} handleChange={handleChange} /> */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+                <input
+                  type="text"
+                  name="inverterMake"
+                  value={formData.inverterMake}
+                  onChange={handleChange}
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
               {/* <InputField name="inverterModuleNo" label="Inverter Module Number" value={formData.inverterModuleNo} handleChange={handleChange} /> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">Inverter Module Number</label>
@@ -324,17 +350,7 @@ const handleDialogClose = () => {
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-              {/* <InputField name="inverterMake" label="Inverter Make" value={formData.inverterMake} handleChange={handleChange} /> */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Inverter Make</label>
-                <input
-                  type="text"
-                  name="inverterMake"
-                  value={formData.inverterMake}
-                  onChange={handleChange}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
+
               {/* <InputField name="rating" label="Rating" value={formData.rating} handleChange={handleChange} /> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">Rating</label>
@@ -360,9 +376,12 @@ const handleDialogClose = () => {
 
               {/* <InputField name="inverterCapacity" label="Inverter Capacity" value={formData.inverterCapacity} handleChange={handleChange} type="number" /> */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Inverter Capacity</label>
+                <label className="block text-sm font-medium text-gray-700">Inverter Capacity(kW)</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="inverterCapacity"
                   value={formData.inverterCapacity}
                   onChange={handleChange}
@@ -371,9 +390,11 @@ const handleDialogClose = () => {
               </div>
               {/* <InputField name="earthingRod" label="Earthing Rod" value={formData.earthingRod} handleChange={handleChange} type="number" /> */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Number of Earthing Rod</label>
+                <label className="block text-sm font-medium text-gray-700">Number of Earthing Rods</label>
                 <input
                   type="number"
+                  min="0"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="earthingRod"
                   value={formData.earthingRod}
                   onChange={handleChange}
@@ -420,6 +441,9 @@ const handleDialogClose = () => {
                 <label className="block text-sm font-medium text-gray-700">ReInstalled Capacity Rooftop</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="reInstalledCapacityRooftop"
                   value={formData.reInstalledCapacityRooftop}
                   onChange={handleChange}
@@ -431,6 +455,9 @@ const handleDialogClose = () => {
                 <label className="block text-sm font-medium text-gray-700">ReInstalled Capacity Ground</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="reInstalledCapacityGround"
                   value={formData.reInstalledCapacityGround}
                   onChange={handleChange}
@@ -442,6 +469,9 @@ const handleDialogClose = () => {
                 <label className="block text-sm font-medium text-gray-700">ReInstalled Capacity Total</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="reInstalledCapacityTotal"
                   value={formData.reInstalledCapacityTotal}
                   onChange={handleChange}
@@ -450,9 +480,11 @@ const handleDialogClose = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">No of PV modules</label>
+                <label className="block text-sm font-medium text-gray-700">Number of PV modules</label>
                 <input
                   type="number"
+                  min="0"
+                  onWheel={(e) => e.currentTarget.blur()}
                   name="noOfModules"
                   value={formData.noOfModules}
                   onChange={handleChange}

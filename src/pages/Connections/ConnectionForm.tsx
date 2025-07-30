@@ -674,7 +674,7 @@ const isNameCorrectionRequired =
 <div>
   <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number <span className="text-red-500">*</span></label>
   <input
-  type="text"
+  type="tel"
   name="confirmConsumerNumber"
   value={confirmConsumerNumber}
   onChange={handleConfirmConsumerNumberChange}

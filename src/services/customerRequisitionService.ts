@@ -279,7 +279,7 @@ export const getInstallationByConsumerId = async (
 
 export const fetchConsumerNumber = async (customerId: number) => {
   try {
-    const response = await crsAPI.get(`/api/connections/customer/${customerId}`);
+    const response = await crsAPI.get(`/api/connections/by-customer/${customerId}`);
     if (response.data?.success === false) {
       console.warn(`No connections found for customerId ${customerId}: ${response.data.message}`);
       return [];
