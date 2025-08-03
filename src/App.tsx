@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import Login from './pages/Auth/Login';
 import PrivateRoute from './routes/PrivateRoute';
@@ -10,6 +10,7 @@ import ListOfConsumers from './pages/ConsumerList/ListOfConsumers';
 import GenerateDocuments from './pages/Documents/GenerateDocuments';
 import { CustomerForm } from './pages/Customers/CustomerForm';
 import { ViewCustomer } from './pages/Customers/ViewCustomer';
+import ManageCustomers from './pages/Customers/ManageCustomers';
 import { ConnectionForm } from './pages/Connections/ConnectionForm';
 import { ViewConnection } from './pages/Connections/ViewConnection';
 import { InstallationForm } from './pages/Installations/InstallationForm';
@@ -22,6 +23,9 @@ import ChangePassword from './pages/Auth/ChangePassword';
 import  Verification  from './pages/Auth/Verification';
 import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
+import SuperAdminDashboard from './pages/Dashboard/SuperAdminDashboard';
+import AgencyAdminDashboard from './pages/Dashboard/AgencyAdminDashboard';
+import StaffDashboard from './pages/Dashboard/StaffDashboard';
 import { EditCustomer } from './pages/Customers/EditCustomer';
 import { EditConnection } from './pages/Connections/EditConnection';
 import { EditInstallation } from './pages/Installations/EditInstallation';
@@ -29,6 +33,17 @@ import  UserForm  from './pages/Users/UserForm';
 import ViewUser  from './pages/Users/ViewUser';
 import EditUser from './pages/Users/EditUser';
 import MaterialDetails from './pages/Materials/MaterialDetails';
+import OrganizationList from './pages/Organizations/OrganizationList';
+import OrganizationForm from './pages/Organizations/OrganizationForm';
+import AdminManagement from './pages/Organizations/AdminManagement';
+import AgencyList from './pages/Organizations/AgencyList';
+import AgencyForm from './pages/Organizations/AgencyForm';
+import OrganizationView from './pages/Organizations/OrganizationView';
+import UserManagement from './pages/Organizations/UserManagement';
+import UserFormManagement from './pages/Organizations/UserFormManagement';
+import UserView from './pages/Organizations/UserView';
+import RoleManagement from './pages/Organizations/RoleManagement';
+import UserOrgRoles from './pages/Organizations/UserOrgRoles';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
 import EnvBanner from './components/EnvBanner';
@@ -38,16 +53,29 @@ import 'leaflet/dist/leaflet.css';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
- const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
+  const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
 
- const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
-//  useEffect(() => {
-//     const publicPaths = ['/login', '/PasswordReset', '/Verification', '/ChangePassword'];
-//     if (publicPaths.includes(location.pathname)) {
-//       localStorage.removeItem('jwtToken'); 
-//     }
-//   }, [location.pathname]);
+  const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
+
+  useEffect(() => {
+    const storedState = localStorage.getItem('sidebarOpen');
+    setSidebarOpen(storedState === 'true');
+
+    const handleStorageChange = () => {
+      const newState = localStorage.getItem('sidebarOpen');
+      setSidebarOpen(newState === 'true');
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 100);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,7 +85,7 @@ const AppContent: React.FC = () => {
       
       <EnvBanner envLabel={envLabel} />
 
-      <div className="py-12">
+      <div className={`py-12 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''}`}>
         <Routes>
 
           
@@ -75,6 +103,15 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<PageNotFound />} />
 
           
+          <Route
+            path="/manage-customers"
+            element={
+              <PrivateRoute>
+                <ManageCustomers />
+              </PrivateRoute>
+            }
+          />
+
           <Route
             path="/list-of-consumers"
             element={
@@ -105,8 +142,17 @@ const AppContent: React.FC = () => {
           <Route
             path="/AdminDashboard"
             element={
-                <RoleProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
                   <AdminDashboard />
+                </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/SuperAdminDashboard"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <SuperAdminDashboard />
                 </RoleProtectedRoute>
             }
           />
@@ -116,6 +162,24 @@ const AppContent: React.FC = () => {
             element={
                 <RoleProtectedRoute allowedRoles={['ROLE_REPRESENTATIVE']}>
                   <RepresentativeDashboard />
+                </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/AgencyAdminDashboard"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_AGENCY_ADMIN']}>
+                  <AgencyAdminDashboard />
+                </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/StaffDashboard"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_STAFF']}>
+                  <StaffDashboard />
                 </RoleProtectedRoute>
             }
           />
@@ -270,6 +334,132 @@ const AppContent: React.FC = () => {
               <PrivateRoute>
                 <MaterialDetails/>
               </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/organizations"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <OrganizationList />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/organization-form"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <OrganizationForm />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/organization-form/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <OrganizationForm />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-management"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <AdminManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/agencies/:orgId"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                <AgencyList />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/agency-form/:orgId"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                <AgencyForm />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/agency-form/:orgId/:agencyId"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <AgencyForm />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/organization-view/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <OrganizationView />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-management"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <UserManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-form"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <UserFormManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-form/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <UserFormManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-view/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <UserView />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/role-management/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                <RoleManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-org-roles/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                <UserOrgRoles />
+              </RoleProtectedRoute>
             }
           />
 

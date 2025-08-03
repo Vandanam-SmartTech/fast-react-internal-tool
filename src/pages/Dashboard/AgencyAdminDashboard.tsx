@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
-import { Users, Building, Building2, UserCog, Settings } from 'lucide-react';
+import { Users, Building2, UserCog, Settings } from 'lucide-react';
 
-const AdminDashboard: React.FC = () => {
+const AgencyAdminDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const navigate = useNavigate();
@@ -43,29 +43,22 @@ const AdminDashboard: React.FC = () => {
       color: 'bg-blue-50 hover:bg-blue-100'
     },
     {
-      title: 'My Organizations',
-      description: 'List, View, Update my organizations',
-      icon: <Building className="h-12 w-12 text-green-600" />,
-      path: '/organizations',
-      color: 'bg-green-50 hover:bg-green-100'
-    },
-    {
       title: 'My Agencies',
-      description: 'List, View, Add, Update my agencies',
+      description: 'List, View, Update my agencies',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
       path: '/organizations',
       color: 'bg-purple-50 hover:bg-purple-100'
     },
     {
-      title: 'Organization Users',
-      description: 'Manage users within my organizations',
+      title: 'Agency Users',
+      description: 'Manage users within my agencies',
       icon: <UserCog className="h-12 w-12 text-orange-600" />,
       path: '/user-management',
       color: 'bg-orange-50 hover:bg-orange-100'
     },
     {
-      title: 'User Organization Roles',
-      description: 'Manage user roles in my organizations',
+      title: 'User Agency Roles',
+      description: 'Manage user roles in my agencies',
       icon: <Settings className="h-12 w-12 text-indigo-600" />,
       path: '/admin-management',
       color: 'bg-indigo-50 hover:bg-indigo-100'
@@ -78,8 +71,8 @@ const AdminDashboard: React.FC = () => {
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Organization Admin Dashboard</h1>
-        <p className="text-gray-600">Manage your organizations, agencies, and users</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Agency Admin Dashboard</h1>
+        <p className="text-gray-600">Manage your agencies and users</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -103,4 +96,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default AgencyAdminDashboard;

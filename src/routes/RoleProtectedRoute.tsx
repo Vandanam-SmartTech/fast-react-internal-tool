@@ -27,9 +27,11 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
       if (isAuthorized) {
         setAuthorized(true);
       } else {
-        if (userRoles.includes('ROLE_REPRESENTATIVE')) {
+        if (userRoles.includes('ROLE_SUPER_ADMIN')) {
+          setRedirectPath('/organizations');
+        } else if (userRoles.includes('ROLE_REPRESENTATIVE')) {
           setRedirectPath('/RepresentativeDashboard');
-        } else if (userRoles.includes('ROLE_ADMIN')) {
+        } else if (userRoles.includes('ROLE_ORG_ADMIN')) {
           setRedirectPath('/AdminDashboard');
         } else {
           setRedirectPath('/login');

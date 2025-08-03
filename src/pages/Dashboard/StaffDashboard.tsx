@@ -1,44 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Users, BarChart3 } from 'lucide-react';
+import { fetchClaims } from '../../services/jwtService';
+import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
+import { Users, UserCheck, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
-const RepresentativeDashboard: React.FC = () => {
+const StaffDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
-  const navigate = useNavigate();
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
   const [data, setData] = useState([]);
-
-  useEffect(() => {
-    getCustomerStats()
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
-
-        setData(filtered);
-      })
-      .catch(console.error);
-  }, []);
-
-  const goToListOfConsumers = () => {
-    navigate('/list-of-consumers');
-  };
-
-  const goToOnboardedCustomers = () => {
-    navigate('/OnboardedConsumers');
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -64,6 +40,22 @@ const RepresentativeDashboard: React.FC = () => {
     };
 
     getClaims();
+  }, []);
+
+  useEffect(() => {
+    getCustomerStats()
+      .then((rawData) => {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        const filtered = rawData.filter((entry: any) => {
+          const entryDate = new Date(entry.date);
+          return entryDate >= oneYearAgo;
+        });
+
+        setData(filtered);
+      })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -99,7 +91,7 @@ const RepresentativeDashboard: React.FC = () => {
   const dashboardItems = [
     {
       title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
+      description: 'Customers within my organizations',
       icon: <Users className="h-12 w-12 text-blue-600" />,
       path: '/manage-customers',
       color: 'bg-blue-50 hover:bg-blue-100'
@@ -112,8 +104,8 @@ const RepresentativeDashboard: React.FC = () => {
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Representative Dashboard</h1>
-        <p className="text-gray-600">Manage customers and track progress</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
+        <p className="text-gray-600">Manage customers and view progress</p>
       </div>
 
       {/* Quick Actions */}
@@ -138,7 +130,7 @@ const RepresentativeDashboard: React.FC = () => {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <button 
-          onClick={goToListOfConsumers}
+          onClick={() => navigate('/list-of-consumers')}
           className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-7 rounded-xl shadow-md hover:bg-blue-300 transition-all h-40"
         >
           <Users className="w-7 h-7 mb-1" />
@@ -149,7 +141,7 @@ const RepresentativeDashboard: React.FC = () => {
         </button>
 
         <button 
-          onClick={goToOnboardedCustomers}
+          onClick={() => navigate('/OnboardedConsumers')}
           className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-7 rounded-xl shadow-md hover:bg-green-300 transition-all h-40"
         >
           <UserCheck className="w-7 h-7 mb-1" />
@@ -204,4 +196,4 @@ const RepresentativeDashboard: React.FC = () => {
   );
 };
 
-export default RepresentativeDashboard;
+export default StaffDashboard;

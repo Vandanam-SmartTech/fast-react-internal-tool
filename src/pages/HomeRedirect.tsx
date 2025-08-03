@@ -31,8 +31,14 @@ const HomeRedirect: React.FC = () => {
       return;
       }
 
-      if (roles.includes('ROLE_ADMIN')) {
+      if (roles.includes('ROLE_SUPER_ADMIN')) {
+        setRedirectPath('/SuperAdminDashboard');
+      } else if (roles.includes('ROLE_ORG_ADMIN')) {
         setRedirectPath('/AdminDashboard');
+      } else if (roles.includes('ROLE_AGENCY_ADMIN')) {
+        setRedirectPath('/AgencyAdminDashboard');
+      } else if (roles.includes('ROLE_STAFF')) {
+        setRedirectPath('/StaffDashboard');
       } else if (roles.includes('ROLE_REPRESENTATIVE')) {
         setRedirectPath('/RepresentativeDashboard');
       } else {

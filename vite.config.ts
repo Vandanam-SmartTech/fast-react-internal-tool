@@ -10,6 +10,7 @@ export default defineConfig({
   },
   define: {
     global: 'window',
+    __DEFINES__: {},
   },
   server: {
     host: '0.0.0.0',

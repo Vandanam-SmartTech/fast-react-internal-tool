@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Using X for close icon
 import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
-import { Home, UserPlus, Users, UserRoundCheck, LogOut, UserCog, UsersRound } from "lucide-react";
+import { Home, UserPlus, Users, UserRoundCheck, LogOut, UserCog, UsersRound, Building, Shield, UserCheck, LayoutDashboard, Building2, Briefcase, ChevronDown, ChevronRight } from "lucide-react";
 import { fetchClaims } from "../services/jwtService";
 
 
@@ -12,6 +12,7 @@ const Sidebar: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
+  const [customersExpanded, setCustomersExpanded] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const toggleSidebar = () => {
@@ -28,8 +29,15 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarOpen");
-    setIsOpen(storedState === "true"); 
+    setIsOpen(storedState === "true");
+    
+    const customersState = localStorage.getItem("customersExpanded");
+    setCustomersExpanded(customersState === "true");
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("customersExpanded", customersExpanded.toString());
+  }, [customersExpanded]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,13 +79,35 @@ const Sidebar: React.FC = () => {
     navigate("/list-of-users");
   };
 
+  const goToOrganizations = () => {
+    navigate("/organizations");
+  };
+
+  const goToAdminManagement = () => {
+    navigate("/admin-management");
+  };
+
+  const goToUserManagement = () => {
+    navigate("/user-management");
+  };
+
+  const goToManageCustomers = () => {
+    navigate("/manage-customers");
+  };
+
   const handleHomeClick = () => {
-    if (roles.includes('ROLE_REPRESENTATIVE')) {
-      navigate('/RepresentativeDashboard');
-    } else if (roles.includes('ROLE_ADMIN')) {
+    if (roles.includes('ROLE_SUPER_ADMIN')) {
+      navigate('/SuperAdminDashboard');
+    } else if (roles.includes('ROLE_ORG_ADMIN')) {
       navigate('/AdminDashboard');
+    } else if (roles.includes('ROLE_AGENCY_ADMIN')) {
+      navigate('/AgencyAdminDashboard');
+    } else if (roles.includes('ROLE_STAFF')) {
+      navigate('/StaffDashboard');
+    } else if (roles.includes('ROLE_REPRESENTATIVE')) {
+      navigate('/RepresentativeDashboard');
     } else {
-      alert('Unauthorized role.'); // or handle error state
+      alert('Unauthorized role.');
     }
   };
   
@@ -134,80 +164,118 @@ const Sidebar: React.FC = () => {
           <button
   onClick={handleHomeClick}
   className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-    location.pathname === "/AdminDashboard" || location.pathname === "/RepresentativeDashboard"
+    location.pathname === "/AdminDashboard" || location.pathname === "/RepresentativeDashboard" || location.pathname === "/SuperAdminDashboard" || location.pathname === "/AgencyAdminDashboard" || location.pathname === "/StaffDashboard"
       ? "text-blue-600 font-semibold"
       : "text-black"
   }`}
 >
-  <Home size={18} />
-  Home
+  <LayoutDashboard size={18} />
+  Dashboard
 </button>
 
-
-
-  <button onClick={goToCustomerForm}
-  className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-    location.pathname === "/CustomerForm"
-      ? "text-blue-600 font-semibold"
-      : "text-black"
-  }`}>
-    <UserPlus size={18} />
-    Add New Customer
-  </button>
-
+{/* Manage Customers Section */}
+<div>
   <button
-  onClick={goToListOfConsumers}
-  className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-    location.pathname === "/list-of-consumers"
-      ? "text-blue-600 font-semibold"
-      : "text-black"
-  }`}
->
-  <Users size={18} />
-  List of Customers
-</button>
-
-  <button
-    onClick={goToOnboardedConsumers}
+    onClick={goToManageCustomers}
     className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/OnboardedConsumers"
+      ['/manage-customers', '/CustomerForm', '/list-of-consumers', '/OnboardedConsumers'].includes(location.pathname)
         ? "text-blue-600 font-semibold"
         : "text-black"
     }`}
   >
-    <UserRoundCheck size={18} />
-    Onboarded Consumers
+    <Users size={18} />
+    Manage Customers
   </button>
+  
+  <button
+    onClick={() => setCustomersExpanded(!customersExpanded)}
+    className="flex items-center justify-center w-full px-2 py-1 text-gray-500 hover:text-gray-700"
+  >
+    {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+  </button>
+  
+  {customersExpanded && (
+    <div className="ml-6 space-y-2 mt-2">
+      <button
+        onClick={goToCustomerForm}
+        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
+          location.pathname === "/CustomerForm"
+            ? "text-blue-600 font-semibold"
+            : "text-black"
+        }`}
+      >
+        <UserPlus size={16} />
+        Add New Customer
+      </button>
+      
+      <button
+        onClick={goToListOfConsumers}
+        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
+          location.pathname === "/list-of-consumers"
+            ? "text-blue-600 font-semibold"
+            : "text-black"
+        }`}
+      >
+        <Users size={16} />
+        List of Customers
+      </button>
+      
+      <button
+        onClick={goToOnboardedConsumers}
+        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
+          location.pathname === "/OnboardedConsumers"
+            ? "text-blue-600 font-semibold"
+            : "text-black"
+        }`}
+      >
+        <UserRoundCheck size={16} />
+        Onboarded Consumers
+      </button>
+    </div>
+  )}
+</div>
 
-{/* {roles.includes("ROLE_ADMIN") && (
+{roles.includes("ROLE_SUPER_ADMIN") && (
   <button 
-    onClick={goToUserForm}
-    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap overflow-hidden ${
-      location.pathname === "/UserForm"
+    onClick={goToOrganizations}
+    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+      location.pathname === "/organizations"
         ? "text-blue-600 font-semibold"
         : "text-black"
     }`}
   >
-    <UserCog size={18} />
-    <span className="truncate w-full text-left">
-      Add New User
-    </span>
+    <Building size={18} />
+    Organizations
   </button>
 )}
-  
-{roles.includes("ROLE_ADMIN") && (
-              <button 
-              onClick={goToListOfUsers}
-              className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-               location.pathname === "/ListOfUsers"
-                  ? "text-blue-600 font-semibold"
-                  : "text-black"
-      }`}
-    >
-                <UsersRound size={18} />
-                List of Users
-              </button>
-            )} */}
+
+{roles.includes("ROLE_SUPER_ADMIN") && (
+  <button 
+    onClick={goToAdminManagement}
+    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+      location.pathname === "/admin-management"
+        ? "text-blue-600 font-semibold"
+        : "text-black"
+    }`}
+  >
+    <Shield size={18} />
+    Role Management
+  </button>
+)}
+
+{(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+  <button 
+    onClick={goToUserManagement}
+    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+      location.pathname === "/user-management"
+        ? "text-blue-600 font-semibold"
+        : "text-black"
+    }`}
+  >
+    <UserCheck size={18} />
+    User Management
+  </button>
+)}
 
   <button
     onClick={handleLogout}

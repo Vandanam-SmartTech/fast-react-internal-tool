@@ -30,10 +30,12 @@ const Login = () => {
       // return;
       // }
 
-      if (claims.roles.includes('ROLE_ADMIN')) {
+      if (claims.roles.includes('ROLE_ORG_ADMIN')) {
         navigate('/AdminDashboard');
       } else if (claims.roles.includes('ROLE_REPRESENTATIVE')) {
         navigate('/RepresentativeDashboard');
+      } else if (claims.roles.includes('ROLE_SUPER_ADMIN')) {
+        navigate('/SuperAdminDashboard');
       }
     };
 
@@ -64,8 +66,10 @@ const Login = () => {
 
       if (roles.includes('ROLE_REPRESENTATIVE')) {
           navigate('/RepresentativeDashboard');
-       } else if (roles.includes('ROLE_ADMIN')) {
+       } else if (roles.includes('ROLE_ORG_ADMIN')) {
           navigate('/AdminDashboard');
+       } else if (roles.includes('ROLE_SUPER_ADMIN')) {
+          navigate('/SuperAdminDashboard');
        } else {
           setError('Unauthorized role.');
        }

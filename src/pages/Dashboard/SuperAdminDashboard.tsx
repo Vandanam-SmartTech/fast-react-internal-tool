@@ -1,38 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchClaims } from '../../services/jwtService';
-import { Users, Building, Building2, UserCog, Settings } from 'lucide-react';
+import { Building, Shield, Users, Plus, Building2, UserCog, Settings, List } from 'lucide-react';
 
-const AdminDashboard: React.FC = () => {
-  const [preferredName, setPreferredName] = useState('');
-  const [greeting, setGreeting] = useState('');
+const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const setTimeBasedGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour < 12) {
-        setGreeting('Good Morning!');
-      } else if (hour < 16) {
-        setGreeting('Good Afternoon!');
-      } else {
-        setGreeting('Good Evening!');
-      }
-    };
-
-    setTimeBasedGreeting();
-
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setPreferredName(claims.preferred_name);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    getClaims();
-  }, []);
 
   const dashboardItems = [
     {
@@ -43,29 +14,36 @@ const AdminDashboard: React.FC = () => {
       color: 'bg-blue-50 hover:bg-blue-100'
     },
     {
-      title: 'My Organizations',
-      description: 'List, View, Update my organizations',
+      title: 'Manage Organizations',
+      description: 'List, View, Add, Update organizations',
       icon: <Building className="h-12 w-12 text-green-600" />,
       path: '/organizations',
       color: 'bg-green-50 hover:bg-green-100'
     },
     {
-      title: 'My Agencies',
-      description: 'List, View, Add, Update my agencies',
+      title: 'Manage Agencies',
+      description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
       path: '/organizations',
       color: 'bg-purple-50 hover:bg-purple-100'
     },
     {
-      title: 'Organization Users',
-      description: 'Manage users within my organizations',
+      title: 'Manage Users',
+      description: 'Search, List, View, Add, Update users',
       icon: <UserCog className="h-12 w-12 text-orange-600" />,
       path: '/user-management',
       color: 'bg-orange-50 hover:bg-orange-100'
     },
     {
+      title: 'Manage Roles',
+      description: 'List, View, Add new roles',
+      icon: <Shield className="h-12 w-12 text-red-600" />,
+      path: '/admin-management',
+      color: 'bg-red-50 hover:bg-red-100'
+    },
+    {
       title: 'User Organization Roles',
-      description: 'Manage user roles in my organizations',
+      description: 'Manage user roles across organizations',
       icon: <Settings className="h-12 w-12 text-indigo-600" />,
       path: '/admin-management',
       color: 'bg-indigo-50 hover:bg-indigo-100'
@@ -75,11 +53,8 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <div className="text-2xl font-semibold mb-2">
-          {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Organization Admin Dashboard</h1>
-        <p className="text-gray-600">Manage your organizations, agencies, and users</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Super Admin Dashboard</h1>
+        <p className="text-gray-600">Complete system administration and management</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -103,4 +78,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default SuperAdminDashboard;
