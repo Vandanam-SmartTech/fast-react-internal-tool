@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { Building } from 'lucide-react';
 
 
 const Login = () => {
@@ -11,31 +12,28 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showOrgSelection, setShowOrgSelection] = useState(false);
+  const [userClaims, setUserClaims] = useState(null);
+  const [selectedOrg, setSelectedOrg] = useState('');
   const navigate = useNavigate();
   
 
-    useEffect(() => {
+  useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
       const token = localStorage.getItem('jwtToken');
+      const selectedOrgId = localStorage.getItem('selectedOrganization');
       if (!token) return;
 
       const claims = await fetchClaims();
       if (!claims || !claims.roles) return;
 
-      // const isPasswordChanged = claims.is_password_changed;
-
-      // if (!isPasswordChanged) {
-    
-      // navigate('/PasswordReset');
-      // return;
-      // }
-
-      if (claims.roles.includes('ROLE_ORG_ADMIN')) {
-        navigate('/AdminDashboard');
-      } else if (claims.roles.includes('ROLE_REPRESENTATIVE')) {
-        navigate('/RepresentativeDashboard');
-      } else if (claims.roles.includes('ROLE_SUPER_ADMIN')) {
+      if (claims.roles.includes('ROLE_SUPER_ADMIN')) {
         navigate('/SuperAdminDashboard');
+        return;
+      }
+
+      if (selectedOrgId && claims.organizationRoles?.length > 0) {
+        navigate('/');
       }
     };
 
@@ -54,29 +52,64 @@ const Login = () => {
       localStorage.setItem('jwtToken', jwt);
       setAuthToken(jwt);
       const claims = await fetchClaims();
+      console.log('User claims:', claims);
 
-      const roles = claims.roles;
       const isPasswordChanged = claims.is_password_changed;
-
       if (!isPasswordChanged) {
-    
-      navigate('/PasswordReset');
-      return;
+        navigate('/PasswordReset');
+        return;
       }
 
-      if (roles.includes('ROLE_REPRESENTATIVE')) {
-          navigate('/RepresentativeDashboard');
-       } else if (roles.includes('ROLE_ORG_ADMIN')) {
-          navigate('/AdminDashboard');
-       } else if (roles.includes('ROLE_SUPER_ADMIN')) {
-          navigate('/SuperAdminDashboard');
-       } else {
-          setError('Unauthorized role.');
-       }
-          } catch (err) {
-          setError('Invalid username or password.');
+      // Super admin doesn't need org selection
+      console.log('Checking global roles:', claims.global_roles);
+      if (claims.global_roles && Array.isArray(claims.global_roles) && claims.global_roles.includes('ROLE_SUPER_ADMIN')) {
+        console.log('Super admin detected, redirecting to dashboard');
+        navigate('/SuperAdminDashboard');
+        return;
+      }
+
+      // Check if user has organization roles
+      if (claims.org_roles && Object.keys(claims.org_roles).length > 0) {
+        const orgIds = Object.keys(claims.org_roles);
+        if (orgIds.length === 1) {
+          // Single org, auto-select
+          const orgId = orgIds[0];
+          const orgData = claims.org_roles[orgId];
+          localStorage.setItem('selectedOrganization', orgId);
+          localStorage.setItem('selectedOrganizationName', orgData.org_name);
+          navigate('/');
+        } else {
+          // Multiple orgs, show selection
+          setUserClaims(claims);
+          setShowOrgSelection(true);
         }
-      };
+      } else {
+        console.log('No organization roles found for user:', claims);
+        setError('No organization access found.');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 401) {
+        setError('Invalid username or password.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    }
+  };
+
+  const handleOrgSelection = () => {
+    if (!selectedOrg) {
+      setError('Please select an organization.');
+      return;
+    }
+    
+    const orgData = userClaims.org_roles[selectedOrg];
+    localStorage.setItem('selectedOrganization', selectedOrg);
+    localStorage.setItem('selectedOrganizationName', orgData.org_name);
+    navigate('/');
+  };
 
   return (
   <div
@@ -100,8 +133,39 @@ const Login = () => {
         </div>
       )}
 
-      {/* Login Form */}
-      <form onSubmit={handleLogin}>
+      {/* Organization Selection */}
+      {showOrgSelection ? (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Select Organization</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Choose your organization:
+            </label>
+            <select
+              value={selectedOrg}
+              onChange={(e) => setSelectedOrg(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            >
+              <option value="">Select Organization</option>
+              {userClaims?.org_roles && Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
+                <option key={orgId} value={orgId}>
+                  {orgData.org_name} ({orgData.role.replace('ROLE_', '')})
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={handleOrgSelection}
+            className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Continue
+          </button>
+        </div>
+      ) : (
+        /* Login Form */
+        <form onSubmit={handleLogin}>
         <div className="mb-3 sm:mb-4">
           <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
             Username or Email
@@ -156,7 +220,8 @@ const Login = () => {
         >
           Login
         </button>
-      </form>
+        </form>
+      )}
 
 {/* {envLabel !== 'Production' && (
   <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-red-900 px-6 py-3 rounded-xl shadow-xl border-2 border-yellow-600 flex items-center space-x-3 animate-pulse">

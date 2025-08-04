@@ -13,6 +13,7 @@ interface Consumer {
   customerId: number;
   consumerId: number;
   connectionType: string;
+  materials?: { materialId: number; materialName: string; quantity: number; unitPrice: number }[];
 }
 
 const OnboardedConsumers: React.FC = () => {
@@ -50,19 +51,10 @@ const OnboardedConsumers: React.FC = () => {
       setConsumers(data.content);
       setTotalPages(data.totalPages);
 
-            // Fetch materials for all consumers in parallel
-      const materialChecks = await Promise.all(
-        data.content.map((consumer: Consumer) =>
-          getMaterialsByConnectionId(consumer.id).then((materials) => ({
-            id: consumer.id,
-            exists: materials.length > 0,
-          }))
-        )
-      );
-
+            // Use materials data from API response
       const map: Record<number, boolean> = {};
-      materialChecks.forEach(({ id, exists }) => {
-        map[id] = exists;
+      data.content.forEach((consumer: Consumer) => {
+        map[consumer.id] = consumer.materials ? consumer.materials.length > 0 : false;
       });
       setMaterialsMap(map);
     } catch (error) {
@@ -88,6 +80,16 @@ const OnboardedConsumers: React.FC = () => {
   useEffect(() => {
     loadOnboardedConsumers(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    const handleOrgChange = () => {
+      setCurrentPage(0);
+      loadOnboardedConsumers(0);
+    };
+    
+    window.addEventListener('organizationChanged', handleOrgChange);
+    return () => window.removeEventListener('organizationChanged', handleOrgChange);
+  }, []);
 
   const goToPage = (page: number) => {
     if (page >= 0 && page < totalPages) setCurrentPage(page);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical } from 'lucide-react';
 import { getChildOrganizations, deleteOrganization, Organization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
@@ -11,12 +11,23 @@ const AgencyList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (orgId) {
       loadAgencies(parseInt(orgId));
     }
   }, [orgId]);
+
+  const toggleDropdown = (id: number) => {
+  setOpenDropdown(openDropdown === id ? null : id);
+};
+
+useEffect(() => {
+    const handleClickOutside = () => setOpenDropdown(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const loadAgencies = async (parentId: number) => {
     try {
@@ -54,20 +65,25 @@ const AgencyList: React.FC = () => {
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/organizations')}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Building2 className="h-6 w-6" />
-          Agencies
-        </h1>
-        <div className="flex gap-4 items-center">
+return (
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/organizations')}
+            className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Building2 className="h-6 w-6" />
+            Agencies
+          </h1>
+        </div>
+        
+        {/* Search and Add Button */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -75,12 +91,12 @@ const AgencyList: React.FC = () => {
               placeholder="Search agencies..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <button
             onClick={() => navigate(`/agency-form/${orgId}`)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Agency
@@ -88,61 +104,128 @@ const AgencyList: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Display Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAgencies.map((agency) => (
-              <tr key={agency.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {agency.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {agency.displayName || '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {agency.contactNumber || '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => navigate(`/organization-view/${agency.id}`)}
-                      className="text-gray-600 hover:text-gray-900"
-                      title="View Details"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => navigate(`/agency-form/${orgId}/${agency.id}`)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(agency.id!)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filteredAgencies.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+      {/* Cards Grid */}
+      {filteredAgencies.length === 0 ? (
+        <div className="text-center py-12">
+          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">
             {searchTerm ? 'No agencies match your search' : 'No agencies found'}
-          </div>
-        )}
-      </div>
+          </p>
+          {!searchTerm && (
+            <button
+              onClick={() => navigate(`/agency-form/${orgId}`)}
+              className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create your first agency
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {filteredAgencies.map((agency) => (
+            <div
+              key={agency.id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-hidden"
+            >
+              {/* Card Header */}
+              <div className="p-4 sm:p-5">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Building2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <h3 className="font-semibold text-gray-900 truncate" title={agency.name}>
+                      {agency.name}
+                    </h3>
+                  </div>
+                  
+                  {/* Dropdown Menu */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDropdown(agency.id!);
+                      }}
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <MoreVertical className="h-4 w-4 text-gray-500" />
+                    </button>
+                    
+                    {openDropdown === agency.id && (
+                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
+                        <button
+                          onClick={() => {
+                            navigate(`/organization-view/${agency.id}`);
+                            setOpenDropdown(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate(`/agency-form/${orgId}/${agency.id}`);
+                            setOpenDropdown(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(agency.id!)}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Display Name */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span className="font-medium">Display Name:</span>
+                    <span className="truncate" title={agency.displayName || 'Not Available'}>
+                      {agency.displayName || 'Not Available'}
+                    </span>
+                  </div>
+                  
+                  {/* Contact Info */}
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate" title={agency.contactNumber || 'Not Available'}>
+                      {agency.contactNumber || 'Not Available'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action Buttons - Mobile Friendly */}
+              <div className="border-t border-gray-100 p-3 bg-gray-50">
+                <div className="flex justify-between items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/organization-view/${agency.id}`)}
+                    className="flex-1 bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Eye className="h-3 w-3" />
+                    <span className="hidden sm:inline">View</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate(`/agency-form/${orgId}/${agency.id}`)}
+                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Edit className="h-3 w-3" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

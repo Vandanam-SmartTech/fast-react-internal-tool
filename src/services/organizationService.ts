@@ -20,7 +20,7 @@ export interface Organization {
   legalName?: string;
   addressLine1?: string;
   addressLine2?: string;
-  postalCode?: string;
+  pincode?: string;
   stateCode?: number;
   districtCode?: number;
   talukaCode?: number;

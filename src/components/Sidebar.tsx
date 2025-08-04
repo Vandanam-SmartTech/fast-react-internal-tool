@@ -91,23 +91,48 @@ const Sidebar: React.FC = () => {
     navigate("/user-management");
   };
 
-  const goToManageCustomers = () => {
-    navigate("/manage-customers");
-  };
 
-  const handleHomeClick = () => {
-    if (roles.includes('ROLE_SUPER_ADMIN')) {
-      navigate('/SuperAdminDashboard');
-    } else if (roles.includes('ROLE_ORG_ADMIN')) {
-      navigate('/AdminDashboard');
-    } else if (roles.includes('ROLE_AGENCY_ADMIN')) {
-      navigate('/AgencyAdminDashboard');
-    } else if (roles.includes('ROLE_STAFF')) {
-      navigate('/StaffDashboard');
-    } else if (roles.includes('ROLE_REPRESENTATIVE')) {
-      navigate('/RepresentativeDashboard');
-    } else {
-      alert('Unauthorized role.');
+
+  const handleHomeClick = async () => {
+    try {
+      const claims = await fetchClaims();
+      
+      if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
+        navigate('/SuperAdminDashboard');
+        return;
+      }
+      
+      const selectedOrgId = localStorage.getItem('selectedOrganization');
+      if (!selectedOrgId || !claims.org_roles) {
+        alert('No organization selected.');
+        return;
+      }
+      
+      const orgData = claims.org_roles[selectedOrgId];
+      if (!orgData) {
+        alert('Invalid organization selection.');
+        return;
+      }
+      
+      switch (orgData.role) {
+        case 'ROLE_ORG_ADMIN':
+          navigate('/AdminDashboard');
+          break;
+        case 'ROLE_AGENCY_ADMIN':
+          navigate('/AgencyAdminDashboard');
+          break;
+        case 'ROLE_STAFF':
+          navigate('/StaffDashboard');
+          break;
+        case 'ROLE_REPRESENTATIVE':
+          navigate('/RepresentativeDashboard');
+          break;
+        default:
+          alert('Unauthorized role.');
+      }
+    } catch (error) {
+      console.error('Error fetching claims:', error);
+      alert('Error determining user role.');
     }
   };
   
@@ -116,13 +141,30 @@ const Sidebar: React.FC = () => {
     const getClaims = async () => {
       try {
         const claims = await fetchClaims();
-        setRoles(claims.roles || []);
+        const allRoles = [];
+        if (claims.global_roles) {
+          allRoles.push(...claims.global_roles);
+        }
+        if (claims.org_roles) {
+          const selectedOrgId = localStorage.getItem('selectedOrganization');
+          if (selectedOrgId && claims.org_roles[selectedOrgId]) {
+            allRoles.push(claims.org_roles[selectedOrgId].role);
+          }
+        }
+        setRoles(allRoles);
       } catch (error) {
         console.error("Failed to fetch user claims", error);
       }
     };
 
     getClaims();
+    
+    const handleOrgChange = () => {
+      getClaims();
+    };
+    
+    window.addEventListener('organizationChanged', handleOrgChange);
+    return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, []);
 
   return (
@@ -141,7 +183,7 @@ const Sidebar: React.FC = () => {
       {isOpen && (
         <div
         ref={sidebarRef}
-          className={`fixed top-0 left-0 h-full w-64 bg-blue-100 text-blue-800 shadow-md z-40 transition-transform duration-300 ease-in-out`}
+          className={`fixed top-0 left-0 h-full w-64 bg-blue-100 text-blue-800 shadow-md z-20 transition-transform duration-300 ease-in-out`}
         >
           {/* Close Icon */}
           <div className="relative px-4 pt-6 pb-2 border-b border-blue-200">
@@ -176,24 +218,22 @@ const Sidebar: React.FC = () => {
 {/* Manage Customers Section */}
 <div>
   <button
-    onClick={goToManageCustomers}
-    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
+    onClick={() => {
+      setCustomersExpanded(!customersExpanded);
+    }}
+    className={`flex items-center justify-between w-full gap-2 px-2 py-1 whitespace-nowrap ${
       ['/manage-customers', '/CustomerForm', '/list-of-consumers', '/OnboardedConsumers'].includes(location.pathname)
         ? "text-blue-600 font-semibold"
         : "text-black"
     }`}
   >
-    <Users size={18} />
-    Manage Customers
-  </button>
-  
-  <button
-    onClick={() => setCustomersExpanded(!customersExpanded)}
-    className="flex items-center justify-center w-full px-2 py-1 text-gray-500 hover:text-gray-700"
-  >
+    <div className="flex items-center gap-2">
+      <Users size={18} />
+      Manage Customers
+    </div>
     {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
   </button>
-  
+
   {customersExpanded && (
     <div className="ml-6 space-y-2 mt-2">
       <button
@@ -207,7 +247,7 @@ const Sidebar: React.FC = () => {
         <UserPlus size={16} />
         Add New Customer
       </button>
-      
+
       <button
         onClick={goToListOfConsumers}
         className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
@@ -219,21 +259,25 @@ const Sidebar: React.FC = () => {
         <Users size={16} />
         List of Customers
       </button>
-      
-      <button
-        onClick={goToOnboardedConsumers}
-        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
-          location.pathname === "/OnboardedConsumers"
-            ? "text-blue-600 font-semibold"
-            : "text-black"
-        }`}
-      >
-        <UserRoundCheck size={16} />
-        Onboarded Consumers
-      </button>
+
+<button
+  onClick={goToOnboardedConsumers}
+  className={`flex items-center gap-2 px-2 py-1 w-full text-left overflow-hidden text-ellipsis whitespace-nowrap ${
+    location.pathname === "/OnboardedConsumers"
+      ? "text-blue-600 font-semibold"
+      : "text-black"
+  }`}
+>
+  <UserRoundCheck size={16} />
+  <span className="overflow-hidden text-ellipsis whitespace-nowrap block">
+    Onboarded Consumers
+  </span>
+</button>
+
     </div>
   )}
 </div>
+
 
 {roles.includes("ROLE_SUPER_ADMIN") && (
   <button 

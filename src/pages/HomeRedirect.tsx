@@ -9,6 +9,7 @@ const HomeRedirect: React.FC = () => {
   useEffect(() => {
     const redirectBasedOnRole = async () => {
       const token = localStorage.getItem('jwtToken');
+      const selectedOrgId = localStorage.getItem('selectedOrganization');
 
       if (!token) {
         setRedirectPath('/login');
@@ -16,40 +17,62 @@ const HomeRedirect: React.FC = () => {
       }
 
       const claims = await fetchClaims();
-      if (!claims || !claims.roles) {
+      if (!claims) {
         setRedirectPath('/login');
         return;
       }
 
-      const roles = claims.roles;
-
       const isPasswordChanged = claims.is_password_changed;
-
       if (!isPasswordChanged) {
-    
-      setRedirectPath('/PasswordReset');
-      return;
+        setRedirectPath('/PasswordReset');
+        return;
       }
 
-      if (roles.includes('ROLE_SUPER_ADMIN')) {
+      // Super admin doesn't need org selection
+      if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         setRedirectPath('/SuperAdminDashboard');
-      } else if (roles.includes('ROLE_ORG_ADMIN')) {
-        setRedirectPath('/AdminDashboard');
-      } else if (roles.includes('ROLE_AGENCY_ADMIN')) {
-        setRedirectPath('/AgencyAdminDashboard');
-      } else if (roles.includes('ROLE_STAFF')) {
-        setRedirectPath('/StaffDashboard');
-      } else if (roles.includes('ROLE_REPRESENTATIVE')) {
-        setRedirectPath('/RepresentativeDashboard');
-      } else {
+        return;
+      }
+
+      // Check if user has organization roles and selected org
+      if (!selectedOrgId || !claims.org_roles) {
         setRedirectPath('/login');
+        return;
+      }
+
+      // Find user's role in selected organization
+      const orgData = claims.org_roles[selectedOrgId];
+      if (!orgData || !orgData.role) {
+        setRedirectPath('/login');
+        return;
+      }
+
+      // Route based on organization-specific role
+      switch (orgData.role) {
+        case 'ROLE_ORG_ADMIN':
+          setRedirectPath('/AdminDashboard');
+          break;
+        case 'ROLE_AGENCY_ADMIN':
+          setRedirectPath('/AgencyAdminDashboard');
+          break;
+        case 'ROLE_STAFF':
+          setRedirectPath('/StaffDashboard');
+          break;
+        case 'ROLE_REPRESENTATIVE':
+          setRedirectPath('/RepresentativeDashboard');
+          break;
+        case 'ROLE_CUSTOMER':
+          setRedirectPath('/manage-customers'); // Default for customers
+          break;
+        default:
+          setRedirectPath('/login');
       }
     };
 
     redirectBasedOnRole();
   }, []);
 
-  if (!redirectPath) return null; // or a loading spinner
+  if (!redirectPath) return null;
 
   return <Navigate to={redirectPath} />;
 };

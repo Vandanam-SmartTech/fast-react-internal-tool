@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building, Shield, Users, Plus, Building2, UserCog, Settings, List } from 'lucide-react';
+import OrganizationSelector from '../../components/OrganizationSelector';
 
 const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [showOrgSelector, setShowOrgSelector] = useState(false);
 
   const dashboardItems = [
     {
@@ -61,7 +63,13 @@ const SuperAdminDashboard: React.FC = () => {
         {dashboardItems.map((item, index) => (
           <div 
             key={index}
-            onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.path === '/manage-customers') {
+                setShowOrgSelector(true);
+              } else {
+                navigate(item.path);
+              }
+            }}
             className={`${item.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200`}
           >
             <div className="flex items-start gap-4">
@@ -74,6 +82,18 @@ const SuperAdminDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {showOrgSelector && (
+        <OrganizationSelector
+          onSelect={(orgId, orgName) => {
+            localStorage.setItem('selectedOrganization', orgId);
+            localStorage.setItem('selectedOrganizationName', orgName);
+            setShowOrgSelector(false);
+            navigate('/manage-customers');
+          }}
+          onCancel={() => setShowOrgSelector(false)}
+        />
+      )}
     </div>
   );
 };

@@ -47,6 +47,8 @@ import UserOrgRoles from './pages/Organizations/UserOrgRoles';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
 import EnvBanner from './components/EnvBanner';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import 'leaflet/dist/leaflet.css';
 
 
@@ -78,14 +80,15 @@ const AppContent: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {showSidebar && <Sidebar />}
+      {showSidebar && <Header />}
 
       <ToastContainer position="top-right" autoClose={1000} />
       
       <EnvBanner envLabel={envLabel} />
 
-      <div className={`py-12 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''}`}>
+      <div className={`flex-1 py-4 pt-20 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''}`}>
         <Routes>
 
           
@@ -465,6 +468,8 @@ const AppContent: React.FC = () => {
 
         </Routes>
       </div>
+      
+      {showSidebar && <Footer />}
     </div>
   );
 };

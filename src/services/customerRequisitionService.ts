@@ -18,7 +18,16 @@ crsAPI.interceptors.request.use((config) => {
 
 export const saveCustomer = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   try {
-    const response = await crsAPI.post('/api/customers', data);
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters:', { orgId, orgName, agencyId, agencyName });
+    
+    const response = await crsAPI.post('/api/customers', data, {
+      params: { orgId, orgName, agencyId, agencyName }
+    });
     const responseData = response.data;
 
     if (responseData.id) {
@@ -245,7 +254,35 @@ export const fetchInstallationSpaceTypes = async (
 
 export const getCustomerById = async (customerId: number): Promise<any> => {
   try {
-    const response = await crsAPI.get(`/api/customers/${customerId}`);
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for getCustomerById:', { orgId, orgName, agencyId, agencyName, customerId });
+    
+    const response = await crsAPI.get(`/api/customers/${customerId}`, {
+      params: { orgId, orgName, agencyId, agencyName }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching customer details:', error);
+    return null;
+  }
+};
+
+export const getCustomerWithConnections = async (customerId: number): Promise<any> => {
+  try {
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for getCustomerWithConnections:', { orgId, orgName, agencyId, agencyName, customerId });
+    
+    const response = await crsAPI.get(`/api/customers/${customerId}/with-connections`, {
+      params: { orgId, orgName, agencyId, agencyName }
+    });
     return response.data;
   } catch (error: any) {
     console.error('Error fetching customer details:', error);
@@ -316,8 +353,15 @@ export const fetchConsumerNumber = async (customerId: number) => {
 
 export const fetchConsumers = async (page = 0) => {
   try {
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for fetchConsumers:', { orgId, orgName, agencyId, agencyName, page });
+    
     const response = await crsAPI.get('/api/customers/paginated', {
-      params: { page },
+      params: { page, orgId, orgName, agencyId, agencyName },
     });
 
     return {
@@ -333,10 +377,43 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
+export const fetchConsumersWithConnections = async (page = 0) => {
+  try {
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for fetchConsumersWithConnections:', { orgId, orgName, agencyId, agencyName, page });
+    
+    const response = await crsAPI.get('/api/customers/with-connections/paginated', {
+      params: { page, orgId, orgName, agencyId, agencyName },
+    });
+
+    return {
+      content: response.data.content,
+      totalPages: response.data.totalPages,
+      totalElements: response.data.totalElements,
+      currentPage: response.data.number,
+      size: response.data.size,
+    };
+  } catch (error) {
+    console.error('Error fetching consumers with connections:', error);
+    throw new Error('Failed to fetch consumers with connections.');
+  }
+};
+
 export const fetchOnboardedConsumers = async (page = 0) => {
   try {
-    const response = await crsAPI.get('/api/customers/onboarded/by-representative/paginated', {
-      params: { page },
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for fetchOnboardedConsumers:', { orgId, orgName, agencyId, agencyName, page });
+    
+    const response = await crsAPI.get('/api/customers/onboarded', {
+      params: { page, orgId, orgName, agencyId, agencyName },
     });
 
     return {
@@ -545,8 +622,15 @@ export const updateMaterialData = async (
 
 export const searchCustomers = async (query: string): Promise<any[]> => {
   try {
+    const orgId = localStorage.getItem('selectedOrganization');
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    const agencyId = localStorage.getItem('selectedAgency');
+    const agencyName = localStorage.getItem('selectedAgencyName');
+    
+    console.log('CRS API Parameters for searchCustomers:', { orgId, orgName, agencyId, agencyName, query });
+    
     const response = await crsAPI.get(`/api/customers/search`, {
-      params: { query },
+      params: { query, orgId, orgName, agencyId, agencyName },
     });
 
     const data = response.data;

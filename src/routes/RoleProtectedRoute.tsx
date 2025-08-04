@@ -9,6 +9,7 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
   useEffect(() => {
     const checkAccess = async () => {
       const token = localStorage.getItem('jwtToken');
+      const selectedOrgId = localStorage.getItem('selectedOrganization');
 
       if (!token) {
         setRedirectPath('/login');
@@ -16,26 +17,39 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
       }
 
       const claims = await fetchClaims();
-      if (!claims || !claims.roles) {
+      if (!claims) {
         setRedirectPath('/login');
         return;
       }
 
-      const userRoles = claims.roles;
-      const isAuthorized = allowedRoles.some(role => userRoles.includes(role));
+      // Check global roles first (ROLE_SUPER_ADMIN)
+      const globalRoles = claims.global_roles || [];
+      const hasGlobalRole = allowedRoles.some(role => globalRoles.includes(role));
+      
+      if (hasGlobalRole) {
+        setAuthorized(true);
+        return;
+      }
 
-      if (isAuthorized) {
+      // Check organization-specific roles
+      if (!selectedOrgId || !claims.org_roles) {
+        setRedirectPath('/login');
+        return;
+      }
+
+      const orgData = claims.org_roles[selectedOrgId];
+      if (!orgData || !orgData.role) {
+        setRedirectPath('/login');
+        return;
+      }
+
+      const hasOrgRole = allowedRoles.includes(orgData.role);
+      
+      if (hasOrgRole) {
         setAuthorized(true);
       } else {
-        if (userRoles.includes('ROLE_SUPER_ADMIN')) {
-          setRedirectPath('/organizations');
-        } else if (userRoles.includes('ROLE_REPRESENTATIVE')) {
-          setRedirectPath('/RepresentativeDashboard');
-        } else if (userRoles.includes('ROLE_ORG_ADMIN')) {
-          setRedirectPath('/AdminDashboard');
-        } else {
-          setRedirectPath('/login');
-        }
+        // Redirect to user's appropriate dashboard
+        setRedirectPath('/');
       }
     };
 

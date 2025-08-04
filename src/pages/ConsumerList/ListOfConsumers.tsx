@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { fetchConsumers, fetchConsumerNumber, searchCustomers } from "../../services/customerRequisitionService";
+import { fetchConsumersWithConnections, searchCustomers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { Eye, Mail, Phone, Lightbulb } from "lucide-react";
 import SearchBar from "../../components/SearchBar"; 
 
 interface Consumer {
-
   id: number;
+  customerId: number;
   govIdName: string;
   emailAddress: string;
   mobileNumber: string;
+  connections?: { id: number; consumerId: string; customerId: number }[];
 }
 
 
@@ -32,13 +33,13 @@ const ListOfConsumers: React.FC = () => {
   const loadConsumers = async (page: number) => {
     try {
       setLoading(true);
-      const data = await fetchConsumers(page);
+      const data = await fetchConsumersWithConnections(page);
       setConsumers(data.content);
       setTotalPages(data.totalPages);
       setCurrentPage(page);
 
-      const consumerIds = data.content.map((consumer: Consumer) => consumer.id);
-      fetchConsumerNumbers(consumerIds);
+      // Connections are now included in the consumer data directly
+      setConsumerNumbers({});
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
@@ -46,31 +47,7 @@ const ListOfConsumers: React.FC = () => {
     }
   };
 
-  const fetchConsumerNumbers = async (consumerIds: number[]) => {
-    try {
-      const consumerNumberMap: {
-        [key: number]: { connectionId: number; consumerId: number }[]
-      } = {};
 
-      await Promise.all(
-        consumerIds.map(async (id) => {
-          const response = await fetchConsumerNumber(id); 
-          if (Array.isArray(response)) {
-            consumerNumberMap[id] = response.map((item) => ({
-              connectionId: item.id, // Store connectionId
-              consumerId: item.consumerId, // Store consumerId
-            }));
-          } else {
-            consumerNumberMap[id] = [];
-          }
-        })
-      );
-
-      setConsumerNumbers((prev) => ({ ...prev, ...consumerNumberMap })); 
-    } catch (error) {
-      console.error("Error fetching consumer numbers:", error);
-    }
-  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -117,6 +94,16 @@ const ListOfConsumers: React.FC = () => {
   useEffect(() => {
     loadConsumers(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    const handleOrgChange = () => {
+      setCurrentPage(0);
+      loadConsumers(0);
+    };
+    
+    window.addEventListener('organizationChanged', handleOrgChange);
+    return () => window.removeEventListener('organizationChanged', handleOrgChange);
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -196,7 +183,7 @@ const ListOfConsumers: React.FC = () => {
                   <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.map((consumer) => (
                       <div
-                        key={consumer.id}
+                        key={consumer.customerId || consumer.id}
                         className="relative bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-lg transition-shadow duration-300 w-full overflow-hidden break-words"
                       >
                         {/* View Button */}
@@ -226,9 +213,9 @@ const ListOfConsumers: React.FC = () => {
                         </div>
 
                         {/* Connection IDs */}
-                        {consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
+                        {consumer.connections && consumer.connections.length > 0 && (
                           <div className="mt-4 space-y-2">
-                            {consumerNumbers[consumer.id].map((entry, index) => (
+                            {consumer.connections.map((connection, index) => (
                               <div
                                 key={index}
                                 className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
@@ -237,15 +224,15 @@ const ListOfConsumers: React.FC = () => {
                                   <span className="font-medium">
                                     Connection {index + 1}:
                                   </span>{" "}
-                                  {entry.consumerId}
+                                  {connection.consumerId}
                                 </span>
                                 <button
                                   onClick={() =>
-                                    navigate(`/view-connection/${entry.connectionId}`, {
+                                    navigate(`/view-connection/${connection.id}`, {
                                       state: {
-                                        customerId: consumer.id,
-                                        connectionId: entry.connectionId,
-                                        consumerId: entry.consumerId,
+                                        customerId: consumer.customerId || consumer.id,
+                                        connectionId: connection.id,
+                                        consumerId: connection.consumerId,
                                       },
                                     })
                                   }
@@ -281,7 +268,7 @@ const ListOfConsumers: React.FC = () => {
                       ) : (
                         consumers.map((consumer) => (
                           <div
-                            key={consumer.id}
+                            key={consumer.customerId || consumer.id}
                             className="relative bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-lg transition-shadow duration-300 w-full overflow-hidden break-words"
                           >
                             {/* View Button */}
@@ -312,9 +299,9 @@ const ListOfConsumers: React.FC = () => {
                             </div>
 
                             {/* Connection IDs */}
-                            {consumerNumbers[consumer.id] !== undefined && consumerNumbers[consumer.id].length > 0 && (
+                            {consumer.connections && consumer.connections.length > 0 && (
                               <div className="mt-4 space-y-2">
-                                {consumerNumbers[consumer.id].map((entry, index) => (
+                                {consumer.connections.map((connection, index) => (
                                   <div
                                     key={index}
                                     className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
@@ -323,18 +310,18 @@ const ListOfConsumers: React.FC = () => {
                                       <span className="font-medium">
                                         Connection {index + 1}:
                                       </span>{" "}
-                                      {entry.consumerId}
+                                      {connection.consumerId}
                                     </span>
 
                                     {/* Icons with minimal spacing */}
                                     <div className="flex items-center space-x-3">
                                       <button
                                         onClick={() =>
-                                          navigate(`/view-connection/${entry.connectionId}`, {
+                                          navigate(`/view-connection/${connection.id}`, {
                                             state: {
-                                              customerId: consumer.id,
-                                              connectionId: entry.connectionId,
-                                              consumerId: entry.consumerId,
+                                              customerId: consumer.customerId || consumer.id,
+                                              connectionId: connection.id,
+                                              consumerId: connection.consumerId,
                                             },
                                           })
                                         }
@@ -348,9 +335,9 @@ const ListOfConsumers: React.FC = () => {
                                         onClick={() =>
                                           navigate(`/SystemSpecifications`, {
                                             state: {
-                                              connectionId: entry.connectionId,
-                                              consumerId: entry.consumerId,
-                                              customerId: consumer.id,
+                                              connectionId: connection.id,
+                                              consumerId: connection.consumerId,
+                                              customerId: consumer.customerId || consumer.id,
                                             },
                                           })
                                         }

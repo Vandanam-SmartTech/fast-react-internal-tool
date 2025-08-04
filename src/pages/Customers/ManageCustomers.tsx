@@ -1,9 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Users, UserRoundCheck } from 'lucide-react';
+import { fetchClaims } from '../../services/jwtService';
+import OrganizationSelector from '../../components/OrganizationSelector';
 
 const ManageCustomers: React.FC = () => {
   const navigate = useNavigate();
+  const [showOrgSelector, setShowOrgSelector] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [pendingPath, setPendingPath] = useState<string>('');
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const claims = await fetchClaims();
+        const isSuper = claims.global_roles?.includes('ROLE_SUPER_ADMIN');
+        setIsSuperAdmin(isSuper);
+      } catch (error) {
+        console.error('Error checking user role:', error);
+      }
+    };
+    checkUserRole();
+  }, []);
 
   const customerActions = [
     {
@@ -29,6 +47,27 @@ const ManageCustomers: React.FC = () => {
     }
   ];
 
+  const handleActionClick = (path: string) => {
+    if (isSuperAdmin) {
+      setPendingPath(path);
+      setShowOrgSelector(true);
+    } else {
+      navigate(path);
+    }
+  };
+
+  const handleOrgSelect = (orgId: string, orgName: string) => {
+    localStorage.setItem('selectedOrganization', orgId);
+    localStorage.setItem('selectedOrganizationName', orgName);
+    setShowOrgSelector(false);
+    navigate(pendingPath);
+  };
+
+  const handleOrgCancel = () => {
+    setShowOrgSelector(false);
+    setPendingPath('');
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -40,7 +79,7 @@ const ManageCustomers: React.FC = () => {
         {customerActions.map((action, index) => (
           <div 
             key={index}
-            onClick={() => navigate(action.path)}
+            onClick={() => handleActionClick(action.path)}
             className={`${action.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200`}
           >
             <div className="flex items-start gap-4">
@@ -53,6 +92,13 @@ const ManageCustomers: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {showOrgSelector && (
+        <OrganizationSelector
+          onSelect={handleOrgSelect}
+          onCancel={handleOrgCancel}
+        />
+      )}
     </div>
   );
 };

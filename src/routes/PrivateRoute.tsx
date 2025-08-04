@@ -17,7 +17,7 @@ const PrivateRoute = ({ children }) => {
       try {
         const claims = await fetchClaims();
 
-        if (!claims || !claims.roles) {
+        if (!claims || (!claims.global_roles && !claims.org_roles)) {
           setRedirectPath('/login');
           return;
         }
