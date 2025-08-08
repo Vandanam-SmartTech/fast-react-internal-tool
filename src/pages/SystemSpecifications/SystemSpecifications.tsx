@@ -968,6 +968,7 @@ const handlePreview = async () => {
             <option value="Sova">Sova</option>
             <option value="En-Icon">En-Icon</option>
             <option value="Adani">Adani</option>
+            <option value="Renew">Renew</option>
           </select>
         </div>
 
