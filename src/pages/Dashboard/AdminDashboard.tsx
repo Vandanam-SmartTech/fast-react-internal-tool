@@ -68,17 +68,7 @@ const AdminDashboard: React.FC = () => {
       change: '+12%',
       changeType: 'positive'
     },
-    {
-      title: 'Organizations',
-      description: 'Manage your organization settings and details',
-      icon: <Building className="h-8 w-8 text-success-600" />,
-      path: '/organizations',
-      color: 'from-success-50 to-success-100',
-      borderColor: 'border-success-200',
-      stats: '5',
-      change: '+1',
-      changeType: 'positive'
-    },
+   
     {
       title: 'Agencies',
       description: 'Manage agencies within your organization',
@@ -111,17 +101,6 @@ const AdminDashboard: React.FC = () => {
       stats: '12',
       change: '0',
       changeType: 'neutral'
-    },
-    {
-      title: 'Documents',
-      description: 'Generate and manage documents',
-      icon: <FileText className="h-8 w-8 text-solar-600" />,
-      path: '/generatedocuments',
-      color: 'from-solar-50 to-solar-100',
-      borderColor: 'border-solar-200',
-      stats: '89',
-      change: '+15',
-      changeType: 'positive'
     }
   ];
 

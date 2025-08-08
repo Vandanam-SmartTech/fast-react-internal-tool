@@ -330,7 +330,7 @@ const Sidebar: React.FC = () => {
               )}
 
               {/* Role Management (Super Admin) */}
-              {roles.includes("ROLE_SUPER_ADMIN") && (
+              {roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") && (
                 <button 
                   onClick={goToAdminManagement}
                   className={`nav-link w-full justify-start ${
