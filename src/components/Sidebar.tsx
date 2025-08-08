@@ -262,13 +262,6 @@ const Sidebar: React.FC = () => {
                 <span>Dashboard</span>
               </button>
 
-              {/* Analytics */}
-              <button
-                className="nav-link-inactive w-full justify-start"
-              >
-                <BarChart3 size={20} />
-                <span>Analytics</span>
-              </button>
 
               {/* Manage Customers Section */}
               <div className="space-y-1">
