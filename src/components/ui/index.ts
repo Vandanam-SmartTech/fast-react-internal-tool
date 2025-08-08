@@ -15,6 +15,7 @@ export { default as Table } from './Table';
 // Display Components
 export { default as Badge } from './Badge';
 export { default as SkeletonLoader } from './SkeletonLoader';
+export { default as Logo } from './Logo';
 
 // Type exports
 export type { ButtonProps } from './Button';
@@ -29,3 +30,4 @@ export type { ModalProps } from './Modal';
 export type { TableProps, TableColumn } from './Table';
 export type { BadgeProps } from './Badge';
 export type { SkeletonLoaderProps } from './SkeletonLoader';
+export type { LogoProps } from './Logo';

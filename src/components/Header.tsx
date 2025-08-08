@@ -4,7 +4,7 @@ import { ChevronDown, LogOut, Building, User, Bell, Settings, Menu } from 'lucid
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import ThemeToggle from './ThemeToggle';
-import defaultLogo from '../assets/Vandanam_SmartTech_Logo.png';
+import { Logo } from './ui';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={`bg-white dark:bg-secondary-800 shadow-soft border-b border-secondary-200 dark:border-secondary-700 px-4 py-3 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'left-64' : 'left-0'}`}>
+    <header className={`bg-white dark:bg-secondary-800 shadow-soft border-b border-secondary-200 dark:border-secondary-700 px-4 py-3 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'md:left-64' : 'left-0'}`}>
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left side - Mobile menu and Logo */}
         <div className="flex items-center gap-4">
@@ -107,11 +107,7 @@ const Header: React.FC = () => {
 
           {/* Logo and Organization */}
           <div className="flex items-center gap-3">
-            <img 
-              src={defaultLogo} 
-              alt="Organization Logo" 
-              className="h-8 w-auto"
-            />
+            <Logo size="lg" />
             {selectedOrgName && !isSuperAdmin && (
               <div className="hidden md:flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
                 <Building className="h-4 w-4" />

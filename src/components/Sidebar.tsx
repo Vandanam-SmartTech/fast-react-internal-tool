@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
+import { Logo } from "./ui"; 
 import { 
   Home, 
   UserPlus, 
@@ -230,7 +230,7 @@ const Sidebar: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-200 dark:border-secondary-700 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20">
             <div className="flex items-center gap-3">
-              <img src={Logo} alt="Logo" className="h-8 w-auto" />
+              <Logo size="lg" />
             </div>
             
             <Button

@@ -88,7 +88,7 @@ const AppContent: React.FC = () => {
       <Sidebar />
       
       {/* Header - Always render but control visibility */}
-      <Header />
+      {showSidebar && <Header />}
 
       <ToastContainer 
         position="top-right" 
@@ -110,7 +110,7 @@ const AppContent: React.FC = () => {
       <main className={`flex-1 transition-all duration-300 ${
         showSidebar && sidebarOpen ? 'md:ml-64' : ''
       }`}>
-        <div className="pt-16">
+        <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />

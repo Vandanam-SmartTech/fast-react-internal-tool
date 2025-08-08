@@ -230,6 +230,10 @@
     @apply bg-white/80 dark:bg-secondary-800/80 backdrop-blur-sm border border-white/20 dark:border-secondary-700/20;
   }
   
+  .glass-effect-enhanced {
+    @apply bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl border border-white/30 dark:border-secondary-700/30 shadow-2xl;
+  }
+  
   .hover-lift {
     @apply transition-transform duration-200 hover:-translate-y-1 hover:shadow-medium;
   }
