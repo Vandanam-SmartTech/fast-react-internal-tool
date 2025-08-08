@@ -37,7 +37,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       
       <div className="relative">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400">
             {leftIcon}
           </div>
         )}
@@ -56,12 +56,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         />
         
         {(rightIcon || showPasswordToggle) && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400">
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400">
             {showPasswordToggle ? (
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="hover:text-secondary-600 transition-colors"
+                className="hover:text-secondary-700 dark:hover:text-secondary-300 transition-colors"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -79,7 +79,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       )}
       
       {helperText && !error && (
-        <p className="text-sm text-secondary-500">
+        <p className="text-sm text-secondary-600 dark:text-secondary-300">
           {helperText}
         </p>
       )}

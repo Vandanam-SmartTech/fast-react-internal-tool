@@ -43,7 +43,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
       )}
       
       {helperText && !error && (
-        <p className="text-sm text-secondary-500">
+        <p className="text-sm text-secondary-600 dark:text-secondary-300">
           {helperText}
         </p>
       )}

@@ -83,7 +83,7 @@ const AdminDashboard: React.FC = () => {
     {
       title: 'User Management',
       description: 'Manage users and their roles',
-      icon: <UserCog className="h-8 w-8 text-secondary-600" />,
+      icon: <UserCog className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/user-management',
       color: 'from-secondary-50 to-secondary-100',
       borderColor: 'border-secondary-200',
@@ -137,12 +137,12 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-3xl font-bold text-secondary-900">
               {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
             </h1>
-            <p className="text-secondary-600 mt-1">
+            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
               Here's what's happening with your organization today
             </p>
           </div>
           
-          <div className="flex items-center gap-4 text-sm text-secondary-500">
+                          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span>{currentTime.toLocaleTimeString()}</span>
@@ -243,7 +243,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-medium text-secondary-900">{action.title}</h3>
-                    <p className="text-sm text-secondary-600">{action.description}</p>
+                    <p className="text-sm text-secondary-700 dark:text-secondary-300">{action.description}</p>
                   </div>
                 </div>
               </CardBody>
@@ -272,7 +272,7 @@ const AdminDashboard: React.FC = () => {
                     <h3 className="text-lg font-semibold text-secondary-900 mb-2">
                       {item.title}
                     </h3>
-                    <p className="text-secondary-600 text-sm mb-4">
+                    <p className="text-secondary-700 dark:text-secondary-300 text-sm mb-4">
                       {item.description}
                     </p>
                     <div className="flex items-center justify-between">
@@ -280,10 +280,10 @@ const AdminDashboard: React.FC = () => {
                         <span className="text-2xl font-bold text-secondary-900">
                           {item.stats}
                         </span>
-                        <span className={`text-sm font-medium ${
-                          item.changeType === 'positive' ? 'text-success-600' : 
-                          item.changeType === 'negative' ? 'text-error-600' : 
-                          'text-secondary-600'
+                        <span                         className={`text-sm font-medium ${
+                          item.changeType === 'positive' ? 'text-success-600 dark:text-success-400' : 
+                          item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' : 
+                          'text-secondary-700 dark:text-secondary-300'
                         }`}>
                           {item.change}
                         </span>
@@ -291,7 +291,7 @@ const AdminDashboard: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-secondary-600 hover:text-secondary-900"
+                        className="text-secondary-700 dark:text-secondary-300 hover:text-secondary-900 dark:hover:text-secondary-100"
                       >
                         View →
                       </Button>

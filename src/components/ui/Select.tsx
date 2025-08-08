@@ -45,7 +45,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
       
       <div className="relative">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 z-10">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400 z-10">
             {leftIcon}
           </div>
         )}
@@ -72,7 +72,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           ))}
         </select>
         
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 pointer-events-none">
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400 pointer-events-none">
           <ChevronDown className="h-4 w-4" />
         </div>
       </div>
@@ -84,7 +84,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
       )}
       
       {helperText && !error && (
-        <p className="text-sm text-secondary-500">
+        <p className="text-sm text-secondary-600 dark:text-secondary-300">
           {helperText}
         </p>
       )}

@@ -214,7 +214,7 @@ const Sidebar: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={toggleSidebar}
-          className="fixed top-3 left-2 z-50 p-2 text-primary-800 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-primary-900"
+          className="fixed top-3 left-2 z-50 p-2 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900"
           aria-label="Open sidebar"
         >
           <Menu size={24} />
@@ -237,7 +237,7 @@ const Sidebar: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="absolute top-4 right-4 p-1 h-8 w-8 text-secondary-600 dark:text-secondary-400 hover:text-error-600 dark:hover:text-error-400"
+              className="absolute top-4 right-4 p-1 h-8 w-8 text-secondary-700 dark:text-secondary-300 hover:text-error-600 dark:hover:text-error-400"
               aria-label="Close sidebar"
             >
               <X size={20} />
@@ -330,7 +330,7 @@ const Sidebar: React.FC = () => {
               )}
 
               {/* Role Management (Super Admin) */}
-              {roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") && (
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
                 <button 
                   onClick={goToAdminManagement}
                   className={`nav-link w-full justify-start ${

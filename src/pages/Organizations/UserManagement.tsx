@@ -225,7 +225,7 @@ const UserManagement: React.FC = () => {
               <h3 className="font-semibold text-secondary-900">
                 {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
               </h3>
-              <p className="text-sm text-secondary-500">@{user.username}</p>
+                              <p className="text-sm text-secondary-600 dark:text-secondary-300">@{user.username}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -239,13 +239,13 @@ const UserManagement: React.FC = () => {
 
         <div className="space-y-3 mb-4">
           {user.emailAddress && (
-            <div className="flex items-center gap-2 text-sm text-secondary-600">
+            <div className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
               <Mail className="h-4 w-4" />
               <span>{user.emailAddress}</span>
             </div>
           )}
           {user.contactNumber && (
-            <div className="flex items-center gap-2 text-sm text-secondary-600">
+            <div className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
               <Phone className="h-4 w-4" />
               <span>{user.contactNumber}</span>
             </div>
@@ -266,7 +266,7 @@ const UserManagement: React.FC = () => {
               </span>
             ))}
             {(!user.roles?.length && !user.organizationRoles?.length) && (
-              <span className="text-xs text-secondary-400">No roles assigned</span>
+              <span className="text-xs text-secondary-600 dark:text-secondary-300">No roles assigned</span>
             )}
           </div>
         </div>
@@ -320,7 +320,7 @@ const UserManagement: React.FC = () => {
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center gap-3">
             <RefreshCw className="h-6 w-6 animate-spin text-primary-600" />
-            <span className="text-secondary-600">Loading users...</span>
+            <span className="text-secondary-700 dark:text-secondary-300">Loading users...</span>
           </div>
         </div>
       </div>
@@ -338,7 +338,7 @@ const UserManagement: React.FC = () => {
             </div>
             User Management
           </h1>
-          <p className="text-secondary-600 mt-1">Manage system users, roles, and permissions</p>
+          <p className="text-secondary-700 dark:text-secondary-300 mt-1">Manage system users, roles, and permissions</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">
@@ -554,7 +554,7 @@ const UserManagement: React.FC = () => {
                           </span>
                         ))}
                         {(!user.roles?.length && !user.organizationRoles?.length) && (
-                          <span className="text-xs text-secondary-400">No roles assigned</span>
+                          <span className="text-xs text-secondary-600 dark:text-secondary-300">No roles assigned</span>
                         )}
                       </div>
                     </td>

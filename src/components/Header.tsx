@@ -101,7 +101,7 @@ const Header: React.FC = () => {
 
   {/* Selected Organization - Always visible */}
   {selectedOrgName && !isSuperAdmin && (
-    <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
+    <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
       <Building className="h-4 w-4" />
       <span className="font-medium text-sm">{selectedOrgName}</span>
     </div>
@@ -153,7 +153,7 @@ const Header: React.FC = () => {
                         }`}
                       >
                         <div className="font-medium">{orgData.org_name}</div>
-                        <div className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">{orgData.role.replace('ROLE_', '')}</div>
+                        <div className="text-xs text-secondary-600 dark:text-secondary-300 mt-1">{orgData.role.replace('ROLE_', '')}</div>
                       </button>
                     ))}
                   </div>
@@ -173,7 +173,7 @@ const Header: React.FC = () => {
                   <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                 </div>
               }
-              rightIcon={<ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-secondary-500 dark:text-secondary-400" />}
+              rightIcon={<ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-secondary-600 dark:text-secondary-300" />}
               className="px-2 sm:px-3"
             >
               <span className="hidden lg:inline font-medium text-secondary-700 dark:text-secondary-300">
@@ -188,7 +188,7 @@ const Header: React.FC = () => {
                     <div className="font-medium text-secondary-900 dark:text-secondary-100 text-sm">
                       {userClaims?.preferred_name || userClaims?.name || 'User'}
                     </div>
-                    <div className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400 mt-1">
+                    <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300 mt-1">
                       {isSuperAdmin ? 'Super Admin' : selectedOrgName}
                     </div>
                   </div>

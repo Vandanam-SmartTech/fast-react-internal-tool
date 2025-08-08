@@ -322,7 +322,7 @@ const ListOfConsumers: React.FC = () => {
             <div className="flex items-center gap-2 mt-1">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4 text-primary-500" />
-                <span className="text-sm text-secondary-600 dark:text-secondary-400">
+                <span className="text-sm text-secondary-700 dark:text-secondary-300">
                   {consumer.connections?.length || 0} connections
                 </span>
               </div>
@@ -352,14 +352,14 @@ const ListOfConsumers: React.FC = () => {
         {/* Contact Information */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-            <Mail className="w-4 h-4 text-secondary-500 flex-shrink-0" />
+                            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300 truncate">
               {consumer.emailAddress || "No email provided"}
             </span>
           </div>
           
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-            <Phone className="w-4 h-4 text-secondary-500 flex-shrink-0" />
+                            <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber}
             </span>
@@ -382,7 +382,7 @@ const ListOfConsumers: React.FC = () => {
                   <div className="text-sm font-medium text-primary-700 dark:text-primary-300">
                     Connection {index + 1}
                   </div>
-                  <div className="text-xs text-secondary-600 dark:text-secondary-400 font-mono">
+                  <div className="text-xs text-secondary-700 dark:text-secondary-300 font-mono">
                     {connection.consumerId}
                   </div>
                 </div>
@@ -439,7 +439,7 @@ const ListOfConsumers: React.FC = () => {
             <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
               Customer Directory
             </h1>
-            <p className="text-secondary-600 dark:text-secondary-400 mt-1">
+            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
               Manage and view all your customers and their connections
             </p>
           </div>
@@ -451,7 +451,7 @@ const ListOfConsumers: React.FC = () => {
       <div className="mb-6 space-y-4">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
           <input
             type="text"
             placeholder="Search customers by name, email, mobile number, or connection ID..."
@@ -482,7 +482,7 @@ const ListOfConsumers: React.FC = () => {
             <Button
               variant="ghost"
               onClick={clearFilters}
-              className="flex items-center gap-2 text-secondary-600 hover:text-secondary-800"
+              className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300 hover:text-secondary-800 dark:hover:text-secondary-100"
             >
               <X className="w-4 h-4" />
               Clear Filters
@@ -578,7 +578,7 @@ const ListOfConsumers: React.FC = () => {
 
       {/* Results Summary */}
       <div className="mb-6 flex items-center justify-between">
-        <div className="text-sm text-secondary-600 dark:text-secondary-400">
+        <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
           ) : (
@@ -587,7 +587,7 @@ const ListOfConsumers: React.FC = () => {
         </div>
         
         {!loading && !isLoadingAll && filteredAndSortedData.length > 0 && (
-          <div className="text-sm text-secondary-600 dark:text-secondary-400">
+          <div className="text-sm text-secondary-700 dark:text-secondary-300">
             {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
           </div>
         )}
@@ -596,7 +596,7 @@ const ListOfConsumers: React.FC = () => {
       {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-flex items-center gap-2 text-secondary-600 dark:text-secondary-400">
+          <div className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
             <RefreshCw className="w-5 h-5 animate-spin" />
             Loading customers...
           </div>
@@ -606,7 +606,7 @@ const ListOfConsumers: React.FC = () => {
       {/* Loading All Data for Search */}
       {isLoadingAll && (
         <div className="text-center py-12">
-          <div className="inline-flex items-center gap-2 text-secondary-600 dark:text-secondary-400">
+          <div className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
             <RefreshCw className="w-5 h-5 animate-spin" />
             Loading all customers for search...
           </div>
@@ -623,7 +623,7 @@ const ListOfConsumers: React.FC = () => {
                 <h3 className="text-lg font-medium text-secondary-900 dark:text-secondary-100 mb-2">
                   No customers found
                 </h3>
-                <p className="text-secondary-600 dark:text-secondary-400">
+                <p className="text-secondary-700 dark:text-secondary-300">
                   {searchQuery.trim() !== "" 
                     ? `No customers match your search for "${searchQuery}"`
                     : "No customers available at the moment."

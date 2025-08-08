@@ -359,21 +359,21 @@ const OnboardedConsumers: React.FC = () => {
         {/* Contact Information */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-            <Mail className="w-4 h-4 text-secondary-500 flex-shrink-0" />
+                            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300 truncate">
               {consumer.emailAddress || "No email provided"}
   </span>
 </div>
 
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-            <Phone className="w-4 h-4 text-secondary-500 flex-shrink-0" />
+                            <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber}
       </span>
     </div>
 
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-            <User className="w-4 h-4 text-secondary-500 flex-shrink-0" />
+                            <User className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               Consumer ID: {consumer.consumerId}
       </span>
@@ -447,7 +447,7 @@ const OnboardedConsumers: React.FC = () => {
             <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
               Onboarded Customers
             </h1>
-            <p className="text-secondary-600 dark:text-secondary-400 mt-1">
+            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
               Manage customers who have completed the onboarding process
             </p>
           </div>
@@ -469,7 +469,7 @@ const OnboardedConsumers: React.FC = () => {
       <div className="mb-6 space-y-4">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
           <input
             type="text"
             placeholder="Search onboarded customers..."
@@ -507,7 +507,7 @@ const OnboardedConsumers: React.FC = () => {
             <Button
               variant="ghost"
               onClick={clearFilters}
-              className="flex items-center gap-2 text-secondary-600 hover:text-secondary-800"
+              className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300 hover:text-secondary-800 dark:hover:text-secondary-100"
             >
               <X className="w-4 h-4" />
               Clear Filters
@@ -605,16 +605,16 @@ const OnboardedConsumers: React.FC = () => {
 
       {/* Results Summary */}
       <div className="mb-6 flex items-center justify-between">
-        <div className="text-sm text-secondary-600 dark:text-secondary-400">
+                <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all onboarded customers for search..." : "Loading onboarded customers..."
           ) : (
             `Showing ${filteredAndSortedData.length} onboarded customer${filteredAndSortedData.length !== 1 ? 's' : ''}`
           )}
-            </div>
+        </div>
         
         {!loading && !isLoadingAll && filteredAndSortedData.length > 0 && (
-          <div className="text-sm text-secondary-600 dark:text-secondary-400">
+          <div className="text-sm text-secondary-700 dark:text-secondary-300">
             {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
           </div>
         )}

@@ -193,22 +193,22 @@ const Login = () => {
                   <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 via-solar-600 to-secondary-600 bg-clip-text text-transparent">
                     SolarPro
                   </h1>
-                  <p className="text-secondary-600 dark:text-secondary-400 text-sm sm:text-base">
+                  <p className="text-secondary-700 dark:text-secondary-300 text-sm sm:text-base">
                     Sign in to access your solar management dashboard
                   </p>
                 </div>
 
                 {/* Feature Icons */}
                 <div className="flex justify-center items-center gap-4 mt-6">
-                  <div className="flex items-center gap-2 text-xs text-secondary-500 dark:text-secondary-400">
+                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
                     <Shield className="h-3 w-3 text-primary-500" />
                     <span>Secure</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-secondary-500 dark:text-secondary-400">
+                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
                     <Zap className="h-3 w-3 text-solar-500" />
                     <span>Fast</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-secondary-500 dark:text-secondary-400">
+                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
                     <Sparkles className="h-3 w-3 text-secondary-500" />
                     <span>Modern</span>
                   </div>
@@ -229,7 +229,7 @@ const Login = () => {
                     <h2 className="text-lg sm:text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-2">
                       Select Organization
                     </h2>
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                    <p className="text-sm text-secondary-700 dark:text-secondary-300">
                       Choose the organization you want to access
                     </p>
                   </div>
@@ -342,7 +342,7 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-xs text-secondary-500 dark:text-secondary-400">
+        <div className="text-center mt-8 text-xs text-secondary-600 dark:text-secondary-300">
           <p>© 2024 Vandanam SmartTech. All rights reserved.</p>
         </div>
       </div>

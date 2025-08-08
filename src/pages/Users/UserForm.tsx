@@ -198,7 +198,7 @@ export const UserForm = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-secondary-900">Add New User</h1>
-              <p className="text-secondary-600 mt-1">Create a new user account with appropriate roles and permissions</p>
+              <p className="text-secondary-700 dark:text-secondary-300 mt-1">Create a new user account with appropriate roles and permissions</p>
             </div>
           </div>
         </div>
@@ -302,7 +302,7 @@ export const UserForm = () => {
                         <button
                           type="button"
                           onClick={handleToggleMobile}
-                          className="hover:text-secondary-600 transition-colors"
+                          className="hover:text-secondary-700 dark:hover:text-secondary-300 transition-colors"
                         >
                           {showMobile ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -337,7 +337,7 @@ export const UserForm = () => {
                         <button
                           type="button"
                           onClick={handleToggleMobile}
-                          className="hover:text-secondary-600 transition-colors"
+                          className="hover:text-secondary-700 dark:hover:text-secondary-300 transition-colors"
                         >
                           {showMobile ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
