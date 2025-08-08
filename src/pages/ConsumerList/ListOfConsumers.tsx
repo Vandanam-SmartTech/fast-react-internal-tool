@@ -444,16 +444,6 @@ const ListOfConsumers: React.FC = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
-          </div>
         </div>
       </div>
 

@@ -228,16 +228,16 @@ const Sidebar: React.FC = () => {
           className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-secondary-800 shadow-large border-r border-secondary-200 dark:border-secondary-700 z-40 transition-transform duration-300 ease-in-out"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-200 dark:border-secondary-700 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20">
-            <div className="flex items-center gap-3">
-              <Logo size="lg" />
+          <div className="flex items-center justify-between px-6 py-6 border-b border-secondary-200 dark:border-secondary-700 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20">
+            <div className="flex items-center justify-center w-full">
+              <Logo size="xl" className="mx-auto" />
             </div>
             
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="p-1 h-8 w-8 text-secondary-600 dark:text-secondary-400 hover:text-error-600 dark:hover:text-error-400"
+              className="absolute top-4 right-4 p-1 h-8 w-8 text-secondary-600 dark:text-secondary-400 hover:text-error-600 dark:hover:text-error-400"
               aria-label="Close sidebar"
             >
               <X size={20} />
