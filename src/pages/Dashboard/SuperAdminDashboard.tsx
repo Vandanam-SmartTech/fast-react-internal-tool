@@ -115,8 +115,8 @@ const SuperAdminDashboard: React.FC = () => {
         <p className="text-secondary-600">Complete system administration and management</p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+ {/* Quick Stats */}
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {quickStats.map((stat, index) => (
           <Card key={index} className="stat-card">
             <CardBody className="p-6">
@@ -137,6 +137,7 @@ const SuperAdminDashboard: React.FC = () => {
           </Card>
         ))}
       </div>
+    
 
       {/* Quick Actions */}
       <div>
@@ -164,6 +165,8 @@ const SuperAdminDashboard: React.FC = () => {
           ))}
         </div>
       </div>
+
+       
 
       {/* Recent Activity */}
       <div>
