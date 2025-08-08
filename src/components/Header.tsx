@@ -77,9 +77,10 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('jwtToken');
-    localStorage.removeItem('selectedOrganization');
-    localStorage.removeItem('selectedOrganizationName');
+    // Clear all localStorage data
+    localStorage.clear();
+    
+    // Navigate to login page
     navigate('/login');
   };
 

@@ -28,9 +28,7 @@ jwtAPI.interceptors.response.use(
     switch (status) {
       case 401:
         // Unauthorized - redirect to login
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('selectedOrganization');
-        localStorage.removeItem('selectedOrganizationName');
+        localStorage.clear();
         window.location.href = '/login';
         showError('Session expired. Please login again.');
         break;
@@ -79,7 +77,7 @@ export const setAuthToken = (token: string) => {
     localStorage.setItem('jwtToken', token);
     jwtAPI.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
-    localStorage.removeItem('jwtToken');
+    localStorage.clear();
     delete jwtAPI.defaults.headers.common['Authorization'];
   }
 };

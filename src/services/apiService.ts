@@ -48,9 +48,7 @@ apiClient.interceptors.response.use(
     switch (status) {
       case 401:
         // Unauthorized - redirect to login
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('selectedOrganization');
-        localStorage.removeItem('selectedOrganizationName');
+        localStorage.clear();
         window.location.href = '/login';
         toast.error('Session expired. Please login again.');
         break;

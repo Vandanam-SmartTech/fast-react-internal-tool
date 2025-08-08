@@ -46,8 +46,10 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("selectedRepresentative");
-    localStorage.removeItem("jwtToken");
+    // Clear all localStorage data
+    localStorage.clear();
+    
+    // Navigate to login page
     navigate("/login");
   };
 
