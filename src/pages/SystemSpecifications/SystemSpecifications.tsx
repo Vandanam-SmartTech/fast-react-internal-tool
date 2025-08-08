@@ -211,7 +211,6 @@ useEffect(() => {
         const recommendedKW = recommendation.recommendedKW || "";
 
         const inverterWattages = await fetchInverterWattages(
-            connectionId,
             recommendation.phaseType,
             recommendation.inverterBrand
         );
@@ -247,7 +246,6 @@ useEffect(() => {
 
         if (recommendation.inverterBrand && recommendation.phaseType) {
           const inverterWattages = await fetchInverterWattages(
-            connectionId,
             recommendation.phaseType,
             recommendation.inverterBrand
           );
@@ -297,7 +295,6 @@ useEffect(() => {
 
         if (customerData.inverterBrand && customerData.phaseType) {
           const inverterWattages = await fetchInverterWattages(
-            connectionId,
             customerData.phaseType,
             customerData.inverterBrand
           );
@@ -443,7 +440,6 @@ if (name === "inversionType") {
       setPanelWattages(wattages);
 
      const inverterWattages = await fetchInverterWattages(
-      connectionId,
       phaseType,
       inverterBrandValue
     );

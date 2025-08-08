@@ -73,16 +73,17 @@ export const fetchPanelWattages = async (
 };
 
 export const fetchInverterWattages = async (
-  connectionId: string,
   phaseType: string,
   inverterBrand: string
 ): Promise<number[]> => {
   try {
     console.log('Fetching inverter wattages...');
 
-    const response = await quotationAPI.post(`/api/inverterCapacity/${connectionId}`, {
-      phaseType,
-      inverterBrand,
+    const response = await quotationAPI.get(`/api/inverterCapacity`, {
+      params: {
+        phaseType,
+        inverterBrand,
+      },
     });
 
     return response.data;

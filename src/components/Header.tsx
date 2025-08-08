@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Building, User, Bell, Settings, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, Building, User, Bell, Settings } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import ThemeToggle from './ThemeToggle';
@@ -76,12 +76,6 @@ const Header: React.FC = () => {
     navigate('/login');
   };
 
-  const toggleSidebar = () => {
-    const newState = !sidebarOpen;
-    setSidebarOpen(newState);
-    localStorage.setItem('sidebarOpen', newState.toString());
-  };
-
   const isSuperAdmin = userClaims?.global_roles?.includes('ROLE_SUPER_ADMIN');
 
   // Don't render header on auth pages
@@ -90,58 +84,44 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={`bg-white dark:bg-secondary-800 shadow-soft border-b border-secondary-200 dark:border-secondary-700 px-4 py-3 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'md:left-64' : 'left-0'}`}>
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* Left side - Mobile menu and Logo */}
-        <div className="flex items-center gap-4">
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleSidebar}
-            className="md:hidden p-2"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+    <header className={`bg-white dark:bg-secondary-800 shadow-soft border-b border-secondary-200 dark:border-secondary-700 fixed top-0 right-0 z-30 transition-all duration-300 ${
+      sidebarOpen 
+        ? 'md:left-64 left-0' 
+        : 'left-0 md:left-0'
+    }`}>
+      <div className="flex items-center justify-between px-2 sm:px-4 py-3 w-full">
+        {/* Left side - Logo and Organization */}
+        <div className="flex items-center gap-2 sm:gap-4">
+  {/* Logo and Organization - Only show logo when sidebar is closed and on desktop */}
+  {!sidebarOpen && (
+    <div className="hidden md:block">
+      <Logo size="xl" />
+    </div>
+  )}
 
-          {/* Logo and Organization - Only show when sidebar is closed */}
-          {!sidebarOpen && (
-            <div className="flex items-center gap-4">
-              <Logo size="xl" />
-              {selectedOrgName && !isSuperAdmin && (
-                <div className="hidden md:flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
-                  <Building className="h-4 w-4" />
-                  <span className="font-medium text-sm">{selectedOrgName}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+  {/* Selected Organization - Always visible */}
+  {selectedOrgName && !isSuperAdmin && (
+    <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
+      <Building className="h-4 w-4" />
+      <span className="font-medium text-sm">{selectedOrgName}</span>
+    </div>
+  )}
+</div>
+
 
         {/* Right side - User controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Notifications */}
+          {/* Notifications - Hide on very small screens */}
           <Button
             variant="ghost"
             size="sm"
-            className="p-2"
+            className="p-1 sm:p-2"
             aria-label="Notifications"
           >
-            <Bell className="h-5 w-5" />
-          </Button>
-
-          {/* Settings */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-2"
-            aria-label="Settings"
-          >
-            <Settings className="h-5 w-5" />
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
 
           {/* Organization Selector (only for non-super admins with multiple orgs) */}
@@ -153,6 +133,7 @@ const Header: React.FC = () => {
                 onClick={() => setShowOrgDropdown(!showOrgDropdown)}
                 leftIcon={<Building className="h-4 w-4" />}
                 rightIcon={<ChevronDown className="h-4 w-4" />}
+                className="flex"
               >
                 <span className="hidden sm:inline">Switch Org</span>
               </Button>
@@ -188,26 +169,26 @@ const Header: React.FC = () => {
               size="sm"
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               leftIcon={
-                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-600 rounded-full flex items-center justify-center">
+                  <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                 </div>
               }
-              rightIcon={<ChevronDown className="h-4 w-4 text-secondary-500 dark:text-secondary-400" />}
-              className="px-3"
+              rightIcon={<ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-secondary-500 dark:text-secondary-400" />}
+              className="px-2 sm:px-3"
             >
-              <span className="hidden sm:inline font-medium text-secondary-700 dark:text-secondary-300">
+              <span className="hidden lg:inline font-medium text-secondary-700 dark:text-secondary-300">
                 {userClaims?.preferred_name || userClaims?.name || 'User'}
               </span>
             </Button>
 
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
+              <div className="absolute right-0 mt-2 w-48 sm:w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
                 <div className="py-2">
-                  <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
-                    <div className="font-medium text-secondary-900 dark:text-secondary-100">
+                  <div className="px-3 sm:px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
+                    <div className="font-medium text-secondary-900 dark:text-secondary-100 text-sm">
                       {userClaims?.preferred_name || userClaims?.name || 'User'}
                     </div>
-                    <div className="text-sm text-secondary-500 dark:text-secondary-400 mt-1">
+                    <div className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400 mt-1">
                       {isSuperAdmin ? 'Super Admin' : selectedOrgName}
                     </div>
                   </div>
@@ -215,7 +196,7 @@ const Header: React.FC = () => {
                   <div className="py-1">
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-3 sm:px-4 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 flex items-center gap-2 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out
