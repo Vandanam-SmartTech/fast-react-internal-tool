@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, LogOut, Building, User, Bell, Settings, Menu } from 'lucide-react';
-import { fetchClaims } from '../services/jwtService';
+import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
+import ThemeToggle from './ThemeToggle';
 import defaultLogo from '../assets/Vandanam_SmartTech_Logo.png';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [userClaims, setUserClaims] = useState<any>(null);
+  const { userClaims } = useUser();
   const [selectedOrgName, setSelectedOrgName] = useState('');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -21,20 +22,11 @@ const Header: React.FC = () => {
   const isAuthPage = authPages.includes(location.pathname);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const claims = await fetchClaims();
-        setUserClaims(claims);
-        
-        const orgName = localStorage.getItem('selectedOrganizationName');
-        setSelectedOrgName(orgName || '');
-      } catch (error) {
-        console.error('Failed to load user data:', error);
-      }
-    };
+    const orgName = localStorage.getItem('selectedOrganizationName');
+    setSelectedOrgName(orgName || '');
+  }, [userClaims]);
 
-    loadUserData();
-    
+  useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');
     setSidebarOpen(storedState === 'true');
     
@@ -90,7 +82,7 @@ const Header: React.FC = () => {
     localStorage.setItem('sidebarOpen', newState.toString());
   };
 
-  const isSuperAdmin = userClaims?.roles?.includes('ROLE_SUPER_ADMIN');
+  const isSuperAdmin = userClaims?.global_roles?.includes('ROLE_SUPER_ADMIN');
 
   // Don't render header on auth pages
   if (isAuthPage) {
@@ -98,7 +90,7 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={`bg-white shadow-soft border-b border-secondary-200 px-4 py-3 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'left-64' : 'left-0'}`}>
+    <header className={`bg-white dark:bg-secondary-800 shadow-soft border-b border-secondary-200 dark:border-secondary-700 px-4 py-3 fixed top-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'left-64' : 'left-0'}`}>
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left side - Mobile menu and Logo */}
         <div className="flex items-center gap-4">
@@ -121,7 +113,7 @@ const Header: React.FC = () => {
               className="h-8 w-auto"
             />
             {selectedOrgName && !isSuperAdmin && (
-              <div className="hidden md:flex items-center gap-2 text-secondary-700">
+              <div className="hidden md:flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
                 <Building className="h-4 w-4" />
                 <span className="font-medium text-sm">{selectedOrgName}</span>
               </div>
@@ -131,6 +123,9 @@ const Header: React.FC = () => {
 
         {/* Right side - User controls */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Notifications */}
           <Button
             variant="ghost"
@@ -165,21 +160,21 @@ const Header: React.FC = () => {
               </Button>
               
               {showOrgDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-large border border-secondary-200 z-50 animate-slide-down">
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
                   <div className="py-2">
-                    <div className="px-4 py-2 border-b border-secondary-100">
-                      <h3 className="text-sm font-semibold text-secondary-900">Select Organization</h3>
+                    <div className="px-4 py-2 border-b border-secondary-100 dark:border-secondary-700">
+                      <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">Select Organization</h3>
                     </div>
                     {Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
                       <button
                         key={orgId}
                         onClick={() => handleOrgChange(orgId, orgData.org_name)}
-                        className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 transition-colors ${
-                          orgData.org_name === selectedOrgName ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600' : 'text-secondary-700'
+                        className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors ${
+                          orgData.org_name === selectedOrgName ? 'bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border-r-2 border-primary-600' : 'text-secondary-700 dark:text-secondary-300'
                         }`}
                       >
                         <div className="font-medium">{orgData.org_name}</div>
-                        <div className="text-xs text-secondary-500 mt-1">{orgData.role.replace('ROLE_', '')}</div>
+                        <div className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">{orgData.role.replace('ROLE_', '')}</div>
                       </button>
                     ))}
                   </div>
@@ -199,22 +194,22 @@ const Header: React.FC = () => {
                   <User className="h-4 w-4 text-white" />
                 </div>
               }
-              rightIcon={<ChevronDown className="h-4 w-4 text-secondary-500" />}
+              rightIcon={<ChevronDown className="h-4 w-4 text-secondary-500 dark:text-secondary-400" />}
               className="px-3"
             >
-              <span className="hidden sm:inline font-medium text-secondary-700">
+              <span className="hidden sm:inline font-medium text-secondary-700 dark:text-secondary-300">
                 {userClaims?.preferred_name || userClaims?.name || 'User'}
               </span>
             </Button>
 
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-large border border-secondary-200 z-50 animate-slide-down">
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
                 <div className="py-2">
-                  <div className="px-4 py-3 border-b border-secondary-100">
-                    <div className="font-medium text-secondary-900">
+                  <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
+                    <div className="font-medium text-secondary-900 dark:text-secondary-100">
                       {userClaims?.preferred_name || userClaims?.name || 'User'}
                     </div>
-                    <div className="text-sm text-secondary-500 mt-1">
+                    <div className="text-sm text-secondary-500 dark:text-secondary-400 mt-1">
                       {isSuperAdmin ? 'Super Admin' : selectedOrgName}
                     </div>
                   </div>
@@ -222,7 +217,7 @@ const Header: React.FC = () => {
                   <div className="py-1">
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-error-600 hover:bg-error-50 flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 flex items-center gap-2 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out

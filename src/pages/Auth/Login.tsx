@@ -9,12 +9,22 @@ import Card, { CardBody } from '../../components/ui/Card';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
 
+interface UserClaims {
+  name?: string;
+  preferred_name?: string;
+  email?: string;
+  global_roles?: string[];
+  org_roles?: Record<string, any>;
+  is_password_changed?: boolean;
+  [key: string]: any;
+}
+
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showOrgSelection, setShowOrgSelection] = useState(false);
-  const [userClaims, setUserClaims] = useState(null);
+  const [userClaims, setUserClaims] = useState<UserClaims | null>(null);
   const [selectedOrg, setSelectedOrg] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -64,6 +74,8 @@ const Login = () => {
       if (claims.global_roles && Array.isArray(claims.global_roles) && claims.global_roles.includes('ROLE_SUPER_ADMIN')) {
         console.log('Super admin detected, redirecting to dashboard');
         showSuccess('Welcome back!');
+        // Trigger user update event for immediate UI update
+        window.dispatchEvent(new CustomEvent('userUpdated'));
         navigate('/SuperAdminDashboard');
         return;
       }
@@ -78,6 +90,8 @@ const Login = () => {
           localStorage.setItem('selectedOrganization', orgId);
           localStorage.setItem('selectedOrganizationName', orgData.org_name);
           showSuccess('Login successful!');
+          // Trigger user update event for immediate UI update
+          window.dispatchEvent(new CustomEvent('userUpdated'));
           navigate('/');
         } else {
           // Multiple orgs, show selection
@@ -107,95 +121,103 @@ const Login = () => {
       setError('Please select an organization.');
       return;
     }
-    
+
+    if (!userClaims?.org_roles) {
+      setError('No organization data available.');
+      return;
+    }
+
     const orgData = userClaims.org_roles[selectedOrg];
     localStorage.setItem('selectedOrganization', selectedOrg);
     localStorage.setItem('selectedOrganizationName', orgData.org_name);
-    showSuccess('Organization selected successfully!');
+    showSuccess('Login successful!');
+    // Trigger user update event for immediate UI update
+    window.dispatchEvent(new CustomEvent('userUpdated'));
     navigate('/');
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-4 relative"
-      style={{ backgroundImage: `url(${bgImage})` }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-solar-50 dark:from-primary-900/20 dark:via-secondary-900 dark:to-solar-900/20 p-4 sm:p-6">
+      <div className="w-full max-w-md mx-auto">
         <Card className="glass-effect">
-          <CardBody className="p-8">
+          <CardBody className="p-6 sm:p-8">
             {/* Logo and Title */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8">
               <div className="flex justify-center mb-4">
-                <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto" />
+                <img src={logo1} alt="Logo" className="h-10 sm:h-12 w-auto" />
               </div>
-              <h1 className="text-2xl font-bold text-gradient mb-2">
-                SolarPro
+              <h1 className="text-xl sm:text-2xl font-bold text-secondary-900 dark:text-secondary-100 mb-2">
+                Welcome to SolarPro
               </h1>
-              <p className="text-secondary-600 text-sm">
-                Solar Energy Management Platform
+              <p className="text-sm sm:text-base text-secondary-600 dark:text-secondary-400">
+                Sign in to your account
               </p>
             </div>
 
-            {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg">
-                <p className="text-error-700 text-sm text-center">{error}</p>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+                <p className="text-error-700 dark:text-error-300 text-sm text-center">{error}</p>
               </div>
             )}
 
-            {/* Organization Selection */}
             {showOrgSelection ? (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="text-center">
-                  <div className="flex justify-center mb-3">
-                    <div className="p-3 bg-primary-100 rounded-full">
-                      <Building className="h-6 w-6 text-primary-600" />
-                    </div>
-                  </div>
-                  <h2 className="text-xl font-semibold text-secondary-900 mb-2">
+                  <h2 className="text-base sm:text-lg font-semibold text-secondary-900 dark:text-secondary-100 mb-2">
                     Select Organization
                   </h2>
-                  <p className="text-secondary-600 text-sm">
+                  <p className="text-sm text-secondary-600 dark:text-secondary-400">
                     Choose the organization you want to access
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="form-label">
-                    Organization
-                  </label>
-                  <select
-                    value={selectedOrg}
-                    onChange={(e) => setSelectedOrg(e.target.value)}
-                    className="form-select"
-                    required
-                  >
-                    <option value="">Select Organization</option>
-                    {userClaims?.org_roles && Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
-                      <option key={orgId} value={orgId}>
-                        {orgData.org_name} ({orgData.role.replace('ROLE_', '')})
-                      </option>
-                    ))}
-                  </select>
+                <div className="space-y-2 sm:space-y-3">
+                  {userClaims?.org_roles && Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
+                    <button
+                      key={orgId}
+                      onClick={() => setSelectedOrg(orgId)}
+                      className={`w-full p-3 sm:p-4 text-left rounded-lg border transition-all duration-200 ${
+                        selectedOrg === orgId
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                          : 'border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:border-primary-300 dark:hover:border-primary-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Building className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm sm:text-base truncate">{orgData.org_name}</div>
+                          <div className="text-xs sm:text-sm opacity-75 truncate">{orgData.role.replace('ROLE_', '')}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
 
-                <Button
-                  onClick={handleOrgSelection}
-                  className="w-full"
-                  size="lg"
-                  leftIcon={<Building className="h-4 w-4" />}
-                >
-                  Continue
-                </Button>
+                <div className="flex gap-2 sm:gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowOrgSelection(false);
+                      setSelectedOrg('');
+                      setError('');
+                    }}
+                    className="flex-1 text-sm"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleOrgSelection}
+                    className="flex-1 text-sm"
+                    leftIcon={<Sun className="h-4 w-4" />}
+                  >
+                    Continue
+                  </Button>
+                </div>
               </div>
             ) : (
-              /* Login Form */
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4">
                   <Input
                     label="Username or Email"
                     type="text"
@@ -205,7 +227,6 @@ const Login = () => {
                     leftIcon={<User className="h-4 w-4" />}
                     required
                   />
-
                   <Input
                     label="Password"
                     type="password"
@@ -218,18 +239,18 @@ const Login = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/PasswordReset')}
-                    className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                <div className="text-center">
+                  <a
+                    href="/PasswordReset"
+                    className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
                   >
-                    Forgot Password?
-                  </button>
+                    Forgot your password?
+                  </a>
                 </div>
 
                 <Button
                   type="submit"
+                  variant="primary"
                   className="w-full"
                   size="lg"
                   loading={loading}
@@ -241,13 +262,6 @@ const Login = () => {
             )}
           </CardBody>
         </Card>
-
-        {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-white/80 text-sm">
-            © 2024 Vandanam SmartTech. All rights reserved.
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from "react";
+import { ThemeProvider } from './contexts/ThemeContext';
+import { UserProvider } from './contexts/UserContext';
 
 import Login from './pages/Auth/Login';
 import PrivateRoute from './routes/PrivateRoute';
@@ -81,7 +83,7 @@ const AppContent: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-secondary-50 flex flex-col">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex flex-col transition-colors duration-200">
       {/* Sidebar - Always render but control visibility */}
       <Sidebar />
       
@@ -490,9 +492,13 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router basename="/solarpro">
-      <AppContent />
-    </Router>
+    <ThemeProvider>
+      <UserProvider>
+        <Router basename="/solarpro">
+          <AppContent />
+        </Router>
+      </UserProvider>
+    </ThemeProvider>
   );
 }
 

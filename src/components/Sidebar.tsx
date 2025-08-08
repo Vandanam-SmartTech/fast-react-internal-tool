@@ -214,7 +214,7 @@ const Sidebar: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={toggleSidebar}
-          className="fixed top-3 left-2 z-50 p-2 text-primary-800 hover:bg-primary-100"
+          className="fixed top-3 left-2 z-50 p-2 text-primary-800 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-primary-900"
           aria-label="Open sidebar"
         >
           <Menu size={24} />
@@ -225,23 +225,19 @@ const Sidebar: React.FC = () => {
       {isOpen && (
         <div
           ref={sidebarRef}
-          className="fixed top-0 left-0 h-full w-64 bg-white shadow-large border-r border-secondary-200 z-40 transition-transform duration-300 ease-in-out"
+          className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-secondary-800 shadow-large border-r border-secondary-200 dark:border-secondary-700 z-40 transition-transform duration-300 ease-in-out"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-200 bg-gradient-to-r from-primary-50 to-solar-50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-200 dark:border-secondary-700 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20">
             <div className="flex items-center gap-3">
               <img src={Logo} alt="Logo" className="h-8 w-auto" />
-              <div>
-                <h1 className="text-lg font-bold text-gradient">SolarPro</h1>
-                <p className="text-xs text-secondary-600">Management Platform</p>
-              </div>
             </div>
             
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="p-1 h-8 w-8 text-secondary-600 hover:text-error-600"
+              className="p-1 h-8 w-8 text-secondary-600 dark:text-secondary-400 hover:text-error-600 dark:hover:text-error-400"
               aria-label="Close sidebar"
             >
               <X size={20} />
@@ -325,15 +321,7 @@ const Sidebar: React.FC = () => {
               </div>
 
               {/* Documents */}
-              <button
-                onClick={goToDocuments}
-                className={`nav-link w-full justify-start ${
-                  isActive("/generatedocuments") ? "nav-link-active" : "nav-link-inactive"
-                }`}
-              >
-                <FileText size={20} />
-                <span>Documents</span>
-              </button>
+             
 
               {/* Organizations (Super Admin) */}
               {roles.includes("ROLE_SUPER_ADMIN") && (
@@ -384,10 +372,10 @@ const Sidebar: React.FC = () => {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-secondary-200">
+            <div className="p-4 border-t border-secondary-200 dark:border-secondary-700">
               <button
                 onClick={handleLogout}
-                className="nav-link-inactive w-full justify-start text-error-600 hover:text-error-700 hover:bg-error-50"
+                className="nav-link-inactive w-full justify-start text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300 hover:bg-error-50 dark:hover:bg-error-900/20"
               >
                 <LogOut size={20} />
                 <span>Sign Out</span>
