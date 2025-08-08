@@ -50,14 +50,15 @@ import EnvBanner from './components/EnvBanner';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import 'leaflet/dist/leaflet.css';
-
-
+import 'react-toastify/dist/ReactToastify.css';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const showSidebar = location.pathname !== '/login' && location.pathname !== '/PasswordReset' && location.pathname !== '/Verification' && location.pathname !== '/ChangePassword' && location.pathname !== '/PageNotFound';
+  // Define auth pages where sidebar/header should not show
+  const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
+  const showSidebar = !authPages.includes(location.pathname);
 
   const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
 
@@ -80,395 +81,408 @@ const AppContent: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {showSidebar && <Sidebar />}
-      {showSidebar && <Header />}
+    <div className="min-h-screen bg-secondary-50 flex flex-col">
+      {/* Sidebar - Always render but control visibility */}
+      <Sidebar />
+      
+      {/* Header - Always render but control visibility */}
+      <Header />
 
-      <ToastContainer position="top-right" autoClose={1000} />
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        toastClassName="rounded-lg shadow-soft"
+      />
       
       <EnvBanner envLabel={envLabel} />
 
-      <div className={`flex-1 py-4 pt-20 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''}`}>
-        <Routes>
+      {/* Main content area */}
+      <main className={`flex-1 transition-all duration-300 ${
+        showSidebar && sidebarOpen ? 'md:ml-64' : ''
+      }`}>
+        <div className="pt-16">
+          <Routes>
+            <Route path="/" element={<HomeRedirect />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/PasswordReset" element={<PasswordReset />} />
+            <Route path="/Verification" element={<Verification />} />
+            <Route path="/ChangePassword" element={<ChangePassword />} />
+            <Route path="*" element={<PageNotFound />} />
 
-          
+            {/* Customer Management Routes */}
+            <Route
+              path="/manage-customers"
+              element={
+                <PrivateRoute>
+                  <ManageCustomers />
+                </PrivateRoute>
+              }
+            />
 
-          <Route path="/" element={<HomeRedirect />} />
-          
-          <Route path="/login" element={<Login />} />
+            <Route
+              path="/list-of-consumers"
+              element={
+                <PrivateRoute>
+                  <ListOfConsumers />
+                </PrivateRoute>
+              }
+            />
 
-          <Route path="/PasswordReset" element={<PasswordReset />} />
+            <Route
+              path="/list-of-users"
+              element={
+                <PrivateRoute>
+                  <ListOfUsers />
+                </PrivateRoute>
+              }
+            />
 
-          <Route path="/Verification" element={<Verification />} />
-
-          <Route path="/ChangePassword" element={<ChangePassword />} />
-
-          <Route path="*" element={<PageNotFound />} />
-
-          
-          <Route
-            path="/manage-customers"
-            element={
-              <PrivateRoute>
-                <ManageCustomers />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/list-of-consumers"
-            element={
-              <PrivateRoute>
-                <ListOfConsumers />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/list-of-users"
-            element={
-              <PrivateRoute>
-                <ListOfUsers />
-              </PrivateRoute>
-            }
-          />
-
-          {/* <Route
-            path="/RepresentativeDashboard"
-            element={
-              <PrivateRoute>
-                <RepresentativeDashboard />
-              </PrivateRoute>
-            }
-          /> */}
-
-          <Route
-            path="/AdminDashboard"
-            element={
+            {/* Dashboard Routes */}
+            <Route
+              path="/AdminDashboard"
+              element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
                   <AdminDashboard />
                 </RoleProtectedRoute>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/SuperAdminDashboard"
-            element={
+            <Route
+              path="/SuperAdminDashboard"
+              element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
                   <SuperAdminDashboard />
                 </RoleProtectedRoute>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/RepresentativeDashboard"
-            element={
+            <Route
+              path="/RepresentativeDashboard"
+              element={
                 <RoleProtectedRoute allowedRoles={['ROLE_REPRESENTATIVE']}>
                   <RepresentativeDashboard />
                 </RoleProtectedRoute>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/AgencyAdminDashboard"
-            element={
+            <Route
+              path="/AgencyAdminDashboard"
+              element={
                 <RoleProtectedRoute allowedRoles={['ROLE_AGENCY_ADMIN']}>
                   <AgencyAdminDashboard />
                 </RoleProtectedRoute>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/StaffDashboard"
-            element={
+            <Route
+              path="/StaffDashboard"
+              element={
                 <RoleProtectedRoute allowedRoles={['ROLE_STAFF']}>
                   <StaffDashboard />
                 </RoleProtectedRoute>
-            }
-          />
+              }
+            />
 
-          <Route
-            path="/generatedocuments"
-            element={
-              <PrivateRoute>
-                <GenerateDocuments />
-              </PrivateRoute>
-            }
-          />
+            {/* Document Routes */}
+            <Route
+              path="/generatedocuments"
+              element={
+                <PrivateRoute>
+                  <GenerateDocuments />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            <Route
               path="/generatedocuments/:id"
               element={
-              <PrivateRoute>
-                <GenerateDocuments />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <GenerateDocuments />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* Customer Routes */}
+            <Route
               path="/view-customer/:id"
               element={
-              <PrivateRoute>
-                <ViewCustomer />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <ViewCustomer />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            <Route
               path="/edit-customer/:id"
               element={
-              <PrivateRoute>
-                <EditCustomer />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <EditCustomer />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-              path="/edit-connection/:id"
-              element={
-              <PrivateRoute>
-                <EditConnection />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-              path="/edit-installation/:id"
-              element={
-              <PrivateRoute>
-                <EditInstallation />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-              path="/view-connection/:id"
-              element={
-              <PrivateRoute>
-                <ViewConnection />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-              path="/view-installation/:id"
-              element={
-              <PrivateRoute>
-                <ViewInstallation />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-              path="/view-user/:id"
-              element={
-              <PrivateRoute>
-                <ViewUser />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-              path="/edit-user/:id"
-              element={
-              <PrivateRoute>
-                <EditUser />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
+            <Route
               path="/CustomerForm"
               element={
-              <PrivateRoute>
-                <CustomerForm />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <CustomerForm />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* Connection Routes */}
+            <Route
+              path="/edit-connection/:id"
+              element={
+                <PrivateRoute>
+                  <EditConnection />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/view-connection/:id"
+              element={
+                <PrivateRoute>
+                  <ViewConnection />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/ConnectionForm"
               element={
-              <PrivateRoute>
-                <ConnectionForm />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <ConnectionForm />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* Installation Routes */}
+            <Route
+              path="/edit-installation/:id"
+              element={
+                <PrivateRoute>
+                  <EditInstallation />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/view-installation/:id"
+              element={
+                <PrivateRoute>
+                  <ViewInstallation />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/InstallationForm"
               element={
-              <PrivateRoute>
-                <InstallationForm />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <InstallationForm />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* System Routes */}
+            <Route
               path="/SystemSpecifications"
               element={
-              <PrivateRoute>
-                <SystemSpecifications />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <SystemSpecifications />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* User Routes */}
+            <Route
+              path="/view-user/:id"
+              element={
+                <PrivateRoute>
+                  <ViewUser />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/edit-user/:id"
+              element={
+                <PrivateRoute>
+                  <EditUser />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/UserForm"
               element={
-              <PrivateRoute>
-                <UserForm />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <UserForm />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
+            {/* Consumer Routes */}
+            <Route
               path="/OnboardedConsumers"
               element={
-              <PrivateRoute>
-                <OnboardedConsumers />
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <OnboardedConsumers />
+                </PrivateRoute>
+              }
+            />
 
+            {/* Material Routes */}
             <Route
               path="/material-form/:id"
               element={
-              <PrivateRoute>
-                <MaterialDetails/>
-              </PrivateRoute>
-            }
-          />
+                <PrivateRoute>
+                  <MaterialDetails />
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/organizations"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                <OrganizationList />
-              </RoleProtectedRoute>
-            }
-          />
+            {/* Organization Routes */}
+            <Route
+              path="/organizations"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <OrganizationList />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/organization-form"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                <OrganizationForm />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/organization-form"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <OrganizationForm />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/organization-form/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                <OrganizationForm />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/organization-form/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <OrganizationForm />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin-management"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                <AdminManagement />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <AdminManagement />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/agencies/:orgId"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
-                <AgencyList />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/agencies/:orgId"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                  <AgencyList />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/agency-form/:orgId"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
-                <AgencyForm />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/agency-form/:orgId"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                  <AgencyForm />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/agency-form/:orgId/:agencyId"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <AgencyForm />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/agency-form/:orgId/:agencyId"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <AgencyForm />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/organization-view/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <OrganizationView />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/organization-view/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <OrganizationView />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/user-management"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <UserManagement />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/user-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <UserManagement />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/user-form"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <UserFormManagement />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/user-form"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <UserFormManagement />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/user-form/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <UserFormManagement />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/user-form/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <UserFormManagement />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/user-view/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                <UserView />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/user-view/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <UserView />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/role-management/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
-                <RoleManagement />
-              </RoleProtectedRoute>
-            }
-          />
+            <Route
+              path="/role-management/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                  <RoleManagement />
+                </RoleProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/user-org-roles/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
-                <UserOrgRoles />
-              </RoleProtectedRoute>
-            }
-          />
-
-        </Routes>
-      </div>
+            <Route
+              path="/user-org-roles/:id"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                  <UserOrgRoles />
+                </RoleProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </main>
       
+      {/* Footer - Only show on authenticated pages */}
       {showSidebar && <Footer />}
     </div>
   );

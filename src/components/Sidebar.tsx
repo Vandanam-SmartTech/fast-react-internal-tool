@@ -1,10 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react"; // Using X for close icon
+import { Menu, X } from "lucide-react";
 import Logo from "../assets/Vandanam_SmartTech_Logo.png"; 
-import { Home, UserPlus, Users, UserRoundCheck, LogOut, UserCog, UsersRound, Building, Shield, UserCheck, LayoutDashboard, Building2, Briefcase, ChevronDown, ChevronRight } from "lucide-react";
+import { 
+  Home, 
+  UserPlus, 
+  Users, 
+  UserRoundCheck, 
+  LogOut, 
+  UserCog, 
+  UsersRound, 
+  Building, 
+  Shield, 
+  UserCheck, 
+  LayoutDashboard, 
+  Building2, 
+  Briefcase, 
+  ChevronDown, 
+  ChevronRight,
+  Settings,
+  FileText,
+  BarChart3
+} from "lucide-react";
 import { fetchClaims } from "../services/jwtService";
-
+import Button from "./ui/Button";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +34,11 @@ const Sidebar: React.FC = () => {
   const [customersExpanded, setCustomersExpanded] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+  
+  // Check if we're on an auth page
+  const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
+  const isAuthPage = authPages.includes(location.pathname);
+  
   const toggleSidebar = () => {
     const newState = !isOpen;
     setIsOpen(newState);
@@ -58,7 +82,6 @@ const Sidebar: React.FC = () => {
     };
   }, [isOpen]);
 
-
   const goToListOfConsumers = () => {
     navigate("/list-of-consumers");
   };
@@ -91,7 +114,9 @@ const Sidebar: React.FC = () => {
     navigate("/user-management");
   };
 
-
+  const goToDocuments = () => {
+    navigate("/generatedocuments");
+  };
 
   const handleHomeClick = async () => {
     try {
@@ -135,7 +160,6 @@ const Sidebar: React.FC = () => {
       alert('Error determining user role.');
     }
   };
-  
 
   useEffect(() => {
     const getClaims = async () => {
@@ -167,170 +191,208 @@ const Sidebar: React.FC = () => {
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, []);
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const isCustomersActive = () => {
+    return ['/manage-customers', '/CustomerForm', '/list-of-consumers', '/OnboardedConsumers'].includes(location.pathname);
+  };
+
+  // Don't render sidebar on auth pages
+  if (isAuthPage) {
+    return null;
+  }
+
   return (
     <>
       {/* Toggle button for smaller screens */}
       {!isOpen && (
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={toggleSidebar}
-          className="fixed top-3 left-2 z-50 p-2  text-blue-800 rounded-md"
+          className="fixed top-3 left-2 z-50 p-2 text-primary-800 hover:bg-primary-100"
+          aria-label="Open sidebar"
         >
           <Menu size={24} />
-        </button>
+        </Button>
       )}
 
       {/* Sidebar */}
       {isOpen && (
         <div
-        ref={sidebarRef}
-          className={`fixed top-0 left-0 h-full w-64 bg-blue-100 text-blue-800 shadow-md z-20 transition-transform duration-300 ease-in-out`}
+          ref={sidebarRef}
+          className="fixed top-0 left-0 h-full w-64 bg-white shadow-large border-r border-secondary-200 z-40 transition-transform duration-300 ease-in-out"
         >
-          {/* Close Icon */}
-          <div className="relative px-4 pt-6 pb-2 border-b border-blue-200">
-  {/* Logo */}
-  <img src={Logo} alt="Logo" className="h-20 w-auto ml-8" />
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-200 bg-gradient-to-r from-primary-50 to-solar-50">
+            <div className="flex items-center gap-3">
+              <img src={Logo} alt="Logo" className="h-8 w-auto" />
+              <div>
+                <h1 className="text-lg font-bold text-gradient">SolarPro</h1>
+                <p className="text-xs text-secondary-600">Management Platform</p>
+              </div>
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="p-1 h-8 w-8 text-secondary-600 hover:text-error-600"
+              aria-label="Close sidebar"
+            >
+              <X size={20} />
+            </Button>
+          </div>
 
-  {/* Cross Button */}
-  <button
-    onClick={toggleSidebar}
-    className="absolute top-3 right-2 text-blue-800 hover:text-red-500"
-  >
-    <X size={24} />
-  </button>
-</div>
+          {/* Navigation */}
+          <div className="flex flex-col h-full">
+            <nav className="flex-1 px-4 py-6 space-y-2">
+              {/* Dashboard */}
+              <button
+                onClick={handleHomeClick}
+                className={`nav-link w-full justify-start ${
+                  isActive("/AdminDashboard") || isActive("/RepresentativeDashboard") || 
+                  isActive("/SuperAdminDashboard") || isActive("/AgencyAdminDashboard") || 
+                  isActive("/StaffDashboard")
+                    ? "nav-link-active"
+                    : "nav-link-inactive"
+                }`}
+              >
+                <LayoutDashboard size={20} />
+                <span>Dashboard</span>
+              </button>
 
+              {/* Analytics */}
+              <button
+                className="nav-link-inactive w-full justify-start"
+              >
+                <BarChart3 size={20} />
+                <span>Analytics</span>
+              </button>
 
-          {/* Navigation Buttons */}
-          <div className="flex flex-col space-y-3 px-6 py-6">
+              {/* Manage Customers Section */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setCustomersExpanded(!customersExpanded)}
+                  className={`nav-link w-full justify-between ${
+                    isCustomersActive() ? "nav-link-active" : "nav-link-inactive"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Users size={20} />
+                    <span>Customers</span>
+                  </div>
+                  {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
 
-          <button
-  onClick={handleHomeClick}
-  className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-    location.pathname === "/AdminDashboard" || location.pathname === "/RepresentativeDashboard" || location.pathname === "/SuperAdminDashboard" || location.pathname === "/AgencyAdminDashboard" || location.pathname === "/StaffDashboard"
-      ? "text-blue-600 font-semibold"
-      : "text-black"
-  }`}
->
-  <LayoutDashboard size={18} />
-  Dashboard
-</button>
+                {customersExpanded && (
+                  <div className="ml-6 space-y-1 mt-2">
+                    <button
+                      onClick={goToCustomerForm}
+                      className={`nav-link w-full justify-start ${
+                        isActive("/CustomerForm") ? "nav-link-active" : "nav-link-inactive"
+                      }`}
+                    >
+                      <UserPlus size={18} />
+                      <span>Add Customer</span>
+                    </button>
 
-{/* Manage Customers Section */}
-<div>
-  <button
-    onClick={() => {
-      setCustomersExpanded(!customersExpanded);
-    }}
-    className={`flex items-center justify-between w-full gap-2 px-2 py-1 whitespace-nowrap ${
-      ['/manage-customers', '/CustomerForm', '/list-of-consumers', '/OnboardedConsumers'].includes(location.pathname)
-        ? "text-blue-600 font-semibold"
-        : "text-black"
-    }`}
-  >
-    <div className="flex items-center gap-2">
-      <Users size={18} />
-      Manage Customers
-    </div>
-    {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-  </button>
+                    <button
+                      onClick={goToListOfConsumers}
+                      className={`nav-link w-full justify-start ${
+                        isActive("/list-of-consumers") ? "nav-link-active" : "nav-link-inactive"
+                      }`}
+                    >
+                      <Users size={18} />
+                      <span>All Customers</span>
+                    </button>
 
-  {customersExpanded && (
-    <div className="ml-6 space-y-2 mt-2">
-      <button
-        onClick={goToCustomerForm}
-        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
-          location.pathname === "/CustomerForm"
-            ? "text-blue-600 font-semibold"
-            : "text-black"
-        }`}
-      >
-        <UserPlus size={16} />
-        Add New Customer
-      </button>
+                    <button
+                      onClick={goToOnboardedConsumers}
+                      className={`nav-link w-full justify-start ${
+                        isActive("/OnboardedConsumers") ? "nav-link-active" : "nav-link-inactive"
+                      }`}
+                    >
+                      <UserRoundCheck size={18} />
+                      <span>Onboarded</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
-      <button
-        onClick={goToListOfConsumers}
-        className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap w-full text-left ${
-          location.pathname === "/list-of-consumers"
-            ? "text-blue-600 font-semibold"
-            : "text-black"
-        }`}
-      >
-        <Users size={16} />
-        List of Customers
-      </button>
+              {/* Documents */}
+              <button
+                onClick={goToDocuments}
+                className={`nav-link w-full justify-start ${
+                  isActive("/generatedocuments") ? "nav-link-active" : "nav-link-inactive"
+                }`}
+              >
+                <FileText size={20} />
+                <span>Documents</span>
+              </button>
 
-<button
-  onClick={goToOnboardedConsumers}
-  className={`flex items-center gap-2 px-2 py-1 w-full text-left overflow-hidden text-ellipsis whitespace-nowrap ${
-    location.pathname === "/OnboardedConsumers"
-      ? "text-blue-600 font-semibold"
-      : "text-black"
-  }`}
->
-  <UserRoundCheck size={16} />
-  <span className="overflow-hidden text-ellipsis whitespace-nowrap block">
-    Onboarded Consumers
-  </span>
-</button>
+              {/* Organizations (Super Admin) */}
+              {roles.includes("ROLE_SUPER_ADMIN") && (
+                <button 
+                  onClick={goToOrganizations}
+                  className={`nav-link w-full justify-start ${
+                    isActive("/organizations") ? "nav-link-active" : "nav-link-inactive"
+                  }`}
+                >
+                  <Building size={20} />
+                  <span>Organizations</span>
+                </button>
+              )}
 
-    </div>
-  )}
-</div>
+              {/* Role Management (Super Admin) */}
+              {roles.includes("ROLE_SUPER_ADMIN") && (
+                <button 
+                  onClick={goToAdminManagement}
+                  className={`nav-link w-full justify-start ${
+                    isActive("/admin-management") ? "nav-link-active" : "nav-link-inactive"
+                  }`}
+                >
+                  <Shield size={20} />
+                  <span>Role Management</span>
+                </button>
+              )}
 
+              {/* User Management */}
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+                <button 
+                  onClick={goToUserManagement}
+                  className={`nav-link w-full justify-start ${
+                    isActive("/user-management") ? "nav-link-active" : "nav-link-inactive"
+                  }`}
+                >
+                  <UserCheck size={20} />
+                  <span>User Management</span>
+                </button>
+              )}
 
-{roles.includes("ROLE_SUPER_ADMIN") && (
-  <button 
-    onClick={goToOrganizations}
-    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/organizations"
-        ? "text-blue-600 font-semibold"
-        : "text-black"
-    }`}
-  >
-    <Building size={18} />
-    Organizations
-  </button>
-)}
+              {/* Settings */}
+              <button
+                className="nav-link-inactive w-full justify-start"
+              >
+                <Settings size={20} />
+                <span>Settings</span>
+              </button>
+            </nav>
 
-{roles.includes("ROLE_SUPER_ADMIN") && (
-  <button 
-    onClick={goToAdminManagement}
-    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/admin-management"
-        ? "text-blue-600 font-semibold"
-        : "text-black"
-    }`}
-  >
-    <Shield size={18} />
-    Role Management
-  </button>
-)}
-
-{(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
-  <button 
-    onClick={goToUserManagement}
-    className={`flex items-center gap-2 px-2 py-1 whitespace-nowrap ${
-      location.pathname === "/user-management"
-        ? "text-blue-600 font-semibold"
-        : "text-black"
-    }`}
-  >
-    <UserCheck size={18} />
-    User Management
-  </button>
-)}
-
-  <button
-    onClick={handleLogout}
-    className="flex items-center gap-2 px-2 py-1 text-black whitespace-nowrap"
-  >
-    <LogOut size={18} />
-    Logout
-  </button>
-</div>
+            {/* Footer */}
+            <div className="p-4 border-t border-secondary-200">
+              <button
+                onClick={handleLogout}
+                className="nav-link-inactive w-full justify-start text-error-600 hover:text-error-700 hover:bg-error-50"
+              >
+                <LogOut size={20} />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
         </div>
-        
       )}
     </>
   );
