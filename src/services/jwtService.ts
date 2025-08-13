@@ -17,58 +17,49 @@ jwtAPI.interceptors.request.use((config) => {
 });
 
 // Response interceptor for error handling
-jwtAPI.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    const status = error.response?.status;
-    const message = error.response?.data?.message || error.message;
+// jwtAPI.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error) => {
+//     const status = error.response?.status;
+//     const message = error.response?.data?.message || error.message;
 
-    switch (status) {
-      case 401:
-        // Unauthorized - redirect to login
-        localStorage.clear();
-        window.location.href = '/login';
-        showError('Session expired. Please login again.');
-        break;
-      case 403:
-        showError('Access denied. You do not have permission to perform this action.');
-        break;
-      case 404:
-        showError('Resource not found.');
-        break;
-      case 422:
-        showError('Validation error. Please check your input.');
-        break;
-      case 500:
-        showError('Server error. Please try again later.');
-        break;
-      default:
-        if (error.code === 'ECONNABORTED') {
-          showError('Request timeout. Please check your connection.');
-        } else {
-          showError(message || 'An unexpected error occurred.');
-        }
-    }
+//     switch (status) {
+//       case 401:
+//         // Unauthorized - redirect to login
+//         localStorage.clear();
+//         window.location.href = '/login';
+//         showError('Session expired. Please login again.');
+//         break;
+//       case 403:
+//         showError('Access denied. You do not have permission to perform this action.');
+//         break;
+//       case 404:
+//         showError('Resource not found.');
+//         break;
+//       case 422:
+//         showError('Validation error. Please check your input.');
+//         break;
+//       case 500:
+//         showError('Server error. Please try again later.');
+//         break;
+//       default:
+//         if (error.code === 'ECONNABORTED') {
+//           showError('Request timeout. Please check your connection.');
+//         } else {
+//           showError(message || 'An unexpected error occurred.');
+//         }
+//     }
 
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 // Login function with enhanced error handling
 export const login = async (credentials: { username: string; password: string; }) => {
-  try {
-    const response = await jwtAPI.post('/auth/login', credentials);
-    return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 401) {
-      showError('Invalid username or password.');
-    } else {
-      showError('Login failed. Please try again.');
-    }
-    throw error;
-  }
+  const response = await jwtAPI.post('/auth/login', credentials);
+  return response.data;
 };
 
 // Set authentication token

@@ -17,14 +17,13 @@ const Header: React.FC = () => {
   const orgDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check if we're on an auth page
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
   const isAuthPage = authPages.includes(location.pathname);
 
-  useEffect(() => {
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    setSelectedOrgName(orgName || '');
-  }, [userClaims]);
+  // useEffect(() => {
+  //   const orgName = localStorage.getItem('selectedOrganizationName');
+  //   setSelectedOrgName(orgName || '');
+  // }, [userClaims]);
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');
@@ -58,22 +57,25 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleOrgChange = (orgId: string, orgName: string) => {
-    localStorage.setItem('selectedOrganization', orgId);
-    localStorage.setItem('selectedOrganizationName', orgName);
-    setSelectedOrgName(orgName);
-    setShowOrgDropdown(false);
-    
-    // Trigger custom event for components to listen to org changes
-    window.dispatchEvent(new CustomEvent('organizationChanged', { detail: { orgId, orgName } }));
-  };
+const handleOrgChange = (orgId: string, orgName: string, role: string) => {
+  const newOrg = { orgId, orgName, role };
+
+  // Store as JSON string
+  localStorage.setItem('selectedOrg', JSON.stringify(newOrg));
+
+  setSelectedOrgName(orgName);
+  setShowOrgDropdown(false);
+
+  // Trigger event for other components
+  window.dispatchEvent(new CustomEvent('organizationChanged', { detail: newOrg }));
+};
+
 
   const handleLogout = () => {
-    // Clear all localStorage data
-    localStorage.clear();
-    
-    // Navigate to login page
-    navigate('/login');
+    localStorage.removeItem("selectedRepresentative");
+    localStorage.removeItem("selectedOrg");
+    localStorage.removeItem("jwtToken");
+    navigate("/login");
   };
 
   const isSuperAdmin = userClaims?.global_roles?.includes('ROLE_SUPER_ADMIN');
@@ -93,11 +95,13 @@ const Header: React.FC = () => {
         {/* Left side - Logo and Organization */}
         <div className="flex items-center gap-2 sm:gap-4">
   {/* Logo and Organization - Only show logo when sidebar is closed and on desktop */}
-  {!sidebarOpen && (
-    <div className="hidden md:block">
-      <Logo size="xl" />
-    </div>
-  )}
+{!sidebarOpen && (
+  <div className="hidden md:block pl-10">
+    <Logo className="w-20 h-20" />
+  </div>
+)}
+
+
 
   {/* Selected Organization - Always visible */}
   {selectedOrgName && !isSuperAdmin && (
@@ -147,7 +151,7 @@ const Header: React.FC = () => {
                     {Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
                       <button
                         key={orgId}
-                        onClick={() => handleOrgChange(orgId, orgData.org_name)}
+                        onClick={() => handleOrgChange(orgId, orgData.org_name, orgData.role)}
                         className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors ${
                           orgData.org_name === selectedOrgName ? 'bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border-r-2 border-primary-600' : 'text-secondary-700 dark:text-secondary-300'
                         }`}

@@ -29,7 +29,7 @@ const SuperAdminDashboard: React.FC = () => {
       icon: <Users className="h-8 w-8 text-primary-600" />,
       path: '/manage-customers',
       color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-      requiresOrg: true
+      // requiresOrg: true
     },
     {
       title: 'Manage Organizations',
@@ -72,31 +72,31 @@ const SuperAdminDashboard: React.FC = () => {
     {
       title: 'Total Organizations',
       value: '24',
-      change: '+3',
-      changeType: 'positive',
+      // change: '+3',
+      // changeType: 'positive',
       icon: <Building className="h-6 w-6 text-primary-700" />
     },
     {
       title: 'Active Users',
       value: '1,234',
-      change: '+12%',
-      changeType: 'positive',
+      // change: '+12%',
+      // changeType: 'positive',
       icon: <Users className="h-6 w-6 text-success-700" />
     },
     {
       title: 'Total Agencies',
       value: '156',
-      change: '+8',
-      changeType: 'positive',
+      // change: '+8',
+      // changeType: 'positive',
       icon: <Building2 className="h-6 w-6 text-warning-700" />
-    },
-    {
-      title: 'System Health',
-      value: '98%',
-      change: '+2%',
-      changeType: 'positive',
-      icon: <BarChart3 className="h-6 w-6 text-error-700" />
     }
+    // {
+    //   title: 'System Health',
+    //   value: '98%',
+    //   change: '+2%',
+    //   changeType: 'positive',
+    //   icon: <BarChart3 className="h-6 w-6 text-error-700" />
+    // }
   ];
 
   const handleItemClick = (item: any) => {
@@ -125,8 +125,8 @@ const SuperAdminDashboard: React.FC = () => {
                   <p className="stat-label">{stat.title}</p>
                   <p className="stat-value">{stat.value}</p>
                   <div className="mt-2 flex items-center gap-1">
-                    <TrendingUp className="h-4 w-4 text-success-600" />
-                    <span className="stat-change stat-change-positive">{stat.change} from last month</span>
+                    {/* <TrendingUp className="h-4 w-4 text-success-600" /> */}
+                    {/* <span className="stat-change stat-change-positive">{stat.change} from last month</span> */}
                   </div>
                 </div>
                 <div className="p-3 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
@@ -169,7 +169,7 @@ const SuperAdminDashboard: React.FC = () => {
        
 
       {/* Recent Activity */}
-      <div>
+      {/* <div>
         <h2 className="text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-4">Recent Activity</h2>
         <Card>
           <CardBody className="p-6">
@@ -204,7 +204,7 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-      </div>
+      </div> */}
 
       {/* Organization Selector Modal */}
       {showOrgSelector && (

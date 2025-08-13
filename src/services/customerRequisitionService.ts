@@ -377,17 +377,12 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
-export const fetchConsumersWithConnections = async (page = 0) => {
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null }) => {
   try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters for fetchConsumersWithConnections:', { orgId, orgName, agencyId, agencyName, page });
-    
+    console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
+
     const response = await crsAPI.get('/api/customers/with-connections/paginated', {
-      params: { page, orgId, orgName, agencyId, agencyName },
+      params: { page, ...params },
     });
 
     return {
@@ -402,6 +397,7 @@ export const fetchConsumersWithConnections = async (page = 0) => {
     throw new Error('Failed to fetch consumers with connections.');
   }
 };
+
 
 export const fetchOnboardedConsumers = async (page = 0) => {
   try {

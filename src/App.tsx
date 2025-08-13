@@ -57,6 +57,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const AppContent: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Define auth pages where sidebar/header should not show
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];

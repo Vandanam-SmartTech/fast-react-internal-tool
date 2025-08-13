@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchConsumersWithConnections } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
+import { fetchOrganizations, getChildOrganizations } from "../../services/organizationService";
+import { fetchClaims } from "../../services/jwtService";
 import { 
   Eye, 
   Mail, 
@@ -38,6 +40,12 @@ interface FilterOptions {
   sortOrder: 'asc' | 'desc';
 }
 
+interface Organization {
+  id: number;
+  name: string;
+  displayName: string;
+}
+
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
   const [consumers, setConsumers] = useState<Consumer[]>([]);
@@ -56,6 +64,13 @@ const ListOfConsumers: React.FC = () => {
     sortOrder: 'asc'
   });
 
+const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
+const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
+
+const [agencies,setAgencies] = useState<{ id: Number; name:string }[]>([]);
+const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
+const [userRole, setUserRole] = useState<string>("");
+
   const handleViewConsumer = (consumer: Consumer) => {
     const customerId = consumer.customerId || consumer.id;
     console.log('Viewing consumer:', { consumer, customerId });
@@ -70,20 +85,99 @@ const ListOfConsumers: React.FC = () => {
     });
   };
 
-  const loadConsumers = async (page: number) => {
+useEffect(() => {
+  const loadOrganizationsAndRole = async () => {
     try {
-      setLoading(true);
-      const data = await fetchConsumersWithConnections(page);
-      console.log('Loaded consumers data:', data.content);
-      setConsumers(data.content);
-      setTotalPages(data.totalPages);
-      setCurrentPage(page);
+      // Load organizations for dropdown
+      const orgs = await fetchOrganizations(); // returns array of { id, name }
+      setOrganizations(orgs);
+
+      // Get user claims & role
+      const claims = await fetchClaims();
+      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        setUserRole("ROLE_SUPER_ADMIN");
+      }
+
+      // Preselect first organization if available
+      if (orgs.length > 0) {
+        setSelectedOrgId(orgs[0].id);
+      }
     } catch (error) {
-      console.error("Error fetching consumers:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error loading organizations or role:", error);
     }
   };
+
+  loadOrganizationsAndRole();
+}, []);
+
+useEffect(() => {
+  const loadAgencies = async () => {
+    try {
+      if (!selectedOrgId) return;
+
+      const data = await getChildOrganizations(selectedOrgId);
+      setAgencies(data);
+    } catch (error) {
+      console.error("Error loading agencies:", error);
+    }
+  };
+
+  loadAgencies();
+}, [selectedOrgId]);
+
+
+
+  // const loadConsumers = async (page: number) => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await fetchConsumersWithConnections(page);
+  //     console.log('Loaded consumers data:', data.content);
+  //     setConsumers(data.content);
+  //     setTotalPages(data.totalPages);
+  //     setCurrentPage(page);
+  //   } catch (error) {
+  //     console.error("Error fetching consumers:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const loadConsumers = async (page: number) => {
+  try {
+    setLoading(true);
+
+    const orgId = selectedOrgId ?? null;
+    const orgName = orgId
+      ? organizations.find((o) => o.id === orgId)?.name || null
+      : null;
+
+    const agencyId = selectedAgencyId ?? null;
+    const agencyName = agencyId
+      ? agencies.find((a) => a.id === agencyId)?.name || null
+      : null;
+
+    const params = {
+      orgId,
+      orgName,
+      agencyId,
+      agencyName,
+      userRole: userRole || null
+    };
+
+    console.log("Fetching consumers with params:", params);
+
+    const data = await fetchConsumersWithConnections(page, params);
+    setConsumers(data.content);
+    setTotalPages(data.totalPages);
+    setCurrentPage(page);
+  } catch (error) {
+    console.error("Error fetching consumers:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // Load all consumers for comprehensive search
   const loadAllConsumers = async () => {
@@ -226,6 +320,13 @@ const ListOfConsumers: React.FC = () => {
   useEffect(() => {
     loadConsumers(currentPage);
   }, [currentPage]);
+
+useEffect(() => {
+  if (selectedOrgId !== null && userRole) {
+    loadConsumers(0); // Will use selectedOrgId and userRole internally
+  }
+}, [selectedOrgId, userRole]);
+
 
   useEffect(() => {
     const handleOrgChange = () => {
@@ -434,18 +535,73 @@ const ListOfConsumers: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header Section */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
-              Customer Directory
-            </h1>
-            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Manage and view all your customers and their connections
-            </p>
-          </div>
-          
-        </div>
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    
+    {/* Heading + Subtitle */}
+    <div>
+      <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
+        Customer Directory
+      </h1>
+      <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+        Manage and view all your customers and their connections
+      </p>
+    </div>
+
+    {/* Organization + Agency Selects */}
+    <div className="flex gap-4">
+      
+      {/* Organization Dropdown */}
+      <div className="w-60"> {/* Fixed width */}
+        <label className="sr-only">Select Organization</label>
+        <select
+          value={selectedOrgId ?? ""}
+          onChange={async (e) => {
+            const value = e.target.value ? Number(e.target.value) : null;
+            setSelectedOrgId(value);
+
+            if (value) {
+              const childOrgs = await getChildOrganizations(value);
+              setAgencies(childOrgs);
+              setSelectedAgencyId(null);
+            } else {
+              setAgencies([]);
+              setSelectedAgencyId(null);
+              loadConsumers(0);
+            }
+          }}
+          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+        >
+          <option value="">Select Organization</option>
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {/* Agency Dropdown */}
+      <div className="w-60"> {/* Same fixed width */}
+        <label className="sr-only">Select Agency</label>
+        <select
+          value={selectedAgencyId ?? ""}
+          onChange={(e) => setSelectedAgencyId(e.target.value ? Number(e.target.value) : null)}
+          disabled={agencies.length === 0}
+          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+        >
+          <option value="">Select Agency</option>
+          {agencies.map((agency) => (
+            <option key={agency.id} value={agency.id}>
+              {agency.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
       {/* Search and Filter Section */}
       <div className="mb-6 space-y-4">
@@ -461,119 +617,6 @@ const ListOfConsumers: React.FC = () => {
           />
         </div>
 
-        {/* Filter Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {getActiveFiltersCount() > 0 && (
-              <span className="bg-primary-500 text-white text-xs rounded-full px-2 py-1">
-                {getActiveFiltersCount()}
-              </span>
-            )}
-            {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
-
-          {getActiveFiltersCount() > 0 && (
-            <Button
-              variant="ghost"
-              onClick={clearFilters}
-              className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300 hover:text-secondary-800 dark:hover:text-secondary-100"
-            >
-              <X className="w-4 h-4" />
-              Clear Filters
-            </Button>
-          )}
-        </div>
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <Card className="animate-slide-down">
-            <CardBody className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Connection Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Connections
-                  </label>
-                  <select
-                    value={filters.hasConnections === null ? '' : filters.hasConnections.toString()}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      hasConnections: e.target.value === '' ? null : e.target.value === 'true'
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">With Connections</option>
-                    <option value="false">Without Connections</option>
-                  </select>
-                </div>
-
-                {/* Email Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Email Status
-                  </label>
-                  <select
-                    value={filters.hasEmail === null ? '' : filters.hasEmail.toString()}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      hasEmail: e.target.value === '' ? null : e.target.value === 'true'
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">With Email</option>
-                    <option value="false">Without Email</option>
-                  </select>
-                </div>
-
-                {/* Sort By */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Sort By
-                  </label>
-                  <select
-                    value={filters.sortBy}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      sortBy: e.target.value as FilterOptions['sortBy']
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="name">Name</option>
-                    <option value="email">Email</option>
-                    <option value="connections">Connections</option>
-                    <option value="date">Date Added</option>
-                  </select>
-                </div>
-
-                {/* Sort Order */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Order
-                  </label>
-                  <select
-                    value={filters.sortOrder}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      sortOrder: e.target.value as FilterOptions['sortOrder']
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                  </select>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        )}
       </div>
 
       {/* Results Summary */}
