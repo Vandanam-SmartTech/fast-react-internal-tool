@@ -88,23 +88,28 @@ const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
   };
 
 useEffect(() => {
-  const loadOrganizationsAndRole = async () => {
+  const loadRoleAndOrganizations = async () => {
     try {
-      const orgs = await fetchOrganizations(); 
-      setOrganizations(orgs);
-
       const claims = await fetchClaims();
+
       if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
         setUserRole("ROLE_SUPER_ADMIN");
-      }
 
+        // Only fetch organizations if SUPER ADMIN
+        const orgs = await fetchOrganizations();
+        setOrganizations(orgs);
+      } else {
+        // For other roles, you can set role here
+        setUserRole(claims.role || "");
+      }
     } catch (error) {
-      console.error("Error loading organizations or role:", error);
+      console.error("Error fetching claims or organizations:", error);
     }
   };
 
-  loadOrganizationsAndRole();
+  loadRoleAndOrganizations();
 }, []);
+
 
 
 useEffect(() => {
@@ -122,28 +127,34 @@ useEffect(() => {
   loadAgencies();
 }, [selectedOrgId]);
 
+useEffect(() => {
+  if (userInfo?.orgRole === "ROLE_ORG_ADMIN") {
+    // Directly use orgId from localStorage
+    setSelectedOrgId(userInfo.orgId);
 
-
-  // const loadConsumers = async (page: number) => {
-  //   try {
-  //     setLoading(true);
-  //     const data = await fetchConsumersWithConnections(page);
-  //     console.log('Loaded consumers data:', data.content);
-  //     setConsumers(data.content);
-  //     setTotalPages(data.totalPages);
-  //     setCurrentPage(page);
-  //   } catch (error) {
-  //     console.error("Error fetching consumers:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    // Fetch agencies for this org
+    getChildOrganizations(userInfo.orgId).then((res) => {
+      if (res.data?.length) {
+        setAgencies(res.data);
+      } else {
+        // No agencies → directly fetch consumers
+        loadConsumers(0); // Pass only page number, orgId will be taken inside
+      }
+    });
+  }
+}, []);
 
 const loadConsumers = async (page: number) => {
   try {
     setLoading(true);
 
-    const orgId = selectedOrgId ?? null;
+    let orgId = selectedOrgId ?? null;
+
+
+    if (userInfo?.orgRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
     const orgName = orgId
       ? organizations.find((o) => o.id === orgId)?.name || null
       : null;
@@ -156,7 +167,8 @@ const loadConsumers = async (page: number) => {
     const params = {
       orgId,
       agencyId,
-      userRole: userRole || null
+
+      userRole: userInfo?.orgRole || userRole || null
     };
 
     console.log("Fetching consumers with params:", params);
@@ -171,6 +183,8 @@ const loadConsumers = async (page: number) => {
     setLoading(false);
   }
 };
+
+
 
 
 
@@ -548,8 +562,8 @@ useEffect(() => {
     {/* Organization + Agency Selects */}
     <div className="flex gap-4">
       
-      {/* Organization Dropdown */}
-      <div className="w-60"> {/* Fixed width */}
+      
+      {userInfo?.role !== "ROLE_ORG_ADMIN" && (<div className="w-60"> 
         <label className="sr-only">Select Organization</label>
         <select
           value={selectedOrgId ?? ""}
@@ -576,10 +590,10 @@ useEffect(() => {
             </option>
           ))}
         </select>
-      </div>
+      </div>)}
 
       {/* Agency Dropdown */}
-      <div className="w-60"> {/* Same fixed width */}
+      {agencies.length > 0 && (<div className="w-60"> 
         <label className="sr-only">Select Agency</label>
         <select
           value={selectedAgencyId ?? ""}
@@ -604,7 +618,7 @@ useEffect(() => {
             </option>
           ))}
         </select>
-      </div>
+      </div>)}
     </div>
   </div>
 </div>
