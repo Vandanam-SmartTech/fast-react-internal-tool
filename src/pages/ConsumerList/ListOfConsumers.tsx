@@ -128,44 +128,33 @@ useEffect(() => {
 }, [selectedOrgId]);
 
 useEffect(() => {
-    if (userInfo?.role === "ROLE_ORG_ADMIN") {
-      // Directly use orgId from localStorage
-      setSelectedOrgId(userInfo.orgId);
+  if (userInfo?.orgRole === "ROLE_ORG_ADMIN") {
+    // Directly use orgId from localStorage
+    setSelectedOrgId(userInfo.orgId);
 
-      // Fetch agencies for this org
-      getChildOrganizations(userInfo.orgId).then((res) => {
-        if (res.data?.length) {
-          setAgencies(res.data);
-        } else {
-          // No agencies → directly fetch consumers
-          loadConsumers(userInfo.orgId, null);
-        }
-      });
-    }
-  }, []);
-
-
-
-  // const loadConsumers = async (page: number) => {
-  //   try {
-  //     setLoading(true);
-  //     const data = await fetchConsumersWithConnections(page);
-  //     console.log('Loaded consumers data:', data.content);
-  //     setConsumers(data.content);
-  //     setTotalPages(data.totalPages);
-  //     setCurrentPage(page);
-  //   } catch (error) {
-  //     console.error("Error fetching consumers:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    // Fetch agencies for this org
+    getChildOrganizations(userInfo.orgId).then((res) => {
+      if (res.data?.length) {
+        setAgencies(res.data);
+      } else {
+        // No agencies → directly fetch consumers
+        loadConsumers(0); // Pass only page number, orgId will be taken inside
+      }
+    });
+  }
+}, []);
 
 const loadConsumers = async (page: number) => {
   try {
     setLoading(true);
 
-    const orgId = selectedOrgId ?? null;
+    let orgId = selectedOrgId ?? null;
+
+
+    if (userInfo?.orgRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
     const orgName = orgId
       ? organizations.find((o) => o.id === orgId)?.name || null
       : null;
@@ -178,7 +167,8 @@ const loadConsumers = async (page: number) => {
     const params = {
       orgId,
       agencyId,
-      userRole: userRole || null
+
+      userRole: userInfo?.orgRole || userRole || null
     };
 
     console.log("Fetching consumers with params:", params);
@@ -193,6 +183,8 @@ const loadConsumers = async (page: number) => {
     setLoading(false);
   }
 };
+
+
 
 
 

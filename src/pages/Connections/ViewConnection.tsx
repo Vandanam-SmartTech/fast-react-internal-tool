@@ -348,141 +348,6 @@ const handleNo = async () => {
           </div>
         )}
 
-<div className="mt-2 md:mt-0 md:ml-auto">
-  <button
-  onClick={() => setModalOpen(true)}
-  className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 hover:bg-blue-200"
->
-  <FileUp className="w-5 h-5 text-gray-700" />
-  <span className="text-gray-700 text-sm font-medium">Upload/View Documents</span>
-</button>
-
-
-  {modalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-          Upload Required Documents
-        </h3>
-
-        {/* Tabs */}
-        <div className="flex justify-around mb-4">
-          {(Object.keys(sessionMap) as SessionKey[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => setActiveDocTab(key)}
-              className={`px-4 py-2 rounded-t ${
-                activeDocTab === key
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-            >
-              {sessionMap[key]}
-            </button>
-          ))}
-        </div>
-
-        {/* File Upload */}
-        <div>
-          <label className="block font-medium text-gray-700 mb-1">
-            Upload {sessionMap[activeDocTab]} File(s)
-          </label>
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="file"
-              id="fileUpload"
-              className="hidden"
-              multiple
-              onChange={(e) => {
-                const newFiles = Array.from(e.target.files || []);
-                setSessionFiles((prev) => {
-                  const existing = prev[activeDocTab] || [];
-                  const updated = [...existing];
-                  newFiles.forEach((file) => {
-                    if (!existing.find((f) => f.name === file.name)) {
-                      updated.push(file);
-                    }
-                  });
-                  return { ...prev, [activeDocTab]: updated };
-                });
-                e.target.value = "";
-              }}
-            />
-
-            <label
-              htmlFor="fileUpload"
-              className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
-            >
-              Choose Files
-            </label>
-          </div>
-
-          {/* Selected Files */}
-          {sessionFiles[activeDocTab]?.length > 0 && (
-            <ul className="text-sm text-gray-700 mb-4">
-              {sessionFiles[activeDocTab].map((file, idx) => (
-                <li
-                  key={file.name + idx}
-                  className="flex justify-between items-center border px-2 py-1 rounded mb-1 bg-gray-50"
-                >
-                  <span className="truncate max-w-[80%]">{file.name}</span>
-                  <button
-                    onClick={() => {
-                      setSessionFiles((prev) => {
-                        const updated = (prev[activeDocTab] || []).filter(
-                          (_, index) => index !== idx
-                        );
-                        return { ...prev, [activeDocTab]: updated };
-                      });
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Uploaded Files */}
-          {uploadedFiles[activeDocTab]?.length > 0 && (
-  <div className="text-sm text-green-600 mb-4 space-y-1">
-    {uploadedFiles[activeDocTab].map((file) => (
-      <div key={file.fileId} className="flex items-center gap-2">
-        <button
-          onClick={() => handleDownload(file.fileId, file.fileName)}
-          className="underline text-left text-green-600 hover:text-green-900"
-        >
-          {file.fileName}
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => setModalOpen(false)}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => handleSingleFileUpload(sessionFiles[activeDocTab] || [])}
-            disabled={isLoading || !(sessionFiles[activeDocTab]?.length > 0)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-          >
-            {isLoading ? "Uploading..." : `Upload ${sessionMap[activeDocTab]}`}
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-</div>
-
 
 
 </div>
@@ -630,30 +495,26 @@ const handleNo = async () => {
     )}
   </div>
 
+  {/* Edit Connection Button */}
+  <div className="mt-6 pt-4 border-t border-gray-200">
+    <button
+      onClick={() =>
+        navigate(`/edit-connection/${connectionId}`, {
+          state: {
+            connectionId,
+            consumerId,
+            customerId,
+            selectedRepresentative,
+          },
+        })
+      }
+      className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-200"
+    >
+      Edit Connection
+    </button>
+  </div>
 
   </div>
-</div>
-
-<div className="col-span-1 md:col-span-2 flex space-x-14">
-<div className="flex justify-start px-2 ml-2">
-
-  <button
-    onClick={() =>
-      navigate(`/edit-connection/${connectionId}`, {
-        state: {
-          connectionId,
-          consumerId,
-          customerId,
-          selectedRepresentative,
-        },
-      })
-    }
-    className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
-  >
-    Edit Connection
-  </button>
-
-</div>
 </div>
 
 
@@ -743,9 +604,11 @@ const handleNo = async () => {
   ))}
 </div>
 
-
-<div className="col-span-1 md:col-span-2 px-2 ml-2">
-  <div className="grid grid-cols-2 gap-4 md:flex md:justify-start">
+{/* Action Buttons Section */}
+<div className="col-span-1 md:col-span-2 px-4 py-4">
+  {/* Responsive Button Grid */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    {/* Add New Installation Button */}
     <button
       onClick={() => {
         console.log("Navigating with connectionId:", connectionId);
@@ -764,11 +627,22 @@ const handleNo = async () => {
           },
         });
       }}
-      className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
+      className="w-full py-2 px-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
-      Add New Installation
+      <HomeModernIcon className="w-4 h-4" />
+      <span>Add New Installation</span>
     </button>
 
+    {/* Upload/View Documents Button */}
+    <button
+      onClick={() => setModalOpen(true)}
+      className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
+    >
+      <FileUp className="w-4 h-4" />
+      <span>Upload/View Documents</span>
+    </button>
+
+    {/* Get Recommendation Button */}
     <button
       onClick={() =>
         navigate(`/SystemSpecifications`, {
@@ -780,12 +654,140 @@ const handleNo = async () => {
           },
         })
       }
-      className="w-full md:w-auto py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 flex items-center justify-center"
+      className="w-full py-2 px-3 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
-      Get Recommendation
+      <Cog6ToothIcon className="w-4 h-4" />
+      <span>Get Recommendation</span>
     </button>
   </div>
 </div>
+
+
+
+
+{/* Document Upload Modal */}
+{modalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
+      <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+        Upload Required Documents
+      </h3>
+
+      {/* Tabs */}
+      <div className="flex justify-around mb-4">
+        {(Object.keys(sessionMap) as SessionKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setActiveDocTab(key)}
+            className={`px-4 py-2 rounded-t ${
+              activeDocTab === key
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            {sessionMap[key]}
+          </button>
+        ))}
+      </div>
+
+      {/* File Upload */}
+      <div>
+        <label className="block font-medium text-gray-700 mb-1">
+          Upload {sessionMap[activeDocTab]} File(s)
+        </label>
+        <div className="flex items-center gap-2 mb-2">
+          <input
+            type="file"
+            id="fileUpload"
+            className="hidden"
+            multiple
+            onChange={(e) => {
+              const newFiles = Array.from(e.target.files || []);
+              setSessionFiles((prev) => {
+                const existing = prev[activeDocTab] || [];
+                const updated = [...existing];
+                newFiles.forEach((file) => {
+                  if (!existing.find((f) => f.name === file.name)) {
+                    updated.push(file);
+                  }
+                });
+                return { ...prev, [activeDocTab]: updated };
+              });
+              e.target.value = "";
+            }}
+          />
+
+          <label
+            htmlFor="fileUpload"
+            className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+          >
+            Choose Files
+          </label>
+        </div>
+
+        {/* Selected Files */}
+        {sessionFiles[activeDocTab]?.length > 0 && (
+          <ul className="text-sm text-gray-700 mb-4">
+            {sessionFiles[activeDocTab].map((file, idx) => (
+              <li
+                key={file.name + idx}
+                className="flex justify-between items-center border px-2 py-1 rounded mb-1 bg-gray-50"
+              >
+                <span className="truncate max-w-[80%]">{file.name}</span>
+                <button
+                  onClick={() => {
+                    setSessionFiles((prev) => {
+                      const updated = (prev[activeDocTab] || []).filter(
+                        (_, index) => index !== idx
+                      );
+                      return { ...prev, [activeDocTab]: updated };
+                    });
+                  }}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Uploaded Files */}
+        {uploadedFiles[activeDocTab]?.length > 0 && (
+          <div className="text-sm text-green-600 mb-4 space-y-1">
+            {uploadedFiles[activeDocTab].map((file) => (
+              <div key={file.fileId} className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDownload(file.fileId, file.fileName)}
+                  className="underline text-left text-green-600 hover:text-green-900"
+                >
+                  {file.fileName}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-between mt-6">
+        <button
+          onClick={() => setModalOpen(false)}
+          className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => handleSingleFileUpload(sessionFiles[activeDocTab] || [])}
+          disabled={isLoading || !(sessionFiles[activeDocTab]?.length > 0)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+        >
+          {isLoading ? "Uploading..." : `Upload ${sessionMap[activeDocTab]}`}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
 
 

@@ -182,7 +182,27 @@ useEffect(() => {
   const getClaims = async () => {
     try {
       const claims = await fetchClaims();
-      setRoles(claims.roles || []);
+      const allRoles: string[] = [];
+
+      // Add global roles
+      if (Array.isArray(claims.global_roles)) {
+        allRoles.push(...claims.global_roles);
+      }
+
+      // Add org roles from selectedOrg in localStorage
+      const selectedOrgStr = localStorage.getItem('selectedOrg');
+      if (selectedOrgStr) {
+        try {
+          const selectedOrg = JSON.parse(selectedOrgStr);
+          if (selectedOrg.role) {
+            allRoles.push(selectedOrg.role);
+          }
+        } catch {
+          console.error("Invalid selectedOrg format in localStorage");
+        }
+      }
+
+      setRoles(allRoles);
     } catch (error) {
       console.error("Failed to fetch user claims", error);
     }
@@ -1086,15 +1106,18 @@ const handlePreview = async () => {
         {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
     </button>
 
-    <button
-        type="submit"
-        onClick={handleGenerateQuotation}
-        disabled={!isSpecsSaved || isLoading}
-        //disabled={isLoading}
-        className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-        {isLoading ? "Generating..." : "Generate & Save Quotation"}
-    </button>
+    {/* Generate & Save Quotation Button - Only visible for Super Admin and Org Admin */}
+    {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+      <button
+          type="submit"
+          onClick={handleGenerateQuotation}
+          disabled={!isSpecsSaved || isLoading}
+          //disabled={isLoading}
+          className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+          {isLoading ? "Generating..." : "Generate & Save Quotation"}
+      </button>
+    )}
 </div>
 
 

@@ -96,8 +96,8 @@ const handleLogin = async (e: React.FormEvent) => {
     }
 
     if (orgEntries.length === 1) {
-      const [, orgData] = orgEntries[0];
-      routeByOrgRole(orgData.role, undefined, orgData.org_name);
+      const [orgId, orgData] = orgEntries[0];
+      routeByOrgRole(orgData.role, orgId, orgData.org_name);
       return;
     }
 
@@ -107,10 +107,17 @@ const handleLogin = async (e: React.FormEvent) => {
   };
 
   const routeByOrgRole = (role: string, orgId?: string, orgName?: string) => {
+    // Store role information in localStorage for single-role users
     if (orgId && orgName) {
       localStorage.setItem(
         'selectedOrg',
         JSON.stringify({ orgId, orgName, role })
+      );
+    } else if (orgName) {
+      // For cases where we have orgName but no orgId (fallback)
+      localStorage.setItem(
+        'selectedOrg',
+        JSON.stringify({ orgId: 'default', orgName, role })
       );
     }
 
@@ -124,11 +131,11 @@ const handleLogin = async (e: React.FormEvent) => {
       case 'ROLE_ORG_STAFF':
         navigate('/StaffDashboard');
         break;
-      case 'ROLE_AGENCY_STAFF':
-        navigate('/StaffDashboard');
-        break;
       case 'ROLE_ORG_REPRESENTATIVE':
         navigate('/RepresentativeDashboard');
+        break;
+        case 'ROLE_AGENCY_STAFF':
+        navigate('/StaffDashboard');
         break;
       case 'ROLE_AGENCY_REPRESENTATIVE':
         navigate('/RepresentativeDashboard');

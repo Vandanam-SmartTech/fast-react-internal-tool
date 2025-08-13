@@ -46,6 +46,7 @@ import UserFormManagement from './pages/Organizations/UserFormManagement';
 import UserView from './pages/Organizations/UserView';
 import RoleManagement from './pages/Organizations/RoleManagement';
 import UserOrgRoles from './pages/Organizations/UserOrgRoles';
+import Profile from './pages/Profile/Profile';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
 import EnvBanner from './components/EnvBanner';
@@ -118,6 +119,17 @@ const AppContent: React.FC = () => {
             <Route path="/PasswordReset" element={<PasswordReset />} />
             <Route path="/Verification" element={<Verification />} />
             <Route path="/ChangePassword" element={<ChangePassword />} />
+            
+            {/* Profile Route */}
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
+            
             <Route path="*" element={<PageNotFound />} />
 
             {/* Customer Management Routes */}
