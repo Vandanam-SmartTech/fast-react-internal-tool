@@ -19,7 +19,8 @@ import {
   X,
   RefreshCw,
   Star,
-  Zap
+  Zap,
+  FileText
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
@@ -533,6 +534,30 @@ useEffect(() => {
                     className="text-solar-600 hover:text-solar-700"
                   >
                     <Lightbulb className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/generatedocuments`, {
+                        state: {
+                          consumer: {
+                            id: connection.id,
+                            customerId: consumer.customerId || consumer.id,
+                            govIdName: consumer.govIdName,
+                            consumerId: connection.consumerId,
+                            connectionType: "Solar Connection",
+                            mobileNumber: consumer.mobileNumber,
+                            emailAddress: consumer.emailAddress,
+                          },
+                        },
+                      })
+                    }
+                    className="text-blue-600 hover:text-blue-700"
+                    title="Generate Documents"
+                  >
+                    <FileText className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
