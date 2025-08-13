@@ -65,10 +65,16 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
           case 'ROLE_AGENCY_ADMIN':
             setRedirectPath('/AgencyAdminDashboard');
             break;
-          case 'ROLE_STAFF':
+          case 'ROLE_ORG_STAFF':
             setRedirectPath('/StaffDashboard');
             break;
-          case 'ROLE_REPRESENTATIVE':
+          case 'ROLE_AGENCY_STAFF':
+            setRedirectPath('/StaffDashboard');
+            break;
+          case 'ROLE_ORG_REPRESENTATIVE':
+            setRedirectPath('/RepresentativeDashboard');
+            break;
+          case 'ROLE_AGENCY_REPRESENTATIVE':
             setRedirectPath('/RepresentativeDashboard');
             break;
           case 'ROLE_CUSTOMER':

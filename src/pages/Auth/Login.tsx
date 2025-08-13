@@ -121,10 +121,16 @@ const handleLogin = async (e: React.FormEvent) => {
       case 'ROLE_AGENCY_ADMIN':
         navigate('/AgencyAdminDashboard');
         break;
-      case 'ROLE_STAFF':
+      case 'ROLE_ORG_STAFF':
         navigate('/StaffDashboard');
         break;
-      case 'ROLE_REPRESENTATIVE':
+      case 'ROLE_AGENCY_STAFF':
+        navigate('/StaffDashboard');
+        break;
+      case 'ROLE_ORG_REPRESENTATIVE':
+        navigate('/RepresentativeDashboard');
+        break;
+      case 'ROLE_AGENCY_REPRESENTATIVE':
         navigate('/RepresentativeDashboard');
         break;
       case 'ROLE_CUSTOMER':
