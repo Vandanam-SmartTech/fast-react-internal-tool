@@ -71,6 +71,8 @@ const [agencies,setAgencies] = useState<{ id: Number; name:string }[]>([]);
 const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
 const [userRole, setUserRole] = useState<string>("");
 
+const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
+
   const handleViewConsumer = (consumer: Consumer) => {
     const customerId = consumer.customerId || consumer.id;
     console.log('Viewing consumer:', { consumer, customerId });
@@ -88,20 +90,14 @@ const [userRole, setUserRole] = useState<string>("");
 useEffect(() => {
   const loadOrganizationsAndRole = async () => {
     try {
-      // Load organizations for dropdown
-      const orgs = await fetchOrganizations(); // returns array of { id, name }
+      const orgs = await fetchOrganizations(); 
       setOrganizations(orgs);
 
-      // Get user claims & role
       const claims = await fetchClaims();
       if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
         setUserRole("ROLE_SUPER_ADMIN");
       }
 
-      // Preselect first organization if available
-      if (orgs.length > 0) {
-        setSelectedOrgId(orgs[0].id);
-      }
     } catch (error) {
       console.error("Error loading organizations or role:", error);
     }
@@ -109,6 +105,7 @@ useEffect(() => {
 
   loadOrganizationsAndRole();
 }, []);
+
 
 useEffect(() => {
   const loadAgencies = async () => {
@@ -158,9 +155,7 @@ const loadConsumers = async (page: number) => {
 
     const params = {
       orgId,
-      orgName,
       agencyId,
-      agencyName,
       userRole: userRole || null
     };
 
@@ -179,9 +174,9 @@ const loadConsumers = async (page: number) => {
 
 
 
-  // Load all consumers for comprehensive search
+
   const loadAllConsumers = async () => {
-    if (allConsumers.length > 0) return; // Already loaded
+    if (allConsumers.length > 0) return; 
     
     try {
       setIsLoadingAll(true);
@@ -322,10 +317,13 @@ const loadConsumers = async (page: number) => {
   }, [currentPage]);
 
 useEffect(() => {
-  if (selectedOrgId !== null && userRole) {
-    loadConsumers(0); // Will use selectedOrgId and userRole internally
-  }
-}, [selectedOrgId, userRole]);
+  
+  if (!selectedOrgId) return;
+
+  // Pass page 0 every time a filter changes
+  loadConsumers(0);
+}, [selectedOrgId, selectedAgencyId, userRole]);
+
 
 
   useEffect(() => {
@@ -585,7 +583,17 @@ useEffect(() => {
         <label className="sr-only">Select Agency</label>
         <select
           value={selectedAgencyId ?? ""}
-          onChange={(e) => setSelectedAgencyId(e.target.value ? Number(e.target.value) : null)}
+          onChange={(e) => {
+    const agencyId = e.target.value || null;
+    setSelectedAgencyId(agencyId);
+    setSelectedAgencyName(agencyId ? e.target.options[e.target.selectedIndex].text : null);
+
+    // Clear org selection if agency is chosen
+    if (agencyId) {
+      setSelectedOrgId(null);
+      setSelectedOrgName(null);
+    }
+  }}
           disabled={agencies.length === 0}
           className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
         >
