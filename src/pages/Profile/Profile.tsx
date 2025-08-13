@@ -1,21 +1,261 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, X, User, Mail, Phone, Shield, Building, Camera, Edit3, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, X, User, Mail, Phone, Shield, Building, Camera, Edit3, Save, Trash2, Crop, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
+import Cropper, { Area } from 'react-easy-crop';
 
 interface UserProfile {
   name?: string;
   preferred_name?: string;
-  email?: string;
+  email_address?: string;
   contact_number?: string;
   global_roles?: string[];
   org_roles?: Record<string, any>;
   signature?: string;
 }
+
+interface CropModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  imageUrl: string;
+  onCropComplete: (croppedImage: string) => void;
+}
+
+const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCropComplete }) => {
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleCropChange = (crop: { x: number; y: number }) => {
+    setCrop(crop);
+  };
+
+  const handleZoomChange = (zoom: number) => {
+    setZoom(zoom);
+  };
+
+  const handleCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', error => reject(error));
+      image.src = url;
+    });
+
+  const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: Area,
+    rotation: number = 0
+  ): Promise<string> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('No 2d context');
+    }
+
+    const maxSize = Math.max(image.width, image.height);
+    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+    canvas.width = safeArea;
+    canvas.height = safeArea;
+
+    ctx.translate(safeArea / 2, safeArea / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-safeArea / 2, -safeArea / 2);
+
+    ctx.drawImage(
+      image,
+      safeArea / 2 - image.width * 0.5,
+      safeArea / 2 - image.height * 0.5
+    );
+
+    const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.putImageData(
+      data,
+      0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x,
+      0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y
+    );
+
+    // Resize to final dimensions (140x70)
+    const finalCanvas = document.createElement('canvas');
+    const finalCtx = finalCanvas.getContext('2d');
+    
+    if (!finalCtx) {
+      throw new Error('No 2d context');
+    }
+
+    finalCanvas.width = 140;
+    finalCanvas.height = 70;
+    
+    // Use high-quality image smoothing
+    finalCtx.imageSmoothingEnabled = true;
+    finalCtx.imageSmoothingQuality = 'high';
+    
+    finalCtx.drawImage(canvas, 0, 0, 140, 70);
+
+    return finalCanvas.toDataURL('image/png', 0.95);
+  };
+
+  const handleSave = async () => {
+    if (!croppedAreaPixels) {
+      toast.error('Please adjust the crop area first');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const croppedImage = await getCroppedImg(imageUrl, croppedAreaPixels, rotation);
+      onCropComplete(croppedImage);
+      onClose();
+    } catch (error) {
+      console.error('Error cropping image:', error);
+      toast.error('Failed to crop image');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReset = () => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Crop Signature</h3>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          {/* Instructions */}
+          <div className="mb-4 text-center">
+            <p className="text-sm text-gray-600 mb-2">
+              Adjust the crop area to select your signature. The final output will be 140×70px.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+              <span>Drag to move</span>
+              <span>•</span>
+              <span>Scroll to zoom</span>
+              <span>•</span>
+              <span>Rotate if needed</span>
+            </div>
+          </div>
+
+          {/* Crop Container */}
+          <div className="relative w-full h-96 mb-4 bg-gray-100 rounded-lg overflow-hidden">
+            <Cropper
+              image={imageUrl}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={2} // 140:70 = 2:1 aspect ratio
+              onCropChange={handleCropChange}
+              onZoomChange={handleZoomChange}
+              onCropComplete={handleCropComplete}
+              objectFit="contain"
+              showGrid={true}
+              cropSize={{ width: 200, height: 100 }}
+              minZoom={0.5}
+              maxZoom={3}
+            />
+          </div>
+
+          {/* Controls */}
+          <div className="space-y-4">
+            {/* Zoom Controls */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                disabled={zoom <= 0.5}
+              >
+                <ZoomOut className="w-4 h-4 text-gray-600" />
+              </button>
+              <span className="text-sm text-gray-600 min-w-[60px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                disabled={zoom >= 3}
+              >
+                <ZoomIn className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Rotation Controls */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setRotation(rotation - 15)}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 text-gray-600" />
+              </button>
+              <span className="text-sm text-gray-600 min-w-[60px] text-center">
+                {rotation}°
+              </span>
+              <button
+                onClick={() => setRotation(rotation + 15)}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleSave}
+                size="sm"
+                leftIcon={<Crop className="w-4 h-4" />}
+                loading={isProcessing}
+                disabled={!croppedAreaPixels}
+              >
+                {isProcessing ? 'Processing...' : 'Save Cropped Image'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +267,7 @@ const Profile: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
   const [editData, setEditData] = useState({
     name: '',
     preferred_name: '',
@@ -76,15 +317,27 @@ const Profile: React.FC = () => {
 
       setSelectedFile(file);
       
-      // Create preview URL
+      // Create preview URL and open crop modal
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      setShowCropModal(true);
+    }
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    // Update preview with cropped image
+    setPreviewUrl(croppedImage);
+    setShowCropModal(false);
+    
+    // Clear file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleUploadSignature = async () => {
-    if (!selectedFile) {
-      toast.error('Please select a file first');
+    if (!previewUrl) {
+      toast.error('Please select and crop a file first');
       return;
     }
 
@@ -101,11 +354,6 @@ const Profile: React.FC = () => {
       toast.success('Signature uploaded successfully');
       setSelectedFile(null);
       setPreviewUrl(null);
-      
-      // Clear file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     } catch (error) {
       console.error('Upload failed:', error);
       toast.error('Failed to upload signature');
@@ -207,247 +455,257 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-                 <div className="space-y-6">
-           {/* Personal Information Card */}
-           <Card>
-             <CardBody className="p-6">
-               <div className="flex items-center justify-between mb-6">
-                 <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
-                 {!isEditing ? (
-                   <Button
-                     onClick={() => setIsEditing(true)}
-                     leftIcon={<Edit3 className="w-4 h-4" />}
-                     variant="outline"
-                     size="sm"
-                   >
-                     Edit
-                   </Button>
-                 ) : (
-                   <div className="flex gap-2">
-                     <Button
-                       onClick={handleCancelEdit}
-                       variant="outline"
-                       size="sm"
-                     >
-                       Cancel
-                     </Button>
-                     <Button
-                       onClick={handleSaveProfile}
-                       leftIcon={<Save className="w-4 h-4" />}
-                       size="sm"
-                       loading={saving}
-                     >
-                       Save
-                     </Button>
-                   </div>
-                 )}
-               </div>
-
-               <div className="space-y-4">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Full Name
-                     </label>
-                     {isEditing ? (
-                       <Input
-                         value={editData.name}
-                         onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
-                         placeholder="Enter your full name"
-                       />
-                     ) : (
-                       <p className="text-gray-900">{profile?.name || 'Not provided'}</p>
-                     )}
-                   </div>
-
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Preferred Name
-                     </label>
-                     {isEditing ? (
-                       <Input
-                         value={editData.preferred_name}
-                         onChange={(e) => setEditData(prev => ({ ...prev, preferred_name: e.target.value }))}
-                         placeholder="Enter your preferred name"
-                       />
-                     ) : (
-                       <p className="text-gray-900">{profile?.preferred_name || 'Not provided'}</p>
-                     )}
-                   </div>
-
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Email Address
-                     </label>
-                     {isEditing ? (
-                       <Input
-                         type="email"
-                         value={editData.email}
-                         onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
-                         placeholder="Enter your email"
-                       />
-                     ) : (
-                       <p className="text-gray-900">{profile?.email_address || 'Not provided'}</p>
-                     )}
-                   </div>
-
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Contact Number
-                     </label>
-                     {isEditing ? (
-                       <Input
-                         value={editData.contact_number}
-                         onChange={(e) => setEditData(prev => ({ ...prev, contact_number: e.target.value }))}
-                         placeholder="Enter your contact number"
-                       />
-                     ) : (
-                       <p className="text-gray-900">{profile?.contact_number || 'Not provided'}</p>
-                     )}
-                   </div>
-                 </div>
-               </div>
-             </CardBody>
-           </Card>
-
-           {/* Account Information Card */}
-           <Card>
-             <CardBody className="p-6">
-               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="flex items-center gap-3">
-                   <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                   <div>
-                     <p className="text-sm font-medium text-gray-900">Role</p>
-                     <p className="text-sm text-gray-600">{getRoleDisplay()}</p>
-                   </div>
-                 </div>
-                 
-                 <div className="flex items-center gap-3">
-                   <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
-                   <div>
-                     <p className="text-sm font-medium text-gray-900">Organization</p>
-                     <p className="text-sm text-gray-600">{getOrganizationDisplay()}</p>
-                   </div>
-                 </div>
-               </div>
-             </CardBody>
-           </Card>
-
-           {/* Digital Signature Card */}
-           <Card>
-             <CardBody className="p-6">
-               <h3 className="text-lg font-semibold text-gray-900 mb-4">Digital Signature</h3>
-               
-                               {/* Current Signature */}
-                {profile?.signature && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Current Signature</p>
-                    <div className="relative inline-block">
-                      <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                        <img
-                          src={profile.signature}
-                          alt="Digital Signature"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <button
-                        onClick={removeSignature}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                        aria-label="Remove signature"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
+        <div className="space-y-6">
+          {/* Personal Information Card */}
+          <Card>
+            <CardBody className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+                {!isEditing ? (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    leftIcon={<Edit3 className="w-4 h-4" />}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveProfile}
+                      leftIcon={<Save className="w-4 h-4" />}
+                      size="sm"
+                      loading={saving}
+                    >
+                      Save
+                    </Button>
                   </div>
                 )}
+              </div>
 
-               {/* Upload New Signature */}
-               <div className="space-y-4">
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                     Upload New Signature
-                   </label>
-                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors focus-within:border-blue-500">
-                     <input
-                       ref={fileInputRef}
-                       type="file"
-                       accept="image/*"
-                       onChange={handleFileSelect}
-                       className="hidden"
-                       aria-describedby="file-upload-help"
-                     />
-                     
-                     {!selectedFile ? (
-                       <div>
-                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                         <p className="text-sm text-gray-600 mb-1">
-                           Click to upload or drag and drop
-                         </p>
-                         <p className="text-xs text-gray-500 mb-3">
-                           PNG, JPG, GIF up to 5MB
-                         </p>
-                         <Button
-                           onClick={() => fileInputRef.current?.click()}
-                           variant="outline"
-                           size="sm"
-                           className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                         >
-                           Choose File
-                         </Button>
-                       </div>
-                                             ) : (
-                          <div>
-                            <div className="mb-3">
-                              <p className="text-xs text-gray-500 mb-2">Preview (140×70px format):</p>
-                              <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center mx-auto">
-                                <img
-                                  src={previewUrl || ''}
-                                  alt="Signature Preview"
-                                  className="w-full h-full object-contain"
-                                />
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">{selectedFile.name}</p>
-                            <div className="flex gap-2 justify-center">
-                              <Button
-                                onClick={handleUploadSignature}
-                                size="sm"
-                                loading={uploading}
-                                className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                              >
-                                Upload
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setSelectedFile(null);
-                                  setPreviewUrl(null);
-                                  if (fileInputRef.current) {
-                                    fileInputRef.current.value = '';
-                                  }
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                   </div>
-                 </div>
-                 
-                                   <div className="text-xs text-gray-500" id="file-upload-help">
-                    <p>• Supported formats: PNG, JPG, JPEG, GIF, WebP</p>
-                    <p>• Maximum file size: 5MB</p>
-                    <p>• Signature will be displayed at 140×70px format</p>
-                    <p>• Recommended: Transparent background for best results</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.name}
+                        onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter your full name"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile?.name || 'Not provided'}</p>
+                    )}
                   </div>
-               </div>
-             </CardBody>
-           </Card>
-         </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Preferred Name
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.preferred_name}
+                        onChange={(e) => setEditData(prev => ({ ...prev, preferred_name: e.target.value }))}
+                        placeholder="Enter your preferred name"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile?.preferred_name || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        value={editData.email}
+                        onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Enter your email"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile?.email_address || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Number
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.contact_number}
+                        onChange={(e) => setEditData(prev => ({ ...prev, contact_number: e.target.value }))}
+                        placeholder="Enter your contact number"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile?.contact_number || 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Account Information Card */}
+          <Card>
+            <CardBody className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Role</p>
+                    <p className="text-sm text-gray-600">{getRoleDisplay()}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Organization</p>
+                    <p className="text-sm text-gray-600">{getOrganizationDisplay()}</p>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Digital Signature Card */}
+          <Card>
+            <CardBody className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Digital Signature</h3>
+              
+              {/* Current Signature */}
+              {profile?.signature && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Current Signature</p>
+                  <div className="relative inline-block">
+                    <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                      <img
+                        src={profile.signature}
+                        alt="Digital Signature"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <button
+                      onClick={removeSignature}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      aria-label="Remove signature"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload New Signature */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload New Signature
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors focus-within:border-blue-500">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      aria-describedby="file-upload-help"
+                    />
+                    
+                    {!previewUrl ? (
+                      <div>
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600 mb-1">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 mb-3">
+                          PNG, JPG, GIF, WebP up to 5MB
+                        </p>
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          variant="outline"
+                          size="sm"
+                          className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          Choose File
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-500 mb-2">Preview (140×70px format):</p>
+                          <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center mx-auto">
+                            <img
+                              src={previewUrl}
+                              alt="Signature Preview"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{selectedFile?.name || 'Cropped Image'}</p>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            onClick={handleUploadSignature}
+                            size="sm"
+                            loading={uploading}
+                            className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            Upload
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedFile(null);
+                              setPreviewUrl(null);
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = '';
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-xs text-gray-500" id="file-upload-help">
+                  <p>• Supported formats: PNG, JPG, JPEG, GIF, WebP</p>
+                  <p>• Maximum file size: 5MB</p>
+                  <p>• Signature will be displayed at 140×70px format</p>
+                  <p>• Recommended: Transparent background for best results</p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Crop Modal */}
+        {showCropModal && previewUrl && (
+          <CropModal
+            isOpen={showCropModal}
+            onClose={() => setShowCropModal(false)}
+            imageUrl={previewUrl}
+            onCropComplete={handleCropComplete}
+          />
+        )}
       </div>
     </div>
   );
