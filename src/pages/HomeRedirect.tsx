@@ -43,7 +43,19 @@ const HomeRedirect: React.FC = () => {
 
       if (orgRoles.length === 1) {
         // Only one role → redirect automatically
-        const role = orgRoles[0].role;
+        const orgRole = orgRoles[0];
+        const role = orgRole.role;
+        
+        // Store role information in localStorage for single-role users
+        localStorage.setItem(
+          'selectedOrg',
+          JSON.stringify({ 
+            orgId: 'default', 
+            orgName: orgRole.org_name || 'Default Organization', 
+            role 
+          })
+        );
+        
         routeByOrgRole(role);
         return;
       }

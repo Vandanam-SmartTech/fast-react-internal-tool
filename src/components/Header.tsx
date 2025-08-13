@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Building, User, Bell, Settings } from 'lucide-react';
+import { ChevronDown, LogOut, Building, User, Bell, Settings, Shield, Check } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import ThemeToggle from './ThemeToggle';
@@ -11,6 +11,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const { userClaims } = useUser();
   const [selectedOrgName, setSelectedOrgName] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,10 +21,19 @@ const Header: React.FC = () => {
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
   const isAuthPage = authPages.includes(location.pathname);
 
-  // useEffect(() => {
-  //   const orgName = localStorage.getItem('selectedOrganizationName');
-  //   setSelectedOrgName(orgName || '');
-  // }, [userClaims]);
+  useEffect(() => {
+    // Load current organization and role from localStorage
+    const selectedOrgStr = localStorage.getItem('selectedOrg');
+    if (selectedOrgStr) {
+      try {
+        const selectedOrg = JSON.parse(selectedOrgStr);
+        setSelectedOrgName(selectedOrg.orgName || '');
+        setSelectedRole(selectedOrg.role || '');
+      } catch (error) {
+        console.error('Error parsing selectedOrg from localStorage:', error);
+      }
+    }
+  }, [userClaims]);
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');
@@ -64,10 +74,14 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
   localStorage.setItem('selectedOrg', JSON.stringify(newOrg));
 
   setSelectedOrgName(orgName);
+  setSelectedRole(role);
   setShowOrgDropdown(false);
 
   // Trigger event for other components
   window.dispatchEvent(new CustomEvent('organizationChanged', { detail: newOrg }));
+
+  // Refresh the page to ensure all components update with new organization context
+  window.location.reload();
 };
 
 
@@ -92,25 +106,42 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
         : 'left-0 md:left-0'
     }`}>
       <div className="flex items-center justify-between px-2 sm:px-4 py-3 w-full">
-        {/* Left side - Logo and Organization */}
+        {/* Left side - Logo, Organization and Role */}
         <div className="flex items-center gap-2 sm:gap-4">
-  {/* Logo and Organization - Only show logo when sidebar is closed and on desktop */}
-{!sidebarOpen && (
-  <div className="hidden md:block pl-10">
-    <Logo className="w-20 h-20" />
-  </div>
-)}
+          {/* Logo - Only show logo when sidebar is closed and on desktop */}
+          {!sidebarOpen && (
+            <div className="hidden md:block pl-10">
+              <Logo className="w-20 h-20" />
+            </div>
+          )}
 
+          {/* Organization and Role Information */}
+          <div className="flex items-center gap-3">
+            {/* Super Admin Display */}
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
+                <Shield className="h-4 w-4 text-primary-600" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-sm">Super Admin</span>
+                  <span className="text-xs text-secondary-500 dark:text-secondary-400">System Administrator</span>
+                </div>
+              </div>
+            )}
 
-
-  {/* Selected Organization - Always visible */}
-  {selectedOrgName && !isSuperAdmin && (
-    <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
-      <Building className="h-4 w-4" />
-      <span className="font-medium text-sm">{selectedOrgName}</span>
-    </div>
-  )}
-</div>
+            {/* Organization and Role Display */}
+            {selectedOrgName && selectedRole && !isSuperAdmin && (
+              <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
+                <Building className="h-4 w-4 text-primary-600" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-sm">{selectedOrgName}</span>
+                  <span className="text-xs text-secondary-500 dark:text-secondary-400">
+                    {selectedRole.replace('ROLE_', '').replace('_', ' ')}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
 
         {/* Right side - User controls */}
@@ -143,23 +174,42 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
               </Button>
               
               {showOrgDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
+                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
                   <div className="py-2">
-                    <div className="px-4 py-2 border-b border-secondary-100 dark:border-secondary-700">
+                    <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
                       <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">Select Organization</h3>
+                      <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">Choose your organization and role</p>
                     </div>
-                    {Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => (
-                      <button
-                        key={orgId}
-                        onClick={() => handleOrgChange(orgId, orgData.org_name, orgData.role)}
-                        className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors ${
-                          orgData.org_name === selectedOrgName ? 'bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border-r-2 border-primary-600' : 'text-secondary-700 dark:text-secondary-300'
-                        }`}
-                      >
-                        <div className="font-medium">{orgData.org_name}</div>
-                        <div className="text-xs text-secondary-600 dark:text-secondary-300 mt-1">{orgData.role.replace('ROLE_', '')}</div>
-                      </button>
-                    ))}
+                    <div className="max-h-64 overflow-y-auto">
+                      {Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => {
+                        const isSelected = orgData.org_name === selectedOrgName && orgData.role === selectedRole;
+                        return (
+                          <button
+                            key={orgId}
+                            onClick={() => handleOrgChange(orgId, orgData.org_name, orgData.role)}
+                            className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${
+                              isSelected 
+                                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600' 
+                                : 'text-secondary-700 dark:text-secondary-300 border-l-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium">{orgData.org_name}</div>
+                                <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                                  {orgData.role.replace('ROLE_', '').replace('_', ' ')}
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="flex items-center">
+                                  <Check className="h-4 w-4 text-primary-600" />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -198,6 +248,16 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
                   </div>
                   
                   <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        navigate('/profile');
+                      }}
+                      className="w-full text-left px-3 sm:px-4 py-2 text-sm text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 flex items-center gap-2 transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      Profile Settings
+                    </button>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-3 sm:px-4 py-2 text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 flex items-center gap-2 transition-colors"
