@@ -107,7 +107,7 @@ const RepresentativeDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}

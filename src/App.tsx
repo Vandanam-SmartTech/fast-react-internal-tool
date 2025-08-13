@@ -182,7 +182,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/RepresentativeDashboard"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_REPRESENTATIVE']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE','ROLE_AGENCY_REPRESENTATIVE']}>
                   <RepresentativeDashboard />
                 </RoleProtectedRoute>
               }
@@ -200,7 +200,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/StaffDashboard"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_STAFF']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF','ROLE_AGENCY_STAFF']}>
                   <StaffDashboard />
                 </RoleProtectedRoute>
               }

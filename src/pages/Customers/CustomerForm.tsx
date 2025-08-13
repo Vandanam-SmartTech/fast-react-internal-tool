@@ -67,8 +67,8 @@ export const CustomerForm = () => {
     mobileNumber: "",
     preferredName: "", 
     isActive: true,
-    organizationId:1,
-    organizationName:"Vandanam",
+    organizationId: 1,
+    organizationName: "Vandanam",
     referredByRepresentativeId:2,
   });
 
