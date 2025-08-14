@@ -43,7 +43,7 @@ const AgencyAdminDashboard: React.FC = () => {
       color: 'bg-blue-50 hover:bg-blue-100'
     },
     {
-      title: 'My Agencies',
+      title: 'My Agency',
       description: 'List, View, Update my agencies',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
       path: '/organizations',

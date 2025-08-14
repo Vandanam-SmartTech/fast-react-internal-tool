@@ -9,16 +9,9 @@ import {
   Phone, 
   Lightbulb, 
   Search, 
-  Filter, 
   Users, 
   UserCheck, 
-  Calendar,
-  MapPin,
-  ChevronDown,
-  ChevronUp,
-  X,
   RefreshCw,
-  Star,
   Zap,
   FileText
 } from "lucide-react";
@@ -129,17 +122,17 @@ useEffect(() => {
 }, [selectedOrgId]);
 
 useEffect(() => {
-  if (userInfo?.orgRole === "ROLE_ORG_ADMIN") {
-    // Directly use orgId from localStorage
+  if (userInfo?.role === "ROLE_ORG_ADMIN") {
+    
     setSelectedOrgId(userInfo.orgId);
 
-    // Fetch agencies for this org
+    
     getChildOrganizations(userInfo.orgId).then((res) => {
       if (res.data?.length) {
         setAgencies(res.data);
       } else {
-        // No agencies → directly fetch consumers
-        loadConsumers(0); // Pass only page number, orgId will be taken inside
+        
+        loadConsumers(0); 
       }
     });
   }
@@ -150,17 +143,30 @@ const loadConsumers = async (page: number) => {
     setLoading(true);
 
     let orgId = selectedOrgId ?? null;
+    let agencyId = selectedAgencyId ?? null;
 
-
-    if (userInfo?.orgRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+    if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
       orgId = userInfo.orgId;
+    }
+
+    if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
+    }
+
+    if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
+    if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
     }
 
     const orgName = orgId
       ? organizations.find((o) => o.id === orgId)?.name || null
       : null;
 
-    const agencyId = selectedAgencyId ?? null;
     const agencyName = agencyId
       ? agencies.find((a) => a.id === agencyId)?.name || null
       : null;
@@ -168,8 +174,7 @@ const loadConsumers = async (page: number) => {
     const params = {
       orgId,
       agencyId,
-
-      userRole: userInfo?.orgRole || userRole || null
+      userRole: userInfo?.role || userRole || null
     };
 
     console.log("Fetching consumers with params:", params);
@@ -184,11 +189,6 @@ const loadConsumers = async (page: number) => {
     setLoading(false);
   }
 };
-
-
-
-
-
 
   const loadAllConsumers = async () => {
     if (allConsumers.length > 0) return; 
@@ -225,24 +225,24 @@ const loadConsumers = async (page: number) => {
       return;
     }
 
-    // If we don't have all consumers loaded yet, load them
+
     if (allConsumers.length === 0) {
       await loadAllConsumers();
     }
 
-    // Search through all consumers
+
     const searchTerm = query.toLowerCase().trim();
     const results = allConsumers.filter(consumer => {
-      // Search in customer name
+
       if (consumer.govIdName?.toLowerCase().includes(searchTerm)) return true;
       
-      // Search in email
+
       if (consumer.emailAddress?.toLowerCase().includes(searchTerm)) return true;
       
-      // Search in mobile number
+
       if (consumer.mobileNumber?.toString().includes(searchTerm)) return true;
       
-      // Search in connections
+
       if (consumer.connections) {
         return consumer.connections.some(connection => 
           connection.consumerId?.toString().includes(searchTerm)
@@ -256,18 +256,18 @@ const loadConsumers = async (page: number) => {
     setSearchResults(results);
   };
 
-    // Enhanced filtering and sorting logic
+
   const filteredAndSortedData = useMemo(() => {
     const data = searchQuery.trim() !== "" ? searchResults : consumers;
     
     let filtered = data.filter(consumer => {
-      // Filter by connections
+      
       if (filters.hasConnections !== null) {
         const hasConnections = consumer.connections && consumer.connections.length > 0;
         if (filters.hasConnections !== hasConnections) return false;
       }
       
-      // Filter by email
+     
       if (filters.hasEmail !== null) {
         const hasEmail = consumer.emailAddress && consumer.emailAddress !== "NA";
         if (filters.hasEmail !== hasEmail) return false;
@@ -276,7 +276,7 @@ const loadConsumers = async (page: number) => {
       return true;
     });
 
-    // Sorting
+
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
       
@@ -588,7 +588,7 @@ useEffect(() => {
     <div className="flex gap-4">
       
       
-      {userInfo?.role !== "ROLE_ORG_ADMIN" && (<div className="w-60"> 
+      {userRole ==="ROLE_SUPER_ADMIN" && (<div className="w-60"> 
         <label className="sr-only">Select Organization</label>
         <select
           value={selectedOrgId ?? ""}
