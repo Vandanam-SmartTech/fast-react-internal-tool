@@ -1,22 +1,28 @@
 import axios from 'axios';
 import { getAuthToken } from './jwtService';
+import { getConfig } from '../config';
 
-const quotationAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_QUOTATION_API}`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const getQuotationAPI = () => {
+  const { VITE_QUOTATION_API } = getConfig();
 
-quotationAPI.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  const quotationAPI = axios.create({
+    baseURL: VITE_QUOTATION_API,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  quotationAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  return quotationAPI;
+};
 
 export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  const quotationAPI = getQuotationAPI();
   try {
     if (!connectionId) {
       throw new Error("Connection ID is missing");
@@ -34,6 +40,7 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
 };
 
 export const previewQuotationPDF = async (connectionId: number): Promise<Blob> => {
+  const quotationAPI = getQuotationAPI();
   try {
     if (!connectionId) {
       throw new Error("Connection ID is missing");
@@ -56,6 +63,7 @@ export const fetchPanelWattages = async (
   dcrNonDcrType: string,
   brand: string
 ): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
   try {
     console.log('Fetching panel wattages...');
 
@@ -76,6 +84,7 @@ export const fetchInverterWattages = async (
   phaseType: string,
   inverterBrand: string
 ): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
   try {
     console.log('Fetching inverter wattages...');
 
@@ -94,6 +103,7 @@ export const fetchInverterWattages = async (
 };
 
 export const fetchRecommendedDetails = async (connectionId: number) => {
+  const quotationAPI = getQuotationAPI();
   try {
     console.log(`Fetching recommendation for connectionId: ${connectionId}`);
 
@@ -109,6 +119,7 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
 };
 
 export const fetchCustomerAgreedDetails = async (connectionId: number) => {
+  const quotationAPI = getQuotationAPI();
   try {
     console.log(`Fetching customer-agreed data for connectionId: ${connectionId}`);
 
@@ -125,6 +136,7 @@ export const fetchCustomerAgreedDetails = async (connectionId: number) => {
 
 
 export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
+  const quotationAPI = getQuotationAPI();
   try {
     const response = await quotationAPI.post('/api/getPrice', data);
 
@@ -140,6 +152,7 @@ export const getPriceDetails = async (data: Record<string, any>): Promise<Record
 };
 
 export const fetchBrandCapacityDetails = async (connectionId: number): Promise<Record<string, any> | null> => {
+  const quotationAPI = getQuotationAPI();
   try {
     const response = await quotationAPI.get(`/api/checkBrandAndCapacity/${connectionId}`);
 
@@ -154,6 +167,7 @@ export const fetchBrandCapacityDetails = async (connectionId: number): Promise<R
 };
 
 export const saveCustomerSpecs = async (connectionId: string, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
   if (!connectionId) {
     throw new Error("Connection ID is missing!");
   }

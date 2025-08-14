@@ -15,7 +15,6 @@ import {
   FileText
 } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import OrganizationSelector from '../../components/OrganizationSelector';
 
 const SuperAdminDashboard: React.FC = () => {

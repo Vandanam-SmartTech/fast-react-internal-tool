@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
-import { getOrganizationById, Organization } from '../../services/organizationService';
+import { getOrganizationById, Organization, fetchOrganizationUsers } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 interface OrganizationUser {
@@ -45,28 +45,17 @@ const OrganizationView: React.FC = () => {
     }
   };
 
-  const loadOrganizationUsers = async (orgId: number) => {
-    setUsersLoading(true);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/all`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const allUsers = await response.json();
-      
-      const usersWithOrgRoles = allUsers.filter((user: OrganizationUser) => 
-        user.organizationRoles?.some(role => role.organizationId === orgId)
-      );
-      
-      setOrgUsers(usersWithOrgRoles);
-    } catch (error) {
-      console.error('Failed to load organization users:', error);
-    } finally {
-      setUsersLoading(false);
-    }
-  };
+const loadOrganizationUsers = async (orgId: number) => {
+  setUsersLoading(true);
+  try {
+    const usersWithOrgRoles: OrganizationUser[] = await fetchOrganizationUsers(orgId);
+    setOrgUsers(usersWithOrgRoles);
+  } catch (error) {
+    console.error('Failed to load organization users:', error);
+  } finally {
+    setUsersLoading(false);
+  }
+};
 
   const getUsersByRole = (roleName: string) => {
     return orgUsers.filter(user => 
@@ -213,7 +202,7 @@ const OrganizationView: React.FC = () => {
 
             {/* Representatives */}
             {(() => {
-              const representatives = getUsersByRole('ROLE_REPRESENTATIVE');
+              const representatives = getUsersByRole('ROLE_ORG_REPRESENTATIVE').concat(getUsersByRole('ROLE_AGENCY_REPRESENTATIVE'));
               return representatives.length > 0 && (
                 <div>
                   <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
@@ -242,7 +231,7 @@ const OrganizationView: React.FC = () => {
 
             {/* Staff */}
             {(() => {
-              const staff = getUsersByRole('ROLE_STAFF');
+              const staff = getUsersByRole('ROLE_ORG_STAFF').concat(getUsersByRole('ROLE_AGENCY_STAFF'));
               return staff.length > 0 && (
                 <div>
                   <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">

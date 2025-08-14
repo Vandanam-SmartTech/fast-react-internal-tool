@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Edit, User } from 'lucide-react';
 import { getUserById } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { fetchOrganizations, Organization, fetchUserRolesByOrganization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 const UserOrgRolesDisplay: React.FC<{ userId: number }> = ({ userId }) => {
@@ -10,41 +10,20 @@ const UserOrgRolesDisplay: React.FC<{ userId: number }> = ({ userId }) => {
   const [userRoles, setUserRoles] = useState<{ org: string; roles: string[] }[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const orgs = await fetchOrganizations();
-        setOrganizations(orgs);
-        
-        const rolesByOrg: { org: string; roles: string[] }[] = [];
-        for (const org of orgs) {
-          try {
-            const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${userId}/organizations/${org.id}/roles`, {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-                'Content-Type': 'application/json'
-              }
-            });
-            if (response.ok) {
-              const orgRoles = await response.json();
-              if (orgRoles.length > 0) {
-                rolesByOrg.push({
-                  org: org.name,
-                  roles: orgRoles.map((role: any) => role.name.replace('ROLE_', ''))
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Error loading roles for org', org.id);
-          }
-        }
-        setUserRoles(rolesByOrg);
-      } catch (error) {
-        console.error('Failed to load organizations');
-      }
-    };
+  const loadData = async () => {
+    try {
+      const orgs = await fetchOrganizations();
+      setOrganizations(orgs);
 
-    loadData();
-  }, [userId]);
+      const rolesByOrg = await fetchUserRolesByOrganization(Number(userId), orgs);
+      setUserRoles(rolesByOrg);
+    } catch (error) {
+      console.error('Failed to load organizations or roles', error);
+    }
+  };
+
+  loadData();
+}, [userId]);
 
   return (
     <div className="space-y-2">

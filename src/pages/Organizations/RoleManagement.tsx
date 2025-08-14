@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft, Shield } from 'lucide-react';
-import { getUserById, updateUser } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { getUserById } from '../../services/jwtService';
+import { fetchOrganizations, Organization, assignMultipleUserOrgRoles } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 const RoleManagement: React.FC = () => {
@@ -57,32 +57,22 @@ const RoleManagement: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // Assign role to user in specific organization using new API
-      if (selectedOrg && selectedRoles.length > 0) {
-        for (const roleId of selectedRoles) {
-          await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${id}/organizations/${selectedOrg}/roles`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(roleId)
-          });
-        }
-      }
-      toast.success('User roles updated successfully');
-      navigate('/user-management');
-    } catch (error) {
-      toast.error('Failed to update user roles');
-    } finally {
-      setLoading(false);
+  try {
+    if (selectedOrg && selectedRoles.length > 0) {
+      await assignMultipleUserOrgRoles(parseInt(id!), parseInt(selectedOrg), selectedRoles.map(Number));
     }
-  };
+    toast.success('User roles updated successfully');
+    navigate('/user-management');
+  } catch (error) {
+    toast.error('Failed to update user roles');
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!user) return <div className="flex justify-center p-8">Loading...</div>;
 

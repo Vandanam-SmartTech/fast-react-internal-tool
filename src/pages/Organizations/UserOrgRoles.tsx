@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Shield, Plus, Trash2 } from 'lucide-react';
 import { getUserById } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { fetchOrganizations, Organization, fetchUserOrgRoles, UserOrgRole } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
-interface UserOrgRole {
-  organizationId: number;
-  organizationName: string;
-  roles: { id: number; name: string }[];
-}
+// interface UserOrgRole {
+//   organizationId: number;
+//   organizationName: string;
+//   roles: { id: number; name: string }[];
+// }
 
 const UserOrgRoles: React.FC = () => {
   const { id } = useParams();
@@ -58,32 +58,14 @@ const UserOrgRoles: React.FC = () => {
     }
   };
 
-  const loadUserOrgRoles = async () => {
-    try {
-      const orgRoles: UserOrgRole[] = [];
-      for (const org of organizations) {
-        const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${id}/organizations/${org.id}/roles`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const roles = await response.json();
-          if (roles.length > 0) {
-            orgRoles.push({
-              organizationId: org.id!,
-              organizationName: org.name,
-              roles
-            });
-          }
-        }
-      }
-      setUserOrgRoles(orgRoles);
-    } catch (error) {
-      console.error('Failed to load user organization roles');
-    }
-  };
+const loadUserOrgRoles = async () => {
+  try {
+    const orgRoles: UserOrgRole[] = await fetchUserOrgRoles(id, organizations);
+    setUserOrgRoles(orgRoles);
+  } catch (error) {
+    console.error('Failed to load user organization roles', error);
+  }
+};
 
   useEffect(() => {
     if (organizations.length > 0 && id) {

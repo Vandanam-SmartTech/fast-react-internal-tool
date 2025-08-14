@@ -1,73 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Building, Users, Shield, Edit, Eye, Plus, Trash2 } from 'lucide-react';
-import { fetchOrganizations, createAdminUser, Organization, getChildOrganizations } from '../../services/organizationService';
-import { updateUser } from '../../services/jwtService';
+import { fetchOrganizations, createAdminUser, Organization, getChildOrganizations, getUserRolesWithAgencies } from '../../services/organizationService';
+import { fetchAdmins, fetchRegularUsers,assignUserRole } from '../../services/jwtService';
 import { getAllRoles, createRole, updateRole, deleteRole, RoleDto } from '../../services/roleService';
 import { toast } from 'react-toastify';
+
 
 const AdminOrgRolesList: React.FC<{ userId: number; organizations: Organization[] }> = ({ userId, organizations }) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadUserRoles = async () => {
-      const roles: string[] = [];
-      
-      // Check parent organization roles
-      for (const org of organizations) {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${userId}/organizations/${org.id}/roles`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (response.ok) {
-            const orgRoles = await response.json();
-            orgRoles.forEach((role: any) => {
-              if (['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN'].includes(role.name)) {
-                roles.push(`${role.name.replace('ROLE_', '')} (${org.name})`);
-              }
-            });
-          }
-        } catch (error) {
-          console.error('Error loading roles for org', org.id);
-        }
-        
-        // Check agency roles for each organization
-        try {
-          const agenciesData = await getChildOrganizations(org.id!);
-          for (const agency of agenciesData) {
-            try {
-              const agencyResponse = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${userId}/organizations/${agency.id}/roles`, {
-                headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              if (agencyResponse.ok) {
-                const agencyRoles = await agencyResponse.json();
-                agencyRoles.forEach((role: any) => {
-                  if (['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN'].includes(role.name)) {
-                    roles.push(`${role.name.replace('ROLE_', '')} (${agency.name})`);
-                  }
-                });
-              }
-            } catch (error) {
-              console.error('Error loading roles for agency', agency.id);
-            }
-          }
-        } catch (error) {
-          console.error('Error loading agencies for org', org.id);
-        }
-      }
-      
-      setUserRoles(roles);
-    };
+  const loadUserRoles = async () => {
+    const roles = await getUserRolesWithAgencies(userId, organizations);
+    setUserRoles(roles);
+  };
 
-    if (organizations.length > 0) {
-      loadUserRoles();
-    }
-  }, [userId, organizations]);
+  if (organizations.length > 0) {
+    loadUserRoles();
+  }
+}, [userId, organizations]);
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -131,24 +82,15 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  const loadUsers = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/all`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      // Filter out super admins only, as other roles are organization-specific
-      const regularUsers = data.filter((user: any) => 
-        !user.roles?.some((role: any) => role.name === 'ROLE_SUPER_ADMIN')
-      );
-      setUsers(regularUsers);
-    } catch (error) {
-      toast.error('Failed to load users');
-    }
-  };
+const loadUsers = async () => {
+  try {
+    const regularUsers = await fetchRegularUsers();
+    setUsers(regularUsers);
+  } catch (error) {
+    toast.error('Failed to load users');
+  }
+};
+
 
   const loadRoles = async () => {
     try {
@@ -159,29 +101,14 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  const loadAdmins = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/all`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      
-      // Filter users with admin roles (global SUPER_ADMIN or org-specific admin roles)
-      const adminUsers = data.filter((user: any) => 
-        user.roles?.some((role: any) => role.name === 'ROLE_SUPER_ADMIN') ||
-        user.organizationRoles?.some((orgRole: any) => 
-          ['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN'].includes(orgRole.roleName)
-        )
-      );
-      
-      setAdmins(adminUsers);
-    } catch (error) {
-      toast.error('Failed to load admins');
-    }
-  };
+const loadAdmins = async () => {
+  try {
+    const admins = await fetchAdmins();
+    setAdmins(admins);
+  } catch (error) {
+    toast.error('Failed to load admins');
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,35 +191,31 @@ const AdminManagement: React.FC = () => {
   };
 
   const handlePromoteUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const selectedRole = roles.find(r => r.id?.toString() === promoteData.roleId);
-      const isAgencyAdmin = selectedRole?.name === 'ROLE_AGENCY_ADMIN';
-      const targetOrgId = isAgencyAdmin && promoteData.agencyId 
-        ? promoteData.agencyId 
+  try {
+    const selectedRole = roles.find(r => r.id?.toString() === promoteData.roleId);
+    const isAgencyAdmin = selectedRole?.name === 'ROLE_AGENCY_ADMIN';
+
+    const targetOrgId =
+      isAgencyAdmin && promoteData.agencyId
+        ? promoteData.agencyId
         : promoteData.organizationId;
-        
-      await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${promoteData.userId}/organizations/${targetOrgId}/roles`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(parseInt(promoteData.roleId))
-      });
-      toast.success('Role assigned successfully');
-      loadUsers();
-      loadAdmins();
-      setPromoteData({ userId: '', roleId: '', organizationId: '', agencyId: '' });
-      setAgencies([]);
-    } catch (error) {
-      toast.error('Failed to assign role');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    await assignUserRole(promoteData.userId, targetOrgId, promoteData.roleId);
+
+    toast.success('Role assigned successfully');
+    loadUsers();
+    loadAdmins();
+    setPromoteData({ userId: '', roleId: '', organizationId: '', agencyId: '' });
+    setAgencies([]);
+  } catch (error) {
+    toast.error('Failed to assign role');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

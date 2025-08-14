@@ -503,16 +503,17 @@ const AppContent: React.FC = () => {
   );
 };
 
-function App() {
+function App({ basePath }: { basePath: string }) {
   return (
     <ThemeProvider>
       <UserProvider>
-        <Router basename="/solarpro">
+        <Router basename={basePath}>
           <AppContent />
         </Router>
       </UserProvider>
     </ThemeProvider>
   );
 }
+
 
 export default App;

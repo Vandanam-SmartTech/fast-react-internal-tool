@@ -1,22 +1,30 @@
 import axios from 'axios';
 import { getAuthToken } from './jwtService';
+import { getConfig } from '../config';
 
-const docGeneratorAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_DOCUMENT_API}`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const getDocumentAPI = () => {
+  const { VITE_DOCUMENT_API } = getConfig();
 
-docGeneratorAPI.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  const documentAPI = axios.create({
+    baseURL: VITE_DOCUMENT_API,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  documentAPI.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  return documentAPI;
+};
 
 export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
+  const documentAPI = getDocumentAPI();
   let endpoint = "";
 
   switch (docName) {
@@ -26,14 +34,11 @@ export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
     case "Annexure 1":
       endpoint = `/api/pdf/annexureProformaAConverted/${id}?download=true`;
       break;
-    case "EarthingPageDocument":
+    case "Earthing Page Document":
       endpoint = `/api/pdf/earthingPageController/${id}?download=true`;
       break;
-    case "Subsidy Agreement Document-Page-1":
+    case "Subsidy Agreement Document":
       endpoint = `/api/pdf/subsidyagreementpageone/${id}?download=true`;
-      break;
-    case "Subsidy Agreement Document-Page-2":
-      endpoint = `/api/pdf/subsidyAgreementPageTwo/${id}?download=true`;
       break;
     case "Vendor Feasibility Document":
       endpoint = `/api/pdf/vendorFeasibilityController/${id}?download=true`;
@@ -53,7 +58,7 @@ export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
   }
 
   try {
-    const response = await docGeneratorAPI.get(endpoint, {
+    const response = await documentAPI.get(endpoint, {
       responseType: 'blob',
       headers: {
         Accept: 'application/pdf',

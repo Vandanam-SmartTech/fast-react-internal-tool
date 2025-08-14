@@ -335,7 +335,7 @@ useEffect(() => {
   
   if (!selectedOrgId) return;
 
-  // Pass page 0 every time a filter changes
+  
   loadConsumers(0);
 }, [selectedOrgId, selectedAgencyId, userRole]);
 
