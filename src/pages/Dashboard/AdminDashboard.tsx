@@ -12,7 +12,8 @@ import {
   FileText,
   BarChart3,
   Calendar,
-  Clock
+  Clock,
+  Shield
 } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -51,57 +52,46 @@ const AdminDashboard: React.FC = () => {
     // Update time every minute
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 1000);
 
     return () => clearInterval(timeInterval);
   }, []);
 
   const dashboardItems = [
+
     {
-      title: 'Manage Customers',
-      description: 'Add, view, and manage customer information',
-      icon: <Users className="h-8 w-8 text-primary-600" />,
-      path: '/manage-customers',
-      color: 'from-primary-50 to-primary-100',
-      borderColor: 'border-primary-200',
-      stats: '1,234',
-      change: '+12%',
-      changeType: 'positive'
+          title: 'Manage Agencies',
+          description: 'List, View, Add, Update agencies',
+          icon: <Building2 className="h-8 w-8 text-warning-600" />,
+          path: '/organizations',
+          color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
+    },
+    
+    {
+          title: 'Manage Customers',
+          description: 'List, View, Add, Update customers',
+          icon: <Users className="h-8 w-8 text-primary-600" />,
+          path: '/manage-customers',
+          color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+          // requiresOrg: true
     },
    
+    
+
     {
-      title: 'Agencies',
-      description: 'Manage agencies within your organization',
-      icon: <Building2 className="h-8 w-8 text-warning-600" />,
-      path: '/organizations',
-      color: 'from-warning-50 to-warning-100',
-      borderColor: 'border-warning-200',
-      stats: '23',
-      change: '+3',
-      changeType: 'positive'
-    },
-    {
-      title: 'User Management',
-      description: 'Manage users and their roles',
-      icon: <UserCog className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
+      title: 'Manage Users',
+      description: 'Search, List, View, Add, Update users',
+      icon: <UserCog className="h-8 w-8 text-error-600" />,
       path: '/user-management',
-      color: 'from-secondary-50 to-secondary-100',
-      borderColor: 'border-secondary-200',
-      stats: '156',
-      change: '+8',
-      changeType: 'positive'
+      color: 'bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700'
     },
     {
-      title: 'Role Management',
-      description: 'Configure user roles and permissions',
-      icon: <Settings className="h-8 w-8 text-error-600" />,
+      title: 'Manage Roles',
+      description: 'List, View, Add new roles',
+      icon: <Shield className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/admin-management',
-      color: 'from-error-50 to-error-100',
-      borderColor: 'border-error-200',
-      stats: '12',
-      change: '0',
-      changeType: 'neutral'
-    }
+      color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
+    },
   ];
 
   const quickActions = [
@@ -156,23 +146,6 @@ const AdminDashboard: React.FC = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary-600">Total Customers</p>
-                  <p className="text-2xl font-bold text-primary-900">1,234</p>
-                </div>
-                <div className="p-2 bg-primary-200 rounded-lg">
-                  <Users className="h-6 w-6 text-primary-700" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+12% from last month</span>
-              </div>
-            </CardBody>
-          </Card>
 
           <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
             <CardBody className="p-4">
@@ -185,12 +158,33 @@ const AdminDashboard: React.FC = () => {
                   <UserCog className="h-6 w-6 text-success-700" />
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-1">
+              {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+8% from last month</span>
-              </div>
+              </div> */}
             </CardBody>
           </Card>
+
+          
+          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary-600">Total Customers</p>
+                  <p className="text-2xl font-bold text-primary-900">1,234</p>
+                </div>
+                <div className="p-2 bg-primary-200 rounded-lg">
+                  <Users className="h-6 w-6 text-primary-700" />
+                </div>
+              </div>
+              {/* <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+12% from last month</span>
+              </div> */}
+            </CardBody>
+          </Card>
+
+          
 
           <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
             <CardBody className="p-4">
@@ -203,14 +197,14 @@ const AdminDashboard: React.FC = () => {
                   <Building2 className="h-6 w-6 text-warning-700" />
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-1">
+              {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+3 new this month</span>
-              </div>
+              </div> */}
             </CardBody>
           </Card>
 
-          <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
+          {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -226,12 +220,12 @@ const AdminDashboard: React.FC = () => {
                 <span className="text-sm text-success-600">+15 this week</span>
               </div>
             </CardBody>
-          </Card>
+          </Card> */}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4">
         <h2 className="text-xl font-semibold text-secondary-900">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {quickActions.map((action, index) => (
@@ -250,59 +244,59 @@ const AdminDashboard: React.FC = () => {
             </Card>
           ))}
         </div>
-      </div>
+      </div> */}
       
       {/* Main Dashboard Items */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-secondary-900">Management Tools</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {dashboardItems.map((item, index) => (
-            <Card 
-            key={index}
-              hover 
-            onClick={() => navigate(item.path)}
-              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
-          >
-              <CardBody className="p-6">
-            <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
+<div className="space-y-4">
+  <h2 className="text-xl font-semibold text-secondary-900">Management Tools</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {dashboardItems.map((item, index) => (
+      <Card 
+        key={index}
+        hover 
+        onClick={() => navigate(item.path)}
+        className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+      >
+        <CardBody className="p-6">
+          <div className="flex items-start gap-4">
+            
+            {/* Icon with white background */}
+            <div className="p-3 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
               {item.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-secondary-700 dark:text-secondary-300 text-sm mb-4">
-                      {item.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-secondary-900">
-                          {item.stats}
-                        </span>
-                        <span                         className={`text-sm font-medium ${
-                          item.changeType === 'positive' ? 'text-success-600 dark:text-success-400' : 
-                          item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' : 
-                          'text-secondary-700 dark:text-secondary-300'
-                        }`}>
-                          {item.change}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-secondary-700 dark:text-secondary-300 hover:text-secondary-900 dark:hover:text-secondary-100"
-                      >
-                        View →
-                      </Button>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                {item.title}
+              </h3>
+              <p className="text-secondary-700 dark:text-secondary-300 text-sm mb-4">
+                {item.description}
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-secondary-900">
+                    {item.stats}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      item.changeType === 'positive' ? 'text-success-600 dark:text-success-400' : 
+                      item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' : 
+                      'text-secondary-700 dark:text-secondary-300'
+                    }`}
+                  >
+                    {item.change}
+                  </span>
+                </div>
               </div>
             </div>
+
           </div>
-              </CardBody>
-            </Card>
-        ))}
-        </div>
-      </div>
+        </CardBody>
+      </Card>
+    ))}
+  </div>
+</div>
+
     </div>
   );
 };

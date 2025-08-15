@@ -2,19 +2,6 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 import { getConfig } from '../config';
 
-// const roleAPI = axios.create({
-//   baseURL: `${import.meta.env.VITE_JWT_API}/api/roles`,
-//   headers: { 'Content-Type': 'application/json' },
-// });
-
-// roleAPI.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('jwtToken');
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
-
 export const getRoleAPI = () => {
   const { VITE_JWT_API } = getConfig();
 

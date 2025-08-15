@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { FaExclamationTriangle } from "react-icons/fa";
+import { loadConfig, getConfig } from "../config";
 
 const EnvBanner: React.FC = () => {
   const [envLabel, setEnvLabel] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/solarpro/config.json")
-      .then((res) => res.json())
-      .then((data) => setEnvLabel(data.VITE_ENV_LABEL || "Development"));
+    const fetchEnvLabel = async () => {
+      try {
+        await loadConfig(); // load the config.json
+        const config = getConfig(); // get the loaded config
+        setEnvLabel(config.VITE_ENV_LABEL || "Development");
+      } catch (error) {
+        console.error("Failed to load config:", error);
+      }
+    };
+
+    fetchEnvLabel();
   }, []);
 
   if (!envLabel || envLabel.toLowerCase() === "production") return null;
