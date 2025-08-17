@@ -141,7 +141,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Crop Signature</h3>
@@ -152,9 +152,9 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-
-        {/* Content */}
-        <div className="p-4">
+  
+        {/* Scrollable Content */}
+        <div className="p-4 overflow-y-auto flex-1">
           {/* Instructions */}
           <div className="mb-4 text-center">
             <p className="text-sm text-gray-600 mb-2">
@@ -168,7 +168,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
               <span>Rotate if needed</span>
             </div>
           </div>
-
+  
           {/* Crop Container */}
           <div className="relative w-full h-96 mb-4 bg-gray-100 rounded-lg overflow-hidden">
             <Cropper
@@ -176,7 +176,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
               crop={crop}
               zoom={zoom}
               rotation={rotation}
-              aspect={2} // 140:70 = 2:1 aspect ratio
+              aspect={2}
               onCropChange={handleCropChange}
               onZoomChange={handleZoomChange}
               onCropComplete={handleCropComplete}
@@ -187,10 +187,9 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
               maxZoom={3}
             />
           </div>
-
-          {/* Controls */}
+  
+          {/* Zoom Controls */}
           <div className="space-y-4">
-            {/* Zoom Controls */}
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
@@ -210,7 +209,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
                 <ZoomIn className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-
+  
             {/* Rotation Controls */}
             <div className="flex items-center justify-center gap-4">
               <button
@@ -229,32 +228,33 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
                 <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
               </button>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                size="sm"
-                leftIcon={<RotateCcw className="w-4 h-4" />}
-              >
-                Reset
-              </Button>
-              <Button
-                onClick={handleSave}
-                size="sm"
-                leftIcon={<Crop className="w-4 h-4" />}
-                loading={isProcessing}
-                disabled={!croppedAreaPixels}
-              >
-                {isProcessing ? 'Processing...' : 'Save Cropped Image'}
-              </Button>
-            </div>
           </div>
+        </div>
+  
+        {/* Sticky Footer for Action Buttons */}
+        <div className="p-4 border-t border-gray-200 flex gap-3 justify-center">
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            size="sm"
+            leftIcon={<RotateCcw className="w-4 h-4" />}
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={handleSave}
+            size="sm"
+            leftIcon={<Crop className="w-4 h-4" />}
+            loading={isProcessing}
+            disabled={!croppedAreaPixels}
+          >
+            {isProcessing ? 'Processing...' : 'Save Cropped Image'}
+          </Button>
         </div>
       </div>
     </div>
   );
+  
 };
 
 const Profile: React.FC = () => {
