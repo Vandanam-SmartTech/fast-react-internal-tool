@@ -1,22 +1,31 @@
 import axios from 'axios';
 import { getAuthToken } from './jwtService';
+import { getConfig } from '../config';
 
-const crsAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_CRS_API}`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const getCrsAPI = () => {
+  const { VITE_CRS_API } = getConfig();
 
-crsAPI.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  const crsAPI = axios.create({
+    baseURL: VITE_CRS_API,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  crsAPI.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  return crsAPI;
+};
+
 
 export const saveCustomer = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -45,6 +54,7 @@ export const saveCustomer = async (data: Record<string, any>): Promise<{ id: num
 export const checkMobileNumberExists = async (
   mobileNumber: string
 ): Promise<boolean> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/customers/mobile-exist', {
       params: { mobileNumber },
@@ -60,6 +70,7 @@ export const checkMobileNumberExists = async (
 export const checkEmailAddressExists = async (
   emailAddress: string
 ): Promise<boolean> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/customers/email-exist', {
       params: { emailAddress },
@@ -75,6 +86,7 @@ export const checkEmailAddressExists = async (
 export const checkConsumerNumberExists = async (
   consumerId: string
 ): Promise<boolean> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/connections/consumerId-exist', {
       params: { consumerId },
@@ -90,6 +102,7 @@ export const checkConsumerNumberExists = async (
 export const saveConnection = async (
   data: Record<string, any>
 ): Promise<{ id: number | null; message?: string }> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.post('/api/connections', data);
 
@@ -118,6 +131,7 @@ export const saveConnection = async (
 
 
 export const saveInstallation = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.post('/api/installations', data);
 
@@ -143,6 +157,7 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 
 
 export const fetchDistricts = async (): Promise<District[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/district/27');
     return response.data;
@@ -155,6 +170,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
 };
 
 export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/taluka/${districtCode}`);
     return response.data;
@@ -167,6 +183,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
 };
 
 export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/village/${talukaCode}`);
     return response.data;
@@ -179,6 +196,7 @@ export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
 };
 
 export const fetchConnectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/connectionType');
     return response.data;
@@ -191,6 +209,7 @@ export const fetchConnectionType = async (): Promise<{ id: number; nameEn: strin
 };
 
 export const fetchPhaseType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/phaseType');
     return response.data;
@@ -203,6 +222,7 @@ export const fetchPhaseType = async (): Promise<{ id: number; nameEn: string }[]
 };
 
 export const fetchAddressType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/addressType');
     return response.data;
@@ -215,6 +235,7 @@ export const fetchAddressType = async (): Promise<{ id: number; nameEn: string }
 };
 
 export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: string }[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/correctionType');
     return response.data;
@@ -227,6 +248,7 @@ export const fetchCorrectionType = async (): Promise<{ id: number; nameEn: strin
 };
 
 export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; nameEnglish: string }[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/installationSpaceTypes');
     return response.data;
@@ -243,6 +265,7 @@ export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; 
 export const fetchInstallationSpaceTypes = async (
   consumerId: number
 ): Promise<number[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
     return response.data;
@@ -253,6 +276,7 @@ export const fetchInstallationSpaceTypes = async (
 };
 
 export const getCustomerById = async (customerId: number): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -272,6 +296,7 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
 };
 
 export const getCustomerWithConnections = async (customerId: number): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -291,6 +316,7 @@ export const getCustomerWithConnections = async (customerId: number): Promise<an
 };
 
 export const getConnectionByConsumerId = async (consumerId: number): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/connections/${consumerId}`);
     return response.data;
@@ -303,6 +329,7 @@ export const getConnectionByConsumerId = async (consumerId: number): Promise<any
 export const getInstallationByConsumerId = async (
   consumerId: number
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
     return response.data;
@@ -315,6 +342,7 @@ export const getInstallationByConsumerId = async (
 
 
 export const fetchConsumerNumber = async (customerId: number) => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/connections/by-customer/${customerId}`);
     if (response.data?.success === false) {
@@ -352,6 +380,7 @@ export const fetchConsumerNumber = async (customerId: number) => {
 // };
 
 export const fetchConsumers = async (page = 0) => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -378,6 +407,7 @@ export const fetchConsumers = async (page = 0) => {
 };
 
 export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null }) => {
+  const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
 
@@ -400,6 +430,7 @@ export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: 
 
 
 export const fetchOnboardedConsumers = async (page = 0) => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -426,6 +457,7 @@ export const fetchOnboardedConsumers = async (page = 0) => {
 
 
 export const getCustomerCount = async (representativeId?: number): Promise<number> => {
+  const crsAPI = getCrsAPI();
   try {
     const url = representativeId
       ? `/api/customers/count?representativeId=${representativeId}`
@@ -439,6 +471,7 @@ export const getCustomerCount = async (representativeId?: number): Promise<numbe
 };
 
 export const getOnboardedCustomerCount = async (representativeId?: number): Promise<number> => {
+  const crsAPI = getCrsAPI();
   try {
     const url = representativeId
       ? `/api/customers/onboarded-count?representativeId=${representativeId}`
@@ -457,6 +490,7 @@ export const updateConsumerPersonalDetails = async (
   customerId: number,
   updatedCustomerData: any
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     console.log("Sending request to update consumer:", updatedCustomerData);
 
@@ -474,6 +508,7 @@ export const updateInstallationSpaceDetails = async (
   id: number,
   updatedInstallationData: any
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     console.log('Sending request to update installation:', updatedInstallationData);
 
@@ -491,6 +526,7 @@ export const updateConsumerConnectionDetails = async (
   id: number,
   updatedData: any
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     console.log('Sending request to update consumer:', updatedData);
 
@@ -506,6 +542,7 @@ export const updateConsumerConnectionDetails = async (
 
 // src/services/districtService.ts
 export const getDistrictNameByCode = async (code: number): Promise<string> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/district/name/${code}`, {
       responseType: 'text', // important for plain text responses
@@ -519,6 +556,7 @@ export const getDistrictNameByCode = async (code: number): Promise<string> => {
 };
 
 export const getTalukaNameByCode = async (code: number): Promise<string> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/taluka/name/${code}`, {
       responseType: 'text', // Axios will treat the response as plain text
@@ -532,6 +570,7 @@ export const getTalukaNameByCode = async (code: number): Promise<string> => {
 };
 
 export const getVillageNameByCode = async (code: number): Promise<string> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/village/name/${code}`, {
       responseType: 'text', // Axios will treat the response as plain text
@@ -571,6 +610,7 @@ export const postMaterialData = async (
     reInstalledCapacityTotal: string;
   }
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.post(`/api/materials/${connectionId}`, data);
     return response.data;
@@ -606,6 +646,7 @@ export const updateMaterialData = async (
     reInstalledCapacityTotal: string;
   }
 ): Promise<any> => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.put(`/api/materials/${connectionId}`, data);
     return response.data;
@@ -617,6 +658,7 @@ export const updateMaterialData = async (
 
 
 export const searchCustomers = async (query: string): Promise<any[]> => {
+  const crsAPI = getCrsAPI();
   try {
     const orgId = localStorage.getItem('selectedOrganization');
     const orgName = localStorage.getItem('selectedOrganizationName');
@@ -651,6 +693,7 @@ export const searchCustomers = async (query: string): Promise<any[]> => {
 };
 
 export const getMaterialsByConnectionId = async (connectionId: number) => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/materials/${connectionId}`);
 
@@ -667,6 +710,7 @@ export const getMaterialsByConnectionId = async (connectionId: number) => {
 };
 
 export const getCustomerStats = async () => {
+  const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/customers/stats');
     return response.data;
@@ -676,14 +720,4 @@ export const getCustomerStats = async () => {
   }
 };
 
-// // services/geocode.ts
-// export const geocodeLocation = async (query: string): Promise<[number, number]> => {
-//   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-//   const response = await fetch(url);
-//   const data = await response.json();
-//   if (data && data.length > 0) {
-//     return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-//   }
-//   throw new Error("Location not found");
-// };
 

@@ -2,14 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Shield, Plus, Trash2 } from 'lucide-react';
 import { getUserById } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { fetchOrganizations, Organization, fetchUserOrgRoles, UserOrgRole, assignUserOrgRole, removeUserOrgRole } from '../../services/organizationService';
 import { toast } from 'react-toastify';
-
-interface UserOrgRole {
-  organizationId: number;
-  organizationName: string;
-  roles: { id: number; name: string }[];
-}
 
 const UserOrgRoles: React.FC = () => {
   const { id } = useParams();
@@ -58,32 +52,14 @@ const UserOrgRoles: React.FC = () => {
     }
   };
 
-  const loadUserOrgRoles = async () => {
-    try {
-      const orgRoles: UserOrgRole[] = [];
-      for (const org of organizations) {
-        const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${id}/organizations/${org.id}/roles`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const roles = await response.json();
-          if (roles.length > 0) {
-            orgRoles.push({
-              organizationId: org.id!,
-              organizationName: org.name,
-              roles
-            });
-          }
-        }
-      }
-      setUserOrgRoles(orgRoles);
-    } catch (error) {
-      console.error('Failed to load user organization roles');
-    }
-  };
+const loadUserOrgRoles = async () => {
+  try {
+    const orgRoles: UserOrgRole[] = await fetchUserOrgRoles(id, organizations);
+    setUserOrgRoles(orgRoles);
+  } catch (error) {
+    console.error('Failed to load user organization roles', error);
+  }
+};
 
   useEffect(() => {
     if (organizations.length > 0 && id) {
@@ -92,48 +68,38 @@ const UserOrgRoles: React.FC = () => {
   }, [organizations, id]);
 
   const handleAddRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${id}/organizations/${newAssignment.organizationId}/roles`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(parseInt(newAssignment.roleId))
-      });
-      
-      toast.success('Role assigned successfully');
-      setNewAssignment({ organizationId: '', roleId: '' });
-      setShowAddForm(false);
-      loadUserOrgRoles();
-    } catch (error) {
-      toast.error('Failed to assign role');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    await assignUserOrgRole(
+      parseInt(id!), 
+      parseInt(newAssignment.organizationId),
+      parseInt(newAssignment.roleId)
+    );
 
-  const handleRemoveRole = async (orgId: number, roleId: number) => {
-    if (window.confirm('Are you sure you want to remove this role?')) {
-      try {
-        await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${id}/organizations/${orgId}/roles/${roleId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        toast.success('Role removed successfully');
-        loadUserOrgRoles();
-      } catch (error) {
-        toast.error('Failed to remove role');
-      }
-    }
-  };
+    toast.success('Role assigned successfully');
+    setNewAssignment({ organizationId: '', roleId: '' });
+    setShowAddForm(false);
+    loadUserOrgRoles();
+  } catch (error) {
+    toast.error('Failed to assign role');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleRemoveRole = async (orgId: number, roleId: number) => {
+  if (!window.confirm('Are you sure you want to remove this role?')) return;
+
+  try {
+    await removeUserOrgRole(parseInt(id!), orgId, roleId);
+    toast.success('Role removed successfully');
+    loadUserOrgRoles();
+  } catch (error) {
+    toast.error('Failed to remove role');
+  }
+};
 
   if (!user) return <div className="flex justify-center p-8">Loading...</div>;
 

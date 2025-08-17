@@ -1,27 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Users, 
-  Eye, 
-  Search, 
-  Shield, 
-  Filter,
-  MoreVertical,
-  Mail,
-  Phone,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Download,
-  Upload,
-  RefreshCw
-} from 'lucide-react';
-import { fetchRepresentativesPaginated, updateUser } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter,Mail,Phone,User,CheckCircle,XCircle,RefreshCw} from 'lucide-react';
+import { updateUser, fetchAllUsers } from '../../services/jwtService';
+import { fetchOrganizations, Organization, fetchAllUserRoles } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -30,70 +11,20 @@ import Input from '../../components/ui/Input';
 const UserOrgRolesList: React.FC<{ userId: number; organizations: Organization[] }> = ({ userId, organizations }) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
-  useEffect(() => {
-    const loadUserRoles = async () => {
-      const roles: string[] = [];
-      
-      // Check parent organization roles
-      for (const org of organizations) {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${userId}/organizations/${org.id}/roles`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (response.ok) {
-            const orgRoles = await response.json();
-            orgRoles.forEach((role: any) => {
-              roles.push(`${role.name.replace('ROLE_', '')} (${org.name})`);
-            });
-          }
-        } catch (error) {
-          console.error('Error loading roles for org', org.id);
-        }
-        
-        // Check agency roles for each organization
-        try {
-          const agenciesResponse = await fetch(`${import.meta.env.VITE_JWT_API}/api/organizations/${org.id}/children`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (agenciesResponse.ok) {
-            const agenciesData = await agenciesResponse.json();
-            for (const agency of agenciesData) {
-              try {
-                const agencyResponse = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/${userId}/organizations/${agency.id}/roles`, {
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-                    'Content-Type': 'application/json'
-                  }
-                });
-                if (agencyResponse.ok) {
-                  const agencyRoles = await agencyResponse.json();
-                  agencyRoles.forEach((role: any) => {
-                    roles.push(`${role.name.replace('ROLE_', '')} (${agency.name})`);
-                  });
-                }
-              } catch (error) {
-                console.error('Error loading roles for agency', agency.id);
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error loading agencies for org', org.id);
-        }
-      }
-      
-      setUserRoles(roles);
-    };
+useEffect(() => {
+  const loadRoles = async () => {
+    const roles = await fetchAllUserRoles(
+      userId,
+      organizations.filter((org): org is { id: number; name: string } => typeof org.id === 'number')
+    );
+    setUserRoles(roles);
+  };
 
-    if (organizations.length > 0) {
-      loadUserRoles();
-    }
-  }, [userId, organizations]);
+  if (organizations.length > 0) {
+    loadRoles();
+  }
+}, [userId, organizations]);
+
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -136,24 +67,18 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_JWT_API}/api/users/all`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
-    } catch (error) {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+const loadUsers = async () => {
+  try {
+    setLoading(true);
+    const data = await fetchAllUsers();
+    setUsers(data);
+    setFilteredUsers(data);
+  } catch (error) {
+    toast.error('Failed to load users');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);

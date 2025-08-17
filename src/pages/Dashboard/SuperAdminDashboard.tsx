@@ -1,26 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Building, 
-  Shield, 
-  Users, 
-  Plus, 
-  Building2, 
-  UserCog, 
-  Settings, 
-  List,
-  TrendingUp,
-  Globe,
-  BarChart3,
-  FileText
-} from 'lucide-react';
+import { Building, Shield, Users, Building2, UserCog, Settings, Clock, Calendar} from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 import OrganizationSelector from '../../components/OrganizationSelector';
+import { fetchClaims } from '../../services/jwtService';
 
 const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showOrgSelector, setShowOrgSelector] = useState(false);
+  const [preferredName, setPreferredName] = useState('');
+  const [greeting, setGreeting] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+    
+  
+    useEffect(() => {
+      const setTimeBasedGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) {
+          setGreeting('Good Morning');
+        } else if (hour < 16) {
+          setGreeting('Good Afternoon');
+        } else {
+          setGreeting('Good Evening');
+        }
+      };
+  
+      setTimeBasedGreeting();
+  
+      const getClaims = async () => {
+        try {
+          const claims = await fetchClaims();
+          setPreferredName(claims.preferred_name);
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+  
+      getClaims();
+  
+      const timeInterval = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+  
+      return () => clearInterval(timeInterval);
+    }, []);
+
+      const handleItemClick = (item: any) => {
+    if (item.requiresOrg) {
+      setShowOrgSelector(true);
+    } else {
+      navigate(item.path);
+    }
+  };
+
+  const handleSelectOrg = (orgId: string, orgName: string) => {
+    setShowOrgSelector(false);
+    navigate(`/agencies/${orgId}`);
+  };
+
+  const handleCancel = () => setShowOrgSelector(false);
+
 
   const dashboardItems = [
     {
@@ -43,7 +82,8 @@ const SuperAdminDashboard: React.FC = () => {
       description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-8 w-8 text-warning-600" />,
       path: '/organizations',
-      color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
+      color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700',
+      requiresOrg: true
     },
     {
       title: 'Manage Users',
@@ -68,55 +108,37 @@ const SuperAdminDashboard: React.FC = () => {
     }
   ];
 
-  const quickStats = [
-    {
-      title: 'Total Organizations',
-      value: '24',
-      // change: '+3',
-      // changeType: 'positive',
-      icon: <Building className="h-6 w-6 text-primary-700" />
-    },
-    {
-      title: 'Active Users',
-      value: '1,234',
-      // change: '+12%',
-      // changeType: 'positive',
-      icon: <Users className="h-6 w-6 text-success-700" />
-    },
-    {
-      title: 'Total Agencies',
-      value: '156',
-      // change: '+8',
-      // changeType: 'positive',
-      icon: <Building2 className="h-6 w-6 text-warning-700" />
-    }
-    // {
-    //   title: 'System Health',
-    //   value: '98%',
-    //   change: '+2%',
-    //   changeType: 'positive',
-    //   icon: <BarChart3 className="h-6 w-6 text-error-700" />
-    // }
-  ];
 
-  const handleItemClick = (item: any) => {
-    if (item.requiresOrg) {
-      setShowOrgSelector(true);
-    } else {
-      navigate(item.path);
-    }
-  };
+
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100 mb-2">Super Admin Dashboard</h1>
-        <p className="text-secondary-700 dark:text-secondary-300">Complete system administration and management</p>
-      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900">
+              {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
+            </h1>
+            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+              Complete system administration and management
+            </p>
+          </div>
+          
+                          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{currentTime.toLocaleTimeString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>{currentTime.toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
 
  {/* Quick Stats */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+ {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {quickStats.map((stat, index) => (
           <Card key={index} className="stat-card">
             <CardBody className="p-6">
@@ -125,8 +147,6 @@ const SuperAdminDashboard: React.FC = () => {
                   <p className="stat-label">{stat.title}</p>
                   <p className="stat-value">{stat.value}</p>
                   <div className="mt-2 flex items-center gap-1">
-                    {/* <TrendingUp className="h-4 w-4 text-success-600" /> */}
-                    {/* <span className="stat-change stat-change-positive">{stat.change} from last month</span> */}
                   </div>
                 </div>
                 <div className="p-3 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
@@ -136,12 +156,109 @@ const SuperAdminDashboard: React.FC = () => {
             </CardBody>
           </Card>
         ))}
+      </div> */}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+  <CardBody className="p-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-purple-600">Total Organizations</p>
+        <p className="text-2xl font-bold text-purple-900">156</p>
       </div>
+      <div className="p-2 bg-purple-200 rounded-lg">
+        <UserCog className="h-6 w-6 text-purple-700" />
+      </div>
+    </div>
+    {/* <div className="mt-2 flex items-center gap-1">
+      <TrendingUp className="h-4 w-4 text-success-600" />
+      <span className="text-sm text-success-600">+8% from last month</span>
+    </div> */}
+  </CardBody>
+</Card>
+
+
+          <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-success-600">Active Users</p>
+                  <p className="text-2xl font-bold text-success-900">156</p>
+                </div>
+                <div className="p-2 bg-success-200 rounded-lg">
+                  <UserCog className="h-6 w-6 text-success-700" />
+                </div>
+              </div>
+              {/* <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+8% from last month</span>
+              </div> */}
+            </CardBody>
+          </Card>
+
+          
+          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary-600">Total Customers</p>
+                  <p className="text-2xl font-bold text-primary-900">1,234</p>
+                </div>
+                <div className="p-2 bg-primary-200 rounded-lg">
+                  <Users className="h-6 w-6 text-primary-700" />
+                </div>
+              </div>
+              {/* <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+12% from last month</span>
+              </div> */}
+            </CardBody>
+          </Card>
+
+          
+
+          <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-warning-600">Agencies</p>
+                  <p className="text-2xl font-bold text-warning-900">23</p>
+                </div>
+                <div className="p-2 bg-warning-200 rounded-lg">
+                  <Building2 className="h-6 w-6 text-warning-700" />
+                </div>
+              </div>
+              {/* <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+3 new this month</span>
+              </div> */}
+            </CardBody>
+          </Card>
+
+          {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-solar-600">Documents</p>
+                  <p className="text-2xl font-bold text-solar-900">89</p>
+                </div>
+                <div className="p-2 bg-solar-200 rounded-lg">
+                  <FileText className="h-6 w-6 text-solar-700" />
+                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+15 this week</span>
+              </div>
+            </CardBody>
+          </Card> */}
+        </div>
     
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-4">Management Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dashboardItems.map((item, index) => (
             <Card 
@@ -207,17 +324,12 @@ const SuperAdminDashboard: React.FC = () => {
       </div> */}
 
       {/* Organization Selector Modal */}
-      {showOrgSelector && (
+    {showOrgSelector && (
         <OrganizationSelector
-          onSelect={(orgId, orgName) => {
-            localStorage.setItem('selectedOrganization', orgId);
-            localStorage.setItem('selectedOrganizationName', orgName);
-            setShowOrgSelector(false);
-            navigate('/manage-customers');
-          }}
-          onCancel={() => setShowOrgSelector(false)}
+            onSelect={handleSelectOrg} // Navigate directly on selection
+            onCancel={handleCancel}    // Close modal on cancel
         />
-      )}
+    )}
     </div>
   );
 };

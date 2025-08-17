@@ -1,20 +1,25 @@
 import axios from 'axios';
 import { getAuthToken, fetchClaims } from './jwtService';
+import { getConfig } from '../config';
 
-const oneDriveAPI = axios.create({
-  baseURL: `${import.meta.env.VITE_ONEDRIVE_API}`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const getOneDriveAPI = () => {
+  const { VITE_ONEDRIVE_API } = getConfig();
 
-oneDriveAPI.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  const oneDriveAPI = axios.create({
+    baseURL: VITE_ONEDRIVE_API,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  oneDriveAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  return oneDriveAPI;
+};
 
 export const uploadDocuments = async (
   connectionId: string,
@@ -22,6 +27,7 @@ export const uploadDocuments = async (
   files: File[]
 ) => {
 
+  const oneDriveAPI = getOneDriveAPI();
   const claims = await fetchClaims();
 
   if (!claims?.email_address) {
@@ -53,6 +59,7 @@ export const fetchUploadedFilesBySession = async (
   connectionId: string,
   session: SessionName
 ): Promise<UploadedFile[]> => {
+  const oneDriveAPI = getOneDriveAPI();
   try {
     const response = await oneDriveAPI.get(`/api/onedrive/metadata/${connectionId}/${session}`);
 
@@ -70,6 +77,7 @@ export const fetchUploadedFilesBySession = async (
 };
 
 export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
+  const oneDriveAPI = getOneDriveAPI();
   const response = await oneDriveAPI.get(`/api/onedrive/download/documentId/${fileId}`, {
     responseType: 'blob',
   });

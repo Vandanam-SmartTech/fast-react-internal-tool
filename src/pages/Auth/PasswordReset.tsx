@@ -4,7 +4,6 @@ import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
 import { validateUser, fetchClaims } from '../../services/jwtService';
 import { sendOtpToEmail } from '../../services/otpService';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
