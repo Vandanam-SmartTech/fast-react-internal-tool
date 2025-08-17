@@ -11,10 +11,10 @@ interface OrganizationUser {
   emailAddress: string;
   contactNumber: string;
   organizationRoles: Array<{
-    organizationId: number;
-    organizationName: string;
-    roleId: number;
-    roleName: string;
+   organizationId: number;
+   organizationName: string;
+   roleId: number;
+   roleName: string;
   }>;
 }
 

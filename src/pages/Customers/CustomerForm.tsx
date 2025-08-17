@@ -7,14 +7,15 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { FaExclamationTriangle } from "react-icons/fa";
+import { fetchOrganizations } from "../../services/organizationService";
+
+interface Organization {
+  id: string;
+  name: string;
+}
 
 
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, } from "@heroicons/react/24/solid";
 
 export const CustomerForm = () => {
   const navigate = useNavigate();
@@ -39,11 +40,15 @@ export const CustomerForm = () => {
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
 
+  const [organizationName, setOrganizationName] = useState("");
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [userRole, setUserRole] =useState("");
+
   const [representativeType, setRepresentativeType] = useState(""); // Track selection
   const [agencyName, setAgencyName] = useState("");
   const [agencyUser, setAgencyUser] = useState("");
   const [organizationUser, setOrganizationUser] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
+  
 
 // Example agency/organization lists (replace with API data)
   const agencyNames = ["Agency A", "Agency B", "Agency C"];
@@ -67,9 +72,6 @@ export const CustomerForm = () => {
     mobileNumber: "",
     preferredName: "", 
     isActive: true,
-    organizationId: 1,
-    organizationName: "Vandanam",
-    referredByRepresentativeId:2,
   });
 
   const getUserIdFromToken = () => {
@@ -112,18 +114,18 @@ useEffect(() => {
 
 ///////////////////////////////////////////////////////////
 
-useEffect(() => {
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setRoles(claims.roles || []);
-      } catch (error) {
-        console.error("Failed to fetch user claims", error);
-      }
-    };
+// useEffect(() => {
+//     const getClaims = async () => {
+//       try {
+//         const claims = await fetchClaims();
+//         setRoles(claims.roles || []);
+//       } catch (error) {
+//         console.error("Failed to fetch user claims", error);
+//       }
+//     };
 
-    getClaims();
-  }, []);
+//     getClaims();
+//   }, []);
 
   useEffect(() => {
     const checkExists = async () => {
@@ -136,6 +138,29 @@ useEffect(() => {
     };
     checkExists();
   }, [formData.mobileNumber]);
+
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      const claims = await fetchClaims();
+
+      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        setUserRole("ROLE_SUPER_ADMIN");
+
+        
+        const data = await fetchOrganizations();
+        setOrganizations(data);
+      } else {
+        setUserRole("USER"); // or whatever default role
+      }
+    } catch (error) {
+      console.error("Failed to fetch claims or organizations:", error);
+    }
+  };
+
+  loadData();
+}, []);
+
 
 useEffect(() => {
   const checkEmailExists = async () => {
@@ -355,56 +380,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">
     Add New Customer
   </h2>
-
-{/*{roles.includes("ROLE_ADMIN") && (
-  <div className="flex items-center gap-2 sm:ml-auto">
-    <div className="relative w-full sm:w-70">
-      <select
-        name="representative"
-        value={selectedRepresentative?.userId || ""}
-        onChange={handleSelectChange}
-        className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
-      >
-        <option value="" disabled hidden>
-          Select Representative
-        </option>
-        {representatives.map(rep => (
-          <option key={rep.userId} value={rep.userId}>
-            {rep.name}
-          </option>
-        ))}
-      </select>
-
-
-      <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500">
-        {!selectedRepresentative && (
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        )}
-      </div>
-
-
-      {selectedRepresentative && (
-        <button
-          type="button"
-          onClick={() => setSelectedRepresentative(null)}
-          className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-600 hover:text-red-500 transition"
-          title="Clear selection"
-        >
-          <X size={18} />
-        </button>
-      )}
-    </div>
-  </div>
-)} 
-*/}
 </div>
 
 <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
@@ -467,12 +442,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 {/* Representative Type Selection */}
 <div className="col-span-2 w-full">
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-    Select Representative Type <span className="text-red-500">*</span>
+    Select User Type <span className="text-red-500">*</span>
   </label>
   <div className="grid grid-cols-2 gap-6 justify-items-center">
     {[
-      { value: "organization", label: "Organization Level Representative" },
-      { value: "agency", label: "Agency Level Representative" }
+      { value: "organization", label: "Organization Level User" },
+      { value: "agency", label: "Agency Level User" }
     ].map((option) => (
       <label
         key={option.value}
@@ -564,22 +539,22 @@ const handleSubmit = async (e: React.FormEvent) => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Select Organization Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Select Organization Name
-        </label>
-        <select
-          value={organizationName}
-          onChange={(e) => setOrganizationName(e.target.value)}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="">-- Select Organization --</option>
-          {organizationNames.map((name, idx) => (
-            <option key={idx} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <label className="block text-sm font-medium text-gray-700">
+        Select Organization Name
+      </label>
+      <select
+        value={organizationName}
+        onChange={(e) => setOrganizationName(e.target.value)}
+        className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      >
+        <option value="">-- Select Organization --</option>
+        {organizations.map((org) => (
+          <option key={org.id} value={org.name}>
+            {org.name}
+          </option>
+        ))}
+      </select>
+    </div>
 
       {/* Select Organization User */}
       <div>

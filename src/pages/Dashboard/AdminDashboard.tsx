@@ -49,7 +49,6 @@ const AdminDashboard: React.FC = () => {
 
     getClaims();
 
-    // Update time every minute
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -165,7 +164,7 @@ const AdminDashboard: React.FC = () => {
             </CardBody>
           </Card>
 
-          
+
           <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
