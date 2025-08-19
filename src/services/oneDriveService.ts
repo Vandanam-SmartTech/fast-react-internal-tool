@@ -7,7 +7,7 @@ export const getOneDriveAPI = () => {
 
   const oneDriveAPI = axios.create({
     baseURL: VITE_ONEDRIVE_API,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
 
   oneDriveAPI.interceptors.request.use((config) => {
@@ -23,36 +23,34 @@ export const getOneDriveAPI = () => {
 
 export const uploadDocuments = async (
   connectionId: string,
-  sessionName: string,
-  files: File[]
+  documentType: string,
+  file: File
 ) => {
+  try {
+    const onedriveAPI = getOneDriveAPI();
 
-  const oneDriveAPI = getOneDriveAPI();
-  const claims = await fetchClaims();
+    const formData = new FormData();
+    formData.append('connectionId', connectionId);
+    formData.append('documentType', documentType);
+    formData.append('documentData', file);
 
-  if (!claims?.email_address) {
-    throw new Error("Unable to fetch uploader email from claims.");
+    const response = await onedriveAPI.post('/api/document-manager/documents/', formData);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error uploading document:', error);
+    throw error;
   }
+};
 
-
-  const formData = new FormData();
-
-  formData.append("connectionId", connectionId);
-  formData.append("folderName", "Onboarding Documents");
-  formData.append("sessionName", sessionName);
-
-  files.forEach((file) => {
-    formData.append("files", file);
-  });
-
-  const response = await oneDriveAPI.post("/api/onedrive/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      "X-Uploaded-By": claims.email_address, 
-    },
-  });
-
-  return response.data;
+export const fetchUploadedDocuments = async (connectionId: string) => {
+  try {
+    const onedriveAPI = getOneDriveAPI();
+    const response = await onedriveAPI.get(`/api/document-manager/documents/data/${connectionId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Failed to fetch documents:', error);
+    throw error;
+  }
 };
 
 export const fetchUploadedFilesBySession = async (

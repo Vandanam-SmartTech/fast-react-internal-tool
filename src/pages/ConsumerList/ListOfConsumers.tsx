@@ -163,6 +163,15 @@ const loadConsumers = async (page: number) => {
       orgId = null;
     }
 
+    if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
+    if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
+    }
+
     const orgName = orgId
       ? organizations.find((o) => o.id === orgId)?.name || null
       : null;

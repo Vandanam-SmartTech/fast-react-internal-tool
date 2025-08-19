@@ -281,11 +281,11 @@ const handleLogin = async (e: React.FormEvent) => {
             ) : (
               <form onSubmit={handleLogin} className="space-y-6">
                 <Input
-                  label="Username or Email"
+                  label="Username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username or email"
+                  placeholder="Enter your username"
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />

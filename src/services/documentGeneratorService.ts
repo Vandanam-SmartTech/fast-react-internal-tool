@@ -25,46 +25,30 @@ export const getDocumentAPI = () => {
 
 export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
   const documentAPI = getDocumentAPI();
-  let endpoint = "";
 
-  switch (docName) {
-    case "WCR Page-1":
-      endpoint = `/api/pdf/wcrUndertakingAdhar/${id}?download=true`;
-      break;
-    case "Annexure 1":
-      endpoint = `/api/pdf/annexureProformaAConverted/${id}?download=true`;
-      break;
-    case "Earthing Page Document":
-      endpoint = `/api/pdf/earthingPageController/${id}?download=true`;
-      break;
-    case "Subsidy Agreement Document":
-      endpoint = `/api/pdf/subsidyagreementpageone/${id}?download=true`;
-      break;
-    case "Vendor Feasibility Document":
-      endpoint = `/api/pdf/vendorFeasibilityController/${id}?download=true`;
-      break;
-    case "Netmeter Agreement Document-Page-1":
-      endpoint = `/api/pdf/netAgreementOne/${id}?download=true`;
-      break;
-    case "Netmeter Agreement Document-Page-2":
-      endpoint = `/api/pdf/netAgreementTwo/${id}?download=true`;
-      break;
-    case "Declaration Page":
-    case "Declarartion Document": // Typo handled here
-      endpoint = `/api/pdf/declarationPage/${id}?download=true`;
-      break;
-    default:
-      throw new Error(`Unknown document name: ${docName}`);
+  // map UI names → API endpoints
+  const endpointMap: Record<string, string> = {
+    "WCR": `/api/pdf/wcrUndertakingAdhar/${id}?download=true`,
+    "Annexure-I": `/api/pdf/annexureProformaAConverted/${id}?download=true`,
+    "Earthing": `/api/pdf/earthingPageController/${id}?download=true`,
+    "Subsidy Document": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
+    "Vendor Feasibility": `/api/pdf/vendorFeasibilityController/${id}?download=true`,
+    "Net Agreement": `/api/pdf/netAgreementOne/${id}?download=true`, // if you have 2 pages, adjust
+    "Declaration": `/api/pdf/declarationPage/${id}?download=true`,
+    "DCR Certificate": `/api/pdf/dcrCertificate/${id}?download=true`, // example, adjust to your BE
+    "Quotation": `/api/pdf/quotation/${id}?download=true` // example, adjust
+  };
+
+  const endpoint = endpointMap[docName];
+  if (!endpoint) {
+    throw new Error(`No endpoint mapped for document: ${docName}`);
   }
 
   try {
     const response = await documentAPI.get(endpoint, {
-      responseType: 'blob',
-      headers: {
-        Accept: 'application/pdf',
-      },
+      responseType: "blob",
+      headers: { Accept: "application/pdf" },
     });
-
     return response.data;
   } catch (error) {
     console.error("Error fetching document:", error);

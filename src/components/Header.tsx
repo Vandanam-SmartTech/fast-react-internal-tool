@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Building, User, Bell, Settings, Shield, Check } from 'lucide-react';
+import { ChevronDown, LogOut, Building, User, Bell, Shield, Check } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import ThemeToggle from './ThemeToggle';
@@ -22,7 +22,7 @@ const Header: React.FC = () => {
   const isAuthPage = authPages.includes(location.pathname);
 
   useEffect(() => {
-    // Load current organization and role from localStorage
+    
     const selectedOrgStr = localStorage.getItem('selectedOrg');
     if (selectedOrgStr) {
       try {
@@ -70,17 +70,17 @@ const Header: React.FC = () => {
 const handleOrgChange = (orgId: string, orgName: string, role: string) => {
   const newOrg = { orgId, orgName, role };
 
-  // Store as JSON string
+  
   localStorage.setItem('selectedOrg', JSON.stringify(newOrg));
 
   setSelectedOrgName(orgName);
   setSelectedRole(role);
   setShowOrgDropdown(false);
 
-  // Trigger event for other components
+  
   window.dispatchEvent(new CustomEvent('organizationChanged', { detail: newOrg }));
 
-  // Refresh the page to ensure all components update with new organization context
+  
   window.location.reload();
 };
 
@@ -94,7 +94,6 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
 
   const isSuperAdmin = userClaims?.global_roles?.includes('ROLE_SUPER_ADMIN');
 
-  // Don't render header on auth pages
   if (isAuthPage) {
     return null;
   }
@@ -106,16 +105,16 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
         : 'left-0 md:left-0'
     }`}>
       <div className="flex items-center justify-between px-2 sm:px-4 py-3 w-full">
-        {/* Left side - Logo, Organization and Role */}
+        
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Logo - Only show logo when sidebar is closed and on desktop */}
+          
           {!sidebarOpen && (
             <div className="hidden md:block pl-10">
               <Logo className="w-20 h-20" />
             </div>
           )}
 
-          {/* Organization and Role Information */}
+          
           <div className="flex items-center gap-3">
             {/* Super Admin Display */}
             {isSuperAdmin && (
@@ -146,10 +145,10 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
 
         {/* Right side - User controls */}
         <div className="flex items-center gap-1 sm:gap-3">
-          {/* Theme Toggle */}
-          <ThemeToggle />
+          {/* Theme Toggle 
+          <ThemeToggle />*/}
 
-          {/* Notifications - Hide on very small screens */}
+          {/* Notifications - Hide on very small screens 
           <Button
             variant="ghost"
             size="sm"
@@ -157,7 +156,7 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
+          </Button>*/}
 
           {/* Organization Selector (only for non-super admins with multiple orgs) */}
           {!isSuperAdmin && userClaims?.org_roles && Object.keys(userClaims.org_roles).length > 1 && (

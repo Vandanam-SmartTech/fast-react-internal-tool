@@ -144,7 +144,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
           <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
             <CardBody className="p-4">
@@ -156,16 +156,16 @@ const AdminDashboard: React.FC = () => {
                 <div className="p-2 bg-success-200 rounded-lg">
                   <UserCog className="h-6 w-6 text-success-700" />
                 </div>
-              </div>
+              </div> */}
               {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+8% from last month</span>
               </div> */}
-            </CardBody>
-          </Card>
+            {/* </CardBody>
+          </Card> */}
 
 
-          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+          {/* <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -175,17 +175,17 @@ const AdminDashboard: React.FC = () => {
                 <div className="p-2 bg-primary-200 rounded-lg">
                   <Users className="h-6 w-6 text-primary-700" />
                 </div>
-              </div>
+              </div> */}
               {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+12% from last month</span>
               </div> */}
-            </CardBody>
-          </Card>
+            {/* </CardBody>
+          </Card> */}
 
           
 
-          <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
+          {/* <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -195,13 +195,13 @@ const AdminDashboard: React.FC = () => {
                 <div className="p-2 bg-warning-200 rounded-lg">
                   <Building2 className="h-6 w-6 text-warning-700" />
                 </div>
-              </div>
+              </div> */}
               {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+3 new this month</span>
               </div> */}
-            </CardBody>
-          </Card>
+            {/* </CardBody>
+          </Card> */}
 
           {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
             <CardBody className="p-4">
@@ -220,7 +220,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </CardBody>
           </Card> */}
-        </div>
+        {/* </div> */}
       </div>
 
       {/* Quick Actions */}

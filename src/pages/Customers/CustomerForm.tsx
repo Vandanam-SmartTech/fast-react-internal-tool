@@ -7,7 +7,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { FaExclamationTriangle } from "react-icons/fa";
-import { fetchOrganizations } from "../../services/organizationService";
+import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg } from "../../services/organizationService";
 
 interface Organization {
   id: string;
@@ -42,19 +42,25 @@ export const CustomerForm = () => {
 
   const [organizationName, setOrganizationName] = useState("");
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+ 
   const [userRole, setUserRole] =useState("");
 
   const [representativeType, setRepresentativeType] = useState(""); // Track selection
   const [agencyName, setAgencyName] = useState("");
-  const [agencyUser, setAgencyUser] = useState("");
-  const [organizationUser, setOrganizationUser] = useState("");
+
+
+  const [organizationId, setOrganizationId] = useState<number | "">("");
+  const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
+  const [organizationUser, setOrganizationUser] = useState<number | "">("");
+
+  const [agencyId, setAgencyId] = useState<number | "">("");
+  const [agencyList, setAgencyList] = useState<any[]>([]);
+  const [agencyUsers, setAgencyUsers] = useState<any[]>([]);
+  const [agencyUser, setAgencyUser] = useState<number | "">("");
+
+  const [selectedOrg, setSelectedOrg] = useState<any>(null);
   
 
-// Example agency/organization lists (replace with API data)
-  const agencyNames = ["Agency A", "Agency B", "Agency C"];
-  const agencyUsers = ["User 1", "User 2", "User 3"];
-  const organizationUsers = ["Org User 1", "Org User 2"];
-  const organizationNames = ["Org A","Org B","Org C"];
 
 
 
@@ -72,20 +78,9 @@ export const CustomerForm = () => {
     mobileNumber: "",
     preferredName: "", 
     isActive: true,
+    referredByRepresentativeId: null,
   });
 
-  const getUserIdFromToken = () => {
-    const token = localStorage.getItem("authToken"); 
-    if (!token) return null;
-  
-    try {
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); 
-      return decodedToken.userId || null;
-    } catch (error) {
-      console.error("Failed to parse token:", error);
-      return null;
-    }
-  };
   
 
 ///////////////////////////////////////////////////////////
@@ -160,6 +155,76 @@ useEffect(() => {
 
   loadData();
 }, []);
+
+useEffect(() => {
+  if (!organizationId) return;
+
+  const loadUsers = async () => {
+    try {
+      const data = await fetchUsersByOrgId(organizationId);
+      setOrganizationUsers(data);
+    } catch (error) {
+      console.error("Error fetching organization users:", error);
+    }
+  };
+
+  loadUsers();
+}, [organizationId]);
+
+useEffect(() => {
+  if (!organizationId) {
+    setAgencyList([]);
+    setAgencyId("");
+    return;
+  }
+
+  const loadAgencies = async () => {
+    try {
+      const data = await fetchAgenciesForOrg(Number(organizationId));
+      setAgencyList(data);
+    } catch (error) {
+      console.error("Error fetching agencies:", error);
+      setAgencyList([]);
+    }
+  };
+
+  loadAgencies();
+}, [organizationId]);
+
+useEffect(() => {
+  if (!agencyId) {
+    setAgencyUsers([]);
+    setAgencyUser("");
+    return;
+  }
+
+  const loadAgencyUsers = async () => {
+    try {
+      const data = await fetchUsersByOrgId(Number(agencyId));
+      setAgencyUsers(data);
+    } catch (error) {
+      console.error("Error fetching agency users:", error);
+      setAgencyUsers([]);
+    }
+  };
+
+  loadAgencyUsers();
+}, [agencyId]);
+
+useEffect(() => {
+  const storedOrg = localStorage.getItem("selectedOrg");
+  if (storedOrg) {
+    setSelectedOrg(JSON.parse(storedOrg));
+  }
+}, []);
+
+useEffect(() => {
+  if (selectedOrg?.orgId) {
+    setOrganizationId(Number(selectedOrg.orgId));
+  }
+}, [selectedOrg]);
+
+
 
 
 useEffect(() => {
@@ -267,22 +332,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     getRepresentatives();
   }, []);
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedUserId = e.target.value;
-  
-    if (!selectedUserId) {
-      setSelectedRepresentative(null); 
-      localStorage.removeItem("selectedRepresentative");
-      return;
-    }
-  
-    const selectedRep = representatives.find(rep => rep.userId === Number(selectedUserId)) || null;
-    setSelectedRepresentative(selectedRep);
-
-    if (selectedRep) {
-      //localStorage.setItem("selectedRepresentative", JSON.stringify(selectedRep)); // Save to localStorage
-    }
-  };
   
 
   
@@ -302,44 +351,84 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (formData.mobileNumber !== confirmMobileNumber) {
-    toast.error("Mobile number and Confirm Mobile number do not match.",{
-      autoClose:1000,
-      hideProgressBar:true,
+    toast.error("Mobile number and Confirm Mobile number do not match.", {
+      autoClose: 1000,
+      hideProgressBar: true,
     });
     return;
   }
 
   if (formData.emailAddress && formData.emailAddress !== confirmEmailAddress) {
-    toast.error("Email and Confirm Email do not match.",{
+    toast.error("Email and Confirm Email do not match.", {
       autoClose: 1000,
-      hideProgressBar:true,
+      hideProgressBar: true,
     });
     return;
   }
 
-  try {
-    const referredByRepresentativeId = selectedRepresentative 
-      ? selectedRepresentative.userId 
-      : getUserIdFromToken();
 
-    const customerData = {
+  if (userRole === "ROLE_SUPER_ADMIN") {
+    if (!representativeType) {
+      toast.error("Please select a user type (Organization or Agency).", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+      return;
+    }
+
+    if (representativeType === "organization" && !organizationId) {
+      toast.error("Please select an organization.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+      return;
+    }
+
+    if (representativeType === "agency") {
+      if (!organizationId) {
+        toast.error("Please select an organization for the agency.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+        return;
+      }
+      if (!agencyId) {
+        toast.error("Please select an agency.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+        return;
+      }
+    }
+  }
+
+  try {
+    const customerData: any = {
       ...formData,
-      referredByRepresentativeId,
+      organizationId: organizationId || null,
+      agencyId: agencyId || null,
     };
+
+
+    if (organizationUser) {
+      customerData.referredByRepresentativeId = organizationUser;
+    } else if (agencyUser) {
+      customerData.referredByRepresentativeId = agencyUser;
+    }
+
     customerData.emailAddress = formData.emailAddress || null;
+
     const result = await saveCustomer(customerData);
 
     if (result.id) {
-      setCreatedCustomerId(result.id); 
+      setCreatedCustomerId(result.id);
       setNavigateAfterClose(true);
 
-      // Show success toast (for 1 second only)
       toast.success(result.message || "Customer data saved successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
 
-      // Navigate immediately
       navigate(`/view-customer/${result.id}`, {
         state: {
           customerId: result.id,
@@ -349,18 +438,16 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       setNavigateAfterClose(false);
       setCreatedCustomerId(null);
-      
     } else {
-      toast.error(result.message || "Failed to save customer data.",{
+      toast.error(result.message || "Failed to save customer data.", {
         autoClose: 1000,
-        hideProgressBar:true,
+        hideProgressBar: true,
       });
     }
-
   } catch (error) {
     console.error("Error in saving customer:", error);
-    toast.error("Failed to save customer. Please try again.",{
-      autoClose:1000,
+    toast.error("Failed to save customer. Please try again.", {
+      autoClose: 1000,
       hideProgressBar: true,
     });
   }
@@ -370,6 +457,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   localStorage.removeItem("confirmEmailAddress");
   localStorage.removeItem("selectedRepresentative");
 };
+
 
 
 
@@ -438,7 +526,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 
-      {/* Representative Type Selection */}
+
 {/* Representative Type Selection */}
 <div className="col-span-2 w-full">
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
@@ -474,40 +562,49 @@ const handleSubmit = async (e: React.FormEvent) => {
 {/* Conditional Sections */}
 {representativeType === "agency" && (
   <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    
+    {/* Organization */}
+    {!selectedOrg && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Select Organization
+    </label>
+    <select
+      value={organizationId}
+      onChange={(e) => {
+        setOrganizationId(Number(e.target.value));
+        setAgencyId("");
+        setAgencyUser("");
+      }}
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    >
+      <option value="">-- Select Organization --</option>
+      {organizations.map((org) => (
+        <option key={org.id} value={org.id}>
+          {org.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
-    {/* Organization Name */}
+    {/* Agency */}
     <div>
       <label className="block text-sm font-medium text-gray-700">
-        Select Organization Name
+        Select Agency
       </label>
       <select
-        value={organizationName}
-        onChange={(e) => setOrganizationName(e.target.value)}
-        className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      >
-        <option value="">-- Select Organization --</option>
-        {organizationNames.map((name, idx) => (
-          <option key={idx} value={name}>
-            {name}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    {/* Agency Name */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700">
-        Select Agency Name
-      </label>
-      <select
-        value={agencyName}
-        onChange={(e) => setAgencyName(e.target.value)}
+        value={agencyId}
+        onChange={(e) => {
+          setAgencyId(Number(e.target.value));
+          setAgencyUser("");
+        }}
         className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       >
         <option value="">-- Select Agency --</option>
-        {agencyNames.map((name, idx) => (
-          <option key={idx} value={name}>
-            {name}
+        {agencyList.map((agency) => (
+          <option key={agency.id} value={agency.id}>
+            {agency.name}
           </option>
         ))}
       </select>
@@ -520,13 +617,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       </label>
       <select
         value={agencyUser}
-        onChange={(e) => setAgencyUser(e.target.value)}
+        onChange={(e) => setAgencyUser(Number(e.target.value))}
         className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       >
         <option value="">-- Select User --</option>
-        {agencyUsers.map((user, idx) => (
-          <option key={idx} value={user}>
-            {user}
+        {agencyUsers.map((user) => (
+          <option key={user.id} value={user.id}>
+            {`${user.nameAsPerGovId} (${user.username})`}
           </option>
         ))}
       </select>
@@ -534,27 +631,33 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 )}
 
+
 {representativeType === "organization" && (
   <div className="col-span-2 mt-4 border rounded-md p-4 shadow-sm">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Select Organization Name */}
-      <div>
-      <label className="block text-sm font-medium text-gray-700">
-        Select Organization Name
-      </label>
-      <select
-        value={organizationName}
-        onChange={(e) => setOrganizationName(e.target.value)}
-        className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      >
-        <option value="">-- Select Organization --</option>
-        {organizations.map((org) => (
-          <option key={org.id} value={org.name}>
-            {org.name}
-          </option>
-        ))}
-      </select>
-    </div>
+      {!selectedOrg && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Select Organization Name
+    </label>
+    <select
+      value={organizationId}
+      onChange={(e) => {
+        setOrganizationId(Number(e.target.value));
+        setOrganizationUser(""); 
+      }}
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    >
+      <option value="">-- Select Organization --</option>
+      {organizations.map((org) => (
+        <option key={org.id} value={org.id}>
+          {org.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
       {/* Select Organization User */}
       <div>
@@ -562,16 +665,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           Select Organization User
         </label>
         <select
-          value={organizationUser}
-          onChange={(e) => setOrganizationUser(e.target.value)}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            value={organizationUser ?? ""}
+            onChange={(e) => setOrganizationUser(Number(e.target.value))}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="">-- Select User --</option>
-          {organizationUsers.map((user, idx) => (
-            <option key={idx} value={user}>
-              {user}
-            </option>
-          ))}
+           <option value="">-- Select User --</option>
+                {organizationUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                {`${user.nameAsPerGovId} (${user.username})`}
+               </option>
+                ))}
         </select>
       </div>
     </div>

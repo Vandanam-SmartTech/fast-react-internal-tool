@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronRight, CheckCircle, Circle, FileText, Upload, Download, Eye, Play } from "lucide-react";
 import { fetchPdf } from "../../services/documentGeneratorService";
-import {
-  uploadDocuments,
-  fetchUploadedFilesBySession,
-  downloadDocumentById,
-} from "../../services/oneDriveService";
+import { uploadDocuments, fetchUploadedFilesBySession, downloadDocumentById, fetchUploadedDocuments} from "../../services/oneDriveService";
 import { toast } from 'react-toastify';
 
 export interface Consumer {
@@ -31,6 +27,7 @@ interface DocumentStep {
   documents: Array<{
     name: string;
     canGenerate: boolean;
+    canPreview: boolean;
     uploadedFile?: File | null;
   }>;
   isCompleted: boolean;
@@ -52,17 +49,24 @@ export default function GenerateDocuments() {
   const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set([1]));
   const [documentFiles, setDocumentFiles] = useState<Record<string, File | null>>({});
 
+  const [loadingUploadDoc, setLoadingUploadDoc] = useState<string | null>(null);
+
+  const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, any[]>>({});
+
+  const [inputKeys, setInputKeys] = useState<Record<string, number>>({});
+
+
   const connectionId = consumer?.id?.toString();
 
-  // Define all document steps
+
   const documentSteps: DocumentStep[] = [
     {
       id: 1,
       title: "Identity & Financial Documents",
       documents: [
-        { name: "Aadhaar Card", canGenerate: false },
-        { name: "Bank Passbook", canGenerate: false },
-        { name: "Ebill", canGenerate: false }
+        { name: "AadhaarCard", canGenerate: false, canPreview: false },
+        { name: "BankPassbook", canGenerate: false, canPreview: false },
+        { name: "Ebill", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: true
@@ -71,7 +75,7 @@ export default function GenerateDocuments() {
       id: 2,
       title: "Quotation",
       documents: [
-        { name: "Quotation", canGenerate: true }
+        { name: "Quotation", canGenerate: true, canPreview: true }
       ],
       isCompleted: false,
       isExpanded: false
@@ -80,8 +84,8 @@ export default function GenerateDocuments() {
       id: 3,
       title: "Testing & Payment",
       documents: [
-        { name: "Gen Meter Testing Letter", canGenerate: true },
-        { name: "Fee Receipt", canGenerate: true }
+        { name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
+        { name: "Fee Receipt", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -90,7 +94,7 @@ export default function GenerateDocuments() {
       id: 4,
       title: "DCR Certificate",
       documents: [
-        { name: "DCR Certificate", canGenerate: true }
+        { name: "DCR Certificate", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -99,17 +103,17 @@ export default function GenerateDocuments() {
       id: 5,
       title: "Comprehensive Documents",
       documents: [
-        { name: "Vendor Feasibility", canGenerate: true },
-        { name: "Digital Approval Letter", canGenerate: true },
-        { name: "WCR", canGenerate: true },
-        { name: "Net Agreement", canGenerate: true },
-        { name: "Geo Tag", canGenerate: true },
-        { name: "Declaration", canGenerate: true },
-        { name: "Annexure-I", canGenerate: true },
-        { name: "Subsidy Document", canGenerate: true },
-        { name: "Earthing", canGenerate: true },
-        { name: "D1Form", canGenerate: true },
-        { name: "Gen Meter Testing Report", canGenerate: true }
+        { name: "Vendor Feasibility", canGenerate: true, canPreview: true },
+        { name: "Digital Approval Letter", canGenerate: false, canPreview: false },
+        { name: "WCR", canGenerate: true, canPreview: true },
+        { name: "Net Agreement", canGenerate: true, canPreview: true },
+        { name: "Geo Tag", canGenerate: true, canPreview: false },
+        { name: "Declaration", canGenerate: true, canPreview: true },
+        { name: "Annexure-I", canGenerate: true, canPreview: true },
+        { name: "Subsidy Document", canGenerate: true, canPreview: true },
+        { name: "Earthing", canGenerate: true, canPreview:true },
+        { name: "D1Form", canGenerate: true, canPreview: false },
+        { name: "Gen Meter Testing Report", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -118,17 +122,17 @@ export default function GenerateDocuments() {
       id: 6,
       title: "Final Approval",
       documents: [
-        { name: "Sanction Letter", canGenerate: true }
+        { name: "Sanction Letter", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     }
   ];
 
-  const getDocumentNameFromSession = (session: string) => {
-    const allDocuments = documentSteps.flatMap(step => step.documents.map(doc => doc.name));
-    return allDocuments.find(doc => session.startsWith(doc)) || session;
-  };
+  // const getDocumentNameFromSession = (session: string) => {
+  //   const allDocuments = documentSteps.flatMap(step => step.documents.map(doc => doc.name));
+  //   return allDocuments.find(doc => session.startsWith(doc)) || session;
+  // };
 
   const getSessionName = (docName: string) =>
     `${docName.replace(/\s/g, "_")}_${consumer.govIdName}`;
@@ -146,104 +150,190 @@ export default function GenerateDocuments() {
     }
   }, [selectedSession]);
 
-  const handleGenerate = async (doc: string) => {
-    if (!consumer?.id) return;
-    setLoadingGenerateDoc(doc);
-    try {
-      const blob = await fetchPdf(consumer.id, doc);
-      const sessionName = getSessionName(doc);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${sessionName}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error("Generate error:", err);
-      toast.error("Failed to generate document");
-    } finally {
-      setLoadingGenerateDoc(null);
-    }
-  };
+// useEffect(() => {
+//   const loadDocuments = async () => {
+//     try {
+//       const data = await fetchUploadedDocuments(connectionId);
 
-  const handlePreview = async (doc: string) => {
-    if (!consumer?.id) return;
-    setLoadingPreviewDoc(doc);
-    try {
-      const blob = await fetchPdf(consumer.id, doc);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    } catch (err) {
-      console.error("Preview error:", err);
-      toast.error("Failed to preview document");
-    } finally {
-      setLoadingPreviewDoc(null);
-    }
-  };
+//       const grouped = data.reduce((acc: Record<string, any[]>, doc: any) => {
+//         if (!acc[doc.documentType]) acc[doc.documentType] = [];
+//         acc[doc.documentType].push(doc);
+//         return acc;
+//       }, {});
 
-  const handleUpload = async () => {
-    if (!connectionId || !selectedSession || !selectedFile) return;
-    setUploading(true);
+//       setUploadedDocuments(grouped);
+//     } catch (error) {
+//       console.error("Failed to fetch documents", error);
+//     }
+//   };
+
+//   if (connectionId) {
+//     loadDocuments();
+//   }
+// }, [connectionId]);
+
+  const loadDocuments = useCallback(async () => {
     try {
-      const sessionName = getSessionName(selectedSession);
-      await uploadDocuments(connectionId, sessionName, [selectedFile]);
-      await fetchUploaded(selectedSession);
+      const data = await fetchUploadedDocuments(connectionId);
+
+      const grouped = data.reduce((acc: Record<string, any[]>, doc: any) => {
+        if (!acc[doc.documentType]) acc[doc.documentType] = [];
+        acc[doc.documentType].push(doc);
+        return acc;
+      }, {});
+
+      setUploadedDocuments(grouped);
+    } catch (error) {
+      console.error("Failed to fetch documents", error);
+    }
+  }, [connectionId]);
+
+  useEffect(() => {
+    if (connectionId) {
+      loadDocuments();
+    }
+  }, [connectionId, loadDocuments]);
+
+const handlePreviewUploaded = (doc: any) => {
+  const fileUrl = `http://localhost:8192/api/document-manager/documents/file/${doc.fileId}`;
+  window.open(fileUrl, "_blank"); // opens in new tab
+};
+
+
+const handleGenerate = async (doc: string) => {
+  if (!consumer?.id) return;
+  setLoadingGenerateDoc(doc);
+  try {
+    const blob = await fetchPdf(consumer.id, doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc}.pdf`; // or use getSessionName(doc)
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error("Generate error:", err);
+    toast.error("Failed to generate document");
+  } finally {
+    setLoadingGenerateDoc(null);
+  }
+};
+
+const handlePreview = async (doc: string) => {
+  if (!consumer?.id) return;
+  setLoadingPreviewDoc(doc);
+  try {
+    const blob = await fetchPdf(consumer.id, doc);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  } catch (err) {
+    console.error("Preview error:", err);
+    toast.error("Failed to preview document");
+  } finally {
+    setLoadingPreviewDoc(null);
+  }
+};
+
+
+  // const handleUpload = async () => {
+  //   if (!connectionId || !selectedSession || !selectedFile) return;
+  //   setUploading(true);
+  //   try {
+  //     const sessionName = getSessionName(selectedSession);
+  //     await uploadDocuments(connectionId, sessionName, [selectedFile]);
+  //     await fetchUploaded(selectedSession);
       
-      toast.success(`${selectedFile.name} uploaded successfully`);
+  //     toast.success(`${selectedFile.name} uploaded successfully`);
       
-      setSelectedFile(null);
-    } catch (err) {
-      console.error("Upload failed", err);
-      toast.error("File upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
+  //     setSelectedFile(null);
+  //   } catch (err) {
+  //     console.error("Upload failed", err);
+  //     toast.error("File upload failed");
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
-  const handleDocumentFileChange = (documentName: string, file: File | null) => {
-    setDocumentFiles(prev => ({
-      ...prev,
-      [documentName]: file
-    }));
-  };
+  const handleDocumentFileChange = (docName: string, file: File | null) => {
+  setDocumentFiles((prev) => ({
+    ...prev,
+    [docName]: file,
+  }));
+};
 
-  const handleDocumentUpload = async (documentName: string) => {
+
+const clearSelectedFile = (docName: string) => {
+  
+  setDocumentFiles((prev) => {
+    const updated = { ...prev };
+    delete updated[docName];
+    return updated;
+  });
+
+  
+  setInputKeys((prev) => ({
+    ...prev,
+    [docName]: Date.now(),
+  }));
+};
+
+
+const handleDocumentUpload = async (documentName: string) => {
     const file = documentFiles[documentName];
-    if (!connectionId || !file) return;
-    
+    if (!file) return;
+
     try {
-      const sessionName = getSessionName(documentName);
-      await uploadDocuments(connectionId, sessionName, [file]);
-      toast.success(`${file.name} uploaded successfully for ${documentName}`);
-      
-      // Clear the file after successful upload
-      setDocumentFiles(prev => ({
-        ...prev,
-        [documentName]: null
-      }));
-    } catch (err) {
-      console.error("Upload failed", err);
-      toast.error(`Failed to upload ${documentName}`);
+      setLoadingUploadDoc(documentName);
+
+      await uploadDocuments(
+        consumer?.id?.toString() || "",
+        documentName,
+        file
+        );
+
+      toast.success("Document Uploaded Successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+
+        setDocumentFiles((prev) => {
+          const updated = { ...prev };
+          delete updated[documentName];
+          return updated;
+          });
+
+
+        await loadDocuments();
+        clearSelectedFile(documentName);
+
+
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error("Document Upload Failed!", { autoClose: 2000 });
+    } finally {
+      setLoadingUploadDoc(null);
     }
   };
 
-  const handleDownload = async (fileId: string, fileName: string) => {
-    try {
-      const blob = await downloadDocumentById(fileId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error("Download error:", err);
-      toast.error("Failed to download file");
-    }
-  };
+
+  // const handleDownload = async (fileId: string, fileName: string) => {
+  //   try {
+  //     const blob = await downloadDocumentById(fileId);
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = fileName;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     document.body.removeChild(a);
+  //   } catch (err) {
+  //     console.error("Download error:", err);
+  //     toast.error("Failed to download file");
+  //   }
+  // };
 
   const toggleStepExpansion = (stepId: number) => {
     setExpandedSteps(prev => {
@@ -327,8 +417,8 @@ export default function GenerateDocuments() {
       )}
 
       {/* Progress Bar - Horizontal on Desktop, Vertical on Mobile */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Document Progress</h2>
+      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Progress</h2>
         
         {/* Desktop Progress Bar */}
         <div className="hidden lg:block">
@@ -420,26 +510,39 @@ export default function GenerateDocuments() {
                         <label className="block text-xs font-medium text-gray-700 mb-2">
                           Choose File
                         </label>
-                        <input
-                          type="file"
-                          accept="application/pdf,image/*"
-                          onChange={(e) => handleDocumentFileChange(document.name, e.target.files?.[0] || null)}
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            <input
+                              key={inputKeys[document.name] || 0}   
+                              type="file"
+                              accept="application/pdf,image/*"
+                              onChange={(e) =>
+                                  handleDocumentFileChange(document.name, e.target.files?.[0] || null)
+                              }
+                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 
+                            file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium 
+                            file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
+
                       </div>
+
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {/* Preview Button - Always available */}
-                        <button
-                          onClick={() => handlePreview(document.name)}
-                          disabled={loadingPreviewDoc === document.name}
-                          className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-                          title="Preview document"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>Preview</span>
-                        </button>
+
+                        {document.canPreview && (
+                          <button
+                            onClick={() => handlePreview(document.name)}
+                            disabled={loadingPreviewDoc === document.name}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                            title="Preview document"
+                          >
+                            {loadingPreviewDoc === document.name ? (
+                              <Play className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Play className="w-3 h-3" />
+                            )}
+                            <span>{loadingPreviewDoc === document.name ? "Previewing..." : "Preview"}</span>
+                          </button>
+                        )}
                         
                         {/* Generate Button - Only for documents that can be generated */}
                         {document.canGenerate && (
@@ -460,24 +563,71 @@ export default function GenerateDocuments() {
 
                         {/* Upload Button - Only when file is selected */}
                         {documentFiles[document.name] && (
-                          <button
+                        <button
                             onClick={() => handleDocumentUpload(document.name)}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+                            disabled={loadingUploadDoc === document.name}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
                             title="Upload selected file"
-                          >
-                            <Upload className="w-3 h-3" />
-                            <span>Upload</span>
-                          </button>
-                        )}
+                        >
+                          {loadingUploadDoc === document.name ? (
+                          <>
+                        <Upload className="w-3 h-3 animate-spin" />
+                            <span>Uploading...</span>
+                        </>
+                      ) : (
+                      <>
+                      <Upload className="w-3 h-3" />
+                    <span>Upload</span>
+                      </>
+                    )}
+                    </button>
+                  )}
+
                       </div>
 
                       {/* File Status */}
                       {documentFiles[document.name] && (
-                        <div className="mt-2 text-xs text-gray-600">
-                          <span className="font-medium">Selected:</span> {documentFiles[document.name]?.name}
+                      <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
+                        <div>
+                            <span className="font-medium">Selected:</span> {documentFiles[document.name]?.name}
                         </div>
+                           <button
+                              onClick={() => clearSelectedFile(document.name)}
+                              className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                            >
+                              ✖
+                            </button>
+
+                      </div>
                       )}
-                    </div>
+
+
+                    {uploadedDocuments[document.name] &&
+      uploadedDocuments[document.name].length > 0 && (
+        <div className="mt-3">
+          <h5 className="text-xs font-medium text-gray-700 mb-1">
+            Uploaded Files:
+          </h5>
+          <ul className="space-y-1">
+            {uploadedDocuments[document.name].map((doc) => (
+              <li
+                key={doc.id}
+                className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded"
+              >
+                <span className="truncate">{doc.fileName}</span>
+                <button
+                  onClick={() => handlePreviewUploaded(doc)}
+                  className="text-blue-600 hover:underline ml-2"
+                >
+                  View
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+  </div>
+                  
                   ))}
                 </div>
               </div>
@@ -486,7 +636,7 @@ export default function GenerateDocuments() {
         ))}
       </div>
 
-      Upload Section
+      {/* Upload Section
       <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload/View Signed Documents</h2>
         
@@ -533,7 +683,6 @@ export default function GenerateDocuments() {
           </button>
         </div>
 
-        {/* Uploaded Files List */}
         {uploadedFiles.length > 0 && (
           <div className="border-t border-gray-200 pt-4">
             <h3 className="font-semibold text-gray-900 mb-3">
@@ -560,7 +709,7 @@ export default function GenerateDocuments() {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

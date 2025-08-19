@@ -271,13 +271,17 @@ useEffect(() => {
       navigate("/SuperAdminDashboard");
     } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
       navigate("/AdminDashboard");
-    } else if (allRoles.includes("ROLE_REPRESENTATIVE")) {
+    } else if (allRoles.includes("ROLE_ORG_REPRESENTATIVE")) {
+      navigate("/RepresentativeDashboard");
+    } else if (allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")) {
       navigate("/RepresentativeDashboard");
     } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
       navigate("/AgencyAdminDashboard");
-    } else if (allRoles.includes("ROLE_STAFF")) {
+    } else if (allRoles.includes("ROLE_ORG_STAFF")) {
       navigate("/StaffDashboard");
-    } else {
+    } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
+      navigate("/StaffDashboard");
+    }else {
       navigate("/login");
     }
   };

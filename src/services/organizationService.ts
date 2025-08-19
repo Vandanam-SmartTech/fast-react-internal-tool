@@ -313,3 +313,16 @@ export const assignMultipleUserOrgRoles = async (
   );
 };
 
+export const fetchUsersByOrgId = async (organizationId: string | number) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(
+      `/api/users/organizations/${organizationId}/users`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch organization users:", error);
+    throw error;
+  }
+};
+

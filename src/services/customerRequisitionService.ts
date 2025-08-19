@@ -27,16 +27,7 @@ export const getCrsAPI = () => {
 export const saveCustomer = async (data: Record<string, any>): Promise<{ id: number | null, message?: string }> => {
   const crsAPI = getCrsAPI();
   try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters:', { orgId, orgName, agencyId, agencyName });
-    
-    const response = await crsAPI.post('/api/customers', data, {
-      params: { orgId, orgName, agencyId, agencyName }
-    });
+    const response = await crsAPI.post('/api/customers', data);
     const responseData = response.data;
 
     if (responseData.id) {
@@ -364,20 +355,6 @@ export const fetchConsumerNumber = async (customerId: number) => {
     return [];
   }
 };
-
-
-
-// export const getInstallationsByCustomerId = async (
-//   consumerId: number
-// ): Promise<any> => {
-//   try {
-//     const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
-//     return response.data;
-//   } catch (error: any) {
-//     console.error('Error fetching installation details:', error);
-//     return null;
-//   }
-// };
 
 export const fetchConsumers = async (page = 0) => {
   const crsAPI = getCrsAPI();
