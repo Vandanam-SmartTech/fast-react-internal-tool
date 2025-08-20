@@ -145,8 +145,8 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
 
         {/* Right side - User controls */}
         <div className="flex items-center gap-1 sm:gap-3">
-          {/* Theme Toggle 
-          <ThemeToggle />*/}
+          {/* Theme Toggle */}
+          {/* <ThemeToggle /> */}
 
           {/* Notifications - Hide on very small screens 
           <Button

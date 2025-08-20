@@ -50,7 +50,7 @@ export const SystemSpecifications = () => {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
 
-
+  const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
 
   const [activeTab, setActiveTab] = useState("System Specifications");
@@ -106,6 +106,20 @@ export const SystemSpecifications = () => {
 
   loadInstallationSpaceTypeMap();
 }, []);
+
+// useEffect(() => {
+//   const loadConnectionDetails = async () => {
+//     if (!connectionId) return;
+//     try {
+//       const data = await getConnectionByConsumerId(connectionId);
+//       setConnectionDetails(data);
+//     } catch (error) {
+//       console.error("Error fetching connection details:", error);
+//     }
+//   };
+
+//   loadConnectionDetails();
+// }, [connectionId]);
   
 useEffect(() => {
   const loadInstallationSpaceDetails = async () => {
@@ -137,7 +151,7 @@ useEffect(() => {
 
     // Fetch connection details using consumerId
     const data = await getConnectionByConsumerId(Number(consumerId));
-    setConnection(data);
+    setConnectionDetails(data);
   };
 
   fetchConnection();
@@ -184,12 +198,12 @@ useEffect(() => {
       const claims = await fetchClaims();
       const allRoles: string[] = [];
 
-      // Add global roles
+      
       if (Array.isArray(claims.global_roles)) {
         allRoles.push(...claims.global_roles);
       }
 
-      // Add org roles from selectedOrg in localStorage
+
       const selectedOrgStr = localStorage.getItem('selectedOrg');
       if (selectedOrgStr) {
         try {
@@ -215,13 +229,16 @@ let hasShownError = false;
 
 useEffect(() => {
   const fetchData = async () => {
-    if (!connectionId) return;
+    if (!connectionId || !connectionDetails) return;
 
     setIsFetchingRecommendations(true);
 
     try {
       // Step 1: Try to fetch customer-agreed data
       const customerData = await fetchCustomerAgreedDetails(connectionId);
+
+      const phaseType = connectionDetails?.phaseTypeName || "";
+
 
       if (customerData.success === false || customerData.message?.includes("Data not found")) {
         // Fallback to recommendation API if not found
@@ -231,7 +248,7 @@ useEffect(() => {
         const recommendedKW = recommendation.recommendedKW || "";
 
         const inverterWattages = await fetchInverterWattages(
-            recommendation.phaseType,
+            phaseType,
             recommendation.inverterBrand
         );
         const selectedInverterKw = inverterWattages[0] || "";
@@ -251,12 +268,12 @@ useEffect(() => {
         }));
 
         setConnectionType(recommendation.connectionType || "");
-        setPhaseType(recommendation.phaseType || "");
+        setPhaseType(phaseType);
 
-        if (recommendation.phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
+        if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
           const wattages = await fetchPanelWattages(
             connectionId,
-            recommendation.phaseType,
+            phaseType,
             recommendation.dcrNonDcrType,
             recommendation.panelBrand
           );
@@ -264,9 +281,9 @@ useEffect(() => {
           setPanelWattages([recommendedKW, ...uniqueWattages]);
         }
 
-        if (recommendation.inverterBrand && recommendation.phaseType) {
+        if (recommendation.inverterBrand && phaseType) {
           const inverterWattages = await fetchInverterWattages(
-            recommendation.phaseType,
+            phaseType,
             recommendation.inverterBrand
           );
           setInverterWattages(inverterWattages);
@@ -300,12 +317,12 @@ useEffect(() => {
           inversionType: customerData.inversionType || "On Grid",
         }));
 
-        setPhaseType(customerData.phaseType || "");
+        setPhaseType(phaseType);
 
-        if (customerData.phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
+        if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
           const wattages = await fetchPanelWattages(
             connectionId,
-            customerData.phaseType,
+            phaseType,
             customerData.dcrNonDcrType,
             customerData.customerSelectedBrand
           );
@@ -313,9 +330,9 @@ useEffect(() => {
           setPanelWattages([customerSelectedKW, ...uniqueWattages]);
         }
 
-        if (customerData.inverterBrand && customerData.phaseType) {
+        if (customerData.inverterBrand && phaseType) {
           const inverterWattages = await fetchInverterWattages(
-            customerData.phaseType,
+            phaseType,
             customerData.inverterBrand
           );
           const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
@@ -337,7 +354,7 @@ useEffect(() => {
   };
 
   fetchData();
-}, [connectionId]);
+}, [connectionId, connectionDetails]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
   const { name, value, type, checked } = e.target;
@@ -486,6 +503,8 @@ if (name === "inversionType") {
   useEffect(() => {
     const handleGetPrice = async () => {
       try {
+        const phaseType = connectionDetails?.phaseTypeName || "";
+
         const requestData = {
           customerSelectedInstallationSpaceType: formData.installationSpaceType || null,
           customerSelectedInstallationStructureType: formData.installationStructureType,
@@ -543,6 +562,7 @@ if (name === "inversionType") {
   ]);
 
   const handleSaveSpecs = async () => {
+    const phaseType = connectionDetails?.phaseTypeName || "";
     const requestData = {
         customerSelectedInstallationStructureType: formData.installationStructureType,
         customerSelectedKW: formData.Kw,

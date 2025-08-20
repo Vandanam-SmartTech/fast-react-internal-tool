@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchConsumersWithConnections } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
-import { fetchOrganizations, getChildOrganizations } from "../../services/organizationService";
+import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 import { 
   Eye, 
@@ -65,7 +65,12 @@ const [agencies,setAgencies] = useState<{ id: Number; name:string }[]>([]);
 const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
 const [userRole, setUserRole] = useState<string>("");
 
+const [users, setUsers] = useState<any[]>([]);
+const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
+const userRoleFromLocalStorage = userInfo?.role;
 
   const handleViewConsumer = (consumer: Consumer) => {
     const customerId = consumer.customerId || consumer.id;
@@ -138,12 +143,63 @@ useEffect(() => {
   }
 }, []);
 
+// useEffect(() => {
+//   if (userInfo?.role === "ROLE_ORG_STAFF") {
+//     setSelectedOrgId(userInfo.orgId);
+
+
+//     loadConsumers(0);
+//   }
+// }, []);
+
+
+
+
+useEffect(() => {
+  const loadUsers = async () => {
+    try {
+      let orgIdToFetch: number | null = null;
+
+      // Priority: if dropdown selections exist, use them
+      if (selectedAgencyId) {
+        orgIdToFetch = selectedAgencyId;
+      } else if (selectedOrgId) {
+        orgIdToFetch = selectedOrgId;
+      } else if (userInfo?.role === "ROLE_ORG_STAFF") {
+        orgIdToFetch = userInfo.orgId; // treat as orgId
+      } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
+        orgIdToFetch = userInfo.orgId; // treat as agencyId
+      }
+
+      if (orgIdToFetch) {
+        const data = await fetchUsersByOrgId(orgIdToFetch);
+        setUsers(data);
+      } else {
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    }
+  };
+
+  loadUsers();
+}, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
+
+useEffect(() => {
+  if (selectedUserId !== null) {
+    loadConsumers(0); 
+  }
+}, [selectedUserId]);
+
+
 const loadConsumers = async (page: number) => {
   try {
     setLoading(true);
 
     let orgId = selectedOrgId ?? null;
     let agencyId = selectedAgencyId ?? null;
+    let representativeId = selectedUserId ?? null;
 
     if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
       orgId = userInfo.orgId;
@@ -183,7 +239,8 @@ const loadConsumers = async (page: number) => {
     const params = {
       orgId,
       agencyId,
-      userRole: userInfo?.role || userRole || null
+      userRole: userInfo?.role || userRole || null,
+      representativeId,
     };
 
     console.log("Fetching consumers with params:", params);
@@ -580,6 +637,8 @@ useEffect(() => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header Section */}
+
+
       <div className="mb-8">
   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     
@@ -604,6 +663,8 @@ useEffect(() => {
           onChange={async (e) => {
             const value = e.target.value ? Number(e.target.value) : null;
             setSelectedOrgId(value);
+
+            setSelectedUserId(null);
 
             if (value) {
               const childOrgs = await getChildOrganizations(value);
@@ -636,6 +697,9 @@ useEffect(() => {
     setSelectedAgencyId(agencyId);
     setSelectedAgencyName(agencyId ? e.target.options[e.target.selectedIndex].text : null);
 
+
+    setSelectedUserId(null);
+    
     // Clear org selection if agency is chosen
     if (agencyId) {
       setSelectedOrgId(null);
@@ -645,7 +709,7 @@ useEffect(() => {
           disabled={agencies.length === 0}
           className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
         >
-          <option value="">Select Agency</option>
+          <option value="">Self</option>
           {agencies.map((agency) => (
             <option key={agency.id} value={agency.id}>
               {agency.name}
@@ -653,6 +717,31 @@ useEffect(() => {
           ))}
         </select>
       </div>)}
+
+      {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" && userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && (
+  <div className="w-60">
+    <label className="sr-only">Select User</label>
+    <select
+      value={selectedUserId ?? ""}
+      onChange={(e) => {
+        const userId = e.target.value ? Number(e.target.value) : null;
+        setSelectedUserId(userId);
+      }}
+      disabled={users.length === 0}
+      className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+    >
+      <option value="">Select User</option>
+      {users.map((user) => (
+        <option key={user.id} value={user.id}>
+          {`${user.nameAsPerGovId} (${user.username})`}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+
+
     </div>
   </div>
 </div>

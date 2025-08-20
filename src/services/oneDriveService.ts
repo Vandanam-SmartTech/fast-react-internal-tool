@@ -76,7 +76,7 @@ export const fetchUploadedFilesBySession = async (
 
 export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
   const oneDriveAPI = getOneDriveAPI();
-  const response = await oneDriveAPI.get(`/api/onedrive/download/documentId/${fileId}`, {
+  const response = await oneDriveAPI.get(`/api/document-manager/documents/download/${fileId}`, {
     responseType: 'blob',
   });
 

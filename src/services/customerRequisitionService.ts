@@ -383,7 +383,7 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
-export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null }) => {
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, representativeId?: number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
@@ -433,19 +433,30 @@ export const fetchOnboardedConsumers = async (page = 0) => {
 };
 
 
-export const getCustomerCount = async (representativeId?: number): Promise<number> => {
+export const getCustomerCount = async (): Promise<number> => {
   const crsAPI = getCrsAPI();
+
+  
+  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const { orgId, role } = selectedOrg;
+
+  
+  let params: Record<string, any> = {};
+  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
+    params.orgId = orgId;
+  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
+    params.agencyId = orgId;
+  }
+
   try {
-    const url = representativeId
-      ? `/api/customers/count?representativeId=${representativeId}`
-      : `/api/customers/count`;
-    const response = await crsAPI.get(url);
-    return response.data;
+    const response = await crsAPI.get("/api/customers/count", { params });
+    return response.data; 
   } catch (error) {
-    console.error('Error fetching customer count:', error);
-    throw new Error('Failed to fetch customer count');
+    console.error("Error fetching customer count:", error);
+    throw new Error("Failed to fetch customer count");
   }
 };
+
 
 export const getOnboardedCustomerCount = async (representativeId?: number): Promise<number> => {
   const crsAPI = getCrsAPI();

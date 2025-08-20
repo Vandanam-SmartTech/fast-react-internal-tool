@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { Users, UserCheck, BarChart3 } from 'lucide-react';
+import Card, { CardBody } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
@@ -20,11 +21,11 @@ const StaffDashboard: React.FC = () => {
     const setTimeBasedGreeting = () => {
       const hour = new Date().getHours();
       if (hour < 12) {
-        setGreeting('Good Morning!');
+        setGreeting('Good Morning');
       } else if (hour < 16) {
-        setGreeting('Good Afternoon!');
+        setGreeting('Good Afternoon');
       } else {
-        setGreeting('Good Evening!');
+        setGreeting('Good Evening');
       }
     };
 
@@ -88,28 +89,80 @@ const StaffDashboard: React.FC = () => {
     }, 5);
   };
 
-  const dashboardItems = [
+const dashboardItems = [
+
     {
-      title: 'Manage Customers',
-      description: 'Customers within my organizations',
-      icon: <Users className="h-12 w-12 text-blue-600" />,
-      path: '/manage-customers',
-      color: 'bg-blue-50 hover:bg-blue-100'
-    }
+          title: 'Manage Customers',
+          description: 'List, View, Add, Update customers',
+          icon: <Users className="h-8 w-8 text-primary-600" />,
+          path: '/manage-customers',
+          color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+          // requiresOrg: true
+    },
+   
   ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
         <p className="text-gray-600">Manage customers and view progress</p>
+      </div> */}
+
+      <div>
+            <h1 className="text-3xl font-bold text-secondary-900">
+              {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
+            </h1>
+            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+              Manage customers and view progress
+            </p>
+          </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+
+
+          
+           <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+  <CardBody className="p-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-purple-600">Total Customers</p>
+        <p className="text-2xl font-bold text-purple-900">
+          {count !== null ? animatedCount : "0"}
+        </p>
       </div>
+      <div className="p-2 bg-purple-200 rounded-lg">
+        <Users className="h-6 w-6 text-purple-700" />
+      </div>
+    </div>
+  </CardBody>
+</Card>
+
+          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary-600">Onboarded Customers</p>
+                  <p className="text-2xl font-bold text-primary-900">100</p>
+                </div>
+                <div className="p-2 bg-primary-200 rounded-lg">
+                  <Users className="h-6 w-6 text-primary-700" />
+                </div>
+              </div> 
+              {/* <div className="mt-2 flex items-center gap-1">
+                <TrendingUp className="h-4 w-4 text-success-600" />
+                <span className="text-sm text-success-600">+12% from last month</span>
+              </div> */}
+             </CardBody>
+          </Card> 
+        
+         </div> 
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4">
         {dashboardItems.map((item, index) => (
           <div 
             key={index}
@@ -126,6 +179,8 @@ const StaffDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">

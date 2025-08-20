@@ -194,9 +194,26 @@ export default function GenerateDocuments() {
     }
   }, [connectionId, loadDocuments]);
 
-const handlePreviewUploaded = (doc: any) => {
-  const fileUrl = `http://localhost:8192/api/document-manager/documents/file/${doc.fileId}`;
-  window.open(fileUrl, "_blank"); // opens in new tab
+// const handlePreviewUploaded = (doc: any) => {
+//   const fileUrl = `http://localhost:8192/api/document-manager/documents/file/${doc.fileId}`;
+//   window.open(fileUrl, "_blank"); // opens in new tab
+// };
+
+const handleDownload = async (fileId: string, fileName: string) => {
+  try {
+    const blob = await downloadDocumentById(fileId);
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download file.");
+  }
 };
 
 
@@ -382,7 +399,7 @@ const handleDocumentUpload = async (documentName: string) => {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <button
-          onClick={() => navigate(`/OnboardedConsumers`)}
+          onClick={() => navigate(`/list-of-consumers`)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
           aria-label="Go back to consumers list"
         >
@@ -417,10 +434,10 @@ const handleDocumentUpload = async (documentName: string) => {
       )}
 
       {/* Progress Bar - Horizontal on Desktop, Vertical on Mobile */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
+      {/* <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Progress</h2>
         
-        {/* Desktop Progress Bar */}
+        
         <div className="hidden lg:block">
           <div className="flex items-center justify-between">
             {documentSteps.map((step, index) => (
@@ -441,7 +458,6 @@ const handleDocumentUpload = async (documentName: string) => {
           </div>
         </div>
 
-        {/* Mobile Progress Bar */}
         <div className="lg:hidden">
           <div className="space-y-4">
             {documentSteps.map((step) => (
@@ -454,7 +470,7 @@ const handleDocumentUpload = async (documentName: string) => {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Document Steps */}
       <div className="space-y-4">
@@ -616,7 +632,7 @@ const handleDocumentUpload = async (documentName: string) => {
               >
                 <span className="truncate">{doc.fileName}</span>
                 <button
-                  onClick={() => handlePreviewUploaded(doc)}
+                  onClick={() => handleDownload(doc.fileId, doc.fileName)}
                   className="text-blue-600 hover:underline ml-2"
                 >
                   View

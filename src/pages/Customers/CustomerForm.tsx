@@ -253,18 +253,18 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   if (name === 'mobileNumber' && value === '') {
     setConfirmMobileNumber('');
-    //localStorage.removeItem("confirmMobileNumber");
+    
   }
 
   if (name === 'emailAddress' && value === '') {
     setConfirmEmailAddress('');
-    //localStorage.removeItem("confirmEmailAddress");
+    
   }
 
   if (name === 'mobileNumber') {
     if (value !== confirmMobileNumber) {
       setConfirmMobileNumber('');
-      //localStorage.removeItem("confirmMobileNumber");
+      
     }
 
     checkMobileNumberExists(value).then((exists) => {
@@ -272,7 +272,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmMobileNumber('');
-        //localStorage.removeItem("confirmMobileNumber");
+        
       }
     });
   }
@@ -280,7 +280,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (name === 'emailAddress') {
     if (value !== confirmEmailAddress) {
       setConfirmEmailAddress('');
-      //localStorage.removeItem("confirmEmailAddress");
+      
     }
 
     checkEmailAddressExists(value).then((exists) => {
@@ -288,7 +288,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmEmailAddress('');
-        //localStorage.removeItem("confirmEmailAddress");
+        
       }
     });
   }
@@ -304,7 +304,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmMobileNumber('');
-        //localStorage.removeItem("confirmMobileNumber");
+        
       }
     });
   }
@@ -315,7 +315,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       if (exists) {
         setConfirmEmailAddress('');
-        //localStorage.removeItem("confirmEmailAddress");
+        
       }
     });
   }
@@ -338,12 +338,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmMobileNumber(value);
-    //localStorage.setItem('confirmMobileNumber', value);
+    
   };
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmEmailAddress(value);
-    //localStorage.setItem('confirmEmailAddress', value);
+    
   };
 
 
@@ -528,7 +528,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
 {/* Representative Type Selection */}
-<div className="col-span-2 w-full">
+{selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
+ selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && (<div className="col-span-2 w-full">
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
     Select User Type <span className="text-red-500">*</span>
   </label>
@@ -557,7 +558,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       </label>
     ))}
   </div>
-</div>
+</div>)}
 
 {/* Conditional Sections */}
 {representativeType === "agency" && (

@@ -25,27 +25,27 @@ export const getQuotationAPI = () => {
  * Build organization/agency context params expected by backend.
  * Supports both legacy keys (selectedOrganization*) and new JSON key (selectedOrg).
  */
-const buildOrgParams = () => {
-  let orgId = localStorage.getItem('selectedOrganization');
-  let orgName = localStorage.getItem('selectedOrganizationName');
-  const agencyId = localStorage.getItem('selectedAgency');
-  const agencyName = localStorage.getItem('selectedAgencyName');
+// const buildOrgParams = () => {
+//   let orgId = localStorage.getItem('selectedOrganization');
+//   let orgName = localStorage.getItem('selectedOrganizationName');
+//   const agencyId = localStorage.getItem('selectedAgency');
+//   const agencyName = localStorage.getItem('selectedAgencyName');
 
-  if (!orgId || !orgName) {
-    const selectedOrgStr = localStorage.getItem('selectedOrg');
-    if (selectedOrgStr) {
-      try {
-        const parsed = JSON.parse(selectedOrgStr);
-        if (!orgId && parsed.orgId) orgId = String(parsed.orgId);
-        if (!orgName && parsed.orgName) orgName = String(parsed.orgName);
-      } catch {
-        // ignore parsing errors; params will remain undefined if not available
-      }
-    }
-  }
+//   if (!orgId || !orgName) {
+//     const selectedOrgStr = localStorage.getItem('selectedOrg');
+//     if (selectedOrgStr) {
+//       try {
+//         const parsed = JSON.parse(selectedOrgStr);
+//         if (!orgId && parsed.orgId) orgId = String(parsed.orgId);
+//         if (!orgName && parsed.orgName) orgName = String(parsed.orgName);
+//       } catch {
+//         // ignore parsing errors; params will remain undefined if not available
+//       }
+//     }
+//   }
 
-  return { orgId, orgName, agencyId, agencyName };
-};
+//   return { orgId, orgName, agencyId, agencyName };
+// };
 
 export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
@@ -133,9 +133,7 @@ export const fetchRecommendedDetails = async (connectionId: number) => {
   try {
     console.log(`Fetching recommendation for connectionId: ${connectionId}`);
 
-    const response = await quotationAPI.get(`/api/recommendation/getAndSave/${connectionId}`, {
-      params: buildOrgParams(),
-    });
+    const response = await quotationAPI.get(`/api/recommendation/getAndSave/${connectionId}`);
 
     return response.data;
   } catch (error: any) {
