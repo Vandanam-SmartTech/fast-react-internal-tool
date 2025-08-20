@@ -699,13 +699,25 @@ export const getMaterialsByConnectionId = async (connectionId: number) => {
 
 export const getCustomerStats = async () => {
   const crsAPI = getCrsAPI();
+
+  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const { orgId, role } = selectedOrg;
+
+  let params: Record<string, any> = {};
+  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
+    params.orgId = orgId;
+  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
+    params.agencyId = orgId;
+  }
+
   try {
-    const response = await crsAPI.get('/api/customers/stats');
+    const response = await crsAPI.get('/api/customers/stats', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching customer stats:', error);
     throw new Error('Failed to fetch customer stats');
   }
 };
+
 
 

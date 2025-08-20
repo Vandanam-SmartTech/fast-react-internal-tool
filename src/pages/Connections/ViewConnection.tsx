@@ -627,20 +627,20 @@ const handleNo = async () => {
           },
         });
       }}
-      className="w-full py-2 px-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+      className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <HomeModernIcon className="w-4 h-4" />
       <span>Add New Installation</span>
     </button>
 
     {/* Upload/View Documents Button */}
-    <button
+    {/* <button
       onClick={() => setModalOpen(true)}
       className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <FileUp className="w-4 h-4" />
       <span>Upload/View Documents</span>
-    </button>
+    </button> */}
 
     {/* Get Recommendation Button */}
     <button
@@ -654,7 +654,7 @@ const handleNo = async () => {
           },
         })
       }
-      className="w-full py-2 px-3 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
+      className="py-2 px-6 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <Cog6ToothIcon className="w-4 h-4" />
       <span>Get Recommendation</span>

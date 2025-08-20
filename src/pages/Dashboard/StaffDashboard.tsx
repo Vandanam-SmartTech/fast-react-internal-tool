@@ -141,15 +141,15 @@ const dashboardItems = [
   </CardBody>
 </Card>
 
-          <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+          <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-primary-600">Onboarded Customers</p>
-                  <p className="text-2xl font-bold text-primary-900">100</p>
+                  <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
+                  <p className="text-2xl font-bold text-solar-900">1</p>
                 </div>
-                <div className="p-2 bg-primary-200 rounded-lg">
-                  <Users className="h-6 w-6 text-primary-700" />
+                <div className="p-2 bg-solar-200 rounded-lg">
+                  <Users className="h-6 w-6 text-solar-700" />
                 </div>
               </div> 
               {/* <div className="mt-2 flex items-center gap-1">
@@ -183,7 +183,7 @@ const dashboardItems = [
 
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <button 
           onClick={() => navigate('/list-of-consumers')}
           className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-7 rounded-xl shadow-md hover:bg-blue-300 transition-all h-40"
@@ -205,7 +205,7 @@ const dashboardItems = [
           </div>
           <div className="text-base font-medium tracking-wide text-center">Onboarded Consumers</div>
         </button>
-      </div>
+      </div> */}
 
       {/* Progress Chart */}
       {count !== 0 && (

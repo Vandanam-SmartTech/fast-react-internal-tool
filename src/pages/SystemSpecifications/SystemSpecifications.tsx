@@ -149,7 +149,6 @@ useEffect(() => {
       return;
     }
 
-    // Fetch connection details using consumerId
     const data = await getConnectionByConsumerId(Number(consumerId));
     setConnectionDetails(data);
   };
@@ -228,8 +227,10 @@ useEffect(() => {
 let hasShownError = false;
 
 useEffect(() => {
-  const fetchData = async () => {
+ 
     if (!connectionId || !connectionDetails) return;
+
+     const fetchData = async () => {
 
     setIsFetchingRecommendations(true);
 
@@ -355,6 +356,8 @@ useEffect(() => {
 
   fetchData();
 }, [connectionId, connectionDetails]);
+
+
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
   const { name, value, type, checked } = e.target;
@@ -803,7 +806,7 @@ const handlePreview = async () => {
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
         ></path>
       </svg>
-      <span className="text-gray-700 text-lg font-medium">Fetching Recommendation Details...</span>
+      <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
     </div>
   </div>
 )}
