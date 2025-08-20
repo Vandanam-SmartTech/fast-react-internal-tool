@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Building, User, Bell, Shield, Check } from 'lucide-react';
+import { ChevronDown, LogOut, Building, User, Shield, Check } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
-import ThemeToggle from './ThemeToggle';
 import { Logo } from './ui';
 
 const Header: React.FC = () => {
@@ -80,7 +79,18 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
   
   window.dispatchEvent(new CustomEvent('organizationChanged', { detail: newOrg }));
 
-  
+  if(newOrg.role === "ROLE_AGENCY_REPRESENTATIVE" || newOrg.role === "ROLE_ORG_REPRESENTATIVE"){
+    navigate('/RepresentativeDashboard');
+  }else if(newOrg.role === "ROLE_ORG_ADMIN"){
+    navigate('/AdminDashboard');
+  }else if(newOrg.role === "ROLE_AGENCY_ADMIN"){
+    navigate('/AgencyAdminDashboard');
+  }else if(newOrg.role === "ROLE_ORG_STAFF" || newOrg.role === "ROLE_AGENCY_STAFF"){
+    navigate('/StaffDashboard');
+  }else if(newOrg.role === "ROLE_SUPER_ADMIN"){
+    navigate('/SuperAdminDashboard');
+  }
+
   window.location.reload();
 };
 
@@ -145,8 +155,13 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
 
         {/* Right side - User controls */}
         <div className="flex items-center gap-1 sm:gap-3">
+<<<<<<< HEAD
           {/* Theme Toggle */}
           {/* <ThemeToggle /> */}
+=======
+          
+          {/* Theme toggle removed */}
+>>>>>>> 87ee24a8bb8548467200c5570660c003c2dbf926
 
           {/* Notifications - Hide on very small screens 
           <Button

@@ -437,7 +437,10 @@ const handleDocumentUpload = async (documentName: string) => {
       {/* <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Progress</h2>
         
+<<<<<<< HEAD
         
+=======
+>>>>>>> 87ee24a8bb8548467200c5570660c003c2dbf926
         <div className="hidden lg:block">
           <div className="flex items-center justify-between">
             {documentSteps.map((step, index) => (
@@ -472,7 +475,6 @@ const handleDocumentUpload = async (documentName: string) => {
         </div>
       </div> */}
 
-      {/* Document Steps */}
       <div className="space-y-4">
         {documentSteps.map((step) => (
           <div key={step.id} className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
