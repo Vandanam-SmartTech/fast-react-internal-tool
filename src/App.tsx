@@ -1,6 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useState } from "react";
-import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
 
 import Login from './pages/Auth/Login';
@@ -58,13 +57,12 @@ import 'react-toastify/dist/ReactToastify.css';
 const AppContent: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   // Define auth pages where sidebar/header should not show
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
   const showSidebar = !authPages.includes(location.pathname);
 
-  const envLabel = import.meta.env.VITE_ENV_LABEL || 'Development';
+  
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');
@@ -106,7 +104,7 @@ const AppContent: React.FC = () => {
         toastClassName="rounded-lg shadow-soft"
       />
       
-      <EnvBanner envLabel={envLabel} />
+      <EnvBanner />
 
       {/* Main content area */}
       <main className={`flex-1 transition-all duration-300 ${
@@ -505,13 +503,11 @@ const AppContent: React.FC = () => {
 
 function App({ basePath }: { basePath: string }) {
   return (
-    <ThemeProvider>
-      <UserProvider>
-        <Router basename={basePath}>
-          <AppContent />
-        </Router>
-      </UserProvider>
-    </ThemeProvider>
+    <UserProvider>
+      <Router basename={basePath}>
+        <AppContent />
+      </Router>
+    </UserProvider>
   );
 }
 

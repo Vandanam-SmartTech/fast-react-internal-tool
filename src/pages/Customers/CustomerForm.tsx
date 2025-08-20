@@ -528,7 +528,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
 {/* Representative Type Selection */}
-<div className="col-span-2 w-full">
+{selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
+ selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && (<div className="col-span-2 w-full">
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
     Select User Type <span className="text-red-500">*</span>
   </label>
@@ -557,7 +558,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       </label>
     ))}
   </div>
-</div>
+</div>)}
 
 {/* Conditional Sections */}
 {representativeType === "agency" && (
