@@ -16,7 +16,6 @@ import {
   Shield
 } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
 
 const AdminDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');
@@ -75,8 +74,6 @@ const AdminDashboard: React.FC = () => {
           // requiresOrg: true
     },
    
-    
-
     {
       title: 'Manage Users',
       description: 'Search, List, View, Add, Update users',
