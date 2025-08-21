@@ -3,10 +3,10 @@ import { getAuthToken, fetchClaims } from './jwtService';
 import { getConfig } from '../config';
 
 export const getOneDriveAPI = () => {
-  const { VITE_ONEDRIVE_API } = getConfig();
+  const { VITE_DOCMANAGER_API } = getConfig();
 
   const oneDriveAPI = axios.create({
-    baseURL: VITE_ONEDRIVE_API,
+    baseURL: VITE_DOCMANAGER_API,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 

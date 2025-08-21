@@ -3,10 +3,10 @@ import { getAuthToken } from './jwtService';
 import { getConfig } from '../config';
 
 export const getDocumentAPI = () => {
-  const { VITE_DOCUMENT_API } = getConfig();
+  const { VITE_DOCGENERATOR_API } = getConfig();
 
   const documentAPI = axios.create({
-    baseURL: VITE_DOCUMENT_API,
+    baseURL: VITE_DOCGENERATOR_API,
     headers: {
       'Content-Type': 'application/json',
     },
