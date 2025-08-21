@@ -25,7 +25,7 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      - name: Debug: List build files
+      - name: "Debug - List build files"
         run: ls -R build || echo "⚠️ Build folder missing!"
 
       - name: Upload build artifact
@@ -44,7 +44,7 @@ jobs:
           name: react-build
           path: ./build
 
-      - name: Debug: Verify downloaded build files
+      - name: "Debug - Verify downloaded build files"
         run: ls -R ./build || echo "⚠️ Build artifact not found!"
 
       - name: Start SSH Agent
