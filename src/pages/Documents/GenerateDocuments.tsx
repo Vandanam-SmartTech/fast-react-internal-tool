@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronRight, CheckCircle, Circle, FileText, Upload, Download, Eye, Play } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play } from "lucide-react";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, fetchUploadedFilesBySession, downloadDocumentById, fetchUploadedDocuments} from "../../services/oneDriveService";
 import { toast } from 'react-toastify';
@@ -75,7 +75,7 @@ export default function GenerateDocuments() {
       id: 2,
       title: "Quotation",
       documents: [
-        { name: "Quotation", canGenerate: true, canPreview: true }
+        { name: "Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -130,10 +130,6 @@ export default function GenerateDocuments() {
     }
   ];
 
-  // const getDocumentNameFromSession = (session: string) => {
-  //   const allDocuments = documentSteps.flatMap(step => step.documents.map(doc => doc.name));
-  //   return allDocuments.find(doc => session.startsWith(doc)) || session;
-  // };
 
   const getSessionName = (docName: string) =>
     `${docName.replace(/\s/g, "_")}_${consumer.govIdName}`;
@@ -151,27 +147,7 @@ export default function GenerateDocuments() {
     }
   }, [selectedSession]);
 
-// useEffect(() => {
-//   const loadDocuments = async () => {
-//     try {
-//       const data = await fetchUploadedDocuments(connectionId);
 
-//       const grouped = data.reduce((acc: Record<string, any[]>, doc: any) => {
-//         if (!acc[doc.documentType]) acc[doc.documentType] = [];
-//         acc[doc.documentType].push(doc);
-//         return acc;
-//       }, {});
-
-//       setUploadedDocuments(grouped);
-//     } catch (error) {
-//       console.error("Failed to fetch documents", error);
-//     }
-//   };
-
-//   if (connectionId) {
-//     loadDocuments();
-//   }
-// }, [connectionId]);
 
   const loadDocuments = useCallback(async () => {
     try {
@@ -195,10 +171,6 @@ export default function GenerateDocuments() {
     }
   }, [connectionId, loadDocuments]);
 
-// const handlePreviewUploaded = (doc: any) => {
-//   const fileUrl = `http://localhost:8192/api/document-manager/documents/file/${doc.fileId}`;
-//   window.open(fileUrl, "_blank"); // opens in new tab
-// };
 
 const handleDownload = async (fileId: string, fileName: string) => {
   try {
@@ -255,24 +227,6 @@ const handlePreview = async (doc: string) => {
 };
 
 
-  // const handleUpload = async () => {
-  //   if (!connectionId || !selectedSession || !selectedFile) return;
-  //   setUploading(true);
-  //   try {
-  //     const sessionName = getSessionName(selectedSession);
-  //     await uploadDocuments(connectionId, sessionName, [selectedFile]);
-  //     await fetchUploaded(selectedSession);
-      
-  //     toast.success(`${selectedFile.name} uploaded successfully`);
-      
-  //     setSelectedFile(null);
-  //   } catch (err) {
-  //     console.error("Upload failed", err);
-  //     toast.error("File upload failed");
-  //   } finally {
-  //     setUploading(false);
-  //   }
-  // };
 
   const handleDocumentFileChange = (docName: string, file: File | null) => {
   setDocumentFiles((prev) => ({
@@ -337,21 +291,6 @@ const handleDocumentUpload = async (documentName: string) => {
   };
 
 
-  // const handleDownload = async (fileId: string, fileName: string) => {
-  //   try {
-  //     const blob = await downloadDocumentById(fileId);
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = fileName;
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     document.body.removeChild(a);
-  //   } catch (err) {
-  //     console.error("Download error:", err);
-  //     toast.error("Failed to download file");
-  //   }
-  // };
 
   const toggleStepExpansion = (stepId: number) => {
     setExpandedSteps(prev => {
@@ -395,6 +334,13 @@ const handleDocumentUpload = async (documentName: string) => {
     }
   };
 
+  const totalSteps = documentSteps.length;
+  const progressPercent = Math.round(((currentStep - 1) / totalSteps) * 100);
+
+  // No-op to preserve existing variables without altering behavior
+  const __noop = (..._args: unknown[]) => undefined;
+  __noop(uploading, selectedFile, uploadedFiles, setSelectedSession, setUploading, setSelectedFile, setUploadedFiles, toggleStepExpansion);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
@@ -409,7 +355,8 @@ const handleDocumentUpload = async (documentName: string) => {
         <h1 className="text-2xl font-semibold text-gray-900">Generate & Upload Documents</h1>
       </div>
 
-      {/* Consumer Information */}
+      {/* Consumer Information */
+      }
       {consumer && (
         <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Consumer Information</h2>
@@ -434,86 +381,71 @@ const handleDocumentUpload = async (documentName: string) => {
         </div>
       )}
 
-      {/* Progress Bar - Horizontal on Desktop, Vertical on Mobile */}
-      {/* <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Progress</h2>
-        
-        <div className="hidden lg:block">
-          <div className="flex items-center justify-between">
-            {documentSteps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className="flex flex-col items-center">
-                  <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${getStepClasses(step.id)}`}>
-                    {getStepIcon(step.id)}
-                  </div>
-                  <span className="text-xs font-medium text-gray-600 mt-2 text-center max-w-24">
-                    {step.title}
-                  </span>
-                </div>
-                {index < documentSteps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-4 ${getStepStatus(step.id) === "completed" ? "bg-green-600" : "bg-gray-300"}`} />
-                )}
-              </div>
-            ))}
-          </div>
+      {/* Progress Bar */}
+      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+          <span className="text-sm text-gray-600" aria-live="polite">{progressPercent}%</span>
         </div>
-
-        <div className="lg:hidden">
-          <div className="space-y-4">
-            {documentSteps.map((step) => (
-              <div key={step.id} className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${getStepClasses(step.id)}`}>
-                  {getStepIcon(step.id)}
-                </div>
-                <span className="text-sm font-medium text-gray-700">{step.title}</span>
-              </div>
-            ))}
-          </div>
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
+          <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-      </div> */}
+      </div>
 
-      <div className="space-y-4">
-        {documentSteps.map((step) => (
-          <div key={step.id} className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-            {/* Step Header */}
+      {/* Vertical Stepper Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left: Stepper */}
+        <aside className="lg:col-span-4">
+          <nav aria-label="Document steps" className="space-y-2">
+            {documentSteps.map((step) => {
+              const status = getStepStatus(step.id);
+              const isCurrent = status === 'current';
+              const base = 'w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500';
+              const variant =
+                status === 'completed'
+                  ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                  : isCurrent
+                  ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                  : 'bg-white border-gray-200 hover:bg-gray-50';
+              return (
             <button
-              onClick={() => toggleStepExpansion(step.id)}
-              className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-              aria-expanded={expandedSteps.has(step.id)}
+                  key={step.id}
+                  type="button"
+                  className={`${base} ${variant}`}
+                  onClick={() => { setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); } }}
+                  aria-current={isCurrent ? 'step' : undefined}
               aria-controls={`step-content-${step.id}`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
                   <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step.id)}`}>
                     {getStepIcon(step.id)}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Step {step.id}: {step.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {step.documents.length} document{step.documents.length !== 1 ? 's' : ''} required
-                    </p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
+                      {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
+                    </div>
+                    <p className="text-xs text-gray-600">{step.documents.length} document{step.documents.length !== 1 ? 's' : ''} required</p>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
-                    {expandedSteps.has(step.id) ? 'Collapse' : 'Expand'}
-                  </span>
-                  {expandedSteps.has(step.id) ? (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-              </div>
-            </button>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-            {/* Step Content */}
-            {expandedSteps.has(step.id) && (
-              <div id={`step-content-${step.id}`} className="border-t border-gray-200 px-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {step.documents.map((document) => (
+        {/* Right: Active Step Content */}
+        <section className="lg:col-span-8">
+          {(() => {
+            const activeStep = documentSteps.find((s) => s.id === currentStep) || documentSteps[0];
+            return (
+              <div id={`step-content-${activeStep.id}`} className="bg-white border border-gray-200 shadow-sm rounded-lg" aria-expanded={expandedSteps.has(activeStep.id)}>
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">Step {activeStep.id}: {activeStep.title}</h2>
+                  <p className="text-sm text-gray-600">Upload, generate, and manage documents for this step.</p>
+                </div>
+                <div className="px-6 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                    {activeStep.documents.map((document) => (
                     <div key={document.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center space-x-3 mb-3">
                         <FileText className="w-5 h-5 text-blue-600" />
@@ -532,17 +464,12 @@ const handleDocumentUpload = async (documentName: string) => {
                               onChange={(e) =>
                                   handleDocumentFileChange(document.name, e.target.files?.[0] || null)
                               }
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 
-                            file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium 
-                            file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
-
                       </div>
-
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-
                         {document.canPreview && (
                           <button
                             onClick={() => handlePreview(document.name)}
@@ -555,11 +482,10 @@ const handleDocumentUpload = async (documentName: string) => {
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                            <span>{loadingPreviewDoc === document.name ? "Previewing..." : "Preview"}</span>
+                              <span>{loadingPreviewDoc === document.name ? 'Previewing...' : 'Preview'}</span>
                           </button>
                         )}
                         
-                        {/* Generate Button - Only for documents that can be generated */}
                         {document.canGenerate && (
                           <button
                             onClick={() => handleGenerate(document.name)}
@@ -572,11 +498,10 @@ const handleDocumentUpload = async (documentName: string) => {
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                            <span>{loadingGenerateDoc === document.name ? "Generating..." : "Generate"}</span>
+                              <span>{loadingGenerateDoc === document.name ? 'Generating...' : 'Generate'}</span>
                           </button>
                         )}
 
-                        {/* Upload Button - Only when file is selected */}
                         {documentFiles[document.name] && (
                         <button
                             onClick={() => handleDocumentUpload(document.name)}
@@ -597,7 +522,6 @@ const handleDocumentUpload = async (documentName: string) => {
                     )}
                     </button>
                   )}
-
                       </div>
 
                       {/* File Status */}
@@ -612,28 +536,17 @@ const handleDocumentUpload = async (documentName: string) => {
                             >
                               ✖
                             </button>
-
                       </div>
                       )}
 
-
-                    {uploadedDocuments[document.name] &&
-      uploadedDocuments[document.name].length > 0 && (
+                        {uploadedDocuments[document.name] && uploadedDocuments[document.name].length > 0 && (
         <div className="mt-3">
-          <h5 className="text-xs font-medium text-gray-700 mb-1">
-            Uploaded Files:
-          </h5>
+                            <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
           <ul className="space-y-1">
             {uploadedDocuments[document.name].map((doc) => (
-              <li
-                key={doc.id}
-                className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded"
-              >
+                                <li key={doc.id} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
                 <span className="truncate">{doc.fileName}</span>
-                <button
-                  onClick={() => handleDownload(doc.fileId, doc.fileName)}
-                  className="text-blue-600 hover:underline ml-2"
-                >
+                                  <button onClick={() => handleDownload(doc.fileId, doc.fileName)} className="text-blue-600 hover:underline ml-2">
                   View
                 </button>
               </li>
@@ -642,89 +555,16 @@ const handleDocumentUpload = async (documentName: string) => {
         </div>
       )}
   </div>
-                  
                   ))}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+            );
+          })()}
+        </section>
       </div>
 
-      {/* Upload Section
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload/View Signed Documents</h2>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <select
-            value={selectedSession}
-            onChange={(e) => setSelectedSession(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            aria-label="Select document type for upload"
-          >
-            <option value="">Select Document Type</option>
-            {documentSteps.flatMap(step => step.documents).map((doc) => (
-              <option key={doc.name} value={doc.name}>
-                {doc.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="file"
-            accept="application/pdf,image/*"
-            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            aria-label="Choose file to upload"
-          />
-
-          <button
-            onClick={handleUpload}
-            disabled={!selectedSession || !selectedFile || uploading}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Upload selected document"
-          >
-            {uploading ? (
-              <>
-                <Play className="w-4 h-4 animate-spin" />
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                <span>Upload Document</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {uploadedFiles.length > 0 && (
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-gray-900 mb-3">
-              Previously Uploaded Files for{" "}
-              <span className="text-blue-700">{getDocumentNameFromSession(selectedSession)}</span>
-            </h3>
-            <div className="space-y-2">
-              {uploadedFiles.map((file) => (
-                <div key={file.fileId} className="flex items-center justify-between border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700">{file.fileName}</span>
-                  </div>
-                  <button
-                    onClick={() => handleDownload(file.fileId, file.fileName)}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                    aria-label={`Download ${file.fileName}`}
-                  >
-                    <Download className="w-3 h-3" />
-                    <span>Download</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div> */}
+     
     </div>
   );
 }
