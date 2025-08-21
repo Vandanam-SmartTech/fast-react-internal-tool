@@ -1,11 +1,11 @@
 
 {
-  "VITE_JWT_API": "http://localhost:8247",
+  "VITE_JWT_API": "https://dev.vandanam.co.in/auth",
   "VITE_OTP_API": "https://dev.vandanam.co.in/otp",
-  "VITE_CRS_API": "http://localhost:8812",
-  "VITE_QUOTATION_API": "http://localhost:8933",
-  "VITE_DOCUMENT_API": "http://localhost:8365",
-  "VITE_ONEDRIVE_API": "http://localhost:8192",
+  "VITE_CRS_API": "https://dev.vandanam.co.in/crs",
+  "VITE_QUOTATION_API": "https://dev.vandanam.co.in/quotation",
+  "VITE_DOCUMENT_API": "https://dev.vandanam.co.in/document-generator",
+  "VITE_ONEDRIVE_API": "https://dev.vandanam.co.in/document-manager",
   "BASE_PATH": "/solarpro/",
   "VITE_MODE": "development",
   "VITE_ENV_LABEL": "Development"
