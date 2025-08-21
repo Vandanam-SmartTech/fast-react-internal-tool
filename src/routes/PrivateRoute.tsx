@@ -26,13 +26,13 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           return;
         }
 
-        // 🔹 Global Super Admin check
+        
         if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
           setAuthorized(true);
           return;
         }
 
-        // 🔹 Extract org roles
+        
         const orgRoles = claims.org_roles ? Object.values(claims.org_roles) : [];
 
         if (orgRoles.length === 0) {
@@ -40,7 +40,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           return;
         }
 
-        // 🔹 Multiple roles but no selectedOrg in localStorage → force login
+        
         if (orgRoles.length > 1 && !localStorage.getItem('selectedOrg')) {
           setRedirectPath('/login');
           return;

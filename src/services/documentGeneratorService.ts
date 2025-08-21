@@ -33,7 +33,8 @@ export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
     "Earthing": `/api/pdf/earthingPageController/${id}?download=true`,
     "Subsidy Document": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
     "Vendor Feasibility": `/api/pdf/vendorFeasibilityController/${id}?download=true`,
-    "Net Agreement": `/api/pdf/netAgreementOne/${id}?download=true`, // if you have 2 pages, adjust
+    "Net Agreement 1": `/api/pdf/netAgreementOne/${id}?download=true`, // if you have 2 pages, adjust
+    "Net Agreement 2": `/api/pdf/netAgreementTwo/${id}?download=true`,
     "Declaration": `/api/pdf/declarationPage/${id}?download=true`,
     "DCR Certificate": `/api/pdf/dcrCertificate/${id}?download=true`, // example, adjust to your BE
     "Quotation": `/api/pdf/quotation/${id}?download=true` // example, adjust
