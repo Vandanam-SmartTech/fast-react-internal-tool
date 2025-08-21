@@ -9,8 +9,9 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,27 +27,8 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      - name: "Debug - List build files"
+      - name: Debug - Show build output
         run: ls -R build || echo "⚠️ Build folder missing!"
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-build
-          path: build
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: react-build
-          path: ./build
-
-      - name: "Debug - Verify downloaded build files"
-        run: ls -R ./build || echo "⚠️ Build artifact not found!"
 
       - name: Start SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
@@ -55,7 +37,11 @@ jobs:
 
       - name: Deploy React app to server
         run: |
-          # Remove old files first
+          # Ensure target directory exists
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo mkdir -p /opt/vandanam/dev/solarpro"
+
+          # Remove old files
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "sudo rm -rf /opt/vandanam/dev/solarpro/*"
 
