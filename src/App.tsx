@@ -18,7 +18,6 @@ import { InstallationForm } from './pages/Installations/InstallationForm';
 import { ViewInstallation } from './pages/Installations/ViewInstallation';
 import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
 import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
-import ListOfUsers from './pages/Users/ListOfUsers';
 import  PasswordReset  from './pages/Auth/PasswordReset'; 
 import ChangePassword from './pages/Auth/ChangePassword';
 import  Verification  from './pages/Auth/Verification';
@@ -30,9 +29,6 @@ import StaffDashboard from './pages/Dashboard/StaffDashboard';
 import { EditCustomer } from './pages/Customers/EditCustomer';
 import { EditConnection } from './pages/Connections/EditConnection';
 import { EditInstallation } from './pages/Installations/EditInstallation';
-import  UserForm  from './pages/Users/UserForm';
-import ViewUser  from './pages/Users/ViewUser';
-import EditUser from './pages/Users/EditUser';
 import MaterialDetails from './pages/Materials/MaterialDetails';
 import OrganizationList from './pages/Organizations/OrganizationList';
 import OrganizationForm from './pages/Organizations/OrganizationForm';
@@ -118,7 +114,7 @@ const AppContent: React.FC = () => {
             <Route path="/Verification" element={<Verification />} />
             <Route path="/ChangePassword" element={<ChangePassword />} />
             
-            {/* Profile Route */}
+            
             <Route
               path="/profile"
               element={
@@ -149,14 +145,7 @@ const AppContent: React.FC = () => {
               }
             />
 
-            <Route
-              path="/list-of-users"
-              element={
-                <PrivateRoute>
-                  <ListOfUsers />
-                </PrivateRoute>
-              }
-            />
+          
 
             {/* Dashboard Routes */}
             <Route
@@ -316,34 +305,9 @@ const AppContent: React.FC = () => {
                 </PrivateRoute>
               }
             />
+    
 
-            {/* User Routes */}
-            <Route
-              path="/view-user/:id"
-              element={
-                <PrivateRoute>
-                  <ViewUser />
-                </PrivateRoute>
-              }
-            />
 
-            <Route
-              path="/edit-user/:id"
-              element={
-                <PrivateRoute>
-                  <EditUser />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/UserForm"
-              element={
-                <PrivateRoute>
-                  <UserForm />
-                </PrivateRoute>
-              }
-            />
 
             {/* Consumer Routes */}
             <Route

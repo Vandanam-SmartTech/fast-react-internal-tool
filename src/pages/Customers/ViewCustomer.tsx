@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
-import { redirectToDashboard } from '../../routes/DashboardRoute'
 import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 import {

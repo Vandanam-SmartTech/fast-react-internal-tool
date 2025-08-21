@@ -634,13 +634,13 @@ const handleNo = async () => {
     </button>
 
     {/* Upload/View Documents Button */}
-    {/* <button
+    <button
       onClick={() => setModalOpen(true)}
       className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <FileUp className="w-4 h-4" />
       <span>Upload/View Documents</span>
-    </button> */}
+    </button>
 
     {/* Get Recommendation Button */}
     <button

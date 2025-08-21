@@ -3,8 +3,8 @@ export interface AppConfig {
   VITE_OTP_API: string;
   VITE_CRS_API: string;
   VITE_QUOTATION_API: string;
-  VITE_DOCUMENT_API: string;
-  VITE_ONEDRIVE_API: string;
+  VITE_DOCGENERATOR_API: string;
+  VITE_DOCMANAGER_API: string;
   BASE_PATH: string;
   VITE_MODE: string;
   VITE_ENV_LABEL: string;

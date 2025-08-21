@@ -302,7 +302,9 @@ const handleLogin = async (e: React.FormEvent) => {
 
                 <div className="text-center">
                   <a
-                    href="/PasswordReset"
+                    onClick={() =>
+                      navigate(`/PasswordReset`)
+                    }
                     className="text-sm text-primary-600 hover:underline"
                   >
                     Forgot your password?
