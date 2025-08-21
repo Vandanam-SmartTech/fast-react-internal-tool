@@ -1,0 +1,58 @@
+name: Build & Deploy React App (Dev)
+ 
+on:
+  push:
+    branches: [ dev ]   # trigger only on dev branch
+  workflow_dispatch:
+ 
+permissions:
+  contents: read
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+ 
+      - name: Install dependencies
+        run: npm install
+ 
+      - name: Build React app
+        run: npm run build
+ 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: build
+ 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: ./build
+ 
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+ 
+      - name: Deploy React app to server
+        run: |
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo rm -rf /opt/vandanam/dev/solarpro/*"
+          
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./build/* \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/vandanam/dev/solarpro/
+ 
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl reload nginx"
