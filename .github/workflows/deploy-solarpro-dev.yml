@@ -23,14 +23,14 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./   # 👈 change this if app is inside subfolder (e.g. ./frontend)
+        working-directory: ./   # 👈 change if your Vite app is in a subfolder (e.g. ./frontend)
 
-      - name: Build React app
+      - name: Build Vite app
         run: npm run build
         working-directory: ./   # 👈 adjust if needed
 
-      - name: Debug - Show build output
-        run: ls -R ./build || echo "⚠️ Build folder missing!"
+      - name: Debug - Show dist output
+        run: ls -R ./dist || echo "⚠️ Dist folder missing!"
         working-directory: ./   # 👈 adjust if needed
 
       - name: Start SSH Agent
@@ -38,12 +38,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Deploy React app to server
+      - name: Deploy Vite app to server
         run: |
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "sudo mkdir -p /var/www/dev/solarpro && sudo rm -rf /var/www/dev/solarpro/*"
 
-          scp -P 6022 -r -o StrictHostKeyChecking=no ./build/* \
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./dist/* \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dev/solarpro/
 
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
