@@ -39,15 +39,15 @@ jobs:
         run: |
           # Ensure target directory exists
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "sudo mkdir -p /opt/vandanam/dev/solarpro"
+            "sudo mkdir -p /var/www/dev/solarpro"
 
           # Remove old files
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "sudo rm -rf /opt/vandanam/dev/solarpro/*"
+            "sudo rm -rf /var/www/dev/solarpro/*"
 
           # Copy new build files
           scp -P 6022 -r -o StrictHostKeyChecking=no ./build/* \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/vandanam/dev/solarpro/
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dev/solarpro/
 
           # Reload nginx
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
