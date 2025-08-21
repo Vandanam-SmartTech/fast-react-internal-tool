@@ -2,7 +2,7 @@ name: Build & Deploy React App (Dev)
 
 on:
   push:
-    branches: [ dev ]   # trigger only on dev branch
+    branches: [ dev ]
   workflow_dispatch:
 
 permissions:
@@ -23,12 +23,15 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./   # 👈 change this if app is inside subfolder (e.g. ./frontend)
 
       - name: Build React app
         run: npm run build
+        working-directory: ./   # 👈 adjust if needed
 
       - name: Debug - Show build output
-        run: ls -R build || echo "⚠️ Build folder missing!"
+        run: ls -R ./build || echo "⚠️ Build folder missing!"
+        working-directory: ./   # 👈 adjust if needed
 
       - name: Start SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
@@ -37,18 +40,11 @@ jobs:
 
       - name: Deploy React app to server
         run: |
-          # Ensure target directory exists
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "sudo mkdir -p /var/www/dev/solarpro"
+            "sudo mkdir -p /var/www/dev/solarpro && sudo rm -rf /var/www/dev/solarpro/*"
 
-          # Remove old files
-          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "sudo rm -rf /var/www/dev/solarpro/*"
-
-          # Copy new build files
           scp -P 6022 -r -o StrictHostKeyChecking=no ./build/* \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dev/solarpro/
 
-          # Reload nginx
           ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "sudo systemctl reload nginx"
