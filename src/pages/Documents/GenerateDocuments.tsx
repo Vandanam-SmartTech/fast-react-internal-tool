@@ -59,14 +59,15 @@ export default function GenerateDocuments() {
   const connectionId = consumer?.id?.toString();
 
 
-  const documentSteps: DocumentStep[] = [
+const documentSteps: DocumentStep[] = [
     {
       id: 1,
       title: "Identity & Financial Documents",
       documents: [
         { name: "AadhaarCard", canGenerate: false, canPreview: false },
         { name: "BankPassbook", canGenerate: false, canPreview: false },
-        { name: "Ebill", canGenerate: false, canPreview: false }
+        { name: "Ebill", canGenerate: false, canPreview: false },
+        { name: "Regular Bill", canGenerate: false, canPreview: false}
       ],
       isCompleted: false,
       isExpanded: true
@@ -75,13 +76,22 @@ export default function GenerateDocuments() {
       id: 2,
       title: "Quotation",
       documents: [
-        { name: "Quotation", canGenerate: false, canPreview: false }
+        { name: "Quotation", canGenerate: true, canPreview: true }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 3,
+      title: "Sanction Letter",
+      documents: [
+        { name: "Sanction Letter", canGenerate: false, canPreview: false }
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 4,
       title: "Testing & Payment",
       documents: [
         { name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
@@ -91,7 +101,27 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 4,
+      id: 5,
+      title: "Comprehensive Documents",
+      documents: [
+        { name: "Subsidy Document", canGenerate: true, canPreview: true },
+        { name: "Net Agreement 1", canGenerate: true, canPreview: true },
+        { name: "Net Agreement 2", canGenerate: true, canPreview: true },
+        { name: "WCR", canGenerate: true, canPreview: true },
+        { name: "Annexure-I", canGenerate: true, canPreview: true },
+        { name: "Declaration", canGenerate: true, canPreview: true },
+        { name: "Earthing", canGenerate: true, canPreview:true },
+        { name: "Geo Tag", canGenerate: false, canPreview: false },
+        { name: "D1Form", canGenerate: false, canPreview: false },
+        { name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
+        { name: "Vendor Feasibility", canGenerate: true, canPreview: true },
+        { name: "Digital Approval Letter", canGenerate: false, canPreview: false },
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 6,
       title: "DCR Certificate",
       documents: [
         { name: "DCR Certificate", canGenerate: false, canPreview: false }
@@ -100,34 +130,15 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 5,
-      title: "Comprehensive Documents",
+      id: 7,
+      title: "Release Order",
       documents: [
-        { name: "Vendor Feasibility", canGenerate: true, canPreview: true },
-        { name: "Digital Approval Letter", canGenerate: false, canPreview: false },
-        { name: "WCR", canGenerate: true, canPreview: true },
-        { name: "Net Agreement 1", canGenerate: true, canPreview: true },
-        { name: "Net Agreement 2", canGenerate: true, canPreview: true },
-        { name: "Geo Tag", canGenerate: false, canPreview: false },
-        { name: "Declaration", canGenerate: true, canPreview: true },
-        { name: "Annexure-I", canGenerate: true, canPreview: true },
-        { name: "Subsidy Document", canGenerate: true, canPreview: true },
-        { name: "Earthing", canGenerate: true, canPreview:true },
-        { name: "D1Form", canGenerate: false, canPreview: false },
-        { name: "Gen Meter Testing Report", canGenerate: false, canPreview: false }
+        { name: "Release Order", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
-    {
-      id: 6,
-      title: "Final Approval",
-      documents: [
-        { name: "Sanction Letter", canGenerate: false, canPreview: false }
-      ],
-      isCompleted: false,
-      isExpanded: false
-    }
+    
   ];
 
 
