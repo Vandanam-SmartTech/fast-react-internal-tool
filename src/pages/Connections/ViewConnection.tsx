@@ -56,6 +56,10 @@ export const ViewConnection = () => {
 
   const [installationsByConsumer, setInstallationsByConsumer] = useState({});
 
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
+
+   const [claims, setClaims] = useState<any>(null);
+
 
 const sessionMap = {
   Aadhar: "Aadhaar Card",
@@ -121,6 +125,19 @@ const [uploadedFiles, setUploadedFiles] = useState<{
   const handleMessageBoxClose = () => {
   setMessageBoxOpen(false);
   };
+
+  useEffect(() => {
+    const loadClaims = async () => {
+      try {
+        const data = await fetchClaims();
+        setClaims(data);
+      } catch (error) {
+        console.error("Failed to load claims", error);
+      }
+    };
+
+    loadClaims();
+  }, []);
 
 
 const fetchAndSetUploadedFiles = async () => {
@@ -790,9 +807,7 @@ const handleNo = async () => {
 )}
 
 
-
-  
-{roles.includes("ROLE_ADMIN") && connection && (
+{(userInfo?.role.includes("ROLE_ORG_ADMIN") || userInfo?.role.includes("ROLE_AGENCY_ADMIN") || claims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && connection && (
   <div className="col-span-1 md:col-span-2 flex justify-start px-4 mt-6">
     {connection.isOnboardedCustomers === true ? (
       <button
