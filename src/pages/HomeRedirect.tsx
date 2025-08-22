@@ -1,4 +1,3 @@
-// pages/HomeRedirect.tsx
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { fetchClaims } from '../services/jwtService';
@@ -21,19 +20,19 @@ const HomeRedirect: React.FC = () => {
         return;
       }
 
-      // 1️⃣ Check password change
+      
       if (!claims.is_password_changed) {
         setRedirectPath('/PasswordReset');
         return;
       }
 
-      // 2️⃣ Global role check
+      
       if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         setRedirectPath('/SuperAdminDashboard');
         return;
       }
 
-      // 3️⃣ Extract org roles
+      
       const orgRoles = claims.org_roles ? Object.values(claims.org_roles) : [];
 
       if (orgRoles.length === 0) {
@@ -42,15 +41,15 @@ const HomeRedirect: React.FC = () => {
       }
 
       if (orgRoles.length === 1) {
-        // Only one role → redirect automatically
+        
         const orgRole = orgRoles[0];
         const role = orgRole.role;
         
-        // Store role information in localStorage for single-role users
+        
         localStorage.setItem(
           'selectedOrg',
           JSON.stringify({ 
-            orgId: 'default', 
+            orgId: orgRole.orgId, 
             orgName: orgRole.org_name || 'Default Organization', 
             role 
           })
@@ -60,10 +59,10 @@ const HomeRedirect: React.FC = () => {
         return;
       }
 
-      // 4️⃣ Multiple roles
+      
       const selectedOrg = localStorage.getItem('selectedOrg');
       if (!selectedOrg) {
-        // No org selected → go to login
+        
         setRedirectPath('/login');
         return;
       }

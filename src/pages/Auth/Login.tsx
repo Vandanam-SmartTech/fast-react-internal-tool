@@ -117,7 +117,7 @@ const handleLogin = async (e: React.FormEvent) => {
       // For cases where we have orgName but no orgId (fallback)
       localStorage.setItem(
         'selectedOrg',
-        JSON.stringify({ orgId: 'default', orgName, role })
+        JSON.stringify({ orgId, orgName, role })
       );
     }
 

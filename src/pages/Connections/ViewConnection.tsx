@@ -29,6 +29,7 @@ export const ViewConnection = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const selectedRepresentative = location.state?.selectedRepresentative;
   const [govIdName, setGovIdName] = useState("");
+  const [claims, setClaims] =useState<any>(null);
   
   const state = "Maharashtra";
   const folderType = "Onboarding Documents";
@@ -55,11 +56,7 @@ export const ViewConnection = () => {
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
   const [installationsByConsumer, setInstallationsByConsumer] = useState({});
-
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
-
-   const [claims, setClaims] = useState<any>(null);
-
 
 const sessionMap = {
   Aadhar: "Aadhaar Card",
@@ -250,6 +247,19 @@ const handleDownload = async (fileId: string, fileName: string) => {
       getClaims();
     }, []);
 
+
+    useEffect(() => {
+      const loadClaims = async () => {
+        try {
+          const data = await fetchClaims();
+          setClaims(data);
+        } catch (error) {
+          console.error("Failed to load claims", error);
+        }
+      };
+   
+      loadClaims();
+    }, []);
 
 useEffect(() => {
   const fetchInstallations = async () => {
@@ -651,13 +661,13 @@ const handleNo = async () => {
     </button>
 
     {/* Upload/View Documents Button */}
-    <button
+    {/* <button
       onClick={() => setModalOpen(true)}
       className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <FileUp className="w-4 h-4" />
       <span>Upload/View Documents</span>
-    </button>
+    </button> */}
 
     {/* Get Recommendation Button */}
     <button
@@ -807,7 +817,11 @@ const handleNo = async () => {
 )}
 
 
-{(userInfo?.role.includes("ROLE_ORG_ADMIN") || userInfo?.role.includes("ROLE_AGENCY_ADMIN") || claims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && connection && (
+
+  
+{(userInfo?.role === "ROLE_ORG_ADMIN" || userInfo?.role === "ROLE_AGENCY_ADMIN"  
+  || claims?.global_roles?.includes("ROLE_SUPER_ADMIN")
+)&& connection && (
   <div className="col-span-1 md:col-span-2 flex justify-start px-4 mt-6">
     {connection.isOnboardedCustomers === true ? (
       <button

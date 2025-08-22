@@ -1,0 +1,50 @@
+name: Build & Deploy React App (Dev)
+
+on:
+  push:
+    branches: [ dev ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./   # 👈 change if your Vite app is in a subfolder (e.g. ./frontend)
+
+      - name: Build Vite app
+        run: npm run build
+        working-directory: ./   # 👈 adjust if needed
+
+      - name: Debug - Show dist output
+        run: ls -R ./dist || echo "⚠️ Dist folder missing!"
+        working-directory: ./   # 👈 adjust if needed
+
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Deploy Vite app to server
+        run: |
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo mkdir -p /var/www/dev/solarpro && sudo rm -rf /var/www/dev/solarpro/*"
+
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./dist/* \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dev/solarpro/
+
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl reload nginx"

@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
+import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
+import { fetchClaims } from "../../services/jwtService";
 
 interface Consumer {
   id: number;
@@ -53,6 +55,22 @@ const OnboardedConsumers: React.FC = () => {
   const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [allConsumers, setAllConsumers] = useState<Consumer[]>([]);
+
+  
+const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
+const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
+
+const [agencies,setAgencies] = useState<{ id: Number; name:string }[]>([]);
+const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
+const [userRole, setUserRole] = useState<string>("");
+
+const [users, setUsers] = useState<any[]>([]);
+const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+
+const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
+const userRoleFromLocalStorage = userInfo?.role;
+  
   const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterOptions>({
     hasMaterials: null,
@@ -88,26 +106,70 @@ const OnboardedConsumers: React.FC = () => {
       state: { consumer, connectionId: consumer.id },
     });
   };
-  
-  const loadOnboardedConsumers = async (page: number) => {
-    try {
-      setLoading(true);
-      const data = await fetchOnboardedConsumers(page);
-      setConsumers(data.content);
-      setTotalPages(data.totalPages);
 
-            // Use materials data from API response
-      const map: Record<number, boolean> = {};
-      data.content.forEach((consumer: Consumer) => {
-        map[consumer.id] = consumer.materials ? consumer.materials.length > 0 : false;
-      });
-      setMaterialsMap(map);
-    } catch (error) {
-      console.error("Error fetching consumers:", error);
-    } finally {
-      setLoading(false);
+  
+const loadOnboardedConsumers = async (page: number) => {
+  try {
+    setLoading(true);
+
+    let orgId = selectedOrgId ?? null;
+    let agencyId = selectedAgencyId ?? null;
+    let representativeId = selectedUserId ?? null;
+
+    if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
     }
-  };
+
+    if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
+    }
+
+    if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
+    if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
+    }
+
+    if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
+      orgId = userInfo.orgId;
+    }
+
+    if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
+      agencyId = userInfo.orgId;
+      orgId = null;
+    }
+
+    const orgName = orgId
+      ? organizations.find((o) => o.id === orgId)?.name || null
+      : null;
+
+    const agencyName = agencyId
+      ? agencies.find((a) => a.id === agencyId)?.name || null
+      : null;
+
+    const params = {
+      orgId,
+      agencyId,
+      userRole: userInfo?.role || userRole || null,
+      representativeId,
+    };
+
+    console.log("Fetching consumers with params:", params);
+
+    const data = await fetchOnboardedConsumers(page, params);
+    setConsumers(data.content);
+    setTotalPages(data.totalPages);
+    setCurrentPage(page);
+  } catch (error) {
+    console.error("Error fetching consumers:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Load all onboarded consumers for comprehensive search
   const loadAllOnboardedConsumers = async () => {
@@ -235,9 +297,108 @@ const OnboardedConsumers: React.FC = () => {
     return Array.from(types).sort();
   }, [consumers]);
 
+
+  
+useEffect(() => {
+  const loadRoleAndOrganizations = async () => {
+    try {
+      const claims = await fetchClaims();
+
+      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        setUserRole("ROLE_SUPER_ADMIN");
+
+        // Only fetch organizations if SUPER ADMIN
+        const orgs = await fetchOrganizations();
+        setOrganizations(orgs);
+      } else {
+        // For other roles, you can set role here
+        setUserRole(claims.role || "");
+      }
+    } catch (error) {
+      console.error("Error fetching claims or organizations:", error);
+    }
+  };
+
+  loadRoleAndOrganizations();
+}, []);
+
+
+
+useEffect(() => {
+  const loadAgencies = async () => {
+    try {
+      if (!selectedOrgId) return;
+
+      const data = await getChildOrganizations(selectedOrgId);
+      setAgencies(data);
+    } catch (error) {
+      console.error("Error loading agencies:", error);
+    }
+  };
+
+  loadAgencies();
+}, [selectedOrgId]);
+
+useEffect(() => {
+  if (userInfo?.role === "ROLE_ORG_ADMIN") {
+    
+    setSelectedOrgId(userInfo.orgId);
+
+    
+    getChildOrganizations(userInfo.orgId).then((res) => {
+      if (res.data?.length) {
+        setAgencies(res.data);
+      } else {
+        
+        loadOnboardedConsumers(0); 
+      }
+    });
+  }
+}, []);
+
+
+useEffect(() => {
+  const loadUsers = async () => {
+    try {
+      let orgIdToFetch: number | null = null;
+
+      // Priority: if dropdown selections exist, use them
+      if (selectedAgencyId) {
+        orgIdToFetch = selectedAgencyId;
+      } else if (selectedOrgId) {
+        orgIdToFetch = selectedOrgId;
+      } else if (userInfo?.role === "ROLE_ORG_STAFF") {
+        orgIdToFetch = userInfo.orgId; // treat as orgId
+      } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
+        orgIdToFetch = userInfo.orgId; // treat as agencyId
+      }
+
+      if (orgIdToFetch) {
+        const data = await fetchUsersByOrgId(orgIdToFetch);
+        setUsers(data);
+      } else {
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    }
+  };
+
+  loadUsers();
+}, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
+
+useEffect(() => {
+  if (selectedUserId !== null) {
+    loadOnboardedConsumers(0); 
+  }
+}, [selectedUserId]);
+
   useEffect(() => {
     loadOnboardedConsumers(currentPage);
   }, [currentPage]);
+
+
 
   useEffect(() => {
     const handleOrgChange = () => {
@@ -450,20 +611,103 @@ const OnboardedConsumers: React.FC = () => {
             <p className="text-secondary-700 dark:text-secondary-300 mt-1">
               Manage customers who have completed the onboarding process
             </p>
+
+
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
-          </div>
+         {/* Organization + Agency Selects */}
+    <div className="flex gap-4">
+      
+      
+      {userRole ==="ROLE_SUPER_ADMIN" && (<div className="w-60"> 
+        <label className="sr-only">Select Organization</label>
+        <select
+          value={selectedOrgId ?? ""}
+          onChange={async (e) => {
+            const value = e.target.value ? Number(e.target.value) : null;
+            setSelectedOrgId(value);
+
+            setSelectedUserId(null);
+
+            if (value) {
+              const childOrgs = await getChildOrganizations(value);
+              setAgencies(childOrgs);
+              setSelectedAgencyId(null);
+            } else {
+              setAgencies([]);
+              setSelectedAgencyId(null);
+              loadOnboardedConsumers(0);
+            }
+          }}
+          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+        >
+          <option value="">Select Organization</option>
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
+      </div>)}
+
+      {/* Agency Dropdown */}
+      {agencies.length > 0 && (<div className="w-60"> 
+        <label className="sr-only">Select Agency</label>
+        <select
+          value={selectedAgencyId ?? ""}
+          onChange={(e) => {
+    const agencyId = e.target.value || null;
+    setSelectedAgencyId(agencyId);
+    setSelectedAgencyName(agencyId ? e.target.options[e.target.selectedIndex].text : null);
+
+
+    setSelectedUserId(null);
+    
+    // Clear org selection if agency is chosen
+    if (agencyId) {
+      setSelectedOrgId(null);
+      setSelectedOrgName(null);
+    }
+  }}
+          disabled={agencies.length === 0}
+          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+        >
+          <option value="">Self</option>
+          {agencies.map((agency) => (
+            <option key={agency.id} value={agency.id}>
+              {agency.name}
+            </option>
+          ))}
+        </select>
+      </div>)}
+
+      {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" && userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && (
+  <div className="w-60">
+    <label className="sr-only">Select User</label>
+    <select
+      value={selectedUserId ?? ""}
+      onChange={(e) => {
+        const userId = e.target.value ? Number(e.target.value) : null;
+        setSelectedUserId(userId);
+      }}
+      disabled={users.length === 0}
+      className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
+    >
+      <option value="">Select User</option>
+      {users.map((user) => (
+        <option key={user.id} value={user.id}>
+          {`${user.nameAsPerGovId} (${user.username})`}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+
+
+    </div>
   </div>
 </div>
+
 
       {/* Search and Filter Section */}
       <div className="mb-6 space-y-4">
@@ -486,121 +730,9 @@ const OnboardedConsumers: React.FC = () => {
           />
         </div>
 
-        {/* Filter Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {getActiveFiltersCount() > 0 && (
-              <span className="bg-primary-500 text-white text-xs rounded-full px-2 py-1">
-                {getActiveFiltersCount()}
-              </span>
-            )}
-            {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
+        
 
-          {getActiveFiltersCount() > 0 && (
-            <Button
-              variant="ghost"
-              onClick={clearFilters}
-              className="flex items-center gap-2 text-secondary-700 dark:text-secondary-300 hover:text-secondary-800 dark:hover:text-secondary-100"
-            >
-              <X className="w-4 h-4" />
-              Clear Filters
-            </Button>
-          )}
-        </div>
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <Card className="animate-slide-down">
-            <CardBody className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Materials Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Materials Status
-                  </label>
-                  <select
-                    value={filters.hasMaterials === null ? '' : filters.hasMaterials.toString()}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      hasMaterials: e.target.value === '' ? null : e.target.value === 'true'
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">With Materials</option>
-                    <option value="false">Without Materials</option>
-                  </select>
-                </div>
-
-                {/* Email Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Email Status
-                  </label>
-                  <select
-                    value={filters.hasEmail === null ? '' : filters.hasEmail.toString()}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      hasEmail: e.target.value === '' ? null : e.target.value === 'true'
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">With Email</option>
-                    <option value="false">Without Email</option>
-                  </select>
-                </div>
-
-                {/* Connection Type Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Connection Type
-                  </label>
-                  <select
-                    value={filters.connectionType}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      connectionType: e.target.value
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">All Types</option>
-                    {connectionTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sort By */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
-                    Sort By
-                  </label>
-                  <select
-                    value={filters.sortBy}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      sortBy: e.target.value as FilterOptions['sortBy']
-                    }))}
-                    className="w-full px-3 py-2 border border-secondary-200 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="name">Name</option>
-                    <option value="email">Email</option>
-                    <option value="consumerId">Consumer ID</option>
-                    <option value="connectionType">Connection Type</option>
-                  </select>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-              )}
+        
             </div>
 
       {/* Results Summary */}

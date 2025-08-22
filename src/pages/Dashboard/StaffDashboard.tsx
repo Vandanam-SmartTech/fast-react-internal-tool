@@ -6,6 +6,7 @@ import { Users, UserCheck, BarChart3 } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 
 const StaffDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');
@@ -14,7 +15,11 @@ const StaffDashboard: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
+  // const onboardingPercent = count && count > 0 && onboardedCount !== null
+  //   ? Math.round((onboardedCount / count) * 100)
+  //   : 0;
   const [data, setData] = useState([]);
+  const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,7 +61,8 @@ const StaffDashboard: React.FC = () => {
 
         setData(filtered);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setStatsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -89,6 +95,16 @@ const StaffDashboard: React.FC = () => {
     }, 5);
   };
 
+  const handleActivate = (path: string) => navigate(path);
+
+  const handleKeyActivate: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const target = e.currentTarget.getAttribute('data-path');
+      if (target) navigate(target);
+    }
+  };
+
 const dashboardItems = [
 
     {
@@ -103,7 +119,7 @@ const dashboardItems = [
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       {/* <div className="mb-8">
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
@@ -117,57 +133,61 @@ const dashboardItems = [
               {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
             </h1>
             <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Manage customers and view progress
+              Manage customers and view progress · {format(new Date(), 'EEE, dd MMM yyyy')}
             </p>
           </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+         
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
 
           
-           <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-  <CardBody className="p-4">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-purple-600">Total Customers</p>
-        <p className="text-2xl font-bold text-purple-900">
-          {count !== null ? animatedCount : "0"}
-        </p>
-      </div>
-      <div className="p-2 bg-purple-200 rounded-lg">
-        <Users className="h-6 w-6 text-purple-700" />
-      </div>
-    </div>
-  </CardBody>
+<Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover-lift focus-ring" onClick={() => handleActivate('/list-of-consumers')}>
+<CardBody className="p-4" >
+<div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/list-of-consumers" aria-label="View total customers" onKeyDown={handleKeyActivate}>
+<div>
+<p className="text-sm font-medium text-purple-600">Total Customers</p>
+<p className="text-2xl font-bold text-purple-900" aria-live="polite">
+{count !== null ? animatedCount : <SkeletonLoader className="mt-1" height="h-8" width="w-16" variant="rectangular" />}
+</p>
+</div>
+<div className="p-2 bg-purple-200 rounded-lg">
+<Users className="h-6 w-6 text-purple-700" />
+</div>
+</div>
+</CardBody>
 </Card>
 
-          <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
-                  <p className="text-2xl font-bold text-solar-900">1</p>
-                </div>
-                <div className="p-2 bg-solar-200 rounded-lg">
-                  <Users className="h-6 w-6 text-solar-700" />
-                </div>
-              </div> 
-              {/* <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+12% from last month</span>
-              </div> */}
-             </CardBody>
-          </Card> 
-        
-         </div> 
+<Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/OnboardedConsumers')}>
+ <CardBody className="p-4">
+   <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/OnboardedConsumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
+     <div>
+       <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
+       <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : <SkeletonLoader className="mt-1" height="h-8" width="w-16" variant="rectangular" />}</p>
+     </div>
+     <div className="p-2 bg-solar-200 rounded-lg">
+       <UserCheck className="h-6 w-6 text-solar-700" />
+     </div>
+   </div> 
+  </CardBody>
+</Card> 
+
+</div> 
+
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-6">
         {dashboardItems.map((item, index) => (
           <div 
             key={index}
             onClick={() => navigate(item.path)}
-            className={`${item.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200`}
+            className={`${item.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200 hover-lift focus-ring`}
+            role="button"
+            tabIndex={0}
+            data-path={item.path}
+            aria-label={item.title}
+            onKeyDown={handleKeyActivate}
           >
             <div className="flex items-start gap-4">
               {item.icon}
@@ -179,7 +199,6 @@ const dashboardItems = [
           </div>
         ))}
       </div>
-
 
 
       {/* Statistics Cards */}
@@ -208,45 +227,57 @@ const dashboardItems = [
       </div> */}
 
       {/* Progress Chart */}
-      {count !== 0 && (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Customer Progress Trend
-          </h2>
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <BarChart3 className="h-5 w-5" />
+          Customer Progress Trend
+        </h2>
+        {statsLoading ? (
+          <SkeletonLoader className="w-full" height="h-[300px]" variant="rectangular" />
+        ) : data && data.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-              <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
+            <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+              <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(dateStr) => format(parseISO(dateStr), 'MMM yyyy')}
-                tick={{ fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                label={{ value: 'Month & Year', position: 'insideBottom', offset: -10 }}
+                tick={{ fontSize: 12, fill: '#475569' }}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={16}
+                tickMargin={12}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 12 }}
-                label={{ value: 'Customer Count', angle: -90, position: 'insideLeft', offset: 10 }}
+                tick={{ fontSize: 12, fill: '#475569' }}
+                axisLine={false}
+                tickLine={false}
               />
               <Tooltip
                 formatter={(value: number) => [`${value} customers`, 'Count']}
-                labelFormatter={(label: string) => `Date: ${label}`}
+                labelFormatter={(label: string) => format(parseISO(label), 'MMM dd, yyyy')}
+                contentStyle={{ borderRadius: 8, borderColor: '#e5e7eb' }}
+                wrapperStyle={{ outline: 'none' }}
+                cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
                 stroke="#2563eb"
                 strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
+                dot={{ r: 3, strokeWidth: 2, stroke: '#2563eb', fill: '#ffffff' }}
+                activeDot={{ r: 6, strokeWidth: 2, stroke: '#2563eb', fill: '#2563eb' }}
+                isAnimationActive
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-      )}
+        ) : (
+          <div className="text-center text-secondary-600 dark:text-secondary-300 py-16">
+            No trend data available for the last 12 months.
+          </div>
+        )}
+      </div>
     </div>
   );
 };

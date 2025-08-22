@@ -32,7 +32,7 @@ const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [customersExpanded, setCustomersExpanded] = useState(false);
+  const [customersExpanded, setCustomersExpanded] = useState(true);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   

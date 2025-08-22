@@ -406,18 +406,39 @@ export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: 
 };
 
 
-export const fetchOnboardedConsumers = async (page = 0) => {
+// export const fetchOnboardedConsumers = async (page = 0) => {
+//   const crsAPI = getCrsAPI();
+//   try {
+//     const orgId = localStorage.getItem('selectedOrganization');
+//     const orgName = localStorage.getItem('selectedOrganizationName');
+//     const agencyId = localStorage.getItem('selectedAgency');
+//     const agencyName = localStorage.getItem('selectedAgencyName');
+    
+//     console.log('CRS API Parameters for fetchOnboardedConsumers:', { orgId, orgName, agencyId, agencyName, page });
+    
+//     const response = await crsAPI.get('/api/customers/onboarded', {
+//       params: { page, orgId, orgName, agencyId, agencyName },
+//     });
+
+//     return {
+//       content: response.data.content,
+//       totalPages: response.data.totalPages,
+//       totalElements: response.data.totalElements,
+//       currentPage: response.data.number,
+//     };
+//   } catch (error) {
+//     console.error('Error fetching onboarded consumers:', error);
+//     throw new Error('Failed to fetch onboarded consumers.');
+//   }
+// };
+
+export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, representativeId?: number | null }) => {
   const crsAPI = getCrsAPI();
   try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters for fetchOnboardedConsumers:', { orgId, orgName, agencyId, agencyName, page });
-    
+    console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
+
     const response = await crsAPI.get('/api/customers/onboarded', {
-      params: { page, orgId, orgName, agencyId, agencyName },
+      params: { page, ...params },
     });
 
     return {
@@ -425,13 +446,13 @@ export const fetchOnboardedConsumers = async (page = 0) => {
       totalPages: response.data.totalPages,
       totalElements: response.data.totalElements,
       currentPage: response.data.number,
+      size: response.data.size,
     };
   } catch (error) {
-    console.error('Error fetching onboarded consumers:', error);
-    throw new Error('Failed to fetch onboarded consumers.');
+    console.error('Error fetching consumers with connections:', error);
+    throw new Error('Failed to fetch consumers with connections.');
   }
 };
-
 
 export const getCustomerCount = async (): Promise<number> => {
   const crsAPI = getCrsAPI();
@@ -458,19 +479,31 @@ export const getCustomerCount = async (): Promise<number> => {
 };
 
 
-export const getOnboardedCustomerCount = async (representativeId?: number): Promise<number> => {
+
+export const getOnboardedCustomerCount = async (): Promise<number> => {
   const crsAPI = getCrsAPI();
+
+  
+  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const { orgId, role } = selectedOrg;
+
+  
+  let params: Record<string, any> = {};
+  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
+    params.orgId = orgId;
+  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
+    params.agencyId = orgId;
+  }
+
   try {
-    const url = representativeId
-      ? `/api/customers/onboarded-count?representativeId=${representativeId}`
-      : `/api/customers/onboarded-count`;
-    const response = await crsAPI.get(url);
-    return response.data;
+    const response = await crsAPI.get("/api/customers/onboarded-count", { params });
+    return response.data; 
   } catch (error) {
-    console.error('Error fetching onboarded customer count:', error);
-    throw new Error('Failed to fetch onboarded customer count');
+    console.error("Error fetching customer count:", error);
+    throw new Error("Failed to fetch customer count");
   }
 };
+
 
 
 
