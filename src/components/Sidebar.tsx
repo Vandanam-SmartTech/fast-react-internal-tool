@@ -2,26 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./ui"; 
-import { 
-  Home, 
-  UserPlus, 
-  Users, 
-  UserRoundCheck, 
-  LogOut, 
-  UserCog, 
-  UsersRound, 
-  Building, 
-  Shield, 
-  UserCheck, 
-  LayoutDashboard, 
-  Building2, 
-  Briefcase, 
-  ChevronDown, 
-  ChevronRight,
-  Settings,
-  FileText,
-  BarChart3
-} from "lucide-react";
+import { UserPlus, Users, UserRoundCheck, LogOut, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
 import { fetchClaims } from "../services/jwtService";
 import Button from "./ui/Button";
 

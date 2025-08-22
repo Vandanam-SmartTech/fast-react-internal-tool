@@ -166,9 +166,9 @@ useEffect(() => {
       } else if (selectedOrgId) {
         orgIdToFetch = selectedOrgId;
       } else if (userInfo?.role === "ROLE_ORG_STAFF") {
-        orgIdToFetch = userInfo.orgId; // treat as orgId
+        orgIdToFetch = userInfo.orgId; 
       } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
-        orgIdToFetch = userInfo.orgId; // treat as agencyId
+        orgIdToFetch = userInfo.orgId; 
       }
 
       if (orgIdToFetch) {
