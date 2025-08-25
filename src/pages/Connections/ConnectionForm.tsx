@@ -30,6 +30,102 @@ interface Village {
   pincode: string;
 }
 
+// Validation utilities
+const validationRules = {
+  consumerNumber: {
+    pattern: /^[0-9]{12}$/,
+    message: "Consumer number must be exactly 12 digits (0-9)"
+  },
+  gstin: {
+    pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    message: "GSTIN must be in format: 22AAAAA0000A1Z6"
+  },
+  billedTo: {
+    pattern: /^[A-Za-z\s]{2,50}$/,
+    message: "Billed To must be 2-50 characters, alphabets and spaces only"
+  },
+  addressLine: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  monthlyConsumption: {
+    pattern: /^[1-9]\d*$/,
+    message: "Monthly consumption must be a positive integer greater than 0"
+  },
+  latitude: {
+    min: -90,
+    max: 90,
+    message: "Latitude must be between -90 and 90"
+  },
+  longitude: {
+    min: -180,
+    max: 180,
+    message: "Longitude must be between -180 and 180"
+  },
+  discomId: {
+    pattern: /^[1-9]\d*$/,
+    message: "DISCOM ID must be a positive integer greater than 0"
+  }
+};
+
+const validateField = (fieldName: string, value: string | number): { isValid: boolean; message: string } => {
+  const rule = validationRules[fieldName as keyof typeof validationRules];
+  if (!rule) return { isValid: true, message: "" };
+
+  if (fieldName === 'consumerNumber') {
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'gstin') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'billedTo') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'addressLine1' || fieldName === 'addressLine2') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'monthlyAvgConsumptionUnits') {
+    if (!value || isNaN(Number(value))) return { isValid: false, message: rule.message };
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'latitude') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const numValue = Number(value);
+    if (isNaN(numValue)) return { isValid: false, message: "Latitude must be a valid number" };
+    const isValid = 'min' in rule && 'max' in rule && numValue >= rule.min && numValue <= rule.max;
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'longitude') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const numValue = Number(value);
+    if (isNaN(numValue)) return { isValid: false, message: "Longitude must be a valid number" };
+    const isValid = 'min' in rule && 'max' in rule && numValue >= rule.min && numValue <= rule.max;
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'discomId') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  return { isValid: true, message: "" };
+};
+
 export const ConnectionForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,8 +165,8 @@ export const ConnectionForm = () => {
 
   const [showMapPreview, setShowMapPreview] = useState(false);
 
-
-
+  // Validation state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const tabs = [
     "Customer Details",
@@ -102,6 +198,108 @@ export const ConnectionForm = () => {
     discomId: "",
     isActive: true,
   });
+
+  // Validation function for form submission
+  const validateForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Required field validations
+    if (!customerId) {
+      errors.push("Customer ID is missing!");
+    }
+
+    if (formData.isMsebConnection === "Yes") {
+      if (!formData.consumerId) {
+        errors.push("Consumer number is required when MSEB connection is Yes");
+      } else {
+        const consumerValidation = validateField('consumerNumber', formData.consumerId);
+        if (!consumerValidation.isValid) {
+          errors.push(consumerValidation.message);
+        }
+      }
+
+      if (formData.consumerId !== confirmConsumerNumber) {
+        errors.push("Consumer number and Confirm Consumer number do not match.");
+      }
+    }
+
+    if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
+      errors.push("Please select a correction type.");
+    }
+
+    if (!formData.billedTo) {
+      errors.push("Billed To is required");
+    } else {
+      const billedToValidation = validateField('billedTo', formData.billedTo);
+      if (!billedToValidation.isValid) {
+        errors.push(billedToValidation.message);
+      }
+    }
+
+    if (!formData.addressLine1) {
+      errors.push("Address Line 1 is required");
+    } else {
+      const addressValidation = validateField('addressLine1', formData.addressLine1);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (formData.addressLine2) {
+      const addressValidation = validateField('addressLine2', formData.addressLine2);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (!formData.monthlyAvgConsumptionUnits || isNaN(formData.monthlyAvgConsumptionUnits)) {
+      errors.push("Monthly Average Consumption Units is required");
+    } else {
+      const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.monthlyAvgConsumptionUnits);
+      if (!consumptionValidation.isValid) {
+        errors.push(consumptionValidation.message);
+      }
+    }
+
+    if (formData.latitude) {
+      const latValidation = validateField('latitude', formData.latitude);
+      if (!latValidation.isValid) {
+        errors.push(latValidation.message);
+      }
+    }
+
+    if (formData.longitude) {
+      const lngValidation = validateField('longitude', formData.longitude);
+      if (!lngValidation.isValid) {
+        errors.push(lngValidation.message);
+      }
+    }
+
+    if (formData.gstIn) {
+      const gstinValidation = validateField('gstin', formData.gstIn);
+      if (!gstinValidation.isValid) {
+        errors.push(gstinValidation.message);
+      }
+    }
+
+    if (formData.discomId) {
+      const discomValidation = validateField('discomId', formData.discomId);
+      if (!discomValidation.isValid) {
+        errors.push(discomValidation.message);
+      }
+    }
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Real-time field validation
+  const validateFieldOnChange = (fieldName: string, value: string | number) => {
+    const validation = validateField(fieldName, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: validation.message
+    }));
+  };
 
 ///////////////////////////////////////////////////////////
   useEffect(() => {
@@ -265,18 +463,16 @@ useEffect(() => {
     const { name, value } = e.target;
     
     if (name === "isMsebConnection" && value === "No") {
-    setConfirmConsumerNumber(""); 
-  }
+      setConfirmConsumerNumber(""); 
+    }
 
-  if(name === 'consumerId' && value=== ''){
-    setConfirmConsumerNumber('');
-    //localStorage.removeItem("confirmConsumerNumber")
-  }
+    if(name === 'consumerId' && value === ''){
+      setConfirmConsumerNumber('');
+    }
 
-  if (name === 'consumerId') {
+    if (name === 'consumerId') {
       if (value !== confirmConsumerNumber) {
         setConfirmConsumerNumber('');
-        //localStorage.removeItem("confirmConsumerNumber");
       }
   
       checkConsumerNumberExists(value).then((exists) => {
@@ -284,26 +480,45 @@ useEffect(() => {
   
         if (exists) {
           setConfirmConsumerNumber('');
-          //localStorage.removeItem("confirmConsumerNumber");
         }
       });
+    }
+
+    // Real-time validation
+    if (name === 'consumerId') {
+      validateFieldOnChange('consumerNumber', value);
+    } else if (name === 'gstIn') {
+      validateFieldOnChange('gstin', value);
+    } else if (name === 'billedTo') {
+      validateFieldOnChange('billedTo', value);
+    } else if (name === 'addressLine1') {
+      validateFieldOnChange('addressLine1', value);
+    } else if (name === 'addressLine2') {
+      validateFieldOnChange('addressLine2', value);
+    } else if (name === 'monthlyAvgConsumptionUnits') {
+      validateFieldOnChange('monthlyAvgConsumptionUnits', value);
+    } else if (name === 'latitude') {
+      validateFieldOnChange('latitude', value);
+    } else if (name === 'longitude') {
+      validateFieldOnChange('longitude', value);
+    } else if (name === 'discomId') {
+      validateFieldOnChange('discomId', value);
     }
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
       ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+    }));
 
-    }));
-        ///////////////
-        setTimeout(() => {
-    localStorage.setItem("connectionFormData", JSON.stringify({
-      ...formData,
-      [name]: value,
-      ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
-    }));
-  }, 0);
-        //////////////
+    // Save to localStorage
+    setTimeout(() => {
+      localStorage.setItem("connectionFormData", JSON.stringify({
+        ...formData,
+        [name]: value,
+        ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+      }));
+    }, 0);
   };
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -389,35 +604,17 @@ useEffect(() => {
   
     console.log("Received CustomerId:", customerId);
   
-    if (!customerId) {
-      toast.error("Customer ID is missing! ",{
-        autoClose:1000,
-        hideProgressBar:true,
+    // Validate form
+    const validation = validateForm();
+    if (!validation.isValid) {
+      validation.errors.forEach(error => {
+        toast.error(error, {
+          autoClose: 3000,
+          hideProgressBar: true,
+        });
       });
       return;
     }
-
-
-    if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
-      toast.error("Please select a correctiontype. ",{
-        autoClose:1000,
-        hideProgressBar:true,
-      });
-      return;
-    }
-
-    if (formData.consumerId !== confirmConsumerNumber) {
-      toast.error("Consumer number and Confirm Consumer number do not match.",{
-        autoClose:1000,
-        hideProgressBar:true,
-      });
-      return;
-    }
-
-    if (formData.isMsebConnection !== "Yes" && formData.isMsebConnection !== "No") {
-  toast.error("Please select whether the customer has an active grid connection.");
-  return;
-}
 
   
   
@@ -631,67 +828,53 @@ const isNameCorrectionRequired =
         </div> */}
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">12-Digit Consumer Number <span className="text-red-500">*</span></label>
-
-  <div className="relative">
-    <input
-      type={showConsumerNumber ? 'text' : 'password'}
-      inputMode="numeric"
-      maxLength={12}
-      name="consumerId"
-      value={formData.consumerId}
-      pattern="[0-9]{12}"
-      onChange={handleChange}
-      placeholder="e.g. 987654321000"
-      required
-      disabled={formData.isMsebConnection === "No"}
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
-      title="Enter a valid 12-digit consumer number"
-      onCopy={(e) => e.preventDefault()}
-      onCut={(e) => e.preventDefault()}
-      onPaste={(e) => e.preventDefault()}
-    />
-    
-    {/* <span
-      onClick={handleToggleConsumerNumber}
-      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-    >
-      {showConsumerNumber ? <FaEyeSlash /> : <FaEye />}
-    </span> */}
-  </div>
-
-{formData.consumerId?.length === 12 && !/^[0-9]{12}$/.test(formData.consumerId) && (
-  <p className="text-red-600 text-sm mt-1">Enter a valid 12-digit consumer number</p>
-)}
-
-
-  {consumerNumberExists && (
-    <p className="text-red-600 text-sm mt-1">Consumer number already exists</p>
-  )}
-</div>
+          <label className="block text-sm font-medium text-gray-700">12-Digit Consumer Number <span className="text-red-500">*</span></label>
+          <div className="relative">
+            <input
+              type="text"
+              inputMode="numeric"
+              name="consumerId"
+              value={formData.consumerId}
+              onChange={handleChange}
+              maxLength={12}
+              pattern="^[0-9]{12}$"
+              title="Enter exactly 12 digits (0–9)"
+              required={formData.isMsebConnection === "Yes"}
+              disabled={formData.isMsebConnection === "No"}
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm disabled:bg-gray-200 ${
+                fieldErrors.consumerNumber ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+          </div>
+          {fieldErrors.consumerNumber && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.consumerNumber}</p>
+          )}
+          {consumerNumberExists && (
+            <p className="text-red-600 text-sm mt-1">Consumer number already exists</p>
+          )}
+        </div>
 
 {/* Confirm Consumer Number */}
 <div>
   <label className="block text-sm font-medium text-gray-700">Confirm Consumer Number <span className="text-red-500">*</span></label>
   <input
-  type="tel"
-  name="confirmConsumerNumber"
-  value={confirmConsumerNumber}
-  onChange={handleConfirmConsumerNumberChange}
-  placeholder="Confirm consumer number"
-  maxLength={12}
-  required
-  //disabled={formData.isMsebConnection === "No"}
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
-  title="Re-enter the same 12-digit consumer number"
-  disabled={!(
-     /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
-  )}
-  onCopy={(e) => e.preventDefault()}
-  onCut={(e) => e.preventDefault()}
-  onPaste={(e) => e.preventDefault()}
-
-/>
+    type="tel"
+    name="confirmConsumerNumber"
+    value={confirmConsumerNumber}
+    onChange={handleConfirmConsumerNumberChange}
+    placeholder="Confirm consumer number"
+    maxLength={12}
+    pattern="^[0-9]{12}$"
+    required={formData.isMsebConnection === "Yes"}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+    title="Re-enter the same 12-digit consumer number"
+    disabled={!(
+      /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
+    )}
+    onCopy={(e) => e.preventDefault()}
+    onCut={(e) => e.preventDefault()}
+    onPaste={(e) => e.preventDefault()}
+  />
   {confirmConsumerNumber &&
     confirmConsumerNumber !== formData.consumerId && (
       <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
@@ -699,33 +882,48 @@ const isNameCorrectionRequired =
 </div>
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
-  <input
-    type="text"
-    name="gstIn"
-    value={formData.gstIn}
-    onChange={(e) =>
-      handleChange({ target: { name: "gstIn", value: e.target.value.toUpperCase() } })
-    }
-    pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-    title="GSTIN must be in format: 22AAAAA0000A1Z6"
-    placeholder="e.g. 22AAAAA0000A1Z6"
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-    maxLength={15}
-  />
-</div>
+          <label className="block text-sm font-medium text-gray-700">GSTIN Number</label>
+          <input
+            type="text"
+            name="gstIn"
+            value={formData.gstIn}
+            onChange={(e) => {
+              const target = e.target as HTMLInputElement;
+              handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
+            }}
+            pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+            title="GSTIN must be in format: 22AAAAA0000A1Z6"
+            placeholder="e.g. 22AAAAA0000A1Z6"
+            maxLength={15}
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.gstin ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {fieldErrors.gstin && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
+          )}
+        </div>
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Billed To</label>
+          <label className="block text-sm font-medium text-gray-700">Billed To <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="billedTo"
             value={formData.billedTo}
             onChange={handleChange}
             placeholder="Enter the name of the billed person or company"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            pattern="^[A-Za-z\s]{2,50}$"
+            title="Billed To must be 2-50 characters, alphabets and spaces only"
+            maxLength={50}
+            required
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.billedTo ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
+          {fieldErrors.billedTo && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
+          )}
         </div>
 
   
@@ -802,29 +1000,45 @@ const isNameCorrectionRequired =
           </div>
 
           <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            name="addressLine1"
-            value={formData.addressLine1}
-            onChange={handleChange}
-            placeholder="e.g. Flat No, House No, Street Name"
-            required
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
+            <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              name="addressLine1"
+              value={formData.addressLine1}
+              onChange={handleChange}
+              placeholder="e.g. Flat No, House No, Street Name"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              required
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.addressLine1 ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {fieldErrors.addressLine1 && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+            )}
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
-          <input
-            type="text"
-            name="addressLine2"
-            value={formData.addressLine2}
-            onChange={handleChange}
-            placeholder="e.g. Apartment, Suite, Unit, Building"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
+            <input
+              type="text"
+              name="addressLine2"
+              value={formData.addressLine2}
+              onChange={handleChange}
+              placeholder="e.g. Apartment, Suite, Unit, Building"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.addressLine2 ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {fieldErrors.addressLine2 && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+            )}
+          </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
@@ -846,15 +1060,22 @@ const isNameCorrectionRequired =
           <label className="block text-sm font-medium text-gray-700">Monthly Average Consumption Units <span className="text-red-500">*</span></label>
           <input
             type="number"
-            min="0"
+            min="1"
+            step="1"
             onWheel={(e) => e.currentTarget.blur()}
             name="monthlyAvgConsumptionUnits"
             value={formData.monthlyAvgConsumptionUnits}
             onChange={handleChange}
             required
             placeholder="e.g. 1"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            title="Enter a positive integer greater than 0"
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
+          {fieldErrors.monthlyAvgConsumptionUnits && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
+          )}
         </div>
 
         <div>
@@ -895,25 +1116,43 @@ const isNameCorrectionRequired =
         <div>
           <label className="block text-sm font-medium text-gray-700">Latitude</label>
           <input
-            type="text"
+            type="number"
             name="latitude"
             value={formData.latitude}
             onChange={handleChange}
             placeholder="e.g. 16.7049873"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            min="-90"
+            max="90"
+            step="any"
+            title="Latitude must be between -90 and 90"
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.latitude ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
+          {fieldErrors.latitude && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
+          )}
         </div>
   
         <div>
           <label className="block text-sm font-medium text-gray-700">Longitude</label>
           <input
-            type="text"
+            type="number"
             name="longitude"
             value={formData.longitude}
             onChange={handleChange}
             placeholder="e.g. 74.2432527"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            min="-180"
+            max="180"
+            step="any"
+            title="Longitude must be between -180 and 180"
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.longitude ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
+          {fieldErrors.longitude && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
+          )}
         </div>
 
         {formData.latitude &&
@@ -965,13 +1204,21 @@ const isNameCorrectionRequired =
         <div>
           <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
           <input
-            type="text"
+            type="number"
             name="discomId"
             value={formData.discomId}
             onChange={handleChange}
             placeholder="e.g. 64797718"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+            min="1"
+            step="1"
+            title="DISCOM ID must be a positive integer greater than 0"
+            className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+              fieldErrors.discomId ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
+          {fieldErrors.discomId && (
+            <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
+          )}
         </div>
 
         <div className="flex flex-col space-y-4">
