@@ -631,7 +631,7 @@ const isNameCorrectionRequired =
         </div> */}
 
         <div>
-  <label className="block text-sm font-medium text-gray-700">Enter Consumer Number <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">12-Digit Consumer Number <span className="text-red-500">*</span></label>
 
   <div className="relative">
     <input
@@ -652,12 +652,12 @@ const isNameCorrectionRequired =
       onPaste={(e) => e.preventDefault()}
     />
     
-    <span
+    {/* <span
       onClick={handleToggleConsumerNumber}
       className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
     >
       {showConsumerNumber ? <FaEyeSlash /> : <FaEye />}
-    </span>
+    </span> */}
   </div>
 
 {formData.consumerId?.length === 12 && !/^[0-9]{12}$/.test(formData.consumerId) && (

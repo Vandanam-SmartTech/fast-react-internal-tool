@@ -1,4 +1,3 @@
-
 {
   "VITE_JWT_API": "https://dev.vandanam.co.in/auth",
   "VITE_OTP_API": "https://dev.vandanam.co.in/otp",

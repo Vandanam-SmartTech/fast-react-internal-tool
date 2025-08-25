@@ -21,7 +21,7 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
         return;
       }
 
-      // ✅ 1. Check global_roles first
+      
       if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         if (allowedRoles.includes('ROLE_SUPER_ADMIN')) {
           setAuthorized(true);

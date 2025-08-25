@@ -122,6 +122,7 @@ useEffect(() => {
 //     getClaims();
 //   }, []);
 
+
   useEffect(() => {
     const checkExists = async () => {
       if (formData.mobileNumber.length === 10) {
@@ -688,21 +689,38 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Customer Name <span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          name="govIdName"
-          value={formData.govIdName}
-          onChange={handleChange}
-          placeholder="Name as per Gov ID"
-          required
-          title="Please enter only your first and last name (e.g., John Doe)"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-                {formData.govIdName && !/^[A-Za-z\s]*$/.test(formData.govIdName) && (
-                    <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
-          )}
-      </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Customer Name <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    name="govIdName"
+    value={formData.govIdName}
+    onChange={(e) => {
+      const value = e.target.value;
+
+
+      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+        handleChange(e);
+      }
+    }}
+    placeholder="Name as per Gov ID"
+    required
+    maxLength={50}
+    title="Please enter only your first and last name (e.g., John Doe)"
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+
+  {formData.govIdName?.trim().length > 0 &&
+    formData.govIdName.trim().length < 2 && (
+      <p className="text-red-600 text-sm mt-1">
+        Name must be at least 2 characters long
+      </p>
+    )}
+</div>
+
+
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Preferred Name</label>
@@ -710,8 +728,13 @@ const handleSubmit = async (e: React.FormEvent) => {
           type="text"
           name="preferredName"
           value={formData.preferredName}
-          placeholder="Enter preferred name"
-          onChange={handleChange}
+          placeholder="Preferred name"
+          onChange={(e) => {
+      const value = e.target.value;
+      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+        handleChange(e);
+      }
+    }}
           maxLength={50}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
@@ -732,7 +755,16 @@ const handleSubmit = async (e: React.FormEvent) => {
       maxLength={10}
       name="mobileNumber"
       value={formData.mobileNumber}
-      onChange={handleChange}
+      onChange={(e) => {
+  const value = e.target.value;
+
+  // Allow only digits, max 10, and must start with 6–9 if not empty
+  if (/^[6-9][0-9]*$/.test(value) || value === "") {
+    if (value.length <= 10) {
+      handleChange(e);
+    }
+  }
+}}
       placeholder="9567023456"
       required
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -742,12 +774,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       onPaste={(e) => e.preventDefault()}
     />
     
-    <span
+    {/* <span
       onClick={handleToggleMobile}
       className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
     >
       {showMobile ? <FaEyeSlash /> : <FaEye />}
-    </span>
+    </span> */}
   </div>
 
   {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
@@ -799,7 +831,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       onChange={handleChange}
       placeholder="johndoe@example.com"
       maxLength={50}
-      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+      pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
       title="Enter a valid email address"
       className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       onCopy={(e) => e.preventDefault()}
@@ -829,7 +861,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
           maxLength={50}
-          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+          pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
           disabled={!(

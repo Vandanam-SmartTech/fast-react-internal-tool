@@ -50,7 +50,7 @@ const HomeRedirect: React.FC = () => {
           'selectedOrg',
           JSON.stringify({ 
             orgId: orgRole.orgId, 
-            orgName: orgRole.org_name || 'Default Organization', 
+            orgName: orgRole.org_name, 
             role 
           })
         );
@@ -106,7 +106,7 @@ const HomeRedirect: React.FC = () => {
     redirectBasedOnRole();
   }, []);
 
-  if (!redirectPath) return null; // Or a loading spinner
+  if (!redirectPath) return null; 
 
   return <Navigate to={redirectPath} />;
 };
