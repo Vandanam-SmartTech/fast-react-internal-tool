@@ -443,104 +443,169 @@ const handleNo = async () => {
   
 
 <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
-  <div className="bg-white shadow-lg rounded-lg p-6 w-full mx-auto max-w-4xl">
-    <h3 className="text-xl font-semibold text-gray-800 mb-2">Connection Details</h3>
+  <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
+    <h3 className="text-lg font-semibold text-gray-800 mb-3">Connection Details</h3>
     <div className="border-b border-gray-200 mb-4" />
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
-      <p className="mt-1 text-base text-gray-800">Yes</p>
+    
+    {/* Connection Status */}
+    <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 mb-4">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+          <BoltIcon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h4 className="text-base font-medium text-blue-900">Connection Status</h4>
+          <p className="text-sm text-blue-700">Active Grid Connection: Yes</p>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.consumerId || "....."}</p>
+    {/* Consumer Information */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+          <UserCircleIcon className="w-4 h-4 text-green-600" />
+        </div>
+        <h4 className="text-base font-medium text-gray-900">Consumer Information</h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Consumer Number</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "....."}</p>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
+    {/* Connection Details */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+          <BoltIcon className="w-4 h-4 text-purple-600" />
+        </div>
+        <h4 className="text-base font-medium text-gray-900">Connection Details</h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "....."}</p>
+        </div>
+
+      </div>
     </div>
 
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
-    </div>
-     
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
-    </div>
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
-    </div>
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
-    </div>
-
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
+    {/* Business Information */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+          <Cog6ToothIcon className="w-4 h-4 text-orange-600" />
+        </div>
+        <h4 className="text-base font-medium text-gray-900">Business Information</h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.addressTypeName || "....."}</p>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
+    {/* Address Information */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+          <HomeModernIcon className="w-4 h-4 text-blue-600" />
+        </div>
+        <h4 className="text-base font-medium text-gray-900">Address Information</h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Address</h5>
+          <p className="text-sm text-gray-800 mt-1">
+            {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
+          </p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Postal Code</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.postalCode || "....."}</p>
+        </div>
+      </div>
     </div>
 
-
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Address</h3>
-      <p className="mt-1 text-base text-gray-800">
-        {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
-      </p>
+    {/* Location Information */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <h4 className="text-base font-medium text-gray-900">Location Information</h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Latitude</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.latitude || "--"}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Longitude</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.longitude || "--"}</p>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
-    </div>
-
-    <div>
-      <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
-    </div>
-
+    {/* Name Correction */}
     {connection.isNameCorrectionRequired && (
-      <div>
-        <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-        <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h4 className="text-base font-medium text-gray-900">Name Correction Required</h4>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Correction Name</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.correctionName || "....."}</p>
+        </div>
       </div>
     )}
-  </div>
 
-  {/* Edit Connection Button */}
-  <div className="mt-6 pt-4 border-t border-gray-200">
-    <button
-      onClick={() =>
-        navigate(`/edit-connection/${connectionId}`, {
-          state: {
-            connectionId,
-            consumerId,
-            customerId,
-            selectedRepresentative,
-          },
-        })
-      }
-      className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-200"
-    >
-      Edit Connection
-    </button>
-  </div>
-
+    {/* Edit Connection Button */}
+    <div className="mt-4 pt-4 border-t border-gray-200">
+      <button
+        onClick={() =>
+          navigate(`/edit-connection/${connectionId}`, {
+            state: {
+              connectionId,
+              consumerId,
+              customerId,
+              selectedRepresentative,
+            },
+          })
+        }
+        className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+      >
+        Edit Connection
+      </button>
+    </div>
   </div>
 </div>
 
