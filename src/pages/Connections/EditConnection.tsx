@@ -136,7 +136,7 @@ interface District {
     return { isValid: true, message: "" };
   };
   
-  // const correctionTypeMapping = {
+  // const correctionTypeMapping  = {
   //   'Spell Correction': 1,
   //   'Transfer Ownership': 2,
   // };
