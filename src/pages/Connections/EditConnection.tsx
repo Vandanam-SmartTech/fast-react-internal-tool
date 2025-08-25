@@ -30,6 +30,112 @@ interface District {
     pincode: string;
   }
   
+  // Validation utilities
+  const validationRules = {
+    consumerNumber: {
+      pattern: /^[0-9]{12}$/,
+      message: "Consumer number must be exactly 12 digits (0-9)"
+    },
+    gstin: {
+      pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+      message: "GSTIN must be in format: 22AAAAA0000A1Z6"
+    },
+    billedTo: {
+      pattern: /^[A-Za-z\s]{2,50}$/,
+      message: "Billed To must be 2-50 characters, alphabets and spaces only"
+    },
+    addressLine: {
+      pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+      message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+    },
+    monthlyConsumption: {
+      pattern: /^[1-9]\d*$/,
+      message: "Monthly consumption must be a positive integer greater than 0"
+    },
+    latitude: {
+      min: -90,
+      max: 90,
+      message: "Latitude must be between -90 and 90"
+    },
+    longitude: {
+      min: -180,
+      max: 180,
+      message: "Longitude must be between -180 and 180"
+    },
+    discomId: {
+      pattern: /^[1-9]\d*$/,
+      message: "DISCOM ID must be a positive integer greater than 0"
+    },
+    pincode: {
+      pattern: /^[0-9]{6}$/,
+      message: "Pincode must be exactly 6 digits (0-9)"
+    }
+  };
+
+  const validateField = (fieldName: string, value: string | number): { isValid: boolean; message: string } => {
+    const rule = validationRules[fieldName as keyof typeof validationRules];
+    if (!rule) return { isValid: true, message: "" };
+
+    if (fieldName === 'consumerNumber') {
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'gstin') {
+      if (!value) return { isValid: true, message: "" }; // Optional field
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'billedTo') {
+      if (!value) return { isValid: true, message: "" }; // Optional field
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'addressLine1' || fieldName === 'addressLine2') {
+      if (!value) return { isValid: true, message: "" }; // Optional field
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'monthlyAvgConsumptionUnits') {
+      if (!value || isNaN(Number(value))) return { isValid: false, message: rule.message };
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'latitude') {
+      if (!value) return { isValid: true, message: "" }; // Optional field
+      const numValue = Number(value);
+      if (isNaN(numValue)) return { isValid: false, message: "Latitude must be a valid number" };
+      const isValid = 'min' in rule && 'max' in rule && numValue >= rule.min && numValue <= rule.max;
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'longitude') {
+      if (!value) return { isValid: true, message: "" }; // Optional field
+      const numValue = Number(value);
+      if (isNaN(numValue)) return { isValid: false, message: "Longitude must be a valid number" };
+      const isValid = 'min' in rule && 'max' in rule && numValue >= rule.min && numValue <= rule.max;
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'discomId') {
+      if (!value) return { isValid: false, message: "DISCOM ID is required" }; // Required field
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    if (fieldName === 'pincode') {
+      if (!value) return { isValid: false, message: "Pincode is required" }; // Required field
+      const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+      return { isValid, message: isValid ? "" : rule.message };
+    }
+
+    return { isValid: true, message: "" };
+  };
+  
   // const correctionTypeMapping = {
   //   'Spell Correction': 1,
   //   'Transfer Ownership': 2,
@@ -77,6 +183,9 @@ export const EditConnection = () => {
     const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
     const [showMapPreview, setShowMapPreview] = useState(false);
+
+    // Validation state
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     const tabs = [
     "Customer Details",
@@ -245,6 +354,118 @@ export const EditConnection = () => {
   loadCorrectionTypes();
 }, []);
 
+  // Validation function for form submission
+  const validateForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Required field validations
+    if (!customerId) {
+      errors.push("Customer ID is missing!");
+    }
+
+    if (formData.isMsebConnection === "Yes") {
+      if (!formData.consumerId) {
+        errors.push("Consumer number is required when MSEB connection is Yes");
+      } else {
+        const consumerValidation = validateField('consumerNumber', formData.consumerId);
+        if (!consumerValidation.isValid) {
+          errors.push(consumerValidation.message);
+        }
+      }
+
+      if (formData.consumerId !== confirmConsumerNumber) {
+        errors.push("Consumer number and Confirm Consumer number do not match.");
+      }
+    }
+
+    if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
+      errors.push("Please select a correction type.");
+    }
+
+    if (!formData.billedTo) {
+      errors.push("Billed To is required");
+    } else {
+      const billedToValidation = validateField('billedTo', formData.billedTo);
+      if (!billedToValidation.isValid) {
+        errors.push(billedToValidation.message);
+      }
+    }
+
+    if (!formData.addressLine1) {
+      errors.push("Address Line 1 is required");
+    } else {
+      const addressValidation = validateField('addressLine1', formData.addressLine1);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (formData.addressLine2) {
+      const addressValidation = validateField('addressLine2', formData.addressLine2);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (!formData.monthlyAvgConsumptionUnits || isNaN(formData.monthlyAvgConsumptionUnits)) {
+      errors.push("Monthly Average Consumption Units is required");
+    } else {
+      const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.monthlyAvgConsumptionUnits);
+      if (!consumptionValidation.isValid) {
+        errors.push(consumptionValidation.message);
+      }
+    }
+
+    if (formData.latitude) {
+      const latValidation = validateField('latitude', formData.latitude);
+      if (!latValidation.isValid) {
+        errors.push(latValidation.message);
+      }
+    }
+
+    if (formData.longitude) {
+      const lngValidation = validateField('longitude', formData.longitude);
+      if (!lngValidation.isValid) {
+        errors.push(lngValidation.message);
+      }
+    }
+
+    if (formData.gstIn) {
+      const gstinValidation = validateField('gstin', formData.gstIn);
+      if (!gstinValidation.isValid) {
+        errors.push(gstinValidation.message);
+      }
+    }
+
+    if (!formData.discomId) {
+      errors.push("DISCOM ID is required");
+    } else {
+      const discomValidation = validateField('discomId', formData.discomId);
+      if (!discomValidation.isValid) {
+        errors.push(discomValidation.message);
+      }
+    }
+
+    if (!formData.pincode) {
+      errors.push("Pincode is required");
+    } else {
+      const pincodeValidation = validateField('pincode', formData.pincode);
+      if (!pincodeValidation.isValid) {
+        errors.push(pincodeValidation.message);
+      }
+    }
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Real-time field validation
+  const validateFieldOnChange = (fieldName: string, value: string | number) => {
+    const validation = validateField(fieldName, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: validation.message
+    }));
+  };
 
     // const reverseCorrectionTypeMap: Record<number, string> = Object.entries(correctionTypeMap).reduce(
     //     (acc, [name, id]) => {
@@ -367,8 +588,31 @@ export const EditConnection = () => {
   }
 
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
   const { name, value } = e.target;
+
+  // Real-time validation
+  if (name === 'consumerId') {
+    validateFieldOnChange('consumerNumber', value);
+  } else if (name === 'gstIn') {
+    validateFieldOnChange('gstin', value);
+  } else if (name === 'billedTo') {
+    validateFieldOnChange('billedTo', value);
+  } else if (name === 'addressLine1') {
+    validateFieldOnChange('addressLine1', value);
+  } else if (name === 'addressLine2') {
+    validateFieldOnChange('addressLine2', value);
+  } else if (name === 'monthlyAvgConsumptionUnits') {
+    validateFieldOnChange('monthlyAvgConsumptionUnits', value);
+  } else if (name === 'latitude') {
+    validateFieldOnChange('latitude', value);
+  } else if (name === 'longitude') {
+    validateFieldOnChange('longitude', value);
+      } else if (name === 'discomId') {
+      validateFieldOnChange('discomId', value);
+    } else if (name === 'pincode') {
+      validateFieldOnChange('pincode', value);
+    }
 
   setFormData((prev: any) => {
     let updatedForm = { ...prev, [name]: value };
@@ -400,22 +644,16 @@ export const EditConnection = () => {
     console.log("Received connectionId:", connectionId);
     console.log("Received CustomerId:", customerId);
 
-    if (
-  String(formData.consumerId).trim() !== String(confirmConsumerNumber).trim()
-) {
-  toast.error("Consumer number and Confirm consumer number do not match.", {
-    autoClose: 1000,
-    hideProgressBar: true,
-  });
-  return;
-}
-  
-    if (!customerId) {
-    toast.error("Customer Id is missing",{
-      autoClose:1000,
-      hideProgressBar:true,
-    });
-    return;
+    // Validate form
+    const validation = validateForm();
+    if (!validation.isValid) {
+      validation.errors.forEach(error => {
+        toast.error(error, {
+          autoClose: 3000,
+          hideProgressBar: true,
+        });
+      });
+      return;
     }
   
     const isMsebConnection = formData.isMsebConnection === "Yes";
@@ -622,13 +860,17 @@ const isNameCorrectionRequired =
                 type={showConsumerNumber ? 'text' : 'password'}
                 inputMode="numeric"
                 maxLength={12}
+                pattern="^[0-9]{12}$"
+                title="Enter exactly 12 digits (0–9)"
                 name="consumerId"
                 value={formData.consumerId}
                 onChange={handleChange}
                 placeholder="e.g. 987654321000"
-                required
+                required={formData.isMsebConnection === "Yes"}
                 disabled={formData.isMsebConnection === "No"}
-                className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
+                className={`mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200 ${
+                  fieldErrors.consumerNumber ? 'border-red-500' : 'border-gray-300'
+                }`}
                 onCopy={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
                 onPaste={(e) => e.preventDefault()}
@@ -640,7 +882,10 @@ const isNameCorrectionRequired =
               >
                 {showConsumerNumber ? <FaEyeSlash /> : <FaEye />}
               </span> */}
-            </div>      
+            </div>
+            {fieldErrors.consumerNumber && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.consumerNumber}</p>
+            )}
           </div>
           
           <div>
@@ -652,22 +897,23 @@ const isNameCorrectionRequired =
               onChange={handleConfirmConsumerNumberChange}
               placeholder="Confirm consumer number"
               maxLength={12}
-              required
+              pattern="^[0-9]{12}$"
+              required={formData.isMsebConnection === "Yes"}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
               onPaste={(e) => e.preventDefault()}
               disabled={!(
-     /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
-  )}
+                /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
+              )}
             />
-  {confirmConsumerNumber &&
-  formData.consumerId &&
-  String(confirmConsumerNumber).trim() !== String(formData.consumerId).trim() && (
-    <p className="text-red-600 text-sm mt-1">
-      Consumer numbers do not match
-    </p>
-)}
+            {confirmConsumerNumber &&
+            formData.consumerId &&
+            String(confirmConsumerNumber).trim() !== String(formData.consumerId).trim() && (
+              <p className="text-red-600 text-sm mt-1">
+                Consumer numbers do not match
+              </p>
+            )}
           </div>
   
           <div>
@@ -676,22 +922,42 @@ const isNameCorrectionRequired =
               type="text"
               name="gstIn"
               value={formData.gstIn}
-              onChange={handleChange}
+              onChange={(e) => {
+                const target = e.target as HTMLInputElement;
+                handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
+              }}
+              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+              title="GSTIN must be in format: 22AAAAA0000A1Z6"
               placeholder="e.g. 22AAAAA0000A1Z6"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              maxLength={15}
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.gstin ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.gstin && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
+            )}
           </div>
   
           <div>
-            <label className="block text-sm font-medium text-gray-700">Billed To</label>
+            <label className="block text-sm font-medium text-gray-700">Billed To <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="billedTo"
               value={formData.billedTo}
               onChange={handleChange}
               placeholder="Enter the name of the billed person or company"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              pattern="^[A-Za-z\s]{2,50}$"
+              title="Billed To must be 2-50 characters, alphabets and spaces only"
+              maxLength={50}
+              required
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.billedTo ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.billedTo && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
+            )}
           </div>
   
     
@@ -759,34 +1025,60 @@ const isNameCorrectionRequired =
                 value={formData.pincode || ''}  // Ensure it uses formData.pincode
                 onChange={handlepincodeChange}
                 placeholder="e.g. 416000"
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+                pattern="^[0-9]{6}$"
+                title="Pincode must be exactly 6 digits (0-9)"
+                maxLength={6}
+                inputMode="numeric"
+                required
+                className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                  fieldErrors.pincode ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {fieldErrors.pincode && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
+              )}
             </div>
   
             <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              name="addressLine1"
-              value={formData.addressLine1}
-              onChange={handleChange}
-              placeholder="e.g. Flat No, House No, Street Name"
-              required
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
-          </div>
+              <label className="block text-sm font-medium text-gray-700">Address Line 1 <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="addressLine1"
+                value={formData.addressLine1}
+                onChange={handleChange}
+                placeholder="e.g. Flat No, House No, Street Name"
+                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                maxLength={100}
+                required
+                className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                  fieldErrors.addressLine1 ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {fieldErrors.addressLine1 && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+              )}
+            </div>
   
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
-            <input
-              type="text"
-              name="addressLine2"
-              value={formData.addressLine2}
-              onChange={handleChange}
-              placeholder="e.g. Apartment, Suite, Unit, Building"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
+              <input
+                type="text"
+                name="addressLine2"
+                value={formData.addressLine2}
+                onChange={handleChange}
+                placeholder="e.g. Apartment, Suite, Unit, Building"
+                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                maxLength={100}
+                className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                  fieldErrors.addressLine2 ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {fieldErrors.addressLine2 && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+              )}
+            </div>
   
         <div>
           <label className="block text-sm font-medium text-gray-700">Address Type <span className="text-red-500">*</span></label>
@@ -829,11 +1121,19 @@ const isNameCorrectionRequired =
               name="monthlyAvgConsumptionUnits"
               value={formData.monthlyAvgConsumptionUnits}
               onChange={handleChange}
-              min="0"
+              min="1"
+              step="1"
               placeholder="e.g. 1"
+              title="Enter a positive integer greater than 0"
               onWheel={(e)=>e.currentTarget.blur()}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              required
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.monthlyAvgConsumptionUnits && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
+            )}
           </div>
   
   
@@ -858,25 +1158,43 @@ const isNameCorrectionRequired =
           <div>
             <label className="block text-sm font-medium text-gray-700">Latitude</label>
             <input
-              type="text"
+              type="number"
               name="latitude"
               value={formData.latitude}
               onChange={handleChange}
               placeholder="e.g. 16.7049873"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              min="-90"
+              max="90"
+              step="any"
+              title="Latitude must be between -90 and 90"
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.latitude ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.latitude && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
+            )}
           </div>
     
           <div>
             <label className="block text-sm font-medium text-gray-700">Longitude</label>
             <input
-              type="text"
+              type="number"
               name="longitude"
               value={formData.longitude}
               onChange={handleChange}
               placeholder="e.g. 74.2432527"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              min="-180"
+              max="180"
+              step="any"
+              title="Longitude must be between -180 and 180"
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.longitude ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.longitude && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
+            )}
           </div>
 
         {formData.latitude &&
@@ -925,15 +1243,24 @@ const isNameCorrectionRequired =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+            <label className="block text-sm font-medium text-gray-700">DISCOM ID <span className="text-red-500">*</span></label>
             <input
-              type="text"
+              type="number"
               name="discomId"
               value={formData.discomId}
               onChange={handleChange}
               placeholder="e.g. 64797718"
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              min="1"
+              step="1"
+              title="DISCOM ID must be a positive integer greater than 0"
+              required
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.discomId ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.discomId && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
+            )}
           </div>
 
   

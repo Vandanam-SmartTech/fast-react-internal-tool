@@ -65,6 +65,10 @@ const validationRules = {
   discomId: {
     pattern: /^[1-9]\d*$/,
     message: "DISCOM ID must be a positive integer greater than 0"
+  },
+  pincode: {
+    pattern: /^[0-9]{6}$/,
+    message: "Pincode must be exactly 6 digits (0-9)"
   }
 };
 
@@ -118,7 +122,13 @@ const validateField = (fieldName: string, value: string | number): { isValid: bo
   }
 
   if (fieldName === 'discomId') {
-    if (!value) return { isValid: true, message: "" }; // Optional field
+    if (!value) return { isValid: false, message: "DISCOM ID is required" }; // Required field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  if (fieldName === 'pincode') {
+    if (!value) return { isValid: false, message: "Pincode is required" }; // Required field
     const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
     return { isValid, message: isValid ? "" : rule.message };
   }
@@ -282,10 +292,21 @@ export const ConnectionForm = () => {
       }
     }
 
-    if (formData.discomId) {
+    if (!formData.discomId) {
+      errors.push("DISCOM ID is required");
+    } else {
       const discomValidation = validateField('discomId', formData.discomId);
       if (!discomValidation.isValid) {
         errors.push(discomValidation.message);
+      }
+    }
+
+    if (!formData.pincode) {
+      errors.push("Pincode is required");
+    } else {
+      const pincodeValidation = validateField('pincode', formData.pincode);
+      if (!pincodeValidation.isValid) {
+        errors.push(pincodeValidation.message);
       }
     }
 
@@ -503,6 +524,8 @@ useEffect(() => {
       validateFieldOnChange('longitude', value);
     } else if (name === 'discomId') {
       validateFieldOnChange('discomId', value);
+    } else if (name === 'pincode') {
+      validateFieldOnChange('pincode', value);
     }
 
     setFormData((prev) => ({
@@ -994,9 +1017,18 @@ const isNameCorrectionRequired =
               value={formData.pincode || ''}  // Ensure it uses formData.pincode
               onChange={handlepincodeChange}
               placeholder="e.g. 416000"
+              pattern="^[0-9]{6}$"
+              title="Pincode must be exactly 6 digits (0-9)"
+              maxLength={6}
+              inputMode="numeric"
               required
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
+                fieldErrors.pincode ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {fieldErrors.pincode && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
+            )}
           </div>
 
           <div>
@@ -1187,22 +1219,10 @@ const isNameCorrectionRequired =
 )}
 
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Section ID <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            name="sectionId"
-            value={formData.sectionId}
-            onChange={handleChange}
-            placeholder="e.g. 7137"
-            required
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm"
-          />
-        </div>
-
+      
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">DISCOM ID</label>
+          <label className="block text-sm font-medium text-gray-700">DISCOM ID <span className="text-red-500">*</span></label>
           <input
             type="number"
             name="discomId"
@@ -1211,6 +1231,7 @@ const isNameCorrectionRequired =
             placeholder="e.g. 64797718"
             min="1"
             step="1"
+            required
             title="DISCOM ID must be a positive integer greater than 0"
             className={`mt-1 block w-full p-2 border rounded-md shadow-sm ${
               fieldErrors.discomId ? 'border-red-500' : 'border-gray-300'
@@ -1220,6 +1241,8 @@ const isNameCorrectionRequired =
             <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
           )}
         </div>
+       
+       <br />
 
         <div className="flex flex-col space-y-4">
   {/* Name Correction Question */}
