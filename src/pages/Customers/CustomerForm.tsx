@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveCustomer } from "../../services/customerRequisitionService";
 import { checkMobileNumberExists, checkEmailAddressExists } from '../../services/customerRequisitionService';
-import { fetchClaims, fetchRepresentatives } from '../../services/jwtService'
+import { fetchClaims } from '../../services/jwtService'
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
@@ -23,7 +23,6 @@ export const CustomerForm = () => {
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
-  const [representatives, setRepresentatives] = useState([]);
   const [selectedRepresentative, setSelectedRepresentative] = useState("");
   const [mobileExists, setMobileExists] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
@@ -108,19 +107,6 @@ useEffect(() => {
 }, []);
 
 ///////////////////////////////////////////////////////////
-
-// useEffect(() => {
-//     const getClaims = async () => {
-//       try {
-//         const claims = await fetchClaims();
-//         setRoles(claims.roles || []);
-//       } catch (error) {
-//         console.error("Failed to fetch user claims", error);
-//       }
-//     };
-
-//     getClaims();
-//   }, []);
 
 
   useEffect(() => {
@@ -325,20 +311,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     });
   }
 };
-
-
-
-  useEffect(() => {
-    const getRepresentatives = async () => {
-      const reps = await fetchRepresentatives();
-      setRepresentatives(reps);
-    };
-
-    getRepresentatives();
-  }, []);
-
-  
-
   
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
