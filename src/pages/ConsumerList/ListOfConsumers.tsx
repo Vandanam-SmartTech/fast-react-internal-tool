@@ -14,7 +14,8 @@ import {
   UserCheck, 
   RefreshCw,
   Zap,
-  FileText
+  FileText,
+  Plus
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
@@ -527,6 +528,9 @@ useEffect(() => {
               <Eye className="w-4 h-4" />
               View
             </Button>
+
+        
+  
           </div>
         </div>
 
@@ -631,6 +635,26 @@ useEffect(() => {
             ))}
           </div>
         )}
+
+        {/* Footer actions */}
+        <div className="mt-4 pt-4 border-t border-secondary-200 dark:border-secondary-700 flex justify-end">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() =>
+              navigate(`/ConnectionForm`, {
+                state: {
+                  customerId: consumer.customerId || consumer.id,
+                  govIdName: consumer.govIdName,
+                },
+              })
+            }
+            className="shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Connection
+          </Button>
+        </div>
       </CardBody>
     </Card>
   );
