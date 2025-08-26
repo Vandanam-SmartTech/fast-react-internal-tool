@@ -551,7 +551,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Connections Section */}
+        {/* Connections Section  */}
         {consumer.connections && consumer.connections.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-1">
@@ -568,7 +568,7 @@ useEffect(() => {
                       customerId: consumer.customerId || consumer.id,
                       govIdName: consumer.govIdName,
                     },
-                  })
+                  }) 
                 }
                 className="whitespace-nowrap"
               >
