@@ -182,75 +182,63 @@ setDialogOpen(true);
   
 
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-
-<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Update Customer</h2>
-
-      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Update Customer</h1>
+              <p className="text-gray-600 mt-0.5 text-sm">Edit customer details and save changes</p>
+            </div>
           </div>
-        )}
+        </div>
 
-  </div>
+        {/* Progress Steps */}
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute top-4 left-[12%] right-[12%] h-0.5 bg-gray-200 z-0" />
+            <div className="flex justify-between relative z-10">
+              {tabs.map((tab) => {
+                const Icon =
+                  tab === "Customer Details" ? UserCircleIcon
+                  : tab === "Connection Details" ? BoltIcon
+                  : tab === "Installation Details" ? HomeModernIcon
+                  : Cog6ToothIcon;
 
+                const isActive = activeTab === tab;
+                const isCompleted = tab === "Customer Details";
 
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
-  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-    
-    {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+                return (
+                  <button key={tab} className="flex flex-col items-center gap-1">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCompleted
+                          ? "bg-green-500 text-white shadow-lg"
+                          : isActive
+                          ? "bg-blue-500 text-white shadow-lg"
+                          : "bg-white border-2 border-gray-300 text-gray-400"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className={`text-[10px] font-medium text-center max-w-20 ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}>
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab;
-
-        const Icon =
-          tab === "Customer Details"
-            ? UserCircleIcon
-            : tab === "Connection Details"
-            ? BoltIcon
-            : tab === "Installation Details"
-            ? HomeModernIcon
-            : Cog6ToothIcon;
-
-            const shouldHighlightIcon = tab === "Customer Details";
-
-
-        return (
-          <button
-      key={tab}
-      className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-    >
-      <div
-        className={`rounded-full p-2 transition-all duration-300 ${
-          shouldHighlightIcon
-            ? "bg-blue-500 text-white"
-            : "bg-white border border-gray-300 text-gray-500"
-        }`}
-      >
-        <Icon className="w-6 h-6" />
-      </div>
-      <span
-        className={`text-xs md:text-sm font-semibold mt-1 ${
-          isActive ? "text-gray-700" : "text-gray-700"
-        }`}
-      >
-        {tab}
-      </span>
-    </button>
-        );
-      })}
-    </div>
-  </div>
-</div>
-
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-        Customer Details
-      </h2>
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Customer Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
   <label className="block text-sm font-medium text-gray-700">
     Customer Name <span className="text-red-500">*</span>
@@ -473,15 +461,18 @@ setDialogOpen(true);
       <p className="text-red-600 text-sm mt-1">Email Address do not match</p>)}
       </div>
 
-        <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
-          <button
-            type="submit"
-            className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            Update Customer
-          </button>
-        </div>
-      </form>
+            </div>
+          </div>
+
+          <div className="flex justify-center pt-1">
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              Update Customer
+            </button>
+          </div>
+        </form>
 
 <Dialog
   open={dialogOpen}
@@ -555,6 +546,7 @@ setDialogOpen(true);
 </Dialog>
 
 
+      </div>
     </div>
   );
 };
