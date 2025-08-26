@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAuthToken, fetchClaims } from './jwtService';
+// Note: auth helpers unused here; token is read from localStorage in interceptor
 import { getConfig } from '../config';
 
 export const getOneDriveAPI = () => {
@@ -20,6 +20,14 @@ export const getOneDriveAPI = () => {
 
   return oneDriveAPI;
 };
+
+// Local types for helper endpoints
+type SessionName = string;
+interface UploadedFile {
+  fileId: string;
+  fileName: string;
+  filePath: string;
+}
 
 export const uploadDocuments = async (
   connectionId: string,
@@ -81,4 +89,26 @@ export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
   });
 
   return response.data;
+};
+
+export const deleteDocumentById = async (fileId: string): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    await oneDriveAPI.delete(`/api/document-manager/documents/${fileId}`);
+  } catch (error: any) {
+    console.error('Failed to delete document:', error);
+    throw error;
+  }
+};
+
+export const updateDocumentById = async (fileId: string, file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const formData = new FormData();
+    formData.append('documentData', file);
+    await oneDriveAPI.put(`/api/document-manager/documents/${fileId}`, formData);
+  } catch (error: any) {
+    console.error('Failed to update document:', error);
+    throw error;
+  }
 };
