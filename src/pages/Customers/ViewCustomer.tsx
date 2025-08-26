@@ -25,12 +25,6 @@ export const ViewCustomer = () => {
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
 
-useEffect(() => {
-    if (!location.state) {
-      redirectToDashboard(navigate);
-    }
-  }, [location, navigate]);
-
   const tabs = [
     "Customer Details",
     "Connection Details",
@@ -192,7 +186,7 @@ useEffect(() => {
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-        <p className="mt-1 text-base text-gray-800">{customer.mobileNumber || "....."}</p>
+        <p className="mt-1 text-base text-gray-800">+91 {customer.mobileNumber || "....."}</p>
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
