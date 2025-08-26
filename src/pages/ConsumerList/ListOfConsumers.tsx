@@ -14,7 +14,8 @@ import {
   UserCheck, 
   RefreshCw,
   Zap,
-  FileText
+  FileText,
+  Plus
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
@@ -144,11 +145,12 @@ useEffect(() => {
   }
 }, []);
 
+//role org staff
 // useEffect(() => {
 //   if (userInfo?.role === "ROLE_ORG_STAFF") {
 //     setSelectedOrgId(userInfo.orgId);
 
-
+//
 //     loadConsumers(0);
 //   }
 // }, []);
@@ -492,26 +494,24 @@ useEffect(() => {
   };
 
   const renderConsumerCard = (consumer: Consumer) => (
-    <Card key={consumer.customerId || consumer.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <CardBody className="p-6">
         {/* Header with status indicators */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-5">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 truncate">
+            <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4 text-primary-500" />
-                <span className="text-sm text-secondary-700 dark:text-secondary-300">
-                  {consumer.connections?.length || 0} connections
-                </span>
-              </div>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 px-2.5 py-1 text-xs">
+                <Users className="w-3.5 h-3.5" />
+                {consumer.connections?.length || 0} connections
+              </span>
               {consumer.emailAddress && consumer.emailAddress !== "NA" && (
-                <div className="flex items-center gap-1">
-                  <UserCheck className="w-4 h-4 text-success-500" />
-                  <span className="text-sm text-success-600 dark:text-success-400">Active</span>
-                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-300 px-2.5 py-1 text-xs">
+                  <UserCheck className="w-3.5 h-3.5" />
+                  Active
+                </span>
               )}
             </div>
           </div>
@@ -522,24 +522,29 @@ useEffect(() => {
               variant="outline"
               size="sm"
               onClick={() => handleViewConsumer(consumer)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className=""
             >
               <Eye className="w-4 h-4" />
               View
             </Button>
+
+            
+
+        
+  
           </div>
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-gray-600 truncate">
               {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
           
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
                             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber}
@@ -547,17 +552,34 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Connections Section */}
+        {/* Connections Section  */}
         {consumer.connections && consumer.connections.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Active Connections
-            </h4>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                Active Connections
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate(`/ConnectionForm`, {
+                    state: {
+                      customerId: consumer.customerId || consumer.id,
+                      govIdName: consumer.govIdName,
+                    },
+                  }) 
+                }
+                className="whitespace-nowrap"
+              >
+               + Add New Connection
+              </Button>
+            </div>
             {consumer.connections.map((connection, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20 rounded-lg border border-primary-100 dark:border-primary-800"
+                className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-primary-700 dark:text-primary-300">
@@ -629,8 +651,11 @@ useEffect(() => {
                 </div>
               </div>
             ))}
+            
           </div>
         )}
+
+        
       </CardBody>
     </Card>
   );
