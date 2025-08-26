@@ -489,52 +489,52 @@ useEffect(() => {
   };
 
   const renderConsumerCard = (consumer: Consumer) => (
-    <Card key={consumer.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <Card key={consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
       <CardBody className="p-6">
         {/* Header with status indicators */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-5">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 truncate">
+            <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1">
-                <CheckCircle className="w-4 h-4 text-success-500" />
-                <span className="text-sm text-success-600 dark:text-success-400">Onboarded</span>
-              </div>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-300 px-2.5 py-1 text-xs">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Onboarded
+              </span>
               {consumer.emailAddress && consumer.emailAddress !== "NA" && (
-                <div className="flex items-center gap-1">
-                  <UserCheck className="w-4 h-4 text-primary-500" />
-                  <span className="text-sm text-primary-600 dark:text-primary-400">Active</span>
-                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 px-2.5 py-1 text-xs">
+                  <UserCheck className="w-3.5 h-3.5" />
+                  Active
+                </span>
               )}
               {materialsMap[consumer.id] && (
-                <div className="flex items-center gap-1">
-                  <Package className="w-4 h-4 text-solar-500" />
-                  <span className="text-sm text-solar-600 dark:text-solar-400">Materials Added</span>
-                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-50 text-solar-700 dark:bg-solar-900/20 dark:text-solar-300 px-2.5 py-1 text-xs">
+                  <Package className="w-3.5 h-3.5" />
+                  Materials Added
+                </span>
               )}
             </div>
           </div>
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-gray-600 truncate">
               {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
                             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber}
       </span>
     </div>
 
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
                             <User className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               Consumer ID: {consumer.consumerId}

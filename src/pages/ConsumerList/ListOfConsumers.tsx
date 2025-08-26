@@ -493,7 +493,7 @@ useEffect(() => {
   };
 
   const renderConsumerCard = (consumer: Consumer) => (
-    <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+    <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <CardBody className="p-6">
         {/* Header with status indicators */}
         <div className="flex items-start justify-between mb-5">
@@ -535,7 +535,7 @@ useEffect(() => {
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-3 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-gray-600 truncate">
@@ -554,7 +554,7 @@ useEffect(() => {
         {/* Connections Section  */}
         {consumer.connections && consumer.connections.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Active Connections
@@ -578,7 +578,7 @@ useEffect(() => {
             {consumer.connections.map((connection, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-sm hover:-translate-y-0.5 transition-all"
+                className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-primary-700 dark:text-primary-300">
