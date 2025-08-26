@@ -521,7 +521,7 @@ useEffect(() => {
               variant="outline"
               size="sm"
               onClick={() => handleViewConsumer(consumer)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className=""
             >
               <Eye className="w-4 h-4" />
               View
@@ -560,7 +560,7 @@ useEffect(() => {
                 Active Connections
               </h4>
               <Button
-                variant="primary"
+                variant="outline"
                 size="sm"
                 onClick={() =>
                   navigate(`/ConnectionForm`, {
