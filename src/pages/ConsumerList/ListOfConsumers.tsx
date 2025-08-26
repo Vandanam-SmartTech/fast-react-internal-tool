@@ -554,10 +554,28 @@ useEffect(() => {
         {/* Connections Section */}
         {consumer.connections && consumer.connections.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Active Connections
-            </h4>
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                Active Connections
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate(`/ConnectionForm`, {
+                    state: {
+                      customerId: consumer.customerId || consumer.id,
+                      govIdName: consumer.govIdName,
+                    },
+                  })
+                }
+                className="shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Connection
+              </Button>
+            </div>
             {consumer.connections.map((connection, index) => (
               <div
                 key={index}
@@ -636,25 +654,7 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Footer actions */}
-        <div className="mt-4 pt-4 border-t border-secondary-200 dark:border-secondary-700 flex justify-end">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() =>
-              navigate(`/ConnectionForm`, {
-                state: {
-                  customerId: consumer.customerId || consumer.id,
-                  govIdName: consumer.govIdName,
-                },
-              })
-            }
-            className="shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Connection
-          </Button>
-        </div>
+        
       </CardBody>
     </Card>
   );
