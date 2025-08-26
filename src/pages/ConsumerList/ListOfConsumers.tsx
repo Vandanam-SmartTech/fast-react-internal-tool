@@ -527,6 +527,8 @@ useEffect(() => {
               View
             </Button>
 
+            
+
         
   
           </div>
@@ -568,10 +570,9 @@ useEffect(() => {
                     },
                   })
                 }
-                className="shadow-sm"
+                className="whitespace-nowrap"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Connection
+               + Add New Connection
               </Button>
             </div>
             {consumer.connections.map((connection, index) => (
@@ -649,6 +650,7 @@ useEffect(() => {
                 </div>
               </div>
             ))}
+            
           </div>
         )}
 
