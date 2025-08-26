@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play } from "lucide-react";
 import { fetchPdf } from "../../services/documentGeneratorService";
-import { uploadDocuments, fetchUploadedFilesBySession, downloadDocumentById, fetchUploadedDocuments} from "../../services/oneDriveService";
+import { uploadDocuments, fetchUploadedFilesBySession, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
 import { toast } from 'react-toastify';
 
 export interface Consumer {
@@ -55,6 +55,8 @@ export default function GenerateDocuments() {
 
   const [inputKeys, setInputKeys] = useState<Record<string, number>>({});
 
+  const [replaceFiles, setReplaceFiles] = useState<Record<string, File | null>>({});
+
 
   const connectionId = consumer?.id?.toString();
 
@@ -74,9 +76,9 @@ const documentSteps: DocumentStep[] = [
     },
     {
       id: 2,
-      title: "Quotation",
+      title: "Quotations",
       documents: [
-        { name: "Quotation", canGenerate: true, canPreview: true }
+        { name: "Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -92,7 +94,7 @@ const documentSteps: DocumentStep[] = [
     },
     {
       id: 4,
-      title: "Testing & Payment",
+      title: "Meter Testing",
       documents: [
         { name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
         { name: "Fee Receipt", canGenerate: false, canPreview: false }
@@ -102,7 +104,7 @@ const documentSteps: DocumentStep[] = [
     },
     {
       id: 5,
-      title: "Comprehensive Documents",
+      title: "MNRE and Discom Documents",
       documents: [
         { name: "Subsidy Document", canGenerate: true, canPreview: true },
         { name: "Net Agreement 1", canGenerate: true, canPreview: true },
@@ -315,31 +317,66 @@ const handleDocumentUpload = async (documentName: string) => {
     });
   };
 
-  const getStepStatus = (stepId: number) => {
-    if (stepId < currentStep) return "completed";
-    if (stepId === currentStep) return "current";
-    return "pending";
+  const handleDeleteDocument = async (fileId: string) => {
+    try {
+      await deleteDocumentById(fileId);
+      toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
+      await loadDocuments();
+    } catch (error) {
+      console.error("Delete failed", error);
+      toast.error("Failed to delete document");
+    }
   };
 
-  const getStepIcon = (stepId: number) => {
-    const status = getStepStatus(stepId);
+  const handleReplaceFileChange = (docId: string, file: File | null) => {
+    setReplaceFiles((prev) => ({ ...prev, [docId]: file }));
+  };
+
+  const handleUpdateDocument = async (fileId: string) => {
+    const file = replaceFiles[fileId];
+    if (!file) return;
+    try {
+      await updateDocumentById(fileId, file);
+      toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
+      setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
+      await loadDocuments();
+    } catch (error) {
+      console.error("Update failed", error);
+      toast.error("Failed to update document");
+    }
+  };
+
+  const getStepStatus = (step: DocumentStep) => {
+    const totalRequired = step.documents.length;
+    const uploadedCount = step.documents.reduce((count, doc) => {
+      const isUploaded = uploadedDocuments[doc.name] && uploadedDocuments[doc.name].length > 0;
+      return count + (isUploaded ? 1 : 0);
+    }, 0);
+
+    if (uploadedCount === 0) return "pending";
+    if (uploadedCount < totalRequired) return "in_progress";
+    return "completed";
+  };
+
+  const getStepIcon = (step: DocumentStep) => {
+    const status = getStepStatus(step);
     switch (status) {
       case "completed":
         return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case "current":
-        return <Circle className="w-5 h-5 text-blue-600 fill-current" />;
+      case "in_progress":
+        return <Circle className="w-5 h-5 text-yellow-500 fill-current" />;
       default:
         return <Circle className="w-5 h-5 text-gray-400" />;
     }
   };
 
-  const getStepClasses = (stepId: number) => {
-    const status = getStepStatus(stepId);
+  const getStepClasses = (step: DocumentStep) => {
+    const status = getStepStatus(step);
     switch (status) {
       case "completed":
         return "text-green-600 border-green-600 bg-green-50";
-      case "current":
-        return "text-blue-600 border-blue-600 bg-blue-50";
+      case "in_progress":
+        return "text-yellow-600 border-yellow-500 bg-yellow-50";
       default:
         return "text-gray-400 border-gray-300 bg-gray-50";
     }
@@ -409,14 +446,18 @@ const handleDocumentUpload = async (documentName: string) => {
         <aside className="lg:col-span-4">
           <nav aria-label="Document steps" className="space-y-2">
             {documentSteps.map((step) => {
-              const status = getStepStatus(step.id);
-              const isCurrent = status === 'current';
+              const status = getStepStatus(step);
+              const totalRequired = step.documents.length;
+              const uploadedCount = step.documents.reduce((count, doc) => {
+                const isUploaded = uploadedDocuments[doc.name] && uploadedDocuments[doc.name].length > 0;
+                return count + (isUploaded ? 1 : 0);
+              }, 0);
               const base = 'w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500';
               const variant =
                 status === 'completed'
                   ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                  : isCurrent
-                  ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                  : status === 'in_progress'
+                  ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
                   : 'bg-white border-gray-200 hover:bg-gray-50';
               return (
             <button
@@ -425,18 +466,26 @@ const handleDocumentUpload = async (documentName: string) => {
                   className={`${base} ${variant}`}
                   onClick={() => { setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); } }}
-                  aria-current={isCurrent ? 'step' : undefined}
+                  aria-current={currentStep === step.id ? 'step' : undefined}
               aria-controls={`step-content-${step.id}`}
             >
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step.id)}`}>
-                    {getStepIcon(step.id)}
+                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
+                    {getStepIcon(step)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
                       {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
                     </div>
-                    <p className="text-xs text-gray-600">{step.documents.length} document{step.documents.length !== 1 ? 's' : ''} required</p>
+                    {uploadedCount === 0 && (
+                      <p className="text-xs text-gray-600">{totalRequired} document{totalRequired !== 1 ? 's' : ''} required</p>
+                    )}
+                    {uploadedCount > 0 && uploadedCount < totalRequired && (
+                      <p className="text-xs text-yellow-700">{uploadedCount} of {totalRequired} documents uploaded</p>
+                    )}
+                    {uploadedCount === totalRequired && (
+                      <p className="text-xs text-green-700">All documents uploaded</p>
+                    )}
                   </div>
                 </button>
               );
@@ -481,7 +530,7 @@ const handleDocumentUpload = async (documentName: string) => {
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {document.canPreview && (
+                        {document.name !== 'Quotations' && document.canPreview && (
                           <button
                             onClick={() => handlePreview(document.name)}
                             disabled={loadingPreviewDoc === document.name}
@@ -497,7 +546,7 @@ const handleDocumentUpload = async (documentName: string) => {
                           </button>
                         )}
                         
-                        {document.canGenerate && (
+                        {document.name !== 'Quotations' && document.canGenerate && (
                           <button
                             onClick={() => handleGenerate(document.name)}
                             disabled={loadingGenerateDoc === document.name}
@@ -555,11 +604,35 @@ const handleDocumentUpload = async (documentName: string) => {
                             <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
           <ul className="space-y-1">
             {uploadedDocuments[document.name].map((doc) => (
-                                <li key={doc.id} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
-                <span className="truncate">{doc.fileName}</span>
-                                  <button onClick={() => handleDownload(doc.fileId, doc.fileName)} className="text-blue-600 hover:underline ml-2">
-                  View
-                </button>
+                                <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
+                <div className="flex items-center justify-between">
+                  <span className="truncate">{doc.fileName}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleDownload(doc.fileId, doc.fileName)} className="text-blue-600 hover:underline ml-2">View</button>
+                    {document.name === 'Quotations' && (
+                      <>
+                        <button onClick={() => handleDeleteDocument(doc.fileId)} className="text-red-600 hover:underline">Delete</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {document.name === 'Quotations' && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      onChange={(e) => handleReplaceFileChange(doc.fileId, e.target.files?.[0] || null)}
+                      className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      onClick={() => handleUpdateDocument(doc.fileId)}
+                      className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 disabled:opacity-50"
+                      disabled={!replaceFiles[doc.fileId]}
+                    >
+                      Replace
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
