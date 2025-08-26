@@ -261,8 +261,6 @@ setDialogOpen(true);
     value={formData.govIdName}
     onChange={(e) => {
       const value = e.target.value;
-
-
       if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
         handleChange(e);
       }
@@ -305,9 +303,15 @@ setDialogOpen(true);
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">
+    Mobile Number <span className="text-red-500">*</span>
+  </label>
 
-  <div className="relative">
+  <div className="relative flex mt-1">
+    <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">   
+      +91
+    </span>
+
     <input
       type={showMobile ? 'text' : 'password'}
       inputMode="numeric"
@@ -318,7 +322,6 @@ setDialogOpen(true);
       onChange={(e) => {
   const value = e.target.value;
 
-  // Allow only digits, max 10, and must start with 6–9 if not empty
   if (/^[6-9][0-9]*$/.test(value) || value === "") {
     if (value.length <= 10) {
       handleChange(e);
@@ -327,7 +330,7 @@ setDialogOpen(true);
 }}
       placeholder="9567023456"
       required
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      className="block w-full p-2 border border-l-0 rounded-r-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       title="Enter a valid 10-digit mobile number starting with 6-9"
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
@@ -386,19 +389,55 @@ setDialogOpen(true);
 
   <div className="relative">
     <input
-      type={showEmail ? 'text' : 'password'}
-      name="emailAddress"
-      value={formData.emailAddress}
-      onChange={handleChange}
-      placeholder="johndoe@example.com"
-      maxLength={50}
-      pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-      title="Enter a valid email address"
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      onCopy={(e) => e.preventDefault()}
-      onCut={(e) => e.preventDefault()}
-      onPaste={(e) => e.preventDefault()}
-    />
+    type="text"
+    name="emailAddress"
+    value={formData.emailAddress}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      if (
+        value === "" ||
+        /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+          value
+        )
+      ) {
+        handleChange(e);
+      } else {
+        handleChange(e); 
+      }
+    }}
+    placeholder="johndoe@example.com"
+    maxLength={50}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+
+  {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email must start with a letter or number
+    </p>
+  )}
+
+  {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email cannot contain consecutive dots
+    </p>
+  )}
+
+  {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email cannot end with a dot before @
+    </p>
+  )}
+
+  {formData.emailAddress &&
+    !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+      formData.emailAddress
+    ) &&
+    !/\.\./.test(formData.emailAddress) &&
+    !/\.@/.test(formData.emailAddress) &&
+    /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+      <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+    )}
 
     {/* <span
       onClick={handleToggleEmail}
@@ -419,14 +458,14 @@ setDialogOpen(true);
           onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
           maxLength={50}
-          pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+           pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
           onCopy={(e) => e.preventDefault()}
           onCut={(e) => e.preventDefault()}
           onPaste={(e) => e.preventDefault()}
           disabled={!(
-            /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(formData.emailAddress) && !emailExists
+            /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress) && !emailExists
           )}
         />
         {formData.emailAddress && confirmEmailAddress &&
