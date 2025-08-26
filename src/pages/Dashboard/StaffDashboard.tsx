@@ -149,7 +149,7 @@ const dashboardItems = [
 <div>
 <p className="text-sm font-medium text-purple-600">Total Customers</p>
 <p className="text-2xl font-bold text-purple-900" aria-live="polite">
-{count !== null ? animatedCount : <SkeletonLoader className="mt-1" height="h-8" width="w-16" variant="rectangular" />}
+{count !== null ? animatedCount : 0}
 </p>
 </div>
 <div className="p-2 bg-purple-200 rounded-lg">
@@ -164,7 +164,7 @@ const dashboardItems = [
    <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/OnboardedConsumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
      <div>
        <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
-       <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : <SkeletonLoader className="mt-1" height="h-8" width="w-16" variant="rectangular" />}</p>
+       <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : 0}</p>
      </div>
      <div className="p-2 bg-solar-200 rounded-lg">
        <UserCheck className="h-6 w-6 text-solar-700" />

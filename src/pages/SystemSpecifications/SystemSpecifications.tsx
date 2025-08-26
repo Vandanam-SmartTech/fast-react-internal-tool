@@ -90,6 +90,15 @@ export const SystemSpecifications = () => {
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
 
+const formatIndianNumber = (value) => {
+  if (!value) return "";
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+
+
   useEffect(() => {
   const loadInstallationSpaceTypeMap = async () => {
     try {
@@ -356,6 +365,13 @@ useEffect(() => {
 
   fetchData();
 }, [connectionId, connectionDetails]);
+
+useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      totalCost: (Number(prev.solarSystemCost) || 0) + (Number(prev.fabricationCost) || 0),
+    }));
+  }, [formData.solarSystemCost, formData.fabricationCost]);
 
 
 
@@ -961,7 +977,7 @@ const handlePreview = async () => {
         </div>
 
                 <div>
-          <label className="block text-sm font-medium text-gray-700">Inverter kW</label>
+          <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
           <select
                 id="inverterKw"
                 name="inverterKw"
@@ -997,7 +1013,7 @@ const handlePreview = async () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Panel Brand</label>
+          <label className="block text-sm font-medium text-gray-700">PV Panel Brand</label>
           <select
             id="panelBrand"
             name="panelBrand"
@@ -1017,14 +1033,14 @@ const handlePreview = async () => {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">System Capacity (kW)</label>
+          <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
           <select
                 id="Kw"
                 name="Kw"
                 value={formData.Kw}
                 onChange={(e) => {
-                  setKw(e.target.value); // Update local state
-                  handleChange(e); // Also update formData
+                  setKw(e.target.value); 
+                  handleChange(e); 
                 }}
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 {panelWattages.map((wattages) => (
@@ -1034,12 +1050,6 @@ const handlePreview = async () => {
                    ))}
               </select>
         </div>
-
-        {/* <div>
-                <label className="block text-sm font-medium text-gray-700">Wattage-wp</label>
-                <input type="number" name="wattage" value={formData.wattage} onChange={handleChange} 
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-         </div> */}
 
 <div className="col-span-full space-y-6">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
@@ -1082,34 +1092,55 @@ const handlePreview = async () => {
           <div className="col-span-full space-y-6 mt-6">
             <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Solar System Cost</label>
-                <input type="number" 
-                    min="0"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    name="solarSystemCost" 
-                    value={formData.solarSystemCost} 
-                    onChange={handleChange} 
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-              </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Solar System Cost (₹)
+    </label>
+    <input
+      type="text" 
+      name="solarSystemCost"
+      value={formatIndianNumber(formData.solarSystemCost)}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          solarSystemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
+        })
+      }
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fabrication Cost</label>
-                <input type="number" 
-                min="0"
-                onWheel={(e) => e.currentTarget.blur()}
-                name="fabricationCost" value={formData.fabricationCost} onChange={handleChange} 
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-              </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Fabrication Cost (₹)
+    </label>
+    <input
+      type="text" 
+      name="fabricationCost"
+      value={formatIndianNumber(formData.fabricationCost)}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
+        })
+      }
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Total Cost</label>
-                <input type="number" name="effectiveCost" value={formData.totalCost} onChange={handleChange} 
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" />
-              </div>
-
-            </div>
-
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Total Cost (₹)
+    </label>
+    <input
+      type="text" 
+      name="totalCost"
+      value={formatIndianNumber(formData.totalCost)}
+      readOnly 
+      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
+</div>
             <div className="flex flex-wrap gap-4 justify-center sm:justify-start sm:ml-4 md:ml-24">
             <button
             type="button"

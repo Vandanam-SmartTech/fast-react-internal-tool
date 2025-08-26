@@ -698,8 +698,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     value={formData.govIdName}
     onChange={(e) => {
       const value = e.target.value;
-
-
       if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
         handleChange(e);
       }
@@ -718,9 +716,6 @@ const handleSubmit = async (e: React.FormEvent) => {
       </p>
     )}
 </div>
-
-
-
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Preferred Name</label>
@@ -745,51 +740,55 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">Mobile Number <span className="text-red-500">*</span></label>
+  <label className="block text-sm font-medium text-gray-700">
+    Mobile Number <span className="text-red-500">*</span>
+  </label>
 
-  <div className="relative">
+  <div className="relative flex mt-1">
+    {/* Country Code Box */}
+    <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">   
+      +91
+    </span>
+
+    {/* Mobile Input */}
     <input
-      type={showMobile ? 'text' : 'password'}
+      type={showMobile ? "text" : "password"}
       inputMode="numeric"
       pattern="[6-9]{1}[0-9]{9}"
       maxLength={10}
       name="mobileNumber"
       value={formData.mobileNumber}
       onChange={(e) => {
-  const value = e.target.value;
-
-  // Allow only digits, max 10, and must start with 6–9 if not empty
-  if (/^[6-9][0-9]*$/.test(value) || value === "") {
-    if (value.length <= 10) {
-      handleChange(e);
-    }
-  }
-}}
+        const value = e.target.value;
+        if (/^[6-9][0-9]*$/.test(value) || value === "") {
+          if (value.length <= 10) {
+            handleChange(e);
+          }
+        }
+      }}
       placeholder="9567023456"
       required
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      className="block w-full p-2 border border-l-0 rounded-r-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
       title="Enter a valid 10-digit mobile number starting with 6-9"
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onPaste={(e) => e.preventDefault()}
     />
-    
-    {/* <span
-      onClick={handleToggleMobile}
-      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-    >
-      {showMobile ? <FaEyeSlash /> : <FaEye />}
-    </span> */}
   </div>
 
-  {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
-    <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
-  )}
+  {/* Error Messages */}
+  {formData.mobileNumber?.length > 0 &&
+    !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
+      <p className="text-red-600 text-sm mt-1">
+        Enter a valid 10-digit mobile number starting with 6-9
+      </p>
+    )}
 
   {mobileExists && (
     <p className="text-red-600 text-sm mt-1">Mobile number already exists</p>
   )}
 </div>
+
 
 {/* Confirm Mobile Number */}
 <div>
@@ -821,36 +820,70 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
       <div>
-  <label className="block text-sm font-medium text-gray-700">Email Address</label>
+  <label className="block text-sm font-medium text-gray-700">
+    Email Address
+  </label>
 
-  <div className="relative">
-    <input
-      type={showEmail ? 'text' : 'password'}
-      name="emailAddress"
-      value={formData.emailAddress}
-      onChange={handleChange}
-      placeholder="johndoe@example.com"
-      maxLength={50}
-      pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-      title="Enter a valid email address"
-      className="mt-1 block w-full p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      onCopy={(e) => e.preventDefault()}
-      onCut={(e) => e.preventDefault()}
-      onPaste={(e) => e.preventDefault()}
-    />
+  <input
+    type="text"
+    name="emailAddress"
+    value={formData.emailAddress}
+    onChange={(e) => {
+      const value = e.target.value;
 
-    <span
-      onClick={handleToggleEmail}
-      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-    >
-      {showEmail ? <FaEyeSlash /> : <FaEye />}
-    </span>
-  </div>
+      if (
+        value === "" ||
+        /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+          value
+        )
+      ) {
+        handleChange(e);
+      } else {
+        handleChange(e); 
+      }
+    }}
+    placeholder="johndoe@example.com"
+    maxLength={50}
+    onCopy={(e) => e.preventDefault()}
+    onCut={(e) => e.preventDefault()}
+    onPaste={(e) => e.preventDefault()}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+
+  {/* Error messages */}
+  {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email must start with a letter or number
+    </p>
+  )}
+
+  {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email cannot contain consecutive dots
+    </p>
+  )}
+
+  {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+    <p className="text-red-600 text-sm mt-1">
+      Email cannot end with a dot before @
+    </p>
+  )}
+
+  {formData.emailAddress &&
+    !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+      formData.emailAddress
+    ) &&
+    !/\.\./.test(formData.emailAddress) &&
+    !/\.@/.test(formData.emailAddress) &&
+    /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+      <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+    )}
 
   {emailExists && (
     <p className="text-red-600 text-sm mt-1">Email address already exists</p>
   )}
 </div>
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Confirm Email Address</label>
@@ -861,11 +894,11 @@ const handleSubmit = async (e: React.FormEvent) => {
           onChange={handleConfirmEmailChange}
           placeholder="Confirm email address"
           maxLength={50}
-          pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+          pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
           title="Re-enter the same email"
           disabled={!(
-            /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(formData.emailAddress) && !emailExists
+            /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress) && !emailExists
           )}
           onCopy={(e) => e.preventDefault()}
           onCut={(e) => e.preventDefault()}

@@ -76,7 +76,7 @@ const documentSteps: DocumentStep[] = [
       id: 2,
       title: "Quotation",
       documents: [
-        { name: "Quotation", canGenerate: true, canPreview: true }
+        { name: "Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
