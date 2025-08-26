@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchOnboardedConsumers, getMaterialsByConnectionId } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
+import { obfuscateEmail } from "../../utils/emailUtils";
 import { 
   Mail, 
   Phone, 
@@ -520,11 +521,11 @@ useEffect(() => {
         {/* Contact Information */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-                            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-secondary-700 dark:text-secondary-300 truncate">
-              {consumer.emailAddress || "No email provided"}
-  </span>
-</div>
+            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
+            <span className="text-sm text-gray-600 truncate">
+              {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
+            </span>
+          </div>
 
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
                             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />

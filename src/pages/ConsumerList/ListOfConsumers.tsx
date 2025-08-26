@@ -3,6 +3,7 @@ import { fetchConsumersWithConnections } from "../../services/customerRequisitio
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
+import { obfuscateEmail } from "../../utils/emailUtils";
 import { 
   Eye, 
   Mail, 
@@ -532,9 +533,9 @@ useEffect(() => {
         {/* Contact Information */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
-                            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-secondary-700 dark:text-secondary-300 truncate">
-              {consumer.emailAddress || "No email provided"}
+            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
+            <span className="text-sm text-gray-600 truncate">
+              {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
           
