@@ -107,25 +107,29 @@ useEffect(() => {
   if (!customer) return <p>Loading...</p>;
 
   return (
-      <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+      <div className="min-h-screen bg-gray-50 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">View Customer Details</h2>
-
-      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
-
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">View Customer</h1>
+    <p className="text-gray-600 mt-1 text-sm">Review customer details and connections</p>
   </div>
 
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+    <div className="sm:ml-auto text-sm text-gray-600 bg-white px-4 py-2 rounded-lg shadow-sm border">
+      <span className="font-medium text-gray-800">Representative:</span> {selectedRepresentative.name}
+    </div>
+  )}
 
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+</div>
+
+
+<div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+    <div className="absolute top-4 left-[12%] right-[12%] h-0.5 bg-gray-200 z-0" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
       {tabs.map((tab) => {
@@ -146,20 +150,22 @@ useEffect(() => {
         return (
           <button
       key={tab}
-      className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+      className="flex flex-col items-center gap-1"
     >
       <div
-        className={`rounded-full p-2 transition-all duration-300 ${
+        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
           shouldHighlightIcon
-            ? "bg-blue-500 text-white"
-            : "bg-white border border-gray-300 text-gray-500"
+            ? "bg-blue-500 text-white shadow-lg"
+            : isActive
+            ? "bg-blue-500 text-white shadow-lg"
+            : "bg-white border-2 border-gray-300 text-gray-400"
         }`}
       >
-        <Icon className="w-6 h-6" />
+        <Icon className="w-4 h-4" />
       </div>
       <span
-        className={`text-xs md:text-sm font-semibold mt-1 ${
-          isActive ? "text-gray-700" : "text-gray-700"
+        className={`text-[10px] font-medium text-center max-w-20 ${
+          isActive ? "text-blue-600" : "text-gray-500"
         }`}
       >
         {tab}
@@ -176,7 +182,7 @@ useEffect(() => {
 
 {/* Customer Card */}
 <div className="px-2 mt-4">
-  <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-4xl mx-auto">
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-4xl mx-auto">
     <h3 className="text-xl font-semibold text-gray-800 mb-2">Customer Details</h3>
     <div className="border-b border-gray-200 mb-4" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
@@ -199,7 +205,7 @@ useEffect(() => {
     </div>
   </div>
 
-  <div className="flex gap-4 justify-start mt-6 max-w-4xl mx-auto">
+  <div className="flex gap-3 justify-start mt-6 max-w-4xl mx-auto">
     <button
       onClick={() =>
         navigate(`/edit-customer/${customerId}`, {
@@ -209,7 +215,7 @@ useEffect(() => {
           },
         })
       }
-      className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition"
+      className="py-2 px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition"
     >
       Edit Customer
     </button>
@@ -225,7 +231,7 @@ useEffect(() => {
             },
           })
         }
-        className="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition"
+        className="py-2 px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition"
       >
         Add New Connection
       </button>
@@ -546,6 +552,7 @@ useEffect(() => {
 
 
     </div>
+  </div>
   );
   
 };
