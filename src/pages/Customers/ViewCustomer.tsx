@@ -57,8 +57,13 @@ useEffect(() => {
     for (const connection of connections) {
       if (!connection.consumerId) continue;
 
-      const data = await getInstallationByConsumerId(Number(connection.consumerId));
-      newInstallationsMap[connection.consumerId] = data || [];
+      try {
+        const data = await getInstallationByConsumerId(Number(connection.consumerId));
+        newInstallationsMap[connection.consumerId] = data || [];
+      } catch (error) {
+        console.log("No installations found for consumer:", connection.consumerId);
+        newInstallationsMap[connection.consumerId] = [];
+      }
     }
 
     setInstallationsByConsumer(newInstallationsMap);
@@ -95,8 +100,13 @@ useEffect(() => {
 
     const fetchConnections = async () => {
       if (customerId) {
-        const data = await fetchConsumerNumber(Number(customerId));
-        if (data) setConnections(data);
+        try {
+          const data = await fetchConsumerNumber(Number(customerId));
+          setConnections(data || []);
+        } catch (error) {
+          console.log("No connections found for customer:", customerId);
+          setConnections([]);
+        }
       }
     };
 
@@ -194,7 +204,7 @@ useEffect(() => {
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-        <p className="mt-1 text-base text-gray-800">+91 {customer.mobileNumber ? obfuscatePhoneNumber(customer.mobileNumber) : "....."}</p>
+        <p className="mt-1 text-base text-gray-800">+91 {customer.mobileNumber || "....."}</p>
       </div>
       <div className="break-words">
         <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
