@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 import { obfuscateEmail } from "../../utils/emailUtils";
+import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { 
   Eye, 
   Mail, 
@@ -504,7 +505,7 @@ useEffect(() => {
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
                             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
-              {consumer.mobileNumber}
+              {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No mobile number provided"}
             </span>
           </div>
         </div>
