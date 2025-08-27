@@ -25,9 +25,7 @@ export const EditCustomer = () => {
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [existingCustomer, setExistingCustomer] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]);
   const customerId = location.state?.customerId;
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab] = useState("Customer Details");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
@@ -53,19 +51,6 @@ export const EditCustomer = () => {
   
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-      const getClaims = async () => {
-        try {
-          const claims = await fetchClaims();
-          setRoles(claims.roles || []);
-        } catch (error) {
-          console.error("Failed to fetch user claims", error);
-        }
-      };
-  
-      getClaims();
-    }, []);
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -162,7 +147,6 @@ if (
         navigate(`/view-customer/${customerId}`, {
           state: {
             customerId,
-            selectedRepresentative,
           },
         });
 
@@ -186,12 +170,6 @@ setDialogOpen(true);
 
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
   <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Update Customer</h2>
-
-      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
 
   </div>
 

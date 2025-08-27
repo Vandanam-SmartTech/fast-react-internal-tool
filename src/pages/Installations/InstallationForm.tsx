@@ -18,8 +18,6 @@ export const InstallationForm = () => {
   const connectionId = location.state?.connectionId || null;
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
 
@@ -59,18 +57,6 @@ export const InstallationForm = () => {
   }, []);
 ///////////////////////////////////////////////////////////
   
-  useEffect(() => {
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setRoles(claims.roles || []);
-      } catch (error) {
-        console.error("Failed to fetch user claims", error);
-      }
-    };
-  
-    getClaims();
-  }, []);
 
   useEffect(() => {
       const getInstallationSpaceTypesNames = async () => {
@@ -149,8 +135,7 @@ export const InstallationForm = () => {
           });
           navigate(`/view-installation/${result.id}`, {
         state: {
-        customerId,connectionId,consumerId,
-        selectedRepresentative: selectedRepresentative,installationId: result.id
+        customerId,connectionId, consumerId, installationId: result.id
       },
     });
 
@@ -187,7 +172,7 @@ return (
     <button
       onClick={() =>
         navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId,selectedRepresentative:selectedRepresentative },
+          state: { consumerId, customerId, connectionId },
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -200,13 +185,6 @@ return (
       Add New Installation
     </h2>
   </div>
-
-  {/* Selected Representative - Adjusts for Desktop & Mobile */}
-  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
 </div>
 
 <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
@@ -240,12 +218,11 @@ return (
               navigate(`/view-customer/${customerId}`, {
                 state: {
                   customerId,
-                  selectedRepresentative: selectedRepresentative || "",
                 },
               });
             } else if (tab === "Connection Details") {
               navigate(`/view-connection/${connectionId}`, {
-                state: { consumerId, customerId, connectionId, selectedRepresentative: selectedRepresentative },
+                state: { consumerId, customerId, connectionId },
               });
             }
           }}

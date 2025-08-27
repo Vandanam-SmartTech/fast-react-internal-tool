@@ -23,7 +23,6 @@ export const CustomerForm = () => {
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
-  const [selectedRepresentative, setSelectedRepresentative] = useState("");
   const [mobileExists, setMobileExists] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
 
@@ -87,7 +86,6 @@ useEffect(() => {
   const savedFormData = localStorage.getItem("customerFormData");
   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
-  const savedRepresentative = localStorage.getItem("selectedRepresentative");
 
   if (savedFormData) {
     setFormData(JSON.parse(savedFormData));
@@ -101,9 +99,6 @@ useEffect(() => {
     setConfirmEmailAddress(savedConfirmEmail);
   }
 
-  if (savedRepresentative) {
-    setSelectedRepresentative(JSON.parse(savedRepresentative));
-  }
 }, []);
 
 ///////////////////////////////////////////////////////////
@@ -408,8 +403,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       navigate(`/view-customer/${result.id}`, {
         state: {
-          customerId: result.id,
-          selectedRepresentative: selectedRepresentative || "",
+          customerId: result.id
         },
       });
 
@@ -432,7 +426,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   localStorage.removeItem("customerFormData");
   localStorage.removeItem("confirmMobileNumber");
   localStorage.removeItem("confirmEmailAddress");
-  localStorage.removeItem("selectedRepresentative");
 };
 
 

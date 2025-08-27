@@ -154,8 +154,6 @@ export const ConnectionForm = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab ] = useState("Connection Details");
   
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
@@ -335,19 +333,6 @@ export const ConnectionForm = () => {
   }
   }, []);
 ///////////////////////////////////////////////////////////
-
-useEffect(() => {
-  const getClaims = async () => {
-    try {
-      const claims = await fetchClaims();
-      setRoles(claims.roles || []);
-    } catch (error) {
-      console.error("Failed to fetch user claims", error);
-    }
-  };
-
-  getClaims();
-}, []);
 
 
 useEffect(() => {
@@ -694,7 +679,7 @@ const isNameCorrectionRequired =
 
       navigate(`/view-connection/${result.id}`, {
           state: {
-                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative,
+                    consumerId: formData.consumerId, customerId, connectionId: result.id,
       },
     });
     setNavigateAfterClose(false);
@@ -735,13 +720,6 @@ const isNameCorrectionRequired =
               <p className="text-gray-600 mt-1">Complete the connection details for your customer</p>
             </div>
             
-            {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border">
-                <span className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-800">Representative:</span> {selectedRepresentative.name}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -767,7 +745,7 @@ const isNameCorrectionRequired =
                       setActiveTab(tab);
                       if (tab === "Customer Details") {
                         navigate(`/view-customer/${customerId}`, {
-                          state: { customerId, selectedRepresentative: selectedRepresentative || "" },
+                          state: { customerId },
                         });
                       }
                     }}

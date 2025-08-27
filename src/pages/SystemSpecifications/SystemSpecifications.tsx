@@ -41,7 +41,6 @@ export const SystemSpecifications = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const [govIdName, setGovIdName] = useState("");
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
@@ -711,7 +710,7 @@ const handlePreview = async () => {
     <button
       onClick={() =>
         navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId,selectedRepresentative:selectedRepresentative },
+          state: { consumerId, customerId, connectionId },
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -724,13 +723,6 @@ const handlePreview = async () => {
     {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
     </h2>
   </div>
-
-  {/* Selected Representative - Adjusts for Desktop & Mobile */}
-  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
 </div>
 
 <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
@@ -764,12 +756,11 @@ const handlePreview = async () => {
           navigate(`/view-customer/${customerId}`, {
             state: {
               customerId,
-              selectedRepresentative: selectedRepresentative || "",
             },
           });
         } else if (tab === "Connection Details") {
           navigate(`/view-connection/${connectionId}`, {
-            state: { consumerId, customerId, connectionId, selectedRepresentative: selectedRepresentative },
+            state: { consumerId, customerId, connectionId },
           });
         }
       }}

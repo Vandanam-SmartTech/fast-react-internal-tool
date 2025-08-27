@@ -19,8 +19,6 @@ export const EditInstallation = () => {
   const customerId = location.state?.customerId || null;
   const consumerId = location.state?.consumerId || null;
   const installationId = location.state?.installationId || null;
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
 
   const [installation, setInstallation] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Installation Details");
@@ -50,19 +48,6 @@ export const EditInstallation = () => {
     installationSpaceTitle:'',
     customInstallationSpaceTitle:'',
   });
-
-  useEffect(() => {
-      const getClaims = async () => {
-        try {
-          const claims = await fetchClaims();
-          setRoles(claims.roles || []);
-        } catch (error) {
-          console.error("Failed to fetch user claims", error);
-        }
-      };
-    
-      getClaims();
-    }, []);
 
       useEffect(() => {
           const getInstallationSpaceTypesNames = async () => {
@@ -163,11 +148,7 @@ export const EditInstallation = () => {
 
                 navigate(`/view-installation/${installationId}`, {
                   state: {
-                    consumerId, connectionId, installationId, customerId, selectedRepresentative,
-                  },  
-                 });
-
-
+                    consumerId, connectionId, installationId, customerId,  },});
             }
           } catch (error) {
              toast.error("Failed to update installation details.", {
@@ -187,11 +168,6 @@ export const EditInstallation = () => {
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
   <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Update Installation</h2>
 
-      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
   </div>
   
 
@@ -226,12 +202,11 @@ export const EditInstallation = () => {
               navigate(`/view-customer/${customerId}`, {
                 state: {
                   customerId,
-                  selectedRepresentative: selectedRepresentative || "",
                 },
               });
             } else if (tab === "Connection Details") {
               navigate(`/view-connection/${connectionId}`, {
-                state: { consumerId, customerId, connectionId, selectedRepresentative: selectedRepresentative },
+                state: { consumerId, customerId, connectionId },
               });
             }
           }}

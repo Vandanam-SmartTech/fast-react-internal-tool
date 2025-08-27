@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
-import { fetchClaims } from "../../services/jwtService";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -18,8 +17,6 @@ export const ViewCustomer = () => {
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
-  const selectedRepresentative = location.state?.selectedRepresentative;
-  const [roles, setRoles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Customer Details");
   const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
@@ -31,20 +28,6 @@ export const ViewCustomer = () => {
     "Installation Details",
     "System Specifications",
   ];
-
-
-  useEffect(() => {
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setRoles(claims.roles || []);
-      } catch (error) {
-        console.error("Failed to fetch user claims", error);
-      }
-    };
-
-    getClaims();
-  }, []);
 
 useEffect(() => {
   const fetchAllInstallations = async () => {
@@ -111,12 +94,6 @@ useEffect(() => {
 
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
   <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">View Customer Details</h2>
-
-      {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
 
   </div>
 
@@ -205,7 +182,6 @@ useEffect(() => {
         navigate(`/edit-customer/${customerId}`, {
           state: {
             customerId,
-            selectedRepresentative,
           },
         })
       }
@@ -220,7 +196,6 @@ useEffect(() => {
           navigate(`/ConnectionForm`, {
             state: {
               customerId,
-              selectedRepresentative,
               govIdName: customer.govIdName,
             },
           })
@@ -257,7 +232,6 @@ useEffect(() => {
             consumerId: connection.consumerId,
             customerId,
             connectionId: connection.id,
-            selectedRepresentative,
           },
         });
       }}
@@ -371,7 +345,6 @@ useEffect(() => {
           consumerId: connection.consumerId,
           connectionId: connection.id,
           customerId: customerId,
-          selectedRepresentative: selectedRepresentative,
         },
       })
     }
@@ -387,7 +360,6 @@ useEffect(() => {
           connectionId: connection.id,
           consumerId: connection.consumerId,
           customerId,
-          selectedRepresentative: selectedRepresentative,
         },
       })
     }
@@ -492,7 +464,6 @@ useEffect(() => {
                   connectionId:connection.id,
                   consumerId: connection.consumerId,
                   customerId,
-                  selectedRepresentative,
                 }
               })
             }
@@ -508,7 +479,7 @@ useEffect(() => {
 
   <button
     onClick={() => {
-      navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId, selectedRepresentative:selectedRepresentative } });
+      navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId} });
     }}
     className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
   >
@@ -530,7 +501,6 @@ useEffect(() => {
           navigate(`/ConnectionForm`, {
             state: {
               customerId: customerId,
-              selectedRepresentative: selectedRepresentative,
               govIdName: customer.govIdName,
             },
           })

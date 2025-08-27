@@ -4,7 +4,7 @@ import { fetchInstallationSpaceTypesNames,  fetchConsumerNumber,  getCustomerByI
 import { useLocation } from "react-router-dom";
 import { fetchClaims } from "../../services/jwtService";
 import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
-import { ArrowLeft, FileUp, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
 import {
@@ -25,9 +25,6 @@ export const ViewConnection = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
   const navigate = useNavigate();
-  const [installations, setInstallations] = useState<any[]>([]);
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [govIdName, setGovIdName] = useState("");
   const [claims, setClaims] =useState<any>(null);
   
@@ -39,10 +36,9 @@ export const ViewConnection = () => {
   const [passbookFile, setPassbookFile] = useState<File | null>(null);
   const [billFile, setBillFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  //const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("Connection Details");
   const [activeDocTab, setActiveDocTab] = useState<SessionKey>("Aadhar");
-  //const [activeDocTab, setActiveDocTab] = useState<"Aadhar Card" | "Bank Passbook" | "Electricity Bill">("Aadhar Card");
+
 
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
@@ -234,32 +230,6 @@ const handleDownload = async (fileId: string, fileName: string) => {
   
       }, [customerId]);
 
-  useEffect(() => {
-      const getClaims = async () => {
-        try {
-          const claims = await fetchClaims();
-          setRoles(claims.roles || []);
-        } catch (error) {
-          console.error("Failed to fetch user claims", error);
-        }
-      };
-  
-      getClaims();
-    }, []);
-
-
-    useEffect(() => {
-      const loadClaims = async () => {
-        try {
-          const data = await fetchClaims();
-          setClaims(data);
-        } catch (error) {
-          console.error("Failed to load claims", error);
-        }
-      };
-   
-      loadClaims();
-    }, []);
 
 useEffect(() => {
   const fetchInstallations = async () => {
@@ -354,7 +324,7 @@ const handleNo = async () => {
     <button
       onClick={() =>
         navigate(`/view-customer/${customerId}`, {
-          state: { consumerId :consumerId, customerId, connectionId : connectionId ,selectedRepresentative :selectedRepresentative},
+          state: { consumerId :consumerId, customerId, connectionId : connectionId },
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -367,15 +337,6 @@ const handleNo = async () => {
       View Connection Details
     </h2>
   </div>
-
-
-  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="text-sm text-gray-600 mt-2 md:mt-0">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
-
-
 
 </div>
 
@@ -411,7 +372,6 @@ const handleNo = async () => {
                     navigate(`/view-customer/${customerId}`, {
                       state: {
                         customerId,
-                        selectedRepresentative: selectedRepresentative || "",
                       },
                     });
                   }
@@ -597,7 +557,6 @@ const handleNo = async () => {
               connectionId,
               consumerId,
               customerId,
-              selectedRepresentative,
             },
           })
         }
@@ -682,7 +641,6 @@ const handleNo = async () => {
                   connectionId,
                   consumerId: connection.consumerId,
                   customerId,
-                  selectedRepresentative,
                 },
               })
             }
@@ -715,7 +673,6 @@ const handleNo = async () => {
             connectionId: connectionId,
             consumerId: consumerId,
             customerId,
-            selectedRepresentative: selectedRepresentative,
           },
         });
       }}
@@ -742,7 +699,6 @@ const handleNo = async () => {
             connectionId: connectionId,
             consumerId: consumerId,
             customerId,
-            selectedRepresentative: selectedRepresentative,
           },
         })
       }

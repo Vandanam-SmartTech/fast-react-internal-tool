@@ -20,8 +20,6 @@ export const ViewInstallation = () => {
   const connectionId = location.state?.connectionId;
   const installationId = location.state?.installationId;
   const customerId = location.state?.customerId;
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [spaceTypes, setSpaceTypes] = useState([]);
 
 
@@ -33,19 +31,6 @@ export const ViewInstallation = () => {
     "Installation Details",
     "System Specifications",
   ];
-
-  useEffect(() => {
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setRoles(claims.roles || []);
-      } catch (error) {
-        console.error("Failed to fetch user claims", error);
-      }
-    };
-  
-    getClaims();
-  }, []);
 
   useEffect(() => {
     const fetchInstallation = async () => {
@@ -86,7 +71,7 @@ export const ViewInstallation = () => {
     <button
       onClick={() =>
         navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId ,selectedRepresentative:selectedRepresentative},
+          state: { consumerId, customerId, connectionId },
         })
       }
       className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -99,13 +84,6 @@ export const ViewInstallation = () => {
       View Installation Details
     </h2>
   </div>
-
-  {/* Selected Representative - Adjusts for Desktop & Mobile */}
-  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-          <div className="sm:ml-auto text-sm text-gray-600">
-            <span className="font-medium text-gray-800">Selected Representative:</span> {selectedRepresentative.name}
-          </div>
-        )}
 </div>
 
 <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
@@ -139,12 +117,11 @@ export const ViewInstallation = () => {
               navigate(`/view-customer/${customerId}`, {
                 state: {
                   customerId,
-                  selectedRepresentative: selectedRepresentative || "",
                 },
               });
             } else if (tab === "Connection Details") {
               navigate(`/view-connection/${connectionId}`, {
-                state: { consumerId, customerId, connectionId, selectedRepresentative: selectedRepresentative },
+                state: { consumerId, customerId, connectionId },
               });
             }
           }}
@@ -246,7 +223,7 @@ export const ViewInstallation = () => {
   <button
     onClick={() =>
       navigate(`/edit-installation/${installationId}`, {
-        state: { installationId, connectionId, consumerId ,customerId,selectedRepresentative:selectedRepresentative},
+        state: { installationId, connectionId, consumerId ,customerId},
       })
     }
     className="w-full sm:w-auto max-w-xs py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -257,7 +234,7 @@ export const ViewInstallation = () => {
   <button
     onClick={() =>
       navigate(`/view-connection/${connectionId}`, {
-        state: { consumerId, customerId, connectionId ,selectedRepresentative:selectedRepresentative},
+        state: { consumerId, customerId, connectionId },
       })
     }
     className="w-full sm:w-auto max-w-xs py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
