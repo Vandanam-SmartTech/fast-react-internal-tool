@@ -341,7 +341,7 @@ const handleNo = async () => {
 </div>
 
 
-<div className="col-span-1 md:col-span-2 mb-2 w-full max-w-4xl mx-auto overflow-x-auto">
+<div className="col-span-1 md:col-span-2 w-full max-w-4xl mx-auto overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -549,7 +549,7 @@ const handleNo = async () => {
     )}
 
     {/* Edit Connection Button */}
-    <div className="mt-4 pt-4 border-t border-gray-200">
+    {/* <div className="mt-4 pt-4 border-t border-gray-200">
       <button
         onClick={() =>
           navigate(`/edit-connection/${connectionId}`, {
@@ -564,7 +564,28 @@ const handleNo = async () => {
       >
         Edit Connection
       </button>
-    </div>
+    </div> */}
+
+    <div className="col-span-1 md:col-span-2 flex space-x-14">
+<div className="flex justify-start px-2 ml-2">
+
+  <button
+    onClick={() =>
+      navigate(`/edit-connection/${connectionId}`, {
+        state: {
+          connectionId,
+          consumerId,
+          customerId
+        },
+      })
+    }
+    className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+  >
+    Edit Connection
+  </button>
+
+</div>
+</div>
   </div>
 </div>
 

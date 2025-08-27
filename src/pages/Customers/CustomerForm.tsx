@@ -432,15 +432,20 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
   return (
-  <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
+              <p className="text-gray-600 mt-0.5 text-sm">Enter the customer details to get started</p>
+            </div>
+          </div>
+        </div>
 
-<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">
-    Add New Customer
-  </h2>
-</div>
-
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+        {/* Progress Steps */}
+<div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -490,11 +495,12 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 </div>
 
-    <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-      Customer Details
-    </h2>
-
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Customer Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+            <h3 className="text-base font-semibold text-gray-900">Customer Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
 
 {/* Representative Type Selection */}
@@ -876,17 +882,20 @@ const handleSubmit = async (e: React.FormEvent) => {
 )}
       </div>
 
-      <div className="flex justify-center sm:justify-start mt-2">
-        <button
-          type="submit"
-          className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Save Customer
-        </button>
-      </div>
-    </form>
+            </div>
+          </div>
 
-  </div>
-);
+          <div className="flex justify-center pt-1">
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              Save Customer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 
 };

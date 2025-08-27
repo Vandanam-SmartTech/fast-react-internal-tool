@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { fetchConsumersWithConnections } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
-import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
+import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 import { obfuscateEmail } from "../../utils/emailUtils";
+import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { 
   Eye, 
   Mail, 
@@ -32,14 +33,6 @@ interface Consumer {
 interface FilterOptions {
   hasConnections: boolean | null;
   hasEmail: boolean | null;
-  sortBy: 'name' | 'email' | 'connections' | 'date';
-  sortOrder: 'asc' | 'desc';
-}
-
-interface Organization {
-  id: number;
-  name: string;
-  displayName: string;
 }
 
 const ListOfConsumers: React.FC = () => {
@@ -56,14 +49,12 @@ const ListOfConsumers: React.FC = () => {
   const [filters, setFilters] = useState<FilterOptions>({
     hasConnections: null,
     hasEmail: null,
-    sortBy: 'name',
-    sortOrder: 'asc'
   });
 
 const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
 const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
 
-const [agencies,setAgencies] = useState<{ id: Number; name:string }[]>([]);
+const [agencies,setAgencies] = useState<Organization[]>([]);
 const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
 const [userRole, setUserRole] = useState<string>("");
 
@@ -145,7 +136,7 @@ useEffect(() => {
   }
 }, []);
 
-//role org staff
+// role org staff
 // useEffect(() => {
 //   if (userInfo?.role === "ROLE_ORG_STAFF") {
 //     setSelectedOrgId(userInfo.orgId);
@@ -345,38 +336,7 @@ const loadConsumers = async (page: number) => {
       return true;
     });
 
-
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
-      
-      switch (filters.sortBy) {
-        case 'name':
-          aValue = a.govIdName?.toLowerCase() || '';
-          bValue = b.govIdName?.toLowerCase() || '';
-          break;
-        case 'email':
-          aValue = a.emailAddress?.toLowerCase() || '';
-          bValue = b.emailAddress?.toLowerCase() || '';
-          break;
-        case 'connections':
-          aValue = a.connections?.length || 0;
-          bValue = b.connections?.length || 0;
-          break;
-        case 'date':
-          aValue = a.id;
-          bValue = b.id;
-          break;
-        default:
-          return 0;
-      }
-
-      if (filters.sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
+    // Remove sorting - keep as received from API
     return filtered;
   }, [consumers, searchResults, searchQuery, filters]);
 
@@ -384,8 +344,6 @@ const loadConsumers = async (page: number) => {
     setFilters({
       hasConnections: null,
       hasEmail: null,
-      sortBy: 'name',
-      sortOrder: 'asc'
     });
   };
 
@@ -547,7 +505,7 @@ useEffect(() => {
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
                             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
-              {consumer.mobileNumber}
+              {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No mobile number provided"}
             </span>
           </div>
         </div>
@@ -655,6 +613,26 @@ useEffect(() => {
           </div>
         )}
 
+        {consumer.connections && consumer.connections.length === 0 && (
+          <div className="mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                navigate(`/ConnectionForm`, {
+                  state: {
+                    customerId: consumer.customerId || consumer.id,
+                    govIdName: consumer.govIdName,
+                  },
+                })
+              }
+              className="whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Connection
+            </Button>
+          </div>
+        )}
         
       </CardBody>
     </Card>
@@ -721,15 +699,12 @@ useEffect(() => {
           onChange={(e) => {
     const agencyId = e.target.value || null;
     setSelectedAgencyId(agencyId);
-    setSelectedAgencyName(agencyId ? e.target.options[e.target.selectedIndex].text : null);
-
 
     setSelectedUserId(null);
     
     // Clear org selection if agency is chosen
     if (agencyId) {
       setSelectedOrgId(null);
-      setSelectedOrgName(null);
     }
   }}
           disabled={agencies.length === 0}
