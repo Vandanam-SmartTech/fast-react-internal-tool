@@ -376,7 +376,16 @@ const handleDocumentUpload = async (documentName: string) => {
   };
 
   const totalSteps = documentSteps.length;
-  const progressPercent = Math.round(((currentStep - 1) / totalSteps) * 100);
+  // Overall documents progress across all steps
+  const totalDocs = documentSteps.reduce((sum, step) => sum + step.documents.length, 0);
+  const completedDocs = documentSteps.reduce((sum, step) => {
+    const uploadedInStep = step.documents.reduce((count, doc) => {
+      const isUploaded = uploadedDocuments[doc.name] && uploadedDocuments[doc.name].length > 0;
+      return count + (isUploaded ? 1 : 0);
+    }, 0);
+    return sum + uploadedInStep;
+  }, 0);
+  const progressPercent = totalDocs === 0 ? 0 : Math.round((completedDocs / totalDocs) * 100);
 
   // No-op to preserve existing variables without altering behavior
   const __noop = (..._args: unknown[]) => undefined;
@@ -396,8 +405,7 @@ const handleDocumentUpload = async (documentName: string) => {
         <h1 className="text-2xl font-semibold text-gray-900">Generate & Upload Documents</h1>
       </div>
 
-      {/* Consumer Information */
-      }
+      {/* Consumer Information */}
       {consumer && (
         <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Consumer Information</h2>
@@ -426,7 +434,7 @@ const handleDocumentUpload = async (documentName: string) => {
       <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-          <span className="text-sm text-gray-600" aria-live="polite">{progressPercent}%</span>
+          <span className="text-sm text-gray-600" aria-live="polite">{completedDocs}/{totalDocs} · {progressPercent}%</span>
         </div>
         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
           <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />

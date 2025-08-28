@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { fetchClaims } from "../../services/jwtService";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -19,6 +20,8 @@ export const ViewCustomer = () => {
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
+  const selectedRepresentative = location.state?.selectedRepresentative;
+  const [roles, setRoles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Customer Details");
   const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
@@ -30,6 +33,20 @@ export const ViewCustomer = () => {
     "Installation Details",
     "System Specifications",
   ];
+
+
+  useEffect(() => {
+    const getClaims = async () => {
+      try {
+        const claims = await fetchClaims();
+        setRoles(claims.roles || []);
+      } catch (error) {
+        console.error("Failed to fetch user claims", error);
+      }
+    };
+
+    getClaims();
+  }, []);
 
 useEffect(() => {
   const fetchAllInstallations = async () => {
@@ -111,14 +128,20 @@ useEffect(() => {
     <p className="text-gray-600 mt-1 text-sm">Review customer details and connections</p>
   </div>
 
+  {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+    <div className="sm:ml-auto text-sm text-gray-600 bg-white px-4 py-2 rounded-lg shadow-sm border">
+      <span className="font-medium text-gray-800">Representative:</span> {selectedRepresentative.name}
+    </div>
+  )}
+
 </div>
 
 
-<div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+    <div className="absolute top-4 left-[12%] right-[12%] h-0.5 bg-gray-200 z-0" />
 
     <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
       {tabs.map((tab) => {
@@ -139,20 +162,22 @@ useEffect(() => {
         return (
           <button
       key={tab}
-      className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+      className="flex flex-col items-center gap-1"
     >
       <div
-        className={`rounded-full p-2 transition-all duration-300 ${
+        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
           shouldHighlightIcon
-            ? "bg-blue-500 text-white"
-            : "bg-white border border-gray-300 text-gray-500"
+            ? "bg-blue-500 text-white shadow-lg"
+            : isActive
+            ? "bg-blue-500 text-white shadow-lg"
+            : "bg-white border-2 border-gray-300 text-gray-400"
         }`}
       >
-        <Icon className="w-6 h-6" />
+        <Icon className="w-4 h-4" />
       </div>
       <span
-        className={`text-xs md:text-sm font-semibold mt-1 ${
-          isActive ? "text-gray-700" : "text-gray-700"
+        className={`text-[10px] font-medium text-center max-w-20 ${
+          isActive ? "text-blue-600" : "text-gray-500"
         }`}
       >
         {tab}
@@ -198,6 +223,7 @@ useEffect(() => {
         navigate(`/edit-customer/${customerId}`, {
           state: {
             customerId,
+            selectedRepresentative,
           },
         })
       }
@@ -212,6 +238,7 @@ useEffect(() => {
           navigate(`/ConnectionForm`, {
             state: {
               customerId,
+              selectedRepresentative,
               govIdName: customer.govIdName,
             },
           })
@@ -248,6 +275,7 @@ useEffect(() => {
             consumerId: connection.consumerId,
             customerId,
             connectionId: connection.id,
+            selectedRepresentative,
           },
         });
       }}
@@ -361,6 +389,7 @@ useEffect(() => {
           consumerId: connection.consumerId,
           connectionId: connection.id,
           customerId: customerId,
+          selectedRepresentative: selectedRepresentative,
         },
       })
     }
@@ -376,6 +405,7 @@ useEffect(() => {
           connectionId: connection.id,
           consumerId: connection.consumerId,
           customerId,
+          selectedRepresentative: selectedRepresentative,
         },
       })
     }
@@ -480,6 +510,7 @@ useEffect(() => {
                   connectionId:connection.id,
                   consumerId: connection.consumerId,
                   customerId,
+                  selectedRepresentative,
                 }
               })
             }
@@ -495,7 +526,7 @@ useEffect(() => {
 
   <button
     onClick={() => {
-      navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId} });
+      navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId, selectedRepresentative:selectedRepresentative } });
     }}
     className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
   >
@@ -517,6 +548,7 @@ useEffect(() => {
           navigate(`/ConnectionForm`, {
             state: {
               customerId: customerId,
+              selectedRepresentative: selectedRepresentative,
               govIdName: customer.govIdName,
             },
           })

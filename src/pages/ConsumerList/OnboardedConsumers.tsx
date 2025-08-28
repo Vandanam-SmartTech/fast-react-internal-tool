@@ -3,7 +3,25 @@ import { fetchOnboardedConsumers, getMaterialsByConnectionId } from "../../servi
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Mail, Phone, User, Zap, Search, Filter, Users, UserCheck, FileText,Package,ChevronDown,ChevronUp,X,RefreshCw,Eye,Plus,CheckCircle,AlertCircle
+import { 
+  Mail, 
+  Phone, 
+  User, 
+  Zap, 
+  Search, 
+  Filter, 
+  Users, 
+  UserCheck, 
+  FileText,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  X,
+  RefreshCw,
+  Eye,
+  Plus,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
