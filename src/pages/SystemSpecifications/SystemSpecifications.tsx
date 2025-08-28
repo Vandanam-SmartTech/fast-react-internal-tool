@@ -925,12 +925,7 @@ const handlePreview = async () => {
     </div>
   </div>
 )}
-
-
 </div>
-
-
-
 
                 <div>
           <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
@@ -1018,7 +1013,7 @@ const handlePreview = async () => {
             <option value="Sova">Sova</option>
             <option value="En-Icon">En-Icon</option>
             <option value="Adani">Adani</option>
-            <option value="Renew">Renew</option>
+            <option value="ReNew">ReNew</option>
           </select>
         </div>
 

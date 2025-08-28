@@ -459,7 +459,7 @@ const Profile: React.FC = () => {
           {/* Personal Information Card */}
           <Card>
             <CardBody className="p-6">
-              <div className="flex items-center justify-between mb-6">
+              {/* <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
                 {!isEditing ? (
                   <Button
@@ -489,7 +489,7 @@ const Profile: React.FC = () => {
                     </Button>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

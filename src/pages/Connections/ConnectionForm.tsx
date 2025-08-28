@@ -154,8 +154,6 @@ export const ConnectionForm = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
-  const [roles, setRoles] = useState<string[]>([]);
-  const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab ] = useState("Connection Details");
   
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
@@ -335,19 +333,6 @@ export const ConnectionForm = () => {
   }
   }, []);
 ///////////////////////////////////////////////////////////
-
-useEffect(() => {
-  const getClaims = async () => {
-    try {
-      const claims = await fetchClaims();
-      setRoles(claims.roles || []);
-    } catch (error) {
-      console.error("Failed to fetch user claims", error);
-    }
-  };
-
-  getClaims();
-}, []);
 
 
 useEffect(() => {
@@ -694,7 +679,7 @@ const isNameCorrectionRequired =
 
       navigate(`/view-connection/${result.id}`, {
           state: {
-                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative,
+                    consumerId: formData.consumerId, customerId, connectionId: result.id,
       },
     });
     setNavigateAfterClose(false);
@@ -726,7 +711,7 @@ const isNameCorrectionRequired =
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -735,66 +720,69 @@ const isNameCorrectionRequired =
               <p className="text-gray-600 mt-1">Complete the connection details for your customer</p>
             </div>
             
-            {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
-              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border">
-                <span className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-800">Representative:</span> {selectedRepresentative.name}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="relative">
-            <div className="absolute top-4 left-[10%] right-[10%] h-0.5 bg-gray-200 z-0" />
-            <div className="flex justify-between relative z-10">
-              {tabs.map((tab, index) => {
-                const Icon =
-                  tab === "Customer Details" ? UserCircleIcon
-                  : tab === "Connection Details" ? BoltIcon
-                  : tab === "Installation Details" ? HomeModernIcon
-                  : Cog6ToothIcon;
+        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+    
+    {/* Connector Line: between the first and last icon only */}
+    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
-                const isActive = activeTab === tab;
-                const isCompleted = index === 0; // Customer Details is completed
+    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab;
 
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setActiveTab(tab);
-                      if (tab === "Customer Details") {
-                        navigate(`/view-customer/${customerId}`, {
-                          state: { customerId, selectedRepresentative: selectedRepresentative || "" },
-                        });
-                      }
-                    }}
-                    className="flex flex-col items-center gap-1.5"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        isCompleted
-                          ? "bg-green-500 text-white shadow-lg"
-                          : isActive
-                          ? "bg-blue-500 text-white shadow-lg"
-                          : "bg-white border-2 border-gray-300 text-gray-400"
-                      }`}
-                    >
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <span className={`text-[11px] font-medium text-center max-w-20 ${
-                      isActive ? "text-blue-600" : "text-gray-500"
-                    }`}>
-                      {tab}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        const Icon =
+          tab === "Customer Details"
+            ? UserCircleIcon
+            : tab === "Connection Details"
+            ? BoltIcon
+            : tab === "Installation Details"
+            ? HomeModernIcon
+            : Cog6ToothIcon;
+
+            const shouldHighlightIcon = tab === "Customer Details";
+
+
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "Customer Details") {
+                    navigate(`/view-customer/${customerId}`, {
+                      state: {
+                        customerId,
+                      },
+                    });
+                  }
+                }}
+                className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+              >
+                <div
+                  className={`rounded-full p-2 transition-all duration-300 ${
+                    shouldHighlightIcon
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
+                  }`}
+                >
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span
+                  className={`text-xs md:text-sm font-semibold mt-1 ${
+                    isActive ? "text-gray-700" : "text-gray-700"
+                  }`}
+                >
+                  {tab}
+                </span>
+              </button>
+            );
+      })}
+    </div>
+  </div>
+</div>
 
                 {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -1229,7 +1217,7 @@ const isNameCorrectionRequired =
                   name="discomId"
                   value={formData.discomId}
                   onChange={handleChange}
-                  placeholder="e.g. 64797718"
+                  placeholder="e.g. 7137"
                   min="1"
                   step="1"
                   required
@@ -1390,10 +1378,10 @@ const isNameCorrectionRequired =
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-1">
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
             >
               Save Connection
             </button>

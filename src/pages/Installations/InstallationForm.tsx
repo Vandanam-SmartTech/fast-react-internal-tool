@@ -363,6 +363,36 @@ return (
       </div>
 
       <div>
+        <label className="block text-sm font-medium text-gray-700">Panel To Inverter Distance (Feet)</label>
+        <input
+          type="number"
+          id="acWireLengthFt"
+          name="acWireLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
+          value={formData.acWireLengthFt}
+          placeholder="e.g. 10"
+          onChange={handleChange}
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Inverter to NetMeter Distance (Feet)</label>
+        <input
+          type="number"
+          id="dcWireLengthFt"
+          name="dcWireLengthFt"
+          min="0"
+          onWheel={(e) => e.currentTarget.blur()}
+          value={formData.dcWireLengthFt}
+          placeholder="e.g. 10"
+          onChange={handleChange}
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* <div>
         <label className="block text-sm font-medium text-gray-700">Required AC Wire Length (Feet)</label>
         <input
           type="number"
@@ -390,7 +420,7 @@ return (
           onChange={handleChange}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
-      </div>
+      </div> */}
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Required Earthing Wire Length (Feet)</label>
@@ -407,7 +437,7 @@ return (
         />
       </div>
 
-      <div>
+      {/* <div>
         <label className="block text-sm font-medium text-gray-700">Required Number of GP Pipes</label>
         <input
           type="number"
@@ -420,7 +450,7 @@ return (
           onChange={handleChange}
           className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
-      </div>
+      </div> */}
 
       <div className="sm:col-span-2">
         <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
