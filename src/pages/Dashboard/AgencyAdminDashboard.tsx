@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
-import { Users, Building2, UserCog, Settings } from 'lucide-react';
+import { Users,
+   Building2,
+    UserCog, 
+    Settings,
+    Calendar,
+  Clock, } from 'lucide-react';
 
 const AgencyAdminDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,6 +80,17 @@ const AgencyAdminDashboard: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Agency Admin Dashboard</h1>
         <p className="text-gray-600">Manage your agencies and users</p>
       </div>
+
+      <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{currentTime.toLocaleTimeString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{currentTime.toLocaleDateString()}</span>
+                  </div>
+                </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardItems.map((item, index) => (

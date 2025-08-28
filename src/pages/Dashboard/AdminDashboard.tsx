@@ -128,7 +128,7 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
           
-                          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span>{currentTime.toLocaleTimeString()}</span>

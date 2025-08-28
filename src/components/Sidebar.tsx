@@ -383,7 +383,7 @@ useEffect(() => {
   >
     <div className="flex items-center gap-3">
       <Users size={20} />
-      <span>Customers</span>
+      <span>Manage Customers</span>
     </div>
     {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
   </button>

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { Users, UserCheck, BarChart3 } from 'lucide-react';
+import { Users, UserCheck, BarChart3, Calendar,
+  Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -13,6 +14,7 @@ const StaffDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
   // const onboardingPercent = count && count > 0 && onboardedCount !== null
@@ -120,6 +122,9 @@ const dashboardItems = [
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+       {/* Header Section */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      
       {/* <div className="mb-8">
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
@@ -133,12 +138,24 @@ const dashboardItems = [
               {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
             </h1>
             <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Manage customers and view progress · {format(new Date(), 'EEE, dd MMM yyyy')}
+              Manage customers and view progress · 
             </p>
           </div>
 
-         
+           {/* Right side - Time & Date */}
+      <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          <span>{currentTime.toLocaleTimeString()}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          <span>{currentTime.toLocaleDateString()}</span>
+        </div>
+      </div>
+    </div>
 
+        
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
 
@@ -227,7 +244,7 @@ const dashboardItems = [
       </div> */}
 
       {/* Progress Chart */}
-      <div className="card p-6">
+      {/* <div className="card p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
           Customer Progress Trend
@@ -277,7 +294,7 @@ const dashboardItems = [
             No trend data available for the last 12 months.
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

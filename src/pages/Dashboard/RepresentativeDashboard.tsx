@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Users, BarChart3 } from 'lucide-react';
+import { UserCheck, Users, BarChart3,Calendar,
+  Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
@@ -11,6 +12,7 @@ const RepresentativeDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const navigate = useNavigate();
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
@@ -108,13 +110,31 @@ const RepresentativeDashboard: React.FC = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+        
+       <div>
         <div className="text-2xl font-semibold mb-2">
           {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
         </div>
+        
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Representative Dashboard</h1>
         <p className="text-gray-600">Manage customers and track progress</p>
       </div>
+      {/* Right - Time & Date */}
+        <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>{currentTime.toLocaleTimeString()}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{currentTime.toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+
+      
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -161,7 +181,7 @@ const RepresentativeDashboard: React.FC = () => {
       </div>
 
       {/* Progress Chart */}
-      {count !== 0 && (
+      {/* {count !== 0 && (
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
@@ -199,7 +219,7 @@ const RepresentativeDashboard: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
