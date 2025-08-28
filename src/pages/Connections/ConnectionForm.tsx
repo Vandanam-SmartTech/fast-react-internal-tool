@@ -755,7 +755,6 @@ const isNameCorrectionRequired =
                     navigate(`/view-customer/${customerId}`, {
                       state: {
                         customerId,
-                        selectedRepresentative: selectedRepresentative || "",
                       },
                     });
                   }
