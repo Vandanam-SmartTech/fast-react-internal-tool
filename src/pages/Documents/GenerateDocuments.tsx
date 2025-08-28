@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play } from "lucide-react";
 import { fetchPdf } from "../../services/documentGeneratorService";
-import { uploadDocuments, fetchUploadedFilesBySession, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
+import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
 import { toast } from 'react-toastify';
 
 export interface Consumer {
@@ -25,6 +25,7 @@ interface DocumentStep {
   id: number;
   title: string;
   documents: Array<{
+    label: string;
     name: string;
     canGenerate: boolean;
     canPreview: boolean;
@@ -66,10 +67,10 @@ const documentSteps: DocumentStep[] = [
       id: 1,
       title: "Identity & Financial Documents",
       documents: [
-        { name: "AadhaarCard", canGenerate: false, canPreview: false },
-        { name: "BankPassbook", canGenerate: false, canPreview: false },
-        { name: "Ebill", canGenerate: false, canPreview: false },
-        { name: "Regular Bill", canGenerate: false, canPreview: false}
+        { label: "Aadhaar Card", name: "AadhaarCard", canGenerate: false, canPreview: false },
+        { label: "Bank Passbook/Cancelled Cheque", name: "BankPassbook", canGenerate: false, canPreview: false },
+        { label: "E-Bill", name: "Ebill", canGenerate: false, canPreview: false },
+        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false}
       ],
       isCompleted: false,
       isExpanded: true
@@ -78,88 +79,80 @@ const documentSteps: DocumentStep[] = [
       id: 2,
       title: "Quotations",
       documents: [
-        { name: "Quotation", canGenerate: false, canPreview: false }
+        { label: "Quotations", name: "Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 3,
-      title: "Sanction Letter",
+      title: "Customer Vendor Agreement",
       documents: [
-        { name: "Sanction Letter", canGenerate: false, canPreview: false }
+        { label: "Customer Vendor Agreement", name: "Customer Vendor Agreement", canGenerate: true, canPreview: true }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 4,
-      title: "Meter Testing",
+      title: "Sanction Letter",
       documents: [
-        { name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
-        { name: "Fee Receipt", canGenerate: false, canPreview: false }
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 5,
-      title: "MNRE and Discom Documents",
+      title: "Meter Testing",
       documents: [
-        { name: "Subsidy Document", canGenerate: true, canPreview: true },
-        { name: "Net Agreement 1", canGenerate: true, canPreview: true },
-        { name: "Net Agreement 2", canGenerate: true, canPreview: true },
-        { name: "WCR", canGenerate: true, canPreview: true },
-        { name: "Annexure-I", canGenerate: true, canPreview: true },
-        { name: "Declaration", canGenerate: true, canPreview: true },
-        { name: "Earthing", canGenerate: true, canPreview:true },
-        { name: "Geo Tag", canGenerate: false, canPreview: false },
-        { name: "D1Form", canGenerate: false, canPreview: false },
-        { name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
-        { name: "Vendor Feasibility", canGenerate: true, canPreview: true },
-        { name: "Digital Approval Letter", canGenerate: false, canPreview: false },
+        { label: "Gen Meter Testing Letter", name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
+        { label:"Gen Meter Testing Report",name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
+        { label: "Fee Receipt", name: "Fee Receipt", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 6,
-      title: "DCR Certificate",
+      title: "MNRE and Discom Documents",
       documents: [
-        { name: "DCR Certificate", canGenerate: false, canPreview: false }
+        { label:"Net Agreement 1",name: "Net Agreement 1", canGenerate: true, canPreview: true },
+        { label:"Net Agreement 2",name: "Net Agreement 2", canGenerate: true, canPreview: true },
+        { label:"WCR",name: "WCR", canGenerate: true, canPreview: true },
+        { label:"Annexure-I",name: "Annexure-I", canGenerate: true, canPreview: true },
+        { label:"RTS Declaration",name: "RTS Declaration", canGenerate: true, canPreview: true },
+        { label:"Earthing Report",name: "Earthing Report", canGenerate: true, canPreview:true },
+        { label:"Geo Tag Photo",name: "Geo Tag", canGenerate: false, canPreview: false },
+        { label:"D1-Form",name: "D1Form", canGenerate: false, canPreview: false },
+        { label:"Vendor Feasibility",name: "Vendor Feasibility", canGenerate: true, canPreview: true },
+        { label:"Digital Approval Letter",name: "Digital Approval Letter", canGenerate: false, canPreview: false },
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 7,
+      title: "DCR & Warranty Certificates",
+      documents: [
+        { label:"DCR Certificate",name: "DCR Certificate", canGenerate: false, canPreview: false },
+        { label:"Inverter Warranty Certificate",name: "Inverter Warranty Certificate", canGenerate: false, canPreview: false },
+        { label:"Panel Warranty Certificate",name: "Panel Warranty Certificate", canGenerate: false, canPreview: false }
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 8,
       title: "Release Order",
       documents: [
-        { name: "Release Order", canGenerate: false, canPreview: false }
+        { label:"Release Order",name: "Release Order", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
     
   ];
-
-
-  const getSessionName = (docName: string) =>
-    `${docName.replace(/\s/g, "_")}_${consumer.govIdName}`;
-
-  const fetchUploaded = async (docName: string) => {
-    if (!connectionId || !docName) return;
-    const session = getSessionName(docName);
-    const files = await fetchUploadedFilesBySession(connectionId, session);
-    setUploadedFiles(files);
-  };
-
-  useEffect(() => {
-    if (selectedSession) {
-      fetchUploaded(selectedSession);
-    }
-  }, [selectedSession]);
-
 
 
   const loadDocuments = useCallback(async () => {
@@ -509,7 +502,7 @@ const handleDocumentUpload = async (documentName: string) => {
                     <div key={document.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center space-x-3 mb-3">
                         <FileText className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-medium text-gray-900">{document.name}</h4>
+                        <h4 className="font-medium text-gray-900">{document.label}</h4>
                       </div>
                       
                       {/* File Upload Section */}
@@ -530,7 +523,8 @@ const handleDocumentUpload = async (documentName: string) => {
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {document.name !== 'Quotations' && document.canPreview && (
+
+                        {document.canPreview && (
                           <button
                             onClick={() => handlePreview(document.name)}
                             disabled={loadingPreviewDoc === document.name}
@@ -542,11 +536,11 @@ const handleDocumentUpload = async (documentName: string) => {
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                              <span>{loadingPreviewDoc === document.name ? 'Previewing...' : 'Preview'}</span>
+                            <span>{loadingPreviewDoc === document.name ? "Previewing..." : "Preview"}</span>
                           </button>
                         )}
                         
-                        {document.name !== 'Quotations' && document.canGenerate && (
+                        {document.canGenerate && (
                           <button
                             onClick={() => handleGenerate(document.name)}
                             disabled={loadingGenerateDoc === document.name}
@@ -558,7 +552,7 @@ const handleDocumentUpload = async (documentName: string) => {
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                              <span>{loadingGenerateDoc === document.name ? 'Generating...' : 'Generate'}</span>
+                            <span>{loadingGenerateDoc === document.name ? "Generating..." : "Generate"}</span>
                           </button>
                         )}
 

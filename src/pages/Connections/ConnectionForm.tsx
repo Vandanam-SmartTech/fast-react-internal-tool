@@ -1218,7 +1218,7 @@ const isNameCorrectionRequired =
                   name="discomId"
                   value={formData.discomId}
                   onChange={handleChange}
-                  placeholder="e.g. 64797718"
+                  placeholder="e.g. 7137"
                   min="1"
                   step="1"
                   required

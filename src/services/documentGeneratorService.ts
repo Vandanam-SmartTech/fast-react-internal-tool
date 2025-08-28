@@ -30,13 +30,12 @@ export const fetchPdf = async (id: number, docName: string): Promise<Blob> => {
   const endpointMap: Record<string, string> = {
     "WCR": `/api/pdf/wcrUndertakingAdhar/${id}?download=true`,
     "Annexure-I": `/api/pdf/annexureProformaAConverted/${id}?download=true`,
-    "Earthing": `/api/pdf/earthingPageController/${id}?download=true`,
-    "Subsidy Document": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
+    "Earthing Report": `/api/pdf/earthingPageController/${id}?download=true`,
+    "Customer Vendor Agreement": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
     "Vendor Feasibility": `/api/pdf/vendorFeasibilityController/${id}?download=true`,
     "Net Agreement 1": `/api/pdf/netAgreementOne/${id}?download=true`, // if you have 2 pages, adjust
     "Net Agreement 2": `/api/pdf/netAgreementTwo/${id}?download=true`,
-    "Declaration": `/api/pdf/declarationPage/${id}?download=true`,
-    "DCR Certificate": `/api/pdf/dcrCertificate/${id}?download=true`, // example, adjust to your BE
+    "RTS Declaration": `/api/pdf/declarationPage/${id}?download=true`,
     "Quotation": `/api/pdf/quotation/${id}?download=true` // example, adjust
   };
 
