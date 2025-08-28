@@ -48,7 +48,13 @@ const StaffDashboard: React.FC = () => {
     };
 
     getClaims();
-  }, []);
+    const timeInterval = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+  
+      return () => clearInterval(timeInterval);
+    }, []);
+
 
   useEffect(() => {
     getCustomerStats()
