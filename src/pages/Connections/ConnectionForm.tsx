@@ -154,6 +154,8 @@ export const ConnectionForm = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
+  const [roles, setRoles] = useState<string[]>([]);
+  const selectedRepresentative = location.state?.selectedRepresentative;
   const [activeTab, setActiveTab ] = useState("Connection Details");
   
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
@@ -333,6 +335,19 @@ export const ConnectionForm = () => {
   }
   }, []);
 ///////////////////////////////////////////////////////////
+
+useEffect(() => {
+  const getClaims = async () => {
+    try {
+      const claims = await fetchClaims();
+      setRoles(claims.roles || []);
+    } catch (error) {
+      console.error("Failed to fetch user claims", error);
+    }
+  };
+
+  getClaims();
+}, []);
 
 
 useEffect(() => {
@@ -679,7 +694,7 @@ const isNameCorrectionRequired =
 
       navigate(`/view-connection/${result.id}`, {
           state: {
-                    consumerId: formData.consumerId, customerId, connectionId: result.id,
+                    consumerId: formData.consumerId, customerId, connectionId: result.id, selectedRepresentative,
       },
     });
     setNavigateAfterClose(false);
@@ -711,7 +726,7 @@ const isNameCorrectionRequired =
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -720,6 +735,13 @@ const isNameCorrectionRequired =
               <p className="text-gray-600 mt-1">Complete the connection details for your customer</p>
             </div>
             
+            {roles.includes("ROLE_ADMIN") && selectedRepresentative && (
+              <div className="bg-white px-4 py-2 rounded-lg shadow-sm border">
+                <span className="text-sm text-gray-600">
+                  <span className="font-medium text-gray-800">Representative:</span> {selectedRepresentative.name}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1217,7 +1239,7 @@ const isNameCorrectionRequired =
                   name="discomId"
                   value={formData.discomId}
                   onChange={handleChange}
-                  placeholder="e.g. 7137"
+                  placeholder="e.g. 64797718"
                   min="1"
                   step="1"
                   required
@@ -1378,10 +1400,10 @@ const isNameCorrectionRequired =
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-1">
+          <div className="flex justify-center pt-4">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
             >
               Save Connection
             </button>

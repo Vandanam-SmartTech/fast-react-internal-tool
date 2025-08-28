@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveCustomer } from "../../services/customerRequisitionService";
 import { checkMobileNumberExists, checkEmailAddressExists } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService'
+import { fetchClaims, fetchRepresentatives } from '../../services/jwtService'
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
@@ -23,6 +23,8 @@ export const CustomerForm = () => {
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
+  const [representatives, setRepresentatives] = useState([]);
+  const [selectedRepresentative, setSelectedRepresentative] = useState("");
   const [mobileExists, setMobileExists] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
 
@@ -86,6 +88,7 @@ useEffect(() => {
   const savedFormData = localStorage.getItem("customerFormData");
   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
+  const savedRepresentative = localStorage.getItem("selectedRepresentative");
 
   if (savedFormData) {
     setFormData(JSON.parse(savedFormData));
@@ -99,9 +102,25 @@ useEffect(() => {
     setConfirmEmailAddress(savedConfirmEmail);
   }
 
+  if (savedRepresentative) {
+    setSelectedRepresentative(JSON.parse(savedRepresentative));
+  }
 }, []);
 
 ///////////////////////////////////////////////////////////
+
+// useEffect(() => {
+//     const getClaims = async () => {
+//       try {
+//         const claims = await fetchClaims();
+//         setRoles(claims.roles || []);
+//       } catch (error) {
+//         console.error("Failed to fetch user claims", error);
+//       }
+//     };
+
+//     getClaims();
+//   }, []);
 
 
   useEffect(() => {
@@ -306,6 +325,20 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     });
   }
 };
+
+
+
+  useEffect(() => {
+    const getRepresentatives = async () => {
+      const reps = await fetchRepresentatives();
+      setRepresentatives(reps);
+    };
+
+    getRepresentatives();
+  }, []);
+
+  
+
   
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -403,7 +436,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       navigate(`/view-customer/${result.id}`, {
         state: {
-          customerId: result.id
+          customerId: result.id,
+          selectedRepresentative: selectedRepresentative || "",
         },
       });
 
@@ -426,6 +460,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   localStorage.removeItem("customerFormData");
   localStorage.removeItem("confirmMobileNumber");
   localStorage.removeItem("confirmEmailAddress");
+  localStorage.removeItem("selectedRepresentative");
 };
 
 
@@ -445,61 +480,53 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
 
         {/* Progress Steps */}
-<div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
-  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-    
-    {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute top-4 left-[12%] right-[12%] h-0.5 bg-gray-200 z-0" />
+            <div className="flex justify-between relative z-10">
+              {tabs.map((tab) => {
+                const Icon =
+                  tab === "Customer Details" ? UserCircleIcon
+                  : tab === "Connection Details" ? BoltIcon
+                  : tab === "Installation Details" ? HomeModernIcon
+                  : Cog6ToothIcon;
 
-    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab;
+                const isActive = activeTab === tab;
+                const isCompleted = tab === "Customer Details"; 
 
-        const Icon =
-          tab === "Customer Details"
-            ? UserCircleIcon
-            : tab === "Connection Details"
-            ? BoltIcon
-            : tab === "Installation Details"
-            ? HomeModernIcon
-            : Cog6ToothIcon;
-
-            const shouldHighlightIcon = false;
-
-
-        return (
-          <button
-      key={tab}
-      className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-    >
-      <div
-        className={`rounded-full p-2 transition-all duration-300 ${
-          shouldHighlightIcon
-            ? "bg-blue-500 text-white"
-            : "bg-white border border-gray-300 text-gray-500"
-        }`}
-      >
-        <Icon className="w-6 h-6" />
-      </div>
-      <span
-        className={`text-xs md:text-sm font-semibold mt-1 ${
-          isActive ? "text-gray-700" : "text-gray-700"
-        }`}
-      >
-        {tab}
-      </span>
-    </button>
-        );
-      })}
-    </div>
-  </div>
-</div>
+                return (
+                  <button
+                    key={tab}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCompleted
+                          ? "bg-green-500 text-white shadow-lg"
+                          : isActive
+                          ? "bg-blue-500 text-white shadow-lg"
+                          : "bg-white border-2 border-gray-300 text-gray-400"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className={`text-[10px] font-medium text-center max-w-20 ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}>
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Customer Information */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <h3 className="text-base font-semibold text-gray-900">Customer Information</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Customer Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
 
