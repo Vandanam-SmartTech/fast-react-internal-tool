@@ -137,11 +137,11 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
               </div>
             )}
 
-            {/* Organization and Role Display */}
+            {/* Organization and Role Display  */}
             {selectedOrgName && selectedRole && !isSuperAdmin && (
-              <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
-                <Building className="h-4 w-4 text-primary-600" />
-                <div className="flex flex-col">
+              <div className="flex items-center gap-3 text-secondary-700 dark:text-secondary-200">
+                <Building className="h-4 w-4 text-primary-600 hidden sm:block" />
+                <div className="flex flex-col ml-[40px] md:ml-[0px] lg:ml-[0px]">
                   <span className="font-semibold text-sm">{selectedOrgName}</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">
                     {selectedRole.replace('ROLE_', '').replace('_', ' ')}
