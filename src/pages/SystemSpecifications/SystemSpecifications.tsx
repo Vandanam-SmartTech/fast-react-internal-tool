@@ -51,6 +51,8 @@ export const SystemSpecifications = () => {
 
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
+  const [batteryCapacity, setBatteryCapacity] =  useState([]);
+
 
   const [activeTab, setActiveTab] = useState("System Specifications");
 
@@ -81,7 +83,9 @@ export const SystemSpecifications = () => {
     heavyDutyStairs: false,
     inversionType:"On-Grid",   
     inverterBrand:"",
-    inverterKw:"",  
+    inverterKw:"",
+    batteryBrand:"VSole",
+    batteryCapacity:"",
   });
 
 
@@ -943,6 +947,50 @@ const handlePreview = async () => {
             <option value="Hybrid">Hybrid</option>
           </select>
         </div>
+
+        {formData.inversionType === "Hybrid" && (
+          <>
+          
+          <div>
+          <label className="block text-sm font-medium text-gray-700">Battery Brand</label>
+          <input
+          type="text"
+          name="batteryBrand"
+          value={formData.batteryBrand}
+          onChange={(e) => {
+      const value = e.target.value;
+      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+        handleChange(e);
+      }
+    }}
+          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+        </div>
+
+        <div>
+  <label className="block text-sm font-medium text-gray-700">
+    Battery Capacity (kW)
+  </label>
+  <select
+    id="batteryCapacity"
+    name="batteryCapacity"
+    value={formData.batteryCapacity}
+    onChange={(e) => {
+      setBatteryCapacity(e.target.value);
+      handleChange(e);
+    }}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
+      <option key={capacity} value={capacity}>
+        {capacity}
+      </option>
+    ))}
+  </select>
+</div>
+</>
+
+)}
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>

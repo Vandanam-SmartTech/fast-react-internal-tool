@@ -712,7 +712,7 @@ const isNameCorrectionRequired =
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Connection</h2>
   </div>
 
-<div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -1331,10 +1331,10 @@ const isNameCorrectionRequired =
           </div>
 
           {/* Submit Button */}
-          <div className="self-start mt-6">
+          <div className="flex justify-center pt-1">
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="py-2.5 px-5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               Update Connection
             </button>

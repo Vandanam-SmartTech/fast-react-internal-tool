@@ -37,13 +37,13 @@ export const EditInstallation = () => {
   ];
 
   const [formData, setFormData] = useState<any>({
-    acWireLengthFt: NaN,
-    dcWireLengthFt: NaN,
+    acWireLengthFt: '',
+    dcWireLengthFt: '',
     earthingWireLengthFt: NaN,
     numberOfGpPipes: NaN,
     descriptionOfInstallation: '',
-    availableSouthNorthLengthFt: NaN,
-    availableEastWestLengthFt: NaN,
+    availableSouthNorthLengthFt: '',
+    availableEastWestLengthFt: '',
     installationSpaceTypeId:1,
     installationSpaceTitle:'',
     customInstallationSpaceTitle:'',
@@ -93,8 +93,8 @@ export const EditInstallation = () => {
               earthingWireLengthFt: selectedInstallation.earthingWireLengthFt || '',
               numberOfGpPipes: selectedInstallation.numberOfGpPipes || '',
               descriptionOfInstallation: selectedInstallation.descriptionOfInstallation || '',
-              availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || 0,
-              availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || 0,
+              availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || '',
+              availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || '',
               installationSpaceTypeId: selectedInstallation.installationSpaceTypeId,
               installationSpaceTitle: isCustomTitle ? 'Other' : selectedInstallation.installationSpaceTitle,
             customInstallationSpaceTitle: isCustomTitle ? selectedInstallation.installationSpaceTitle : '',
@@ -123,13 +123,13 @@ export const EditInstallation = () => {
     connectionId,
     customerId,
     installationSpaceTypeId: formData.installationSpaceTypeId,
-    acWireLengthFt: formData.acWireLengthFt || 0,
-    dcWireLengthFt: formData.dcWireLengthFt || 0,
-    earthingWireLengthFt: formData.earthingWireLengthFt || 0,
-    numberOfGpPipes: formData.numberOfGpPipes || 0,
+    acWireLengthFt: formData.acWireLengthFt || '',
+    dcWireLengthFt: formData.dcWireLengthFt || '',
+    earthingWireLengthFt: formData.earthingWireLengthFt || '',
+    numberOfGpPipes: formData.numberOfGpPipes || '',
     descriptionOfInstallation: formData.descriptionOfInstallation || '',
-    availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || 0,
-    availableEastWestLengthFt: formData.availableEastWestLengthFt || 0,
+    availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || '',
+    availableEastWestLengthFt: formData.availableEastWestLengthFt || '',
     installationSpaceTitle:
             formData.installationSpaceTitle === 'Other'
               ? formData.customInstallationSpaceTitle
@@ -319,12 +319,18 @@ export const EditInstallation = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             name="availableEastWestLengthFt"
-            min="0"
-            onWheel={(e) => e.currentTarget.blur()}
+            //min="0"
+            //onWheel={(e) => e.currentTarget.blur()}
             value={formData.availableEastWestLengthFt}
-            onChange={handleChange}
+            onChange={(e) => {
+            const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+              handleChange(e);
+             }
+          }}
             placeholder="e.g. 10"
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
@@ -333,18 +339,66 @@ export const EditInstallation = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             name="availableSouthNorthLengthFt"
-            min="0"
-            onWheel={(e) => e.currentTarget.blur()}
+            //min="0"
+            //onWheel={(e) => e.currentTarget.blur()}
             value={formData.availableSouthNorthLengthFt}
             placeholder="e.g. 10"
-            onChange={handleChange}
+            onChange={(e) => {
+            const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+              handleChange(e);
+             }
+          }}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Panel To Inverter Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="dcWireLengthFt"
+            name="dcWireLengthFt"
+            //min="0"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.dcWireLengthFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+            const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+              handleChange(e);
+             }
+          }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
   
         <div>
+          <label className="block text-sm font-medium text-gray-700">Inverter to NetMeter Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="acWireLengthFt"
+            name="acWireLengthFt"
+            //min="0"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.acWireLengthFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+            const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+              handleChange(e);
+             }
+          }}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700">AC Wire Length (Feet)</label>
           <input
             type="number"
@@ -372,9 +426,9 @@ export const EditInstallation = () => {
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
-        </div>
+        </div> */}
   
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700">Earthing Wire Length (Feet)</label>
           <input
             type="number"
@@ -402,7 +456,7 @@ export const EditInstallation = () => {
             onChange={handleChange}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
-        </div>
+        </div> */}
   
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
@@ -465,13 +519,13 @@ export const EditInstallation = () => {
                      setFormData({
       
         installationSpaceTypeId:installation.installationSpaceTypeId,
-        acWireLengthFt: installation.acWireLengthFt || 0,
-        dcWireLengthFt: installation.dcWireLengthFt || 0,
-        earthingWireLengthFt: installation.earthingWireLengthFt || 0,
-        numberOfGpPipes: installation.numberOfGpPipes || 0,
+        acWireLengthFt: installation.acWireLengthFt || '',
+        dcWireLengthFt: installation.dcWireLengthFt || '',
+        earthingWireLengthFt: installation.earthingWireLengthFt || '',
+        numberOfGpPipes: installation.numberOfGpPipes || '',
         descriptionOfInstallation: installation.descriptionOfInstallation || '',
-        availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || 0,
-        availableEastWestLengthFt: installation.availableEastWestLengthFt || 0,
+        availableSouthNorthLengthFt: installation.availableSouthNorthLengthFt || '',
+        availableEastWestLengthFt: installation.availableEastWestLengthFt || '',
         installationSpaceTitle: installation.installationSpaceTitle || '',
       });
       

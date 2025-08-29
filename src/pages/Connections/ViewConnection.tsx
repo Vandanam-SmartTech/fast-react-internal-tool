@@ -631,20 +631,12 @@ const handleNo = async () => {
             <p className="mt-1">{installation.availableSouthNorthLengthFt || "....."}</p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
-            <p className="mt-1">{installation.acWireLengthFt || "....."}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">DC Wire Length (Feet)</h3>
+            <h3 className="text-sm font-medium text-gray-500">Panel To Inverter Distance (Feet)</h3>
             <p className="mt-1">{installation.dcWireLengthFt || "....."}</p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500">Earthing Wire Length (Feet)</h3>
-            <p className="mt-1">{installation.earthingWireLengthFt || "....."}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Number of GP Pipes</h3>
-            <p className="mt-1">{installation.numberOfGpPipes || "....."}</p>
+            <h3 className="text-sm font-medium text-gray-500">Inverter to NetMeter Distance (Feet)</h3>
+            <p className="mt-1">{installation.acWireLengthFt || "....."}</p>
           </div>
           <div className="md:col-span-2">
             <h3 className="text-sm font-medium text-gray-500">Description</h3>
