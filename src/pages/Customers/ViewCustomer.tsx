@@ -310,8 +310,8 @@ useEffect(() => {
     </div>
 
     <div>
-      <h3 className="text-sm font-medium text-gray-500">Section ID</h3>
-      <p className="mt-1 text-base text-gray-800">{connection.sectionId || "....."}</p>
+      <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
+      <p className="mt-1 text-base text-gray-800">{connection.discomId || "....."}</p>
     </div>
 
 

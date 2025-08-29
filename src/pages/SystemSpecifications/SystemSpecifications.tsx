@@ -1053,8 +1053,8 @@ const handlePreview = async () => {
             name="panelBrand"
             value={formData.panelBrand}
             onChange={(e) => {
-              setPanelBrand(e.target.value); // Update local state
-              handleChange(e); // Also update formData
+              setPanelBrand(e.target.value); 
+              handleChange(e); 
             }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
