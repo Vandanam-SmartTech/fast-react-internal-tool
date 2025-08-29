@@ -84,8 +84,8 @@ export const SystemSpecifications = () => {
     inversionType:"On-Grid",   
     inverterBrand:"",
     inverterKw:"",
-    batteryBrand:"VSole",
-    batteryCapacity:"",
+    batteryBrand: "VSole",
+    batteryCapacity: 5,
   });
 
 
@@ -328,6 +328,8 @@ useEffect(() => {
           heavyDutyRamp: customerData.heavyDutyRamp || false,
           heavyDutyStairs: customerData.heavyDutyStairs || false,
           inversionType: customerData.inversionType || "On Grid",
+          batteryBrand: customerData.batteryBrand || "VSole",
+          batteryCapacity: customerData.batteryCapacity || 5,
         }));
 
         setPhaseType(phaseType);
@@ -602,6 +604,8 @@ if (name === "inversionType") {
         heavyDutyStairs: formData.heavyDutyStairs,
         inverterCapacity: formData.inverterKw,
         inverterBrand: formData.inverterBrand,
+        batteryCapacity: formData.batteryCapacity,
+        batteryBrand: formData.batteryBrand,
     };
 
     try {
@@ -1056,23 +1060,33 @@ const handlePreview = async () => {
                 name="batteryBrand"
                 value={formData.batteryBrand}
                 onChange={(e) => { const value = e.target.value; if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") { handleChange(e); } }}
-                placeholder="e.g., VSole"
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
               <select
-                id="batteryCapacity"
-                name="batteryCapacity"
-                value={formData.batteryCapacity}
-                onChange={(e) => { setBatteryCapacity(e.target.value); handleChange(e); }}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
-                  <option key={capacity} value={capacity}>{capacity}</option>
-                ))}
-              </select>
+  id="batteryCapacity"
+  name="batteryCapacity"
+  value={formData.batteryCapacity}
+  onChange={(e) =>
+    handleChange({
+      target: {
+        name: "batteryCapacity",
+        value: Number(e.target.value),
+      },
+    })
+  }
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
+    <option key={capacity} value={capacity}>
+      {capacity}
+    </option>
+  ))}
+</select>
+
             </div>
           </>
         )}
