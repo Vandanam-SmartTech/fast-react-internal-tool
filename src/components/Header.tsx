@@ -137,7 +137,7 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
               </div>
             )}
 
-            {/* Organization and Role Display */}
+            {/* Organization and Role Display  */}
             {selectedOrgName && selectedRole && !isSuperAdmin && (
               <div className="flex items-center gap-3 text-secondary-700 dark:text-secondary-200">
                 <Building className="h-4 w-4 text-primary-600 hidden sm:block" />
