@@ -87,7 +87,8 @@ const documentSteps: DocumentStep[] = [
       id: 2,
       title: "Quotations",
       documents: [
-        { label: "Quotations", name: "Quotation", canGenerate: false, canPreview: false }
+        { label: "Normal Quotation", name: "Normal Quotation", canGenerate: false, canPreview: false },
+         { label: "Signed/Agreed Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -538,7 +539,7 @@ const handleUpdateDocument = async (fileId: string) => {
                             <input
                               key={inputKeys[docDef.name] || 0}   
                               type="file"
-                              accept="application/pdf,image/*"
+                              accept={docDef.name === 'Regular Bill' ? '.jpeg,.jpg,.png' : 'application/pdf,image/*'}
                               onChange={(e) =>
                                   handleDocumentFileChange(docDef.name, e.target.files?.[0] || null)
                               }
@@ -640,7 +641,7 @@ const handleUpdateDocument = async (fileId: string) => {
       <input
         id={`update-input-${doc.fileId}`}
         type="file"
-        accept="application/pdf,image/*"
+        accept={docDef.name === 'Regular Bill' ? '.jpeg,.jpg,.png' : 'application/pdf,image/*'}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0] || null;
