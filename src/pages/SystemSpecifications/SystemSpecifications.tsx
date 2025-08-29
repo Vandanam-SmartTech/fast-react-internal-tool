@@ -51,6 +51,8 @@ export const SystemSpecifications = () => {
 
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
+  const [batteryCapacity, setBatteryCapacity] =  useState([]);
+
 
   const [activeTab, setActiveTab] = useState("System Specifications");
 
@@ -81,7 +83,9 @@ export const SystemSpecifications = () => {
     heavyDutyStairs: false,
     inversionType:"On-Grid",   
     inverterBrand:"",
-    inverterKw:"",  
+    inverterKw:"",
+    batteryBrand:"VSole",
+    batteryCapacity:"",
   });
 
 
@@ -822,8 +826,18 @@ const handlePreview = async () => {
 
 
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
+      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+            <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
+        </div>
+        <div className="border-b border-gray-200 mb-4" />
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="md:col-span-1">
+        
   <label className="block text-sm font-medium text-gray-700">Installation Space</label>
   <select
     id="installationSpaceType"
@@ -926,6 +940,7 @@ const handlePreview = async () => {
   </div>
 )}
 </div>
+<div className="hidden md:block md:col-span-1"></div>
 
                 <div>
           <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
@@ -941,6 +956,21 @@ const handlePreview = async () => {
           >
             <option value="On-Grid">On-Grid</option>
             <option value="Hybrid">Hybrid</option>
+          </select>
+        </div>
+
+        {/* DCR/Non-DCR moved up to row with Inversion Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
+          <select
+            id="dcrNonDcrType"
+            name="dcrNonDcrType"
+            value={formData.dcrNonDcrType}
+            onChange={(e) => { setDcrNonDcrType(e.target.value); handleChange(e); }}
+            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="DCR">DCR</option>
+            <option value="Non-DCR">Non-DCR</option>
           </select>
         </div>
 
@@ -981,33 +1011,14 @@ const handlePreview = async () => {
               </select>
         </div>
 
-                <div>
-          <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
-          <select
-            id="dcrNonDcrType"
-            name="dcrNonDcrType"
-            value={formData.dcrNonDcrType}
-            onChange={(e) => {
-              setDcrNonDcrType(e.target.value); 
-              handleChange(e); 
-            }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="DCR">DCR</option>
-            <option value="Non-DCR">Non-DCR</option>
-          </select>
-        </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">PV Panel Brand</label>
+          <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
           <select
             id="panelBrand"
             name="panelBrand"
             value={formData.panelBrand}
-            onChange={(e) => {
-              setPanelBrand(e.target.value); // Update local state
-              handleChange(e); // Also update formData
-            }}
+            onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
             className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="Sova">Sova</option>
@@ -1016,7 +1027,6 @@ const handlePreview = async () => {
             <option value="ReNew">ReNew</option>
           </select>
         </div>
-
 
         <div>
           <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
@@ -1036,6 +1046,36 @@ const handlePreview = async () => {
                    ))}
               </select>
         </div>
+
+        {formData.inversionType === "Hybrid" && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Battery Brand</label>
+              <input
+                type="text"
+                name="batteryBrand"
+                value={formData.batteryBrand}
+                onChange={(e) => { const value = e.target.value; if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") { handleChange(e); } }}
+                placeholder="e.g., VSole"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
+              <select
+                id="batteryCapacity"
+                name="batteryCapacity"
+                value={formData.batteryCapacity}
+                onChange={(e) => { setBatteryCapacity(e.target.value); handleChange(e); }}
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
+                  <option key={capacity} value={capacity}>{capacity}</option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
 
 <div className="col-span-full space-y-6">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
@@ -1127,7 +1167,7 @@ const handlePreview = async () => {
     />
   </div>
 </div>
-            <div className="flex flex-wrap gap-4 justify-center sm:justify-start sm:ml-4 md:ml-24">
+            <div className="flex flex-wrap gap-4 justify-start">
             <button
             type="button"
             onClick={handleSaveSpecs}
@@ -1159,13 +1199,10 @@ const handlePreview = async () => {
       </button>
     )}
 </div>
-
-
           </div>
-
-
-          
-      </form>
+       
+        </form>
+      </div>
 
       <Dialog
   open={dialogOpen}

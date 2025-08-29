@@ -183,27 +183,15 @@ export const ViewInstallation = () => {
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
       <div>
-        <h3 className="text-sm font-medium text-gray-500">AC Wire Length (Feet)</h3>
-        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-          {installation.acWireLengthFt || "....."}
-        </p>
-      </div>
-      <div>
-        <h3 className="text-sm font-medium text-gray-500">DC Wire Length (Feet)</h3>
+        <h3 className="text-sm font-medium text-gray-500">Panel To Inverter Distance (Feet)</h3>
         <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
           {installation.dcWireLengthFt || "....."}
         </p>
       </div>
       <div>
-        <h3 className="text-sm font-medium text-gray-500">Earthing Wire Length (Feet)</h3>
+        <h3 className="text-sm font-medium text-gray-500">Inverter to NetMeter Distance (Feet)</h3>
         <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-          {installation.earthingWireLengthFt || "....."}
-        </p>
-      </div>
-      <div>
-        <h3 className="text-sm font-medium text-gray-500">Number of GP Pipes</h3>
-        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-          {installation.numberOfGpPipes || "....."}
+          {installation.acWireLengthFt || "....."}
         </p>
       </div>
       <div className="md:col-span-2">
