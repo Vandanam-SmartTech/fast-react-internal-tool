@@ -432,14 +432,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-4">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="mb-3 sm:mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
-              <p className="text-gray-600 mt-0.5 text-sm">Enter the customer details to get started</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Add New Customer</h1>
+              <p className="text-gray-600 mt-0.5 text-xs sm:text-sm">Enter the customer details to get started</p>
             </div>
           </div>
         </div>
@@ -498,7 +498,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Customer Information */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
             <h3 className="text-base font-semibold text-gray-900">Customer Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
@@ -509,7 +509,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
     Select User Type <span className="text-red-500">*</span>
   </label>
-  <div className="grid grid-cols-2 gap-6 justify-items-center">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
     {[
       { value: "organization", label: "Organization Level User" },
       { value: "agency", label: "Agency Level User" }
@@ -538,7 +538,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 {/* Conditional Sections */}
 {representativeType === "agency" && (
-  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
     
     {/* Organization */}
     {!selectedOrg && (
@@ -610,8 +610,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
 {representativeType === "organization" && (
-  <div className="col-span-2 mt-4 border rounded-md p-4 shadow-sm">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="col-span-2 mt-3 sm:mt-4 border rounded-md p-3 sm:p-4 shadow-sm">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
       {/* Select Organization Name */}
       {!selectedOrg && (
   <div>
@@ -885,10 +885,10 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
 
-          <div className="flex justify-center pt-1">
+          <div className="pt-1">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+              className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
             >
               Save Customer
             </button>

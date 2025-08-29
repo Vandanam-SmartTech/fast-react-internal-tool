@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Eye, Trash2, Pencil } from "lucide-react";
+import IconButton from "../../components/ui/IconButton";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
 import { toast } from 'react-toastify';
@@ -86,9 +87,9 @@ const documentSteps: DocumentStep[] = [
     },
     {
       id: 3,
-      title: "Customer Vendor Agreement",
+      title: "Consumer Vendor Agreement",
       documents: [
-        { label: "Customer Vendor Agreement", name: "Customer Vendor Agreement", canGenerate: true, canPreview: true }
+        { label: "Consumer Vendor Agreement", name: "Consumer Vendor Agreement", canGenerate: true, canPreview: true }
       ],
       isCompleted: false,
       isExpanded: false
@@ -391,6 +392,15 @@ const handleDocumentUpload = async (documentName: string) => {
   const __noop = (..._args: unknown[]) => undefined;
   __noop(uploading, selectedFile, uploadedFiles, setSelectedSession, setUploading, setSelectedFile, setUploadedFiles, toggleStepExpansion);
 
+  const formatFileTail = (fileName: string, keep: number = 18): string => {
+    if (!fileName) return "";
+    const dotIndex = fileName.lastIndexOf('.')
+    const base = dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName;
+    const ext = dotIndex > 0 ? fileName.substring(dotIndex) : '';
+    const suffix = base.length > keep ? base.slice(-keep) : base;
+    return `${base.length > keep ? '…' : ''}${suffix}${ext}`;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
@@ -506,11 +516,11 @@ const handleDocumentUpload = async (documentName: string) => {
                 </div>
                 <div className="px-6 py-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                    {activeStep.documents.map((document) => (
-                    <div key={document.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    {activeStep.documents.map((docDef) => (
+                    <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center space-x-3 mb-3">
                         <FileText className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-medium text-gray-900">{document.label}</h4>
+                        <h4 className="font-medium text-gray-900">{docDef.label}</h4>
                       </div>
                       
                       {/* File Upload Section */}
@@ -519,11 +529,11 @@ const handleDocumentUpload = async (documentName: string) => {
                           Choose File
                         </label>
                             <input
-                              key={inputKeys[document.name] || 0}   
+                              key={inputKeys[docDef.name] || 0}   
                               type="file"
                               accept="application/pdf,image/*"
                               onChange={(e) =>
-                                  handleDocumentFileChange(document.name, e.target.files?.[0] || null)
+                                  handleDocumentFileChange(docDef.name, e.target.files?.[0] || null)
                               }
                             className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
@@ -532,46 +542,46 @@ const handleDocumentUpload = async (documentName: string) => {
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
 
-                        {document.canPreview && (
+                        {docDef.canPreview && (
                           <button
-                            onClick={() => handlePreview(document.name)}
-                            disabled={loadingPreviewDoc === document.name}
+                            onClick={() => handlePreview(docDef.name)}
+                            disabled={loadingPreviewDoc === docDef.name}
                             className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
                             title="Preview document"
                           >
-                            {loadingPreviewDoc === document.name ? (
+                            {loadingPreviewDoc === docDef.name ? (
                               <Play className="w-3 h-3 animate-spin" />
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                            <span>{loadingPreviewDoc === document.name ? "Previewing..." : "Preview"}</span>
+                            <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
                           </button>
                         )}
                         
-                        {document.canGenerate && (
+                        {docDef.canGenerate && (
                           <button
-                            onClick={() => handleGenerate(document.name)}
-                            disabled={loadingGenerateDoc === document.name}
+                            onClick={() => handleGenerate(docDef.name)}
+                            disabled={loadingGenerateDoc === docDef.name}
                             className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
                             title="Generate document"
                           >
-                            {loadingGenerateDoc === document.name ? (
+                            {loadingGenerateDoc === docDef.name ? (
                               <Play className="w-3 h-3 animate-spin" />
                             ) : (
                               <Play className="w-3 h-3" />
                             )}
-                            <span>{loadingGenerateDoc === document.name ? "Generating..." : "Generate"}</span>
+                            <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
                           </button>
                         )}
 
-                        {documentFiles[document.name] && (
+                        {documentFiles[docDef.name] && (
                         <button
-                            onClick={() => handleDocumentUpload(document.name)}
-                            disabled={loadingUploadDoc === document.name}
+                            onClick={() => handleDocumentUpload(docDef.name)}
+                            disabled={loadingUploadDoc === docDef.name}
                             className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
                             title="Upload selected file"
                         >
-                          {loadingUploadDoc === document.name ? (
+                          {loadingUploadDoc === docDef.name ? (
                           <>
                         <Upload className="w-3 h-3 animate-spin" />
                             <span>Uploading...</span>
@@ -587,13 +597,13 @@ const handleDocumentUpload = async (documentName: string) => {
                       </div>
 
                       {/* File Status */}
-                      {documentFiles[document.name] && (
+                      {documentFiles[docDef.name] && (
                       <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
                         <div>
-                            <span className="font-medium">Selected:</span> {documentFiles[document.name]?.name}
+                            <span className="font-medium">Selected:</span> {documentFiles[docDef.name]?.name}
                         </div>
                            <button
-                              onClick={() => clearSelectedFile(document.name)}
+                              onClick={() => clearSelectedFile(docDef.name)}
                               className="ml-2 text-red-500 hover:text-red-700 text-xs"
                             >
                               ✖
@@ -601,40 +611,60 @@ const handleDocumentUpload = async (documentName: string) => {
                       </div>
                       )}
 
-                        {uploadedDocuments[document.name] && uploadedDocuments[document.name].length > 0 && (
+                        {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
         <div className="mt-3">
                             <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
           <ul className="space-y-1">
-            {uploadedDocuments[document.name].map((doc) => (
+            {uploadedDocuments[docDef.name].map((doc) => (
                                 <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
                 <div className="flex items-center justify-between">
-                  <span className="truncate">{doc.fileName}</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDownload(doc.fileId, doc.fileName)} className="text-blue-600 hover:underline ml-2">View</button>
-                    {document.name === 'Quotations' && (
-                      <>
-                        <button onClick={() => handleDeleteDocument(doc.fileId)} className="text-red-600 hover:underline">Delete</button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {document.name === 'Quotations' && (
-                  <div className="mt-2 flex items-center gap-2">
+                  <span className="truncate" title={doc.fileName}>{formatFileTail(doc.fileName, 18)}</span>
+                  <div className="flex items-center gap-1.5 flex-nowrap">
                     <input
+                      id={`update-input-${doc.fileId}`}
                       type="file"
                       accept="application/pdf,image/*"
-                      onChange={(e) => handleReplaceFileChange(doc.fileId, e.target.files?.[0] || null)}
-                      className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (!file) return;
+                        handleReplaceFileChange(doc.fileId, file);
+                        await handleUpdateDocument(doc.fileId);
+                        e.currentTarget.value = '';
+                      }}
                     />
-                    <button
-                      onClick={() => handleUpdateDocument(doc.fileId)}
-                      className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 disabled:opacity-50"
-                      disabled={!replaceFiles[doc.fileId]}
-                    >
-                      Replace
-                    </button>
+                    <IconButton
+                      aria-label={`View ${doc.fileName}`}
+                      title="View"
+                      size="sm"
+                      variant="outline"
+                      className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                      icon={<Eye className="w-4 h-4" />}
+                      onClick={() => handleDownload(doc.fileId, doc.fileName)}
+                    />
+                    <IconButton
+                      aria-label={`Update ${doc.fileName}`}
+                      title="Update"
+                      size="sm"
+                      variant="outline"
+                      className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
+                      icon={<Pencil className="w-4 h-4" />}
+                      onClick={() => {
+                        const input = window.document.getElementById(`update-input-${doc.fileId}`) as HTMLInputElement | null;
+                        input?.click();
+                      }}
+                    />
+                    <IconButton
+                      aria-label={`Delete ${doc.fileName}`}
+                      title="Delete"
+                      size="sm"
+                      variant="outline"
+                      className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
+                      icon={<Trash2 className="w-4 h-4" />}
+                      onClick={() => handleDeleteDocument(doc.fileId)}
+                    />
                   </div>
-                )}
+                </div>
               </li>
             ))}
           </ul>
