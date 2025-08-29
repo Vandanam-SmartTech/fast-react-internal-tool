@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Eye, Trash2, Pencil } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
+import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -33,6 +34,9 @@ interface DocumentStep {
     canGenerate: boolean;
     canPreview: boolean;
     uploadedFile?: File | null;
+    fileExtensions?: string[]; // e.g., ['pdf'] or ['jpeg','jpg','png']
+    fileMimeTypes?: string[]; // e.g., ['application/pdf'] or ['image/jpeg','image/png']
+    maxBytes?: number; // optional max size in bytes
   }>;
   isCompleted: boolean;
   isExpanded: boolean;
@@ -77,8 +81,8 @@ const documentSteps: DocumentStep[] = [
       documents: [
         { label: "Aadhaar Card", name: "AadhaarCard", canGenerate: false, canPreview: false },
         { label: "Bank Passbook/Cancelled Cheque", name: "BankPassbook", canGenerate: false, canPreview: false },
-        { label: "E-Bill", name: "Ebill", canGenerate: false, canPreview: false },
-        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false}
+        { label: "E-Bill", name: "Ebill", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"] },
+        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false, fileExtensions: ["jpeg","jpg","png"], fileMimeTypes: ["image/jpeg","image/png","image/jpg"] }
       ],
       isCompleted: false,
       isExpanded: true
@@ -87,7 +91,8 @@ const documentSteps: DocumentStep[] = [
       id: 2,
       title: "Quotations",
       documents: [
-        { label: "Quotations", name: "Quotation", canGenerate: false, canPreview: false }
+        { label: "Normal Quotation", name: "Normal Quotation", canGenerate: false, canPreview: false },
+         { label: "Signed/Agreed Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -105,7 +110,7 @@ const documentSteps: DocumentStep[] = [
       id: 4,
       title: "Sanction Letter",
       documents: [
-        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false }
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false , fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50)}
       ],
       isCompleted: false,
       isExpanded: false
@@ -131,7 +136,7 @@ const documentSteps: DocumentStep[] = [
         { label:"Annexure-I",name: "Annexure-I", canGenerate: true, canPreview: true },
         { label:"RTS Declaration",name: "RTS Declaration", canGenerate: true, canPreview: true },
         { label:"Earthing Report",name: "Earthing Report", canGenerate: true, canPreview:true },
-        { label:"Geo Tag Photo",name: "Geo Tag", canGenerate: false, canPreview: false },
+        { label:"Geo Tag Photo",name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg","jpg","png"], fileMimeTypes: ["image/jpeg","image/png","image/jpg"] },
         { label:"D1-Form",name: "D1Form", canGenerate: false, canPreview: false },
         { label:"Vendor Feasibility",name: "Vendor Feasibility", canGenerate: true, canPreview: true },
         { label:"Digital Approval Letter",name: "Digital Approval Letter", canGenerate: false, canPreview: false },
@@ -535,13 +540,30 @@ const handleUpdateDocument = async (fileId: string) => {
                         <label className="block text-xs font-medium text-gray-700 mb-2">
                           Choose File
                         </label>
+                        
                             <input
                               key={inputKeys[docDef.name] || 0}   
                               type="file"
-                              accept="application/pdf,image/*"
-                              onChange={(e) =>
-                                  handleDocumentFileChange(docDef.name, e.target.files?.[0] || null)
-                              }
+                              accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                if (file) {
+                                  if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                                    const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                                    if (!typeOk) {
+                                      toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                                      setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                                      return;
+                                    }
+                                  }
+                                  if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                                    toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                                    setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                                    return;
+                                  }
+                                }
+                                handleDocumentFileChange(docDef.name, file);
+                              }}
                             className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
                       </div>
@@ -607,7 +629,7 @@ const handleUpdateDocument = async (fileId: string) => {
   <div className="mt-2 text-xs text-gray-600 flex items-center">
     <span className="font-medium mr-1">Selected:</span>
     <span className="truncate flex-1">
-      {formatFileName(documentFiles[docDef.name]?.name, 40)}
+      {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
     </span>
     <button
       onClick={() => clearSelectedFile(docDef.name)}
@@ -640,11 +662,24 @@ const handleUpdateDocument = async (fileId: string) => {
       <input
         id={`update-input-${doc.fileId}`}
         type="file"
-        accept="application/pdf,image/*"
+        accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0] || null;
           if (!file) return;
+          if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+            const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+            if (!ok) {
+              toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+              e.currentTarget.value = '';
+              return;
+            }
+          }
+          if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+            toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+            e.currentTarget.value = '';
+            return;
+          }
           handleReplaceFileChange(doc.fileId, file);
           e.currentTarget.value = "";
         }}
