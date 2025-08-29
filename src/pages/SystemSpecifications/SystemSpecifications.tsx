@@ -826,7 +826,16 @@ const handlePreview = async () => {
 
 
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+            <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
+        </div>
+        <div className="border-b border-gray-200 mb-4" />
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="md:col-span-1">
         
   <label className="block text-sm font-medium text-gray-700">Installation Space</label>
@@ -1158,7 +1167,7 @@ const handlePreview = async () => {
     />
   </div>
 </div>
-            <div className="flex flex-wrap gap-4 justify-center sm:justify-start sm:ml-4 md:ml-24">
+            <div className="flex flex-wrap gap-4 justify-start">
             <button
             type="button"
             onClick={handleSaveSpecs}
@@ -1196,7 +1205,8 @@ const handlePreview = async () => {
 
 
           
-      </form>
+        </form>
+      </div>
 
       <Dialog
   open={dialogOpen}
