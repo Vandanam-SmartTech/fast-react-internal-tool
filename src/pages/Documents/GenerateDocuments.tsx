@@ -536,6 +536,7 @@ const handleUpdateDocument = async (fileId: string) => {
                         <label className="block text-xs font-medium text-gray-700 mb-2">
                           Choose File
                         </label>
+                        
                             <input
                               key={inputKeys[docDef.name] || 0}   
                               type="file"
