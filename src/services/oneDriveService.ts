@@ -94,7 +94,7 @@ export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
 export const deleteDocumentById = async (fileId: string): Promise<void> => {
   try {
     const oneDriveAPI = getOneDriveAPI();
-    await oneDriveAPI.delete(`/api/document-manager/documents/${fileId}`);
+    await oneDriveAPI.delete(`/api/document-manager/documents/delete/${fileId}`);
   } catch (error: any) {
     console.error('Failed to delete document:', error);
     throw error;
@@ -105,10 +105,14 @@ export const updateDocumentById = async (fileId: string, file: File): Promise<vo
   try {
     const oneDriveAPI = getOneDriveAPI();
     const formData = new FormData();
-    formData.append('documentData', file);
-    await oneDriveAPI.put(`/api/document-manager/documents/${fileId}`, formData);
+
+    // append both fileId and fileData
+    formData.append("fileId", fileId);
+    formData.append("fileData", file);
+
+    await oneDriveAPI.put(`/api/document-manager/documents/update/${fileId}`, formData);
   } catch (error: any) {
-    console.error('Failed to update document:', error);
+    console.error("Failed to update document:", error);
     throw error;
   }
 };
