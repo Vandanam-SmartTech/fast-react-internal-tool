@@ -495,15 +495,14 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 </div>
 
-        {/* Form */}
+
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Customer Information */}
+          
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
             <h3 className="text-base font-semibold text-gray-900">Customer Information</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            
 
 
-{/* Representative Type Selection */}
 {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
  selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && (<div className="col-span-2 w-full">
   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
@@ -536,11 +535,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 </div>)}
 
-{/* Conditional Sections */}
+
 {representativeType === "agency" && (
   <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
     
-    {/* Organization */}
     {!selectedOrg && (
   <div>
     <label className="block text-sm font-medium text-gray-700">
@@ -565,7 +563,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 )}
 
-    {/* Agency */}
+
     <div>
       <label className="block text-sm font-medium text-gray-700">
         Select Agency
@@ -587,7 +585,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       </select>
     </div>
 
-    {/* Agency User */}
+
     <div>
       <label className="block text-sm font-medium text-gray-700">
         Select Agency User
@@ -612,7 +610,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 {representativeType === "organization" && (
   <div className="col-span-2 mt-3 sm:mt-4 border rounded-md p-3 sm:p-4 shadow-sm">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-      {/* Select Organization Name */}
+      
       {!selectedOrg && (
   <div>
     <label className="block text-sm font-medium text-gray-700">
@@ -636,7 +634,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 )}
 
-      {/* Select Organization User */}
+     
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Select Organization User
@@ -658,7 +656,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 )}
 
-
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
   <label className="block text-sm font-medium text-gray-700">
     Customer Name <span className="text-red-500">*</span>
