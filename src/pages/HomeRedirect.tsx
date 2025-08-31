@@ -41,23 +41,22 @@ const HomeRedirect: React.FC = () => {
       }
 
       if (orgRoles.length === 1) {
-        
-        const orgRole = orgRoles[0];
+        const [orgId, orgRole] = Object.entries(claims.org_roles)[0]; 
         const role = orgRole.role;
-        
-        
+
         localStorage.setItem(
           'selectedOrg',
-          JSON.stringify({ 
-            orgId: orgRole.orgId, 
-            orgName: orgRole.org_name, 
-            role 
+          JSON.stringify({
+            orgId,                   
+            orgName: orgRole.org_name,
+            role
           })
         );
-        
+
         routeByOrgRole(role);
         return;
       }
+
 
       
       const selectedOrg = localStorage.getItem('selectedOrg');
