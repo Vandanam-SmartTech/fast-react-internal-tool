@@ -21,32 +21,6 @@ export const getQuotationAPI = () => {
   return quotationAPI;
 };
 
-/**
- * Build organization/agency context params expected by backend.
- * Supports both legacy keys (selectedOrganization*) and new JSON key (selectedOrg).
- */
-// const buildOrgParams = () => {
-//   let orgId = localStorage.getItem('selectedOrganization');
-//   let orgName = localStorage.getItem('selectedOrganizationName');
-//   const agencyId = localStorage.getItem('selectedAgency');
-//   const agencyName = localStorage.getItem('selectedAgencyName');
-
-//   if (!orgId || !orgName) {
-//     const selectedOrgStr = localStorage.getItem('selectedOrg');
-//     if (selectedOrgStr) {
-//       try {
-//         const parsed = JSON.parse(selectedOrgStr);
-//         if (!orgId && parsed.orgId) orgId = String(parsed.orgId);
-//         if (!orgName && parsed.orgName) orgName = String(parsed.orgName);
-//       } catch {
-//         // ignore parsing errors; params will remain undefined if not available
-//       }
-//     }
-//   }
-
-//   return { orgId, orgName, agencyId, agencyName };
-// };
-
 export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -106,6 +80,52 @@ export const fetchPanelWattages = async (
   }
 };
 
+export const fetchInverters = async (
+  phaseType: string,
+  inversionType: string
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get(`/api/inverter/inverterBrands`, {
+      params: {
+        phaseType,
+        gridType: inversionType,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch inverter wattages from server');
+  }
+};
+
+export const fetchPanels = async (
+  phaseType: string,
+  dcrNonDcrType: string
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching inverters...");
+    console.log("Request params:", {
+      phaseType,
+      dcrNondcr: dcrNonDcrType,
+    });
+
+    const response = await quotationAPI.get(`/api/panelBrands`, {
+      params: {
+        phaseType,
+        dcrNondcr: dcrNonDcrType,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch inverter wattages from server');
+  }
+};
+
 export const fetchInverterWattages = async (
   phaseType: string,
   inverterBrand: string
@@ -114,7 +134,7 @@ export const fetchInverterWattages = async (
   try {
     console.log('Fetching inverter wattages...');
 
-    const response = await quotationAPI.get(`/api/inverterCapacity`, {
+    const response = await quotationAPI.get(`/api/inverter/inverterCapacity`, {
       params: {
         phaseType,
         inverterBrand,
@@ -127,6 +147,8 @@ export const fetchInverterWattages = async (
     throw new Error('Failed to fetch inverter wattages from server');
   }
 };
+
+
 
 export const fetchRecommendedDetails = async (connectionId: number) => {
   const quotationAPI = getQuotationAPI();

@@ -131,7 +131,6 @@ const documentSteps: DocumentStep[] = [
       title: "MNRE and Discom Documents",
       documents: [
         { label:"Net Agreement 1",name: "Net Agreement 1", canGenerate: true, canPreview: true },
-        { label:"Net Agreement 2",name: "Net Agreement 2", canGenerate: true, canPreview: true },
         { label:"WCR",name: "WCR", canGenerate: true, canPreview: true },
         { label:"Annexure-I",name: "Annexure-I", canGenerate: true, canPreview: true },
         { label:"RTS Declaration",name: "RTS Declaration", canGenerate: true, canPreview: true },

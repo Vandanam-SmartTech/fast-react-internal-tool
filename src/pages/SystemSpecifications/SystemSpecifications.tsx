@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, getDistrictNameByCode,  getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
-import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails} from '../../services/quotationService';
+import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters } from '../../services/quotationService';
 import { uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -49,6 +49,9 @@ export const SystemSpecifications = () => {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
 
+  const [inverterBrands, setInverterBrands] = useState<string[]>([]);
+
+
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
   const [batteryCapacity, setBatteryCapacity] =  useState([]);
@@ -84,8 +87,8 @@ export const SystemSpecifications = () => {
     inversionType:"On-Grid",   
     inverterBrand:"",
     inverterKw:"",
-    batteryBrand:"VSole",
-    batteryCapacity:"",
+    batteryBrand: "VSole",
+    batteryCapacity: 5,
   });
 
 
@@ -260,10 +263,10 @@ useEffect(() => {
 
         const recommendedKW = recommendation.recommendedKW || "";
 
-        const inverterWattages = await fetchInverterWattages(
-            phaseType,
-            recommendation.inverterBrand
-        );
+        // const inverterWattages = await fetchInverterWattages(
+        //     phaseType,
+        //     recommendation.inverterBrand
+        // );
         const selectedInverterKw = inverterWattages[0] || "";
 
 
@@ -278,10 +281,17 @@ useEffect(() => {
           panelBrand: recommendation.panelBrand || "",
           inverterBrand: recommendation.inverterBrand || "",
           inverterKw: selectedInverterKw,
+          inversionType: recommendation.inversionType,
         }));
 
         setConnectionType(recommendation.connectionType || "");
         setPhaseType(phaseType);
+
+        if (phaseType && recommendation.inversionType) {
+          const inverters = await fetchInverters(phaseType, recommendation.inversionType);
+          setInverterBrands(inverters || []);
+        }
+
 
         if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
           const wattages = await fetchPanelWattages(
@@ -328,9 +338,17 @@ useEffect(() => {
           heavyDutyRamp: customerData.heavyDutyRamp || false,
           heavyDutyStairs: customerData.heavyDutyStairs || false,
           inversionType: customerData.inversionType || "On Grid",
+          batteryBrand: customerData.batteryBrand || "VSole",
+          batteryCapacity: customerData.batteryCapacity || 5,
         }));
 
         setPhaseType(phaseType);
+
+        if (phaseType && customerData.inversionType) {
+          const inverters = await fetchInverters(phaseType, customerData.inversionType);
+          setInverterBrands(inverters || []);
+        }
+
 
         if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
           const wattages = await fetchPanelWattages(
@@ -368,6 +386,7 @@ useEffect(() => {
 
   fetchData();
 }, [connectionId, connectionDetails]);
+
 
 useEffect(() => {
     setFormData((prev) => ({
@@ -478,8 +497,8 @@ if (name === "inversionType") {
           : "KSolare" 
         : formData.inverterBrand;
 
-
-
+    const inversionTypeValue =
+      name === "inversionType" ? value : formData.inversionType;
 
     try {
       console.log("Fetching panel wattages with:");
@@ -504,9 +523,12 @@ if (name === "inversionType") {
     );
     console.log("Fetched Inverter Wattages:", inverterWattages);
     setInverterWattages(inverterWattages);
+
+    if (phaseType && inversionTypeValue) {
+        const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
+        setInverterBrands(inverterBrands || []);
+      }
     
-
-
       setFormData((prev) => ({
         ...prev,
         Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
@@ -602,6 +624,8 @@ if (name === "inversionType") {
         heavyDutyStairs: formData.heavyDutyStairs,
         inverterCapacity: formData.inverterKw,
         inverterBrand: formData.inverterBrand,
+        batteryCapacity: formData.batteryCapacity,
+        batteryBrand: formData.batteryBrand,
     };
 
     try {
@@ -975,22 +999,24 @@ const handlePreview = async () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-          <select
-            id="inverterBrand"
-            name="inverterBrand"
-            value={formData.inverterBrand}
-            onChange={(e) => {
-              setInverterBrand(e.target.value); 
-              handleChange(e); 
-            }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="Growatt">Growatt</option>
-            <option value="KSolare">KSolare</option>
-            <option value="VSole">VSole</option>
-          </select>
-        </div>
+  <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+  <select
+    id="inverterBrand"
+    name="inverterBrand"
+    value={formData.inverterBrand}
+    onChange={(e) => {
+      handleChange(e);
+    }}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    {inverterBrands.map((brand) => (
+      <option key={brand} value={brand}>
+        {brand}
+      </option>
+    ))}
+  </select>
+</div>
+
 
                 <div>
           <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
@@ -1056,23 +1082,33 @@ const handlePreview = async () => {
                 name="batteryBrand"
                 value={formData.batteryBrand}
                 onChange={(e) => { const value = e.target.value; if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") { handleChange(e); } }}
-                placeholder="e.g., VSole"
                 className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
               <select
-                id="batteryCapacity"
-                name="batteryCapacity"
-                value={formData.batteryCapacity}
-                onChange={(e) => { setBatteryCapacity(e.target.value); handleChange(e); }}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
-                  <option key={capacity} value={capacity}>{capacity}</option>
-                ))}
-              </select>
+  id="batteryCapacity"
+  name="batteryCapacity"
+  value={formData.batteryCapacity}
+  onChange={(e) =>
+    handleChange({
+      target: {
+        name: "batteryCapacity",
+        value: Number(e.target.value),
+      },
+    })
+  }
+  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+>
+  {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
+    <option key={capacity} value={capacity}>
+      {capacity}
+    </option>
+  ))}
+</select>
+
             </div>
           </>
         )}
