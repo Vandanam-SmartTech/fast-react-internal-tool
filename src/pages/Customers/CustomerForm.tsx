@@ -438,8 +438,8 @@ const handleSubmit = async (e: React.FormEvent) => {
         <div className="mb-3 sm:mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Add New Customer</h1>
-              <p className="text-gray-600 mt-0.5 text-xs sm:text-sm">Enter the customer details to get started</p>
+              <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
+              {/* <p className="text-gray-600 mt-0.5 text-sm">Enter the customer details to get started</p> */}
             </div>
           </div>
         </div>

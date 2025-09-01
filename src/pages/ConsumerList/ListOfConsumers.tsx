@@ -651,9 +651,9 @@ useEffect(() => {
       <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
         Customer Directory
       </h1>
-      <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+      {/* <p className="text-secondary-700 dark:text-secondary-300 mt-1">
         Manage and view all your customers and their connections
-      </p>
+      </p> */}
     </div>
 
     {/* Organization + Agency Selects */}
