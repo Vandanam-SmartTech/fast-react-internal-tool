@@ -43,13 +43,7 @@ useEffect(() => {
 
     const claims = await fetchClaims();
     if (!claims) return;
-
-    const savedOrg = localStorage.getItem('selectedOrg');
-  if (savedOrg) {
-    const { role, orgId, orgName } = JSON.parse(savedOrg);
-    routeByOrgRole(role, orgId, orgName);
-    return;
-  }
+    
 
     handleRoleRouting(claims);
   };

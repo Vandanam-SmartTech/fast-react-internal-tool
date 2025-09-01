@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCustomerById, getDistrictNameByCode,  getTalukaNameByCode, getVillageNameByCode, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
+import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
-import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters } from '../../services/quotationService';
+import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels } from '../../services/quotationService';
 import { uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -37,9 +37,6 @@ export const SystemSpecifications = () => {
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const [connection, setConnection] = useState<any>(null);
-  const [districtName, setDistrictName] = useState<string>("");
-  const [talukaName, setTalukaName] = useState<string>("");
-  const [villageName, setVillageName] = useState<string>("");
   const [govIdName, setGovIdName] = useState("");
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,6 +48,7 @@ export const SystemSpecifications = () => {
 
   const [inverterBrands, setInverterBrands] = useState<string[]>([]);
 
+  const [panelBrands, setPanelBrands] = useState<any[]>([]);
 
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
@@ -171,28 +169,6 @@ useEffect(() => {
   fetchConnection();
 }, [consumerId]);
 
-useEffect(() => {
-    const fetchLocationNames = async () => {
-      if (connection) {
-        if (connection.districtCode) {
-          const name = await getDistrictNameByCode(connection.districtCode);
-          setDistrictName(name);
-        }
-        if (connection.talukaCode) {
-          const name = await getTalukaNameByCode(connection.talukaCode);
-          setTalukaName(name);
-        }
-        if (connection.villageCode) {
-          const name = await getVillageNameByCode(connection.villageCode);
-          setVillageName(name);
-        }
-      }
-    };
-
-    fetchLocationNames();
-
-  }, [connection]);
-
     useEffect(() => {
       const fetchCustomer = async () => {
         if (customerId) {
@@ -292,6 +268,11 @@ useEffect(() => {
           setInverterBrands(inverters || []);
         }
 
+        if(phaseType && recommendation.dcrNonDcrType) {
+          const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
+          setPanelBrands(panels || []);
+        }
+
 
         if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
           const wattages = await fetchPanelWattages(
@@ -347,6 +328,11 @@ useEffect(() => {
         if (phaseType && customerData.inversionType) {
           const inverters = await fetchInverters(phaseType, customerData.inversionType);
           setInverterBrands(inverters || []);
+        }
+
+        if(phaseType && customerData.dcrNonDcrType) {
+          const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
+          setPanelBrands(panels || []);
         }
 
 
@@ -436,29 +422,19 @@ useEffect(() => {
       }
     }
 
-if (name === "panelBrand") {
+// if (name === "panelBrand" && value === "En-Icon") {
+//       updatedData.dcrNonDcrType = "Non-DCR";
+//     }
+//     if (name === "dcrNonDcrType" && value === "Non-DCR") {
+//       updatedData.panelBrand = "En-Icon";
+//     }
+//     if (name === "dcrNonDcrType" && value === "DCR") {
+//       updatedData.panelBrand = "Sova";
+//     }
 
-    if (value === "En-Icon") {
-    updatedData.dcrNonDcrType = "Non-DCR";
-   }
-}
-
-if (name === "dcrNonDcrType") {
-
-  if (value === "Non-DCR") {
-    updatedData.panelBrand = "En-Icon";
-  }
-}
-
-if (name === "dcrNonDcrType") {
-
-  if (value === "DCR") {
-    updatedData.panelBrand = "Sova";
-  }
-}
-
-if (name === "inversionType") {
-      updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare"; 
+    // Inverter <-> Type mapping
+    if (name === "inversionType") {
+      updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
     }
 
     updatedFormData = updatedData; 
@@ -469,77 +445,71 @@ if (name === "inversionType") {
   setIsSpecsSaved(false);
   setPriceAlreadySetFromCustomerData(false);
 
-  if (["panelBrand", "dcrNonDcrType", "inverterBrand","inversionType"].includes(name)) {
-    const dcrNonDcrValue =
-      name === "dcrNonDcrType"
-        ? value
-        : name === "panelBrand"
-        ? value === "En-Icon"
-          ? "Non-DCR"
-          : "DCR"
-        : formData.dcrNonDcrType;
+if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
+  let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+  let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+  const inverterBrandValue =
+    name === "inverterBrand"
+      ? value
+      : name === "inversionType"
+      ? value === "Hybrid"
+        ? "VSole"
+        : "KSolare"
+      : formData.inverterBrand;
+  const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
 
-    const panelBrandValue =
-      name === "panelBrand"
-        ? value
-        : name === "dcrNonDcrType"
-        ? value === "Non-DCR"
-          ? "En-Icon"
-          : "Sova"
-        : formData.panelBrand;
-      
-    const inverterBrandValue =
-      name === "inverterBrand"
-        ? value
-        : name === "inversionType"
-        ? value === "Hybrid"
-          ? "VSole"
-          : "KSolare" 
-        : formData.inverterBrand;
+  try {
+    if (name === "dcrNonDcrType") {
+      const panels = await fetchPanels(phaseType, value);
+      console.log("Fetched Panels:", panels);
+      setPanelBrands(panels || []);
 
-    const inversionTypeValue =
-      name === "inversionType" ? value : formData.inversionType;
+      if (panels.length > 0) {
+        panelBrandValue = panels[0].brand; // 🔥 update local variable immediately
+        setFormData((prev) => ({
+          ...prev,
+          panelBrand: panels[0].brand,
+        }));
+      }
 
-    try {
-      console.log("Fetching panel wattages with:");
-      console.log("Connection ID:", connectionId);
-      console.log("Phase Type:", phaseType);
-      console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-      console.log("Panel Brand:", panelBrandValue);
+      dcrNonDcrValue = value; // ensure correct updated value
+    }
 
-      const wattages = await fetchPanelWattages(
-        connectionId,
-        phaseType,
-        dcrNonDcrValue,
-        panelBrandValue
-      );
+    console.log("Fetching panel wattages with:");
+    console.log("Connection ID:", connectionId);
+    console.log("Phase Type:", phaseType);
+    console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+    console.log("Panel Brand:", panelBrandValue);
 
-      console.log("Fetched Wattages:", wattages);
-      setPanelWattages(wattages);
-
-     const inverterWattages = await fetchInverterWattages(
+    const wattages = await fetchPanelWattages(
+      connectionId,
       phaseType,
-      inverterBrandValue
+      dcrNonDcrValue,
+      panelBrandValue
     );
-    console.log("Fetched Inverter Wattages:", inverterWattages);
+
+    setPanelWattages(wattages);
+
+    const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
     setInverterWattages(inverterWattages);
 
     if (phaseType && inversionTypeValue) {
-        const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
-        setInverterBrands(inverterBrands || []);
-      }
-    
-      setFormData((prev) => ({
-        ...prev,
-        Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
-        inverterKw: inverterWattages.includes(prev.inverterKw)
-          ? prev.inverterKw
-          : inverterWattages[0] || "",
-      }));
-    } catch (error) {
-      console.error("Error fetching panel wattages:", error);
+      const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
+      setInverterBrands(inverterBrands || []);
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
+      inverterKw: inverterWattages.includes(prev.inverterKw)
+        ? prev.inverterKw
+        : inverterWattages[0] || "",
+    }));
+  } catch (error) {
+    console.error("Error fetching panel wattages:", error);
   }
+}
+
 };
 
 
@@ -1038,7 +1008,7 @@ const handlePreview = async () => {
         </div>
 
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
           <select
             id="panelBrand"
@@ -1052,7 +1022,25 @@ const handlePreview = async () => {
             <option value="Adani">Adani</option>
             <option value="ReNew">ReNew</option>
           </select>
-        </div>
+        </div> */}
+
+        <div>
+  <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
+  <select
+    id="panelBrand"
+    name="panelBrand"
+    value={formData.panelBrand}
+    onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
+    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    {panelBrands.map((panel) => (
+      <option key={panel.id} value={panel.brand}>
+        {panel.brand}
+      </option>
+    ))}
+  </select>
+</div>
+
 
         <div>
           <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
@@ -1089,25 +1077,25 @@ const handlePreview = async () => {
             <div>
               <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
               <select
-  id="batteryCapacity"
-  name="batteryCapacity"
-  value={formData.batteryCapacity}
-  onChange={(e) =>
-    handleChange({
-      target: {
-        name: "batteryCapacity",
-        value: Number(e.target.value),
-      },
-    })
-  }
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
->
-  {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
-    <option key={capacity} value={capacity}>
-      {capacity}
-    </option>
-  ))}
-</select>
+                id="batteryCapacity"
+                name="batteryCapacity"
+                value={formData.batteryCapacity}
+                onChange={(e) =>
+                  handleChange({
+                    target: {
+                      name: "batteryCapacity",
+                      value: Number(e.target.value),
+                    },
+                  })
+                 }
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+             {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
+              <option key={capacity} value={capacity}>
+                {capacity}
+                </option>
+              ))}
+            </select>
 
             </div>
           </>

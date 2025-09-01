@@ -106,7 +106,6 @@ export const updateDocumentById = async (fileId: string, file: File): Promise<vo
     const oneDriveAPI = getOneDriveAPI();
     const formData = new FormData();
 
-    // append both fileId and fileData
     formData.append("fileId", fileId);
     formData.append("fileData", file);
 

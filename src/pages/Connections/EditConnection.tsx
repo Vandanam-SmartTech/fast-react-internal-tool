@@ -210,7 +210,6 @@ export const EditConnection = () => {
     talukaCode: 0,
     villageCode: 0,
     pincode: "",
-
     isNameCorrection: "No",
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
