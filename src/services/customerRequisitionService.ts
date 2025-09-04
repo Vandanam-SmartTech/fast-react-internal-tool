@@ -383,7 +383,7 @@ export const fetchConsumers = async (page = 0) => {
   }
 };
 
-export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, representativeId?: number | null }) => {
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
@@ -406,33 +406,7 @@ export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: 
 };
 
 
-// export const fetchOnboardedConsumers = async (page = 0) => {
-//   const crsAPI = getCrsAPI();
-//   try {
-//     const orgId = localStorage.getItem('selectedOrganization');
-//     const orgName = localStorage.getItem('selectedOrganizationName');
-//     const agencyId = localStorage.getItem('selectedAgency');
-//     const agencyName = localStorage.getItem('selectedAgencyName');
-    
-//     console.log('CRS API Parameters for fetchOnboardedConsumers:', { orgId, orgName, agencyId, agencyName, page });
-    
-//     const response = await crsAPI.get('/api/customers/onboarded', {
-//       params: { page, orgId, orgName, agencyId, agencyName },
-//     });
-
-//     return {
-//       content: response.data.content,
-//       totalPages: response.data.totalPages,
-//       totalElements: response.data.totalElements,
-//       currentPage: response.data.number,
-//     };
-//   } catch (error) {
-//     console.error('Error fetching onboarded consumers:', error);
-//     throw new Error('Failed to fetch onboarded consumers.');
-//   }
-// };
-
-export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, representativeId?: number | null }) => {
+export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });

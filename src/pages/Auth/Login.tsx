@@ -24,7 +24,7 @@ interface UserClaims {
 }
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showOrgSelection, setShowOrgSelection] = useState(false);
@@ -33,52 +33,52 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-useEffect(() => {
-  const checkAlreadyLoggedIn = async () => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) return;
+  useEffect(() => {
+    const checkAlreadyLoggedIn = async () => {
+      const token = localStorage.getItem('jwtToken');
+      if (!token) return;
 
 
-    window.dispatchEvent(new Event('userUpdated'));
+      window.dispatchEvent(new Event('userUpdated'));
 
-    const claims = await fetchClaims();
-    if (!claims) return;
-    
-
-    handleRoleRouting(claims);
-  };
-
-  checkAlreadyLoggedIn();
-}, []);
+      const claims = await fetchClaims();
+      if (!claims) return;
 
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+      handleRoleRouting(claims);
+    };
 
-  try {
-    const { jwt } = await login({ username, password });
-    localStorage.setItem('jwtToken', jwt);
-    setAuthToken(jwt);
+    checkAlreadyLoggedIn();
+  }, []);
 
 
-    window.dispatchEvent(new Event('userUpdated'));
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    const claims = await fetchClaims();
+    try {
+      const { jwt } = await login({ identifier, password });
+      localStorage.setItem('jwtToken', jwt);
+      setAuthToken(jwt);
 
-    if (!claims.is_password_changed) {
-      navigate('/PasswordReset');
-      return;
+
+      window.dispatchEvent(new Event('userUpdated'));
+
+      const claims = await fetchClaims();
+
+      if (!claims.is_password_changed) {
+        navigate('/PasswordReset');
+        return;
+      }
+
+      handleRoleRouting(claims);
+    } catch (err) {
+      setError('Invalid login credentials.');
+    } finally {
+      setLoading(false);
     }
-
-    handleRoleRouting(claims);
-  } catch (err) {
-    setError('Invalid username or password.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const handleRoleRouting = (claims: UserClaims) => {
@@ -135,7 +135,7 @@ const handleLogin = async (e: React.FormEvent) => {
       case 'ROLE_ORG_REPRESENTATIVE':
         navigate('/RepresentativeDashboard');
         break;
-        case 'ROLE_AGENCY_STAFF':
+      case 'ROLE_AGENCY_STAFF':
         navigate('/StaffDashboard');
         break;
       case 'ROLE_AGENCY_REPRESENTATIVE':
@@ -186,42 +186,42 @@ const handleLogin = async (e: React.FormEvent) => {
           <CardBody className="p-8 sm:p-10">
             {/* Logo and title */}
 
-                          <div className="text-center mb-8">
-                <div className="flex justify-center mb-6">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
-                    <Logo 
-                      size="xl" 
-                      className="relative drop-shadow-lg"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 via-solar-600 to-secondary-600 bg-clip-text text-transparent">
-                    SolarPro
-                  </h1>
-                  <p className="text-secondary-700 dark:text-secondary-300 text-sm sm:text-base">
-                    Sign in to access your solar management dashboard
-                  </p>
-                </div>
-
-                {/* Feature Icons */}
-                <div className="flex justify-center items-center gap-4 mt-6">
-                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
-                    <Shield className="h-3 w-3 text-primary-500" />
-                    <span>Secure</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
-                    <Zap className="h-3 w-3 text-solar-500" />
-                    <span>Fast</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
-                    <Sparkles className="h-3 w-3 text-secondary-500" />
-                    <span>Modern</span>
-                  </div>
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
+                  <Logo
+                    size="xl"
+                    className="relative drop-shadow-lg"
+                  />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 via-solar-600 to-secondary-600 bg-clip-text text-transparent">
+                  SolarPro
+                </h1>
+                <p className="text-secondary-700 dark:text-secondary-300 text-sm sm:text-base">
+                  Sign in to access your solar management dashboard
+                </p>
+              </div>
+
+              {/* Feature Icons */}
+              <div className="flex justify-center items-center gap-4 mt-6">
+                <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
+                  <Shield className="h-3 w-3 text-primary-500" />
+                  <span>Secure</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
+                  <Zap className="h-3 w-3 text-solar-500" />
+                  <span>Fast</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
+                  <Sparkles className="h-3 w-3 text-secondary-500" />
+                  <span>Modern</span>
+                </div>
+              </div>
+            </div>
             {/* Error */}
             {error && (
               <div className="mb-6 p-4 bg-gradient-to-r from-error-50 to-error-100 border border-error-200 rounded-xl">
@@ -282,11 +282,11 @@ const handleLogin = async (e: React.FormEvent) => {
             ) : (
               <form onSubmit={handleLogin} className="space-y-6">
                 <Input
-                  label="Username"
+                  label="Username/ Email Id/ Contact Number"
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Enter username or email or contact number"
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
@@ -295,33 +295,32 @@ const handleLogin = async (e: React.FormEvent) => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Enter password"
                   leftIcon={<Lock className="h-4 w-4" />}
                   showPasswordToggle
                   required
                 />
 
                 <div className="text-center">
-                  <a
-                    onClick={() =>
-                      navigate(`/PasswordReset`)
-                    }
-                    className="text-sm text-primary-600 hover:underline"
+                  <button
+                    onClick={() => navigate("/PasswordReset")}
+                    className="text-sm text-blue-600 font-medium hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </button>
                 </div>
 
+
                 <Button
-  type="submit"
-  variant="primary"
-  className="w-full justify-center"
-  size="lg"
-  loading={loading}
-  leftIcon={!loading && <Sun className="h-4 w-4" />}
->
-  {!loading && 'Sign In'}
-</Button>
+                  type="submit"
+                  variant="primary"
+                  className="w-full justify-center"
+                  size="lg"
+                  loading={loading}
+                  leftIcon={!loading && <Sun className="h-4 w-4" />}
+                >
+                  {!loading && 'Sign In'}
+                </Button>
 
               </form>
             )}

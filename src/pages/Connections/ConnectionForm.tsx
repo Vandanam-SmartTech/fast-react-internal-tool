@@ -5,7 +5,7 @@ import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetch
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { fetchClaims } from "../../services/jwtService";
 import { toast } from "react-toastify";
-import MapPreview from '../../components/MapPreview'; 
+import MapPreview from '../../components/MapPreview';
 
 import {
   UserCircleIcon,
@@ -154,8 +154,8 @@ export const ConnectionForm = () => {
   const [villageName, setVillageName] = useState<string>("");
   const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
-  const [activeTab, setActiveTab ] = useState("Connection Details");
-  
+  const [activeTab, setActiveTab] = useState("Connection Details");
+
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [phaseTypes, setPhaseTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
@@ -173,7 +173,6 @@ export const ConnectionForm = () => {
 
   const [showMapPreview, setShowMapPreview] = useState(false);
 
-  // Validation state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const tabs = [
@@ -199,7 +198,6 @@ export const ConnectionForm = () => {
     talukaCode: 0,
     villageCode: 0,
     pincode: "",
-
     isNameCorrection: "No",
     correctionType: "",
     monthlyAvgConsumptionUnits: NaN,
@@ -207,11 +205,11 @@ export const ConnectionForm = () => {
     isActive: true,
   });
 
-  // Validation function for form submission
+
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    
-    // Required field validations
+
+
     if (!customerId) {
       errors.push("Customer ID is missing!");
     }
@@ -320,7 +318,7 @@ export const ConnectionForm = () => {
     }));
   };
 
-///////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
   useEffect(() => {
     const savedForm = localStorage.getItem('connectionFormData');
     const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
@@ -329,19 +327,19 @@ export const ConnectionForm = () => {
     }
 
     if (savedConfirmConsumerNumber) {
-    setConfirmConsumerNumber(savedConfirmConsumerNumber);
-  }
+      setConfirmConsumerNumber(savedConfirmConsumerNumber);
+    }
   }, []);
-///////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
 
 
-useEffect(() => {
-  if (govIdName) {
-    setFormData((prev) => ({ ...prev, billedTo: govIdName }));
-  }
-}, [govIdName]);
+  useEffect(() => {
+    if (govIdName) {
+      setFormData((prev) => ({ ...prev, billedTo: govIdName }));
+    }
+  }, [govIdName]);
 
-useEffect(() => {
+  useEffect(() => {
     const checkConsumerIdExists = async () => {
       if (formData.consumerId.length === 12) {
         const exists = await checkConsumerNumberExists(formData.consumerId);
@@ -368,11 +366,11 @@ useEffect(() => {
 
   useEffect(() => {
     if (districtCode) {
-        getDistrictNameByCode(districtCode)
-            .then((name) => setDistrictName(name))
-            .catch(() => setDistrictName("Unknown District"));
+      getDistrictNameByCode(districtCode)
+        .then((name) => setDistrictName(name))
+        .catch(() => setDistrictName("Unknown District"));
     }
-}, [districtCode]);
+  }, [districtCode]);
 
   useEffect(() => {
     const fetchTalukasData = async () => {
@@ -415,7 +413,7 @@ useEffect(() => {
         console.error("Failed to fetch connection types", error);
       }
     };
-  
+
     getConnectionTypes();
   }, []);
 
@@ -428,7 +426,7 @@ useEffect(() => {
         console.error("Failed to fetch phase types", error);
       }
     };
-  
+
     getPhaseTypes();
   }, []);
 
@@ -441,38 +439,38 @@ useEffect(() => {
         console.error("Failed to fetch address types", error);
       }
     };
-  
+
     getAddressTypes();
   }, []);
 
   useEffect(() => {
-  const loadCorrectionTypes = async () => {
-    try {
-      const types = await fetchCorrectionType();
-      const map: Record<string, number> = {};
-      types.forEach((type) => {
-        map[type.correctionName] = type.id;
-      });
-      setCorrectionTypeMap(map);
-    } catch (err) {
-      console.error('Failed to load correction types', err);
-    }
-  };
+    const loadCorrectionTypes = async () => {
+      try {
+        const types = await fetchCorrectionType();
+        const map: Record<string, number> = {};
+        types.forEach((type) => {
+          map[type.correctionName] = type.id;
+        });
+        setCorrectionTypeMap(map);
+      } catch (err) {
+        console.error('Failed to load correction types', err);
+      }
+    };
 
-  loadCorrectionTypes();
-}, []);
-  
-  
-  
+    loadCorrectionTypes();
+  }, []);
+
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === "isMsebConnection" && value === "No") {
-      setConfirmConsumerNumber(""); 
+      setConfirmConsumerNumber("");
     }
 
-    if(name === 'consumerId' && value === ''){
+    if (name === 'consumerId' && value === '') {
       setConfirmConsumerNumber('');
     }
 
@@ -480,10 +478,10 @@ useEffect(() => {
       if (value !== confirmConsumerNumber) {
         setConfirmConsumerNumber('');
       }
-  
+
       checkConsumerNumberExists(value).then((exists) => {
         setConsumerNumberExists(exists);
-  
+
         if (exists) {
           setConfirmConsumerNumber('');
         }
@@ -534,8 +532,8 @@ useEffect(() => {
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
-    setTalukaName(""); 
-    setVillageName(""); 
+    setTalukaName("");
+    setVillageName("");
     setPincode("");
     setFormData((prev) => ({
       ...prev,
@@ -577,28 +575,28 @@ useEffect(() => {
   };
 
   const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setPincode(value);
-      setFormData((prev) => ({ ...prev, pincode: value }));
-      console.log("Current state pincode:", pincode);
-    };
+    const value = parseInt(e.target.value, 10);
+    setPincode(value);
+    setFormData((prev) => ({ ...prev, pincode: value }));
+    console.log("Current state pincode:", pincode);
+  };
 
 
-    const handleNameCorrection = (e) => {
-      const { value } = e.target;
-      setFormData((prev) => ({
-        ...prev,
-        isNameCorrection: value,
-        correctionType: value === "No" ? "" : prev.correctionType,
-      }));
-    };
-  
-    // Handle Correction Type Change
-    const handleCorrectionTypeChange = (e) => {
-      setFormData((prev) => ({ ...prev, correctionType: e.target.value }));
-    };
+  const handleNameCorrection = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      isNameCorrection: value,
+      correctionType: value === "No" ? "" : prev.correctionType,
+    }));
+  };
 
-    const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Correction Type Change
+  const handleCorrectionTypeChange = (e) => {
+    setFormData((prev) => ({ ...prev, correctionType: e.target.value }));
+  };
+
+  const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmConsumerNumber(value);
     //localStorage.setItem('confirmConsumerNumber', value);
@@ -609,9 +607,9 @@ useEffect(() => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     console.log("Received CustomerId:", customerId);
-  
+
     // Validate form
     const validation = validateForm();
     if (!validation.isValid) {
@@ -624,14 +622,14 @@ useEffect(() => {
       return;
     }
 
-  
-  
+
+
     const isMsebConnection = formData.isMsebConnection === "Yes";
-const isNameCorrectionRequired =
-  formData.isNameCorrection === "Yes" && correctionTypeMap[formData.correctionType]
-    ? correctionTypeMap[formData.correctionType]
-    : false;
-  
+    const isNameCorrectionRequired =
+      formData.isNameCorrection === "Yes" && correctionTypeMap[formData.correctionType]
+        ? correctionTypeMap[formData.correctionType]
+        : false;
+
     const connectionData = {
       customerId,
       consumerId: formData.consumerId,
@@ -641,9 +639,9 @@ const isNameCorrectionRequired =
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
       correctionTypeId:
-  formData.isNameCorrection === "Yes"
-    ? correctionTypeMap[formData.correctionType] || null
-    : null,
+        formData.isNameCorrection === "Yes"
+          ? correctionTypeMap[formData.correctionType] || null
+          : null,
 
       monthlyAvgConsumptionUnits: formData.monthlyAvgConsumptionUnits,
       districtCode: formData.districtCode,
@@ -657,13 +655,13 @@ const isNameCorrectionRequired =
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
-      discomId:formData.discomId,
-      isActive:formData.isActive,
+      discomId: formData.discomId,
+      isActive: formData.isActive,
     };
-  
+
     try {
       console.log("Saving new connection...");
-      
+
       const result = await saveConnection(connectionData);
       console.log("Received result:", result);
 
@@ -671,41 +669,41 @@ const isNameCorrectionRequired =
 
         setCreatedConnectionId(result.id);
         setNavigateAfterClose(true);
-        
-        toast.success(result.message || "Connection data saved successfully!", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
 
-      navigate(`/view-connection/${result.id}`, {
+        toast.success(result.message || "Connection data saved successfully!", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+
+        navigate(`/view-connection/${result.id}`, {
           state: {
-                    consumerId: formData.consumerId, customerId, connectionId: result.id,
-      },
-    });
-    setNavigateAfterClose(false);
-    setCreatedConnectionId(null);
+            consumerId: formData.consumerId, customerId, connectionId: result.id,
+          },
+        });
+        setNavigateAfterClose(false);
+        setCreatedConnectionId(null);
 
       }
-      else{
-        toast.error(result.message || "Failed to save connection data.",{
-          autoClose:1000,
-          hideProgressBar:true,
+      else {
+        toast.error(result.message || "Failed to save connection data.", {
+          autoClose: 1000,
+          hideProgressBar: true,
         });
       }
     } catch (error) {
       console.error("Error in saving connection:", error);
-      toast.error("Failed to save connection. Please try again.",{
-      autoClose:1000,
-      hideProgressBar: true,
-    });
-  }
+      toast.error("Failed to save connection. Please try again.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    }
 
-  /////////////
+    /////////////
     localStorage.removeItem('connectionFormData');
     //localStorage.removeItem('confirmConsumerNumber');
-  ////////////
+    ////////////
   };
-  
+
 
 
 
@@ -716,77 +714,74 @@ const isNameCorrectionRequired =
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Add New Connection</h1>
-              <p className="text-gray-600 mt-1">Complete the connection details for your customer</p>
+              <h1 className="text-2xl font-bold text-gray-700">Add New Connection</h1>
             </div>
-            
+
           </div>
         </div>
 
         {/* Progress Steps */}
         <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
-  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-    
-    {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
-    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab;
+            {/* Connector Line: between the first and last icon only */}
+            <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
-        const Icon =
-          tab === "Customer Details"
-            ? UserCircleIcon
-            : tab === "Connection Details"
-            ? BoltIcon
-            : tab === "Installation Details"
-            ? HomeModernIcon
-            : Cog6ToothIcon;
+            <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab;
 
-            const shouldHighlightIcon = tab === "Customer Details";
+                const Icon =
+                  tab === "Customer Details"
+                    ? UserCircleIcon
+                    : tab === "Connection Details"
+                      ? BoltIcon
+                      : tab === "Installation Details"
+                        ? HomeModernIcon
+                        : Cog6ToothIcon;
+
+                const shouldHighlightIcon = tab === "Customer Details";
 
 
-            return (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  if (tab === "Customer Details") {
-                    navigate(`/view-customer/${customerId}`, {
-                      state: {
-                        customerId,
-                      },
-                    });
-                  }
-                }}
-                className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-              >
-                <div
-                  className={`rounded-full p-2 transition-all duration-300 ${
-                    shouldHighlightIcon
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500"
-                  }`}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-                <span
-                  className={`text-xs md:text-sm font-semibold mt-1 ${
-                    isActive ? "text-gray-700" : "text-gray-700"
-                  }`}
-                >
-                  {tab}
-                </span>
-              </button>
-            );
-      })}
-    </div>
-  </div>
-</div>
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      if (tab === "Customer Details") {
+                        navigate(`/view-customer/${customerId}`, {
+                          state: {
+                            customerId,
+                          },
+                        });
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+                  >
+                    <div
+                      className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
+                        ? "bg-blue-500 text-white"
+                        : "bg-white border border-gray-300 text-gray-500"
+                        }`}
+                    >
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
+                        }`}
+                    >
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-                {/* Form */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           {/* Connection Status Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -835,7 +830,10 @@ const isNameCorrectionRequired =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  12-Digit Consumer Number <span className="text-red-500">*</span>
+                  12-Digit Consumer Number{" "}
+                  {formData.isMsebConnection === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </label>
                 <input
                   type="text"
@@ -843,15 +841,20 @@ const isNameCorrectionRequired =
                   name="consumerId"
                   value={formData.consumerId}
                   onChange={handleChange}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  }}
                   maxLength={12}
                   pattern="^[0-9]{12}$"
                   title="Enter exactly 12 digits (0–9)"
                   required={formData.isMsebConnection === "Yes"}
                   disabled={formData.isMsebConnection === "No"}
                   placeholder="e.g. 987654321000"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  } ${formData.isMsebConnection === "No" ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    } ${formData.isMsebConnection === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
                 />
                 {fieldErrors.consumerNumber && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.consumerNumber}</p>
@@ -863,22 +866,30 @@ const isNameCorrectionRequired =
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Consumer Number <span className="text-red-500">*</span>
+                  Confirm Consumer Number{" "}
+                  {formData.isMsebConnection === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </label>
+
                 <input
                   type="tel"
                   name="confirmConsumerNumber"
                   value={confirmConsumerNumber}
                   onChange={handleConfirmConsumerNumberChange}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  }}
                   placeholder="Confirm consumer number"
                   maxLength={12}
                   pattern="^[0-9]{12}$"
                   required={formData.isMsebConnection === "Yes"}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                   title="Re-enter the same 12-digit consumer number"
-                  disabled={!(
-                    /^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists
-                  )}
+                  disabled={
+                    formData.isMsebConnection === "No" ||
+                    !(/^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists)
+                  }
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
@@ -886,6 +897,105 @@ const isNameCorrectionRequired =
                 {confirmConsumerNumber &&
                   confirmConsumerNumber !== formData.consumerId && (
                     <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
+                  )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Connection Type{" "}
+                  {formData.isMsebConnection === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <select
+                  name="connectionTypeId"
+                  value={formData.connectionTypeId}
+                  onChange={handleChange}
+                  required={formData.isMsebConnection === "Yes"}
+                  disabled={formData.isMsebConnection === "No"}
+                  className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300 disabled:bg-gray-200 disabled:cursor-not-allowed"
+                >
+                  {connectionTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phase Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="phaseTypeId"
+                  value={formData.phaseTypeId}
+                  onChange={handleChange}
+                  className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                >
+                  {phaseTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Monthly Average Consumption Units <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  name="monthlyAvgConsumptionUnits"
+                  value={formData.monthlyAvgConsumptionUnits}
+                  onChange={handleChange}
+                  onBlur={(e) => {
+                    if (e.target.value) {
+                      validateFieldOnChange('monthlyAvgConsumptionUnits', e.target.value);
+                    }
+                  }}
+                  required
+                  placeholder="e.g. 1"
+                  title="Enter a positive integer greater than 0"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                />
+                {fieldErrors.monthlyAvgConsumptionUnits && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
+                )}
+                {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
+                  <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  DISCOM ID{" "}
+                  {formData.isMsebConnection === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  name="discomId"
+                  value={formData.discomId}
+                  onChange={handleChange}
+                  placeholder="e.g. 7137"
+                  min="1"
+                  step="1"
+                  required={formData.isMsebConnection === "Yes"}
+                  disabled={formData.isMsebConnection === "No"}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  title="DISCOM ID must be a positive integer greater than 0"
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed ${fieldErrors.discomId ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                />
+                {fieldErrors.discomId && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
                 )}
               </div>
             </div>
@@ -902,7 +1012,7 @@ const isNameCorrectionRequired =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GSTIN Number
+                  GST Number
                 </label>
                 <input
                   type="text"
@@ -916,9 +1026,8 @@ const isNameCorrectionRequired =
                   title="GSTIN must be in format: 22AAAAA0000A1Z6"
                   placeholder="e.g. 22AAAAA0000A1Z6"
                   maxLength={15}
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.gstin ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.gstin ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.gstin && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
@@ -939,9 +1048,8 @@ const isNameCorrectionRequired =
                   title="Billed To must be 2-50 characters, alphabets and spaces only"
                   maxLength={50}
                   required
-                  className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.billedTo && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
@@ -949,29 +1057,6 @@ const isNameCorrectionRequired =
               </div>
             </div>
           </div>
-
-  
-
-        
-
-          
-
-          
-
-          
-
-          
-
-          
-
-        
-
-  
-  
-
-
-
-      
 
           {/* Address Information Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -983,6 +1068,19 @@ const isNameCorrectionRequired =
               Address Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value="Maharashtra"
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   District <span className="text-red-500">*</span>
@@ -992,7 +1090,7 @@ const isNameCorrectionRequired =
                   value={districtCode}
                   onChange={handleDistrictChange}
                   required
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 >
                   <option value={0}>{districtName || "Select District"}</option>
                   {districts.map((district) => (
@@ -1012,7 +1110,7 @@ const isNameCorrectionRequired =
                   value={talukaCode}
                   onChange={handleTalukaChange}
                   required
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 >
                   <option value={0}>{talukaName || "Select Taluka"}</option>
                   {talukas.map((taluka) => (
@@ -1031,7 +1129,7 @@ const isNameCorrectionRequired =
                   name="villageCode"
                   value={villageCode}
                   onChange={handleVillageChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 >
                   <option value={0}>{villageName || "Select Village"}</option>
                   {villages.map((village) => (
@@ -1057,13 +1155,30 @@ const isNameCorrectionRequired =
                   maxLength={6}
                   inputMode="numeric"
                   required
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.pincode && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="addressTypeId"
+                  value={formData.addressTypeId}
+                  onChange={handleChange}
+                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  {addressTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.nameEn}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="md:col-span-2">
@@ -1080,9 +1195,8 @@ const isNameCorrectionRequired =
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
                   required
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.addressLine1 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine1 ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.addressLine1 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
@@ -1102,146 +1216,14 @@ const isNameCorrectionRequired =
                   pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.addressLine2 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine2 ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.addressLine2 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* Connection Details Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Connection Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Monthly Average Consumption Units <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  name="monthlyAvgConsumptionUnits"
-                  value={formData.monthlyAvgConsumptionUnits}
-                  onChange={handleChange}
-                  onBlur={(e) => {
-                    if (e.target.value) {
-                      validateFieldOnChange('monthlyAvgConsumptionUnits', e.target.value);
-                    }
-                  }}
-                  required
-                  placeholder="e.g. 1"
-                  title="Enter a positive integer greater than 0"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {fieldErrors.monthlyAvgConsumptionUnits && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
-                )}
-                {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
-                  <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Connection Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="connectionTypeId"
-                  value={formData.connectionTypeId}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  {connectionTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phase Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="phaseTypeId"
-                  value={formData.phaseTypeId}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  {phaseTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="addressTypeId"
-                  value={formData.addressTypeId}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  {addressTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  DISCOM ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="discomId"
-                  value={formData.discomId}
-                  onChange={handleChange}
-                  placeholder="e.g. 7137"
-                  min="1"
-                  step="1"
-                  required
-                  title="DISCOM ID must be a positive integer greater than 0"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.discomId ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-                />
-                {fieldErrors.discomId && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Location Information Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
-              </svg>
-              Location Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Latitude
@@ -1256,9 +1238,8 @@ const isNameCorrectionRequired =
                   max="90"
                   step="any"
                   title="Latitude must be between -90 and 90"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.latitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.latitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.latitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
@@ -1279,43 +1260,44 @@ const isNameCorrectionRequired =
                   max="180"
                   step="any"
                   title="Longitude must be between -180 and 180"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                    fieldErrors.longitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.longitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 {fieldErrors.longitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
                 )}
               </div>
-            </div>
 
-            {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowMapPreview((prev) => !prev)}
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  {showMapPreview ? 'Close Map' : 'View Location on Map'}
-                </button>
+              <div className="md:col-span-2">
+                {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowMapPreview((prev) => !prev)}
+                      className="px-3 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      {showMapPreview ? 'Close Map' : 'View Location on Map'}
+                    </button>
 
-                {showMapPreview && (
-                  <div className="mt-4 w-full h-[300px] rounded-lg overflow-hidden border shadow-md">
-                    <MapPreview
-                      latitude={parseFloat(formData.latitude)}
-                      longitude={parseFloat(formData.longitude)}
-                      onLocationChange={(newLat, newLng) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          latitude: newLat.toFixed(6),
-                          longitude: newLng.toFixed(6),
-                        }));
-                      }}
-                    />
+                    {showMapPreview && (
+                      <div className="mt-4 w-full h-[300px] rounded-md overflow-hidden border shadow-md">
+                        <MapPreview
+                          latitude={parseFloat(formData.latitude)}
+                          longitude={parseFloat(formData.longitude)}
+                          onLocationChange={(newLat, newLng) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              latitude: newLat.toFixed(6),
+                              longitude: newLng.toFixed(6),
+                            }));
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Name Correction Section */}

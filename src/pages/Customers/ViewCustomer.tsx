@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/solid"
-import { Eye } from 'lucide-react';
-import { obfuscateEmail } from "../../utils/emailUtils";
-import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid"
+import { Eye,User, Phone, Mail, X } from 'lucide-react';
+import { getUserById } from "../../services/jwtService";
 
 
 export const ViewCustomer = () => {
@@ -22,6 +16,18 @@ export const ViewCustomer = () => {
   const [activeTab, setActiveTab] = useState("Customer Details");
   const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
+
+  const [showUserModal, setShowUserModal] = useState(false);
+
+  const [referredByUser, setReferredByUser] = useState<any | null>(null);
+
+
+  const addedByUser = {
+    name: "Prasad Krishnat Sutar",
+    email: "rajesh.kumar@company.com",
+    mobileNumber: "9876543210"
+  };
+
 
 
   const tabs = [
@@ -73,29 +79,40 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    console.log("Fetch Consumer Number API is used");
-    const fetchCustomer = async () => {
-      if (customerId) {
-        const data = await getCustomerById(Number(customerId));
-        setCustomer(data);
-      }
-    };
+  console.log("Fetch Consumer Number API is used");
 
-    const fetchConnections = async () => {
-      if (customerId) {
-        try {
-          const data = await fetchConsumerNumber(Number(customerId));
-          setConnections(data || []);
-        } catch (error) {
-          console.log("No connections found for customer:", customerId);
-          setConnections([]);
+  const fetchCustomer = async () => {
+    if (customerId) {
+      const data = await getCustomerById(Number(customerId));
+      setCustomer(data);
+
+      if (data?.referredByUserId) {
+        const userResponse = await getUserById(data.referredByUserId);
+        if (userResponse.data) {
+          setReferredByUser(userResponse.data);
+        } else {
+          setReferredByUser(null);
         }
       }
-    };
+    }
+  };
 
-    fetchCustomer();
-    fetchConnections();
-  }, [customerId]);
+  const fetchConnections = async () => {
+    if (customerId) {
+      try {
+        const data = await fetchConsumerNumber(Number(customerId));
+        setConnections(data || []);
+      } catch (error) {
+        console.log("No connections found for customer:", customerId);
+        setConnections([]);
+      }
+    }
+  };
+
+  fetchCustomer();
+  fetchConnections();
+}, [customerId]);
+
 
  
 
@@ -107,8 +124,7 @@ useEffect(() => {
 
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
   <div>
-    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">View Customer</h1>
-    {/* <p className="text-gray-600 mt-1 text-sm">Review customer details and connections</p> */}
+    <h1 className="text-2xl font-bold text-gray-700">View Customer Details</h1>
   </div>
 
 </div>
@@ -169,8 +185,25 @@ useEffect(() => {
 
 {/* Customer Card */}
 <div className="px-2 mt-4">
+
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-4xl mx-auto">
-    <h3 className="text-xl font-semibold text-gray-800 mb-2">Customer Details</h3>
+    <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+    <UserCircleIcon className="w-4 h-4 text-green-600" />
+  </div>
+  <h3 className="text-base font-semibold text-gray-800">Customer Details</h3>
+</div>
+
+          <div 
+            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-900 cursor-pointer transition-colors"
+            onClick={() => setShowUserModal(true)}
+          >
+            <User className="w-4 h-4" />
+            <span className="font-medium">Referred By: {referredByUser?.nameAsPerGovId || 'User'}</span>
+          </div>
+        </div>
+
     <div className="border-b border-gray-200 mb-4" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
       <div className="break-words">
@@ -191,6 +224,56 @@ useEffect(() => {
       </div>
     </div>
   </div>
+  
+  {showUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                User Details
+              </h2>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Full Name</p>
+                  <p className="text-base font-medium text-gray-800 mt-1">{referredByUser.nameAsPerGovId}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Email Address</p>
+                  <p className="text-base text-gray-800 mt-1 break-all">{referredByUser.emailAddress}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Phone className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Mobile Number</p>
+                  <p className="text-base text-gray-800 mt-1">{referredByUser.contactNumber}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
 
   <div className="flex gap-3 justify-start mt-6 max-w-4xl mx-auto">
     <button
@@ -237,7 +320,13 @@ useEffect(() => {
           className="group rounded-xl border border-gray-200 bg-white shadow-lg"
         >
 <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
-  <span>Connection {index + 1}</span>
+<div className="flex items-center gap-2">
+  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+    <BoltIcon className="w-4 h-4 text-blue-600" />
+  </div>
+  <span className="text-base font-semibold">Connection {index + 1}</span>
+</div>
+
 
   <div className="flex items-center gap-4">
     <button
@@ -274,8 +363,8 @@ useEffect(() => {
 </summary>
 
 
-
           <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
+            <div className="border-b border-gray-200 mb-2" />
   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
 
     <div>
@@ -381,7 +470,7 @@ useEffect(() => {
     }
     className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
   >
-    Get Recommendation
+    Generate Quotation
   </button>
 </div>
 
@@ -390,10 +479,14 @@ useEffect(() => {
   {/* Nested Installations */}
 {(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
   <details key={installation.id} className="group bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
-    <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group">
-  <span>
-    Installation {idx + 1} - On {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."} ({installation.installationSpaceTitle})
-  </span>
+    <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group mt-2 mb-2">
+
+  <div className="flex items-center gap-2">
+  <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+    <HomeModernIcon className="w-4 h-4 text-yellow-600" />
+  </div>
+  <span className="text-base font-semibold">Installation {idx + 1} - On {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."} ({installation.installationSpaceTitle})</span>
+</div>
   <svg
     className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open:rotate-180"
     fill="none"
@@ -407,9 +500,11 @@ useEffect(() => {
 
     {/* Full Installation Info Block */}
     <div className="mt-4">
-      <div className="p-6 w-full">
-        {/* Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
+      <div className="border-b border-gray-200 mb-2 mt-2" />
+      <div className="p-4 w-full">
+  
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
+          
           <div>
             <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
             <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">

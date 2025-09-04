@@ -332,10 +332,7 @@ const handleNo = async () => {
       <ArrowLeft className="w-6 h-6 text-gray-700" />
     </button>
 
-
-    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-      View Connection Details
-    </h2>
+    <h1 className="text-2xl font-bold text-gray-700">View Connection Details</h1>
   </div>
 
 </div>
@@ -426,7 +423,7 @@ const handleNo = async () => {
         <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
           <UserCircleIcon className="w-4 h-4 text-green-600" />
         </div>
-        <h4 className="text-base font-medium text-gray-900">Consumer Information</h4>
+        <h4 className="text-base font-medium text-gray-900">Connection Information</h4>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -434,14 +431,26 @@ const handleNo = async () => {
           <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "....."}</p>
         </div>
         <div>
-          <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
-          <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "....."}</p>
+          <h5 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">DISCOM ID</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.discomId || "....."}</p>
         </div>
       </div>
     </div>
 
     {/* Connection Details */}
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+    {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
           <BoltIcon className="w-4 h-4 text-purple-600" />
@@ -461,9 +470,13 @@ const handleNo = async () => {
           <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
           <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "....."}</p>
         </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">DISCOM ID</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.discomId || "....."}</p>
+        </div>
 
       </div>
-    </div>
+    </div> */}
 
     {/* Business Information */}
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
@@ -475,12 +488,12 @@ const handleNo = async () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
-          <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "....."}</p>
+          <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "....."}</p>
         </div>
         <div>
-          <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
-          <p className="text-sm text-gray-800 mt-1">{connection.addressTypeName || "....."}</p>
+          <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "....."}</p>
         </div>
       </div>
     </div>
@@ -504,11 +517,19 @@ const handleNo = async () => {
           <h5 className="text-sm font-medium text-gray-500">Postal Code</h5>
           <p className="text-sm text-gray-800 mt-1">{connection.postalCode || "....."}</p>
         </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.addressTypeName || "....."}</p>
+        </div>
+        <div>
+          <h5 className="text-sm font-medium text-gray-500">Latitude, Longitude</h5>
+          <p className="text-sm text-gray-800 mt-1">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
+        </div>
       </div>
     </div>
 
     {/* Location Information */}
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+    {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
           <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,7 +549,7 @@ const handleNo = async () => {
           <p className="text-sm text-gray-800 mt-1">{connection.longitude || "--"}</p>
         </div>
       </div>
-    </div>
+    </div> */}
 
     {/* Name Correction */}
     {connection.isNameCorrectionRequired && (
@@ -718,7 +739,7 @@ const handleNo = async () => {
       className="py-2 px-6 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
     >
       <Cog6ToothIcon className="w-4 h-4" />
-      <span>Get Recommendation</span>
+      <span>Generate Quotation</span>
     </button>
   </div>
 </div>

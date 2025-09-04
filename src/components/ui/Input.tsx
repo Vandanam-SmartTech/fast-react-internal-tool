@@ -1,5 +1,7 @@
 import React, { forwardRef } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -56,20 +58,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         />
         
         {(rightIcon || showPasswordToggle) && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400">
-            {showPasswordToggle ? (
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="hover:text-secondary-700 dark:hover:text-secondary-300 transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            ) : (
-              rightIcon
-            )}
-          </div>
+  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400">
+    {showPasswordToggle ? (
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="flex items-center justify-center h-5 w-5  dark:hover:text-secondary-300 transition-colors"
+      >
+        {showPassword ? (
+          <FaEyeSlash className="h-4 w-4" />
+        ) : (
+          <FaEye className="h-4 w-4" />
         )}
+      </button>
+    ) : (
+      rightIcon
+    )}
+  </div>
+)}
+
       </div>
       
       {error && (

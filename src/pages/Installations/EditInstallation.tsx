@@ -166,7 +166,7 @@ export const EditInstallation = () => {
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">Update Installation</h2>
+  <h1 className="text-2xl font-bold text-gray-700">Update Installation</h1>
 
   </div>
   

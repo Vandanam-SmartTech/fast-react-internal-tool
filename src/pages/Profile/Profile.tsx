@@ -7,9 +7,10 @@ import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Cropper, { Area } from 'react-easy-crop';
+import { uploadUserSignature, getUserSignature } from '../../services/oneDriveService';
 
 interface UserProfile {
-  name?: string;
+  name_as_per_gov_id?: string;
   preferred_name?: string;
   email_address?: string;
   contact_number?: string;
@@ -95,18 +96,18 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
     // Resize to final dimensions (140x70)
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
-    
+
     if (!finalCtx) {
       throw new Error('No 2d context');
     }
 
     finalCanvas.width = 140;
     finalCanvas.height = 70;
-    
+
     // Use high-quality image smoothing
     finalCtx.imageSmoothingEnabled = true;
     finalCtx.imageSmoothingQuality = 'high';
-    
+
     finalCtx.drawImage(canvas, 0, 0, 140, 70);
 
     return finalCanvas.toDataURL('image/png', 0.95);
@@ -152,7 +153,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-  
+
         {/* Scrollable Content */}
         <div className="p-4 overflow-y-auto flex-1">
           {/* Instructions */}
@@ -168,7 +169,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
               <span>Rotate if needed</span>
             </div>
           </div>
-  
+
           {/* Crop Container */}
           <div className="relative w-full h-96 mb-4 bg-gray-100 rounded-lg overflow-hidden">
             <Cropper
@@ -187,7 +188,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
               maxZoom={3}
             />
           </div>
-  
+
           {/* Zoom Controls */}
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-4">
@@ -209,7 +210,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
                 <ZoomIn className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-  
+
             {/* Rotation Controls */}
             <div className="flex items-center justify-center gap-4">
               <button
@@ -230,7 +231,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
             </div>
           </div>
         </div>
-  
+
         {/* Sticky Footer for Action Buttons */}
         <div className="p-4 border-t border-gray-200 flex gap-3 justify-center">
           <Button
@@ -254,7 +255,7 @@ const CropModal: React.FC<CropModalProps> = ({ isOpen, onClose, imageUrl, onCrop
       </div>
     </div>
   );
-  
+
 };
 
 const Profile: React.FC = () => {
@@ -268,8 +269,10 @@ const Profile: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+
   const [editData, setEditData] = useState({
-    name: '',
+    name_as_per_gov_id: '',
     preferred_name: '',
     email: '',
     contact_number: ''
@@ -283,11 +286,11 @@ const Profile: React.FC = () => {
     try {
       setLoading(true);
       const claims = await fetchClaims();
-      
+
       // Set profile and edit data simultaneously
       setProfile(claims);
       setEditData({
-        name: claims.name || '',
+        name_as_per_gov_id: claims.name_as_per_gov_id || '',
         preferred_name: claims.preferred_name || '',
         email: claims.email_address || '',
         contact_number: claims.contact_number || ''
@@ -316,7 +319,7 @@ const Profile: React.FC = () => {
       }
 
       setSelectedFile(file);
-      
+
       // Create preview URL and open crop modal
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -328,48 +331,71 @@ const Profile: React.FC = () => {
     // Update preview with cropped image
     setPreviewUrl(croppedImage);
     setShowCropModal(false);
-    
+
     // Clear file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleUploadSignature = async () => {
-    if (!previewUrl) {
-      toast.error('Please select and crop a file first');
-      return;
-    }
+  // const handleUploadSignature = async () => {
+  //   if (!previewUrl) {
+  //     toast.error('Please select and crop a file first');
+  //     return;
+  //   }
 
+  //   try {
+  //     setUploading(true);
+
+  //     await new Promise(resolve => setTimeout(resolve, 500));
+
+  //     // Update profile with new signature
+  //     setProfile(prev => prev ? { ...prev, signature: previewUrl } : null);
+
+  //     toast.success('Signature uploaded successfully');
+  //     setSelectedFile(null);
+  //     setPreviewUrl(null);
+  //   } catch (error) {
+  //     console.error('Upload failed:', error);
+  //     toast.error('Failed to upload signature');
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
+  const handleUploadSignature = async () => {
+    if (!selectedFile) return;
     try {
       setUploading(true);
-      
-      // Here you would typically upload to your backend
-      // For now, we'll simulate a quick upload
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Update profile with new signature
-      setProfile(prev => prev ? { ...prev, signature: previewUrl } : null);
-      
+      await uploadUserSignature(selectedFile);
       toast.success('Signature uploaded successfully');
       setSelectedFile(null);
       setPreviewUrl(null);
-    } catch (error) {
-      console.error('Upload failed:', error);
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to upload signature');
     } finally {
       setUploading(false);
     }
   };
 
+  useEffect(() => {
+    const fetchSignature = async () => {
+      const url = await getUserSignature();
+      setSignatureUrl(url);
+    };
+    fetchSignature();
+  }, []);
+
+
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
-      
+
       // Here you would typically save to your backend
       // For now, we'll simulate a quick save
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       setProfile(prev => prev ? { ...prev, ...editData } : null);
       setIsEditing(false);
       toast.success('Profile updated successfully');
@@ -383,7 +409,7 @@ const Profile: React.FC = () => {
 
   const handleCancelEdit = () => {
     setEditData({
-      name: profile?.name || '',
+      name_as_per_gov_id: profile?.name_as_per_gov_id || '',
       preferred_name: profile?.preferred_name || '',
       email: profile?.email_address || '',
       contact_number: profile?.contact_number || ''
@@ -400,7 +426,7 @@ const Profile: React.FC = () => {
     if (profile?.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       return 'Super Administrator';
     }
-    
+
     const selectedOrgStr = localStorage.getItem('selectedOrg');
     if (selectedOrgStr) {
       try {
@@ -410,7 +436,7 @@ const Profile: React.FC = () => {
         return 'User';
       }
     }
-    
+
     return 'User';
   };
 
@@ -499,12 +525,12 @@ const Profile: React.FC = () => {
                     </label>
                     {isEditing ? (
                       <Input
-                        value={editData.name}
-                        onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                        value={editData.name_as_per_gov_id}
+                        onChange={(e) => setEditData(prev => ({ ...prev, name_as_per_gov_id: e.target.value }))}
                         placeholder="Enter your full name"
                       />
                     ) : (
-                      <p className="text-gray-900">{profile?.name || 'Not provided'}</p>
+                      <p className="text-gray-900">{profile?.name_as_per_gov_id || 'Not provided'}</p>
                     )}
                   </div>
 
@@ -570,7 +596,7 @@ const Profile: React.FC = () => {
                     <p className="text-sm text-gray-600">{getRoleDisplay()}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
                   <div>
@@ -586,29 +612,30 @@ const Profile: React.FC = () => {
           <Card>
             <CardBody className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Digital Signature</h3>
-              
+
               {/* Current Signature */}
-              {profile?.signature && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Current Signature</p>
-                  <div className="relative inline-block">
-                    <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                      <img
-                        src={profile.signature}
-                        alt="Digital Signature"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    <button
-                      onClick={removeSignature}
-                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                      aria-label="Remove signature"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
+                      {signatureUrl && (
+          <div className="mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">Current Signature</p>
+            <div className="relative inline-block">
+              <div className="w-[140px] h-[70px] border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                <img
+                  src={signatureUrl}
+                  alt="Digital Signature"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              {/* <button
+                onClick={handleRemoveSignature}
+                className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                aria-label="Remove signature"
+              >
+                <X className="w-3 h-3" />
+              </button> */}
+            </div>
+          </div>
+        )}
+
 
               {/* Upload New Signature */}
               <div className="space-y-4">
@@ -625,7 +652,7 @@ const Profile: React.FC = () => {
                       className="hidden"
                       aria-describedby="file-upload-help"
                     />
-                    
+
                     {!previewUrl ? (
                       <div>
                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -666,6 +693,7 @@ const Profile: React.FC = () => {
                           >
                             Upload
                           </Button>
+
                           <Button
                             onClick={() => {
                               setSelectedFile(null);
@@ -685,7 +713,7 @@ const Profile: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="text-xs text-gray-500" id="file-upload-help">
                   <p>• Supported formats: PNG, JPG, JPEG, GIF, WebP</p>
                   <p>• Maximum file size: 5MB</p>

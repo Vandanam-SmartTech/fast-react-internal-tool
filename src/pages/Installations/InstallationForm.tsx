@@ -181,9 +181,7 @@ return (
     </button>
 
     {/* Heading - Adjusts Position on Small Screens */}
-    <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2 sm:mb-0">
-      Add New Installation
-    </h2>
+    <h1 className="text-2xl font-bold text-gray-700">Add New Installation</h1>
   </div>
 </div>
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
-// Note: auth helpers unused here; token is read from localStorage in interceptor
 import { getConfig } from '../config';
+import { fetchClaims } from './jwtService';
 
 export const getOneDriveAPI = () => {
   const { VITE_DOCMANAGER_API } = getConfig();
@@ -113,5 +113,42 @@ export const updateDocumentById = async (fileId: string, file: File): Promise<vo
   } catch (error: any) {
     console.error("Failed to update document:", error);
     throw error;
+  }
+};
+
+export const uploadUserSignature = async (file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const formData = new FormData();
+    formData.append("filedata", file);
+
+    await oneDriveAPI.post(`/api/document-manager/user-media/${userId}/signature`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error: any) {
+    console.error("Failed to upload signature:", error);
+    throw error;
+  }
+};
+
+export const getUserSignature = async (): Promise<string | null> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const res = await oneDriveAPI.get(
+      `/api/document-manager/user-media/${userId}/signature`
+    );
+
+    return res.data?.url || res.data || null; 
+  } catch (error: any) {
+    console.error("Failed to fetch signature:", error);
+    return null;
   }
 };

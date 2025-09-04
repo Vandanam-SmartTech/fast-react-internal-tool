@@ -12,6 +12,7 @@ import {
   BoltIcon,
   HomeModernIcon,
   Cog6ToothIcon,
+  CurrencyRupeeIcon
 } from "@heroicons/react/24/solid";
 
 
@@ -36,7 +37,6 @@ export const SystemSpecifications = () => {
   const [inverterWattages, setInverterWattages] = useState([]);
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
-  const [connection, setConnection] = useState<any>(null);
   const [govIdName, setGovIdName] = useState("");
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -120,19 +120,6 @@ const formatIndianNumber = (value) => {
   loadInstallationSpaceTypeMap();
 }, []);
 
-// useEffect(() => {
-//   const loadConnectionDetails = async () => {
-//     if (!connectionId) return;
-//     try {
-//       const data = await getConnectionByConsumerId(connectionId);
-//       setConnectionDetails(data);
-//     } catch (error) {
-//       console.error("Error fetching connection details:", error);
-//     }
-//   };
-
-//   loadConnectionDetails();
-// }, [connectionId]);
   
 useEffect(() => {
   const loadInstallationSpaceDetails = async () => {
@@ -465,14 +452,14 @@ if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(n
       setPanelBrands(panels || []);
 
       if (panels.length > 0) {
-        panelBrandValue = panels[0].brand; // 🔥 update local variable immediately
+        panelBrandValue = panels[0].brand; 
         setFormData((prev) => ({
           ...prev,
           panelBrand: panels[0].brand,
         }));
       }
 
-      dcrNonDcrValue = value; // ensure correct updated value
+      dcrNonDcrValue = value; 
     }
 
     console.log("Fetching panel wattages with:");
@@ -1140,7 +1127,18 @@ const handlePreview = async () => {
 
 
           <div className="col-span-full space-y-6 mt-6">
-            <h2 className="text-xl font-semibold text-gray-700">Cost Details</h2>
+            <div>
+  <div className="flex items-center gap-3">
+    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+      <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
+    </div>
+    <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
+  </div>
+
+  {/* Horizontal line */}
+  <div className="mt-2 border-b border-gray-200"></div>
+</div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
   <div>
     <label className="block text-sm font-medium text-gray-700">

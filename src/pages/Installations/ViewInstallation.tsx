@@ -80,9 +80,7 @@ export const ViewInstallation = () => {
     </button>
 
     {/* Heading - Adjusts Position on Small Screens */}
-    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-      View Installation Details
-    </h2>
+    <h1 className="text-2xl font-bold text-gray-700">View Installation Details</h1>
   </div>
 </div>
 

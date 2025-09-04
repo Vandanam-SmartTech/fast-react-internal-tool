@@ -5,19 +5,7 @@ import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organizat
 import { fetchClaims } from "../../services/jwtService";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { 
-  Eye, 
-  Mail, 
-  Phone, 
-  Lightbulb, 
-  Search, 
-  Users, 
-  UserCheck, 
-  RefreshCw,
-  Zap,
-  FileText,
-  Plus
-} from "lucide-react";
+import { Eye, Mail, Phone, Lightbulb, Search, Users, UserCheck, RefreshCw,Zap,FileText,Plus} from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 
@@ -193,7 +181,7 @@ const loadConsumers = async (page: number) => {
 
     let orgId = selectedOrgId ?? null;
     let agencyId = selectedAgencyId ?? null;
-    let representativeId = selectedUserId ?? null;
+    let userId = selectedUserId ?? null;
 
     if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
       orgId = userInfo.orgId;
@@ -234,7 +222,7 @@ const loadConsumers = async (page: number) => {
       orgId,
       agencyId,
       userRole: userInfo?.role || userRole || null,
-      representativeId,
+      userId,
     };
 
     console.log("Fetching consumers with params:", params);

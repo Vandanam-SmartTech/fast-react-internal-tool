@@ -20,7 +20,7 @@ export const getJwtAPI = () => {
   return jwtAPI;
 };
 
-export const login = async (credentials: { username: string; password: string; }) => {
+export const login = async (credentials: { identifier: string; password: string; }) => {
   const jwtAPI = getJwtAPI();
   const response = await jwtAPI.post('/auth/login', credentials);
   return response.data;

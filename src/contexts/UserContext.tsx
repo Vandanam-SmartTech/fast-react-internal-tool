@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { fetchClaims } from '../services/jwtService';
 
 interface UserClaims {
-  name?: string;
+  name_as_per_gov_id?: string;
   preferred_name?: string;
   email?: string;
   global_roles?: string[];

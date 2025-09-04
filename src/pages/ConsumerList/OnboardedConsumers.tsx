@@ -3,26 +3,7 @@ import { fetchOnboardedConsumers, getMaterialsByConnectionId } from "../../servi
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { 
-  Mail, 
-  Phone, 
-  User, 
-  Zap, 
-  Search, 
-  Filter, 
-  Users, 
-  UserCheck, 
-  FileText,
-  Package,
-  ChevronDown,
-  ChevronUp,
-  X,
-  RefreshCw,
-  Eye,
-  Plus,
-  CheckCircle,
-  AlertCircle
-} from "lucide-react";
+import { Mail, Phone, User, Zap, Search, Filter, Users, UserCheck, FileText, Package, ChevronDown, ChevronUp, X, RefreshCw, Eye, Plus, CheckCircle, AlertCircle} from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
@@ -116,7 +97,7 @@ const loadOnboardedConsumers = async (page: number) => {
 
     let orgId = selectedOrgId ?? null;
     let agencyId = selectedAgencyId ?? null;
-    let representativeId = selectedUserId ?? null;
+    let userId = selectedUserId ?? null;
 
     if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
       orgId = userInfo.orgId;
@@ -157,7 +138,7 @@ const loadOnboardedConsumers = async (page: number) => {
       orgId,
       agencyId,
       userRole: userInfo?.role || userRole || null,
-      representativeId,
+      userId,
     };
 
     console.log("Fetching consumers with params:", params);
@@ -370,9 +351,9 @@ useEffect(() => {
       } else if (selectedOrgId) {
         orgIdToFetch = selectedOrgId;
       } else if (userInfo?.role === "ROLE_ORG_STAFF") {
-        orgIdToFetch = userInfo.orgId; // treat as orgId
+        orgIdToFetch = userInfo.orgId; 
       } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
-        orgIdToFetch = userInfo.orgId; // treat as agencyId
+        orgIdToFetch = userInfo.orgId; 
       }
 
       if (orgIdToFetch) {

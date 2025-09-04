@@ -144,7 +144,7 @@ const dashboardItems = [
               {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
             </h1>
             <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Manage customers and view progress · 
+              Manage customers and view progress.
             </p>
           </div>
 

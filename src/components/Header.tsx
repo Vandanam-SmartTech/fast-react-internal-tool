@@ -240,7 +240,7 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
               className="px-2 sm:px-3"
             >
               <span className="hidden lg:inline font-medium text-secondary-700 dark:text-secondary-300">
-                {userClaims?.preferred_name || userClaims?.name || 'User'}
+                {userClaims?.name_as_per_gov_id || userClaims?.preferred_name || 'User'}
               </span>
             </Button>
 
@@ -249,7 +249,7 @@ const handleOrgChange = (orgId: string, orgName: string, role: string) => {
                 <div className="py-2">
                   <div className="px-3 sm:px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
                     <div className="font-medium text-secondary-900 dark:text-secondary-100 text-sm">
-                      {userClaims?.preferred_name || userClaims?.name || 'User'}
+                      {userClaims?.name_as_per_gov_id || userClaims?.name || 'User'}
                     </div>
                     <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300 mt-1">
                       {isSuperAdmin ? 'Super Admin' : selectedOrgName}
