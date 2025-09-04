@@ -282,7 +282,7 @@ const Login = () => {
             ) : (
               <form onSubmit={handleLogin} className="space-y-6">
                 <Input
-                  label="Username/ Email Id/ Contact Number"
+                  label="Login ID"
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
