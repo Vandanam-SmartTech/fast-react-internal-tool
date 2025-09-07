@@ -143,12 +143,38 @@ export const getUserSignature = async (): Promise<string | null> => {
     const userId = claims.id;
 
     const res = await oneDriveAPI.get(
-      `/api/document-manager/user-media/${userId}/signature`
+      `/api/document-manager/user-media/${userId}/signature`,
+      { responseType: "blob" }
     );
 
-    return res.data?.url || res.data || null; 
+    
+    return URL.createObjectURL(res.data);
   } catch (error: any) {
     console.error("Failed to fetch signature:", error);
     return null;
+  }
+};
+
+export const editUserSignature = async (file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const formData = new FormData();
+    formData.append("filedata", file);
+
+    await oneDriveAPI.put(
+      `/api/document-manager/user-media/${userId}/signature`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  } catch (error: any) {
+    console.error("Failed to edit signature:", error);
+    throw error;
   }
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 
 import {
@@ -34,10 +34,10 @@ export const ViewInstallation = () => {
 
   useEffect(() => {
     const fetchInstallation = async () => {
-      if (consumerId && installationId) {
+      if (connectionId && installationId) {
         try {
           const [installations, spaceTypeList] = await Promise.all([
-            getInstallationByConsumerId(Number(consumerId)),
+            getInstallationByConnectionId(Number(connectionId)),
             fetchInstallationSpaceTypesNames(), 
           ]);
   
@@ -58,7 +58,7 @@ export const ViewInstallation = () => {
     };
   
     fetchInstallation();
-  }, [consumerId, installationId]);
+  }, [connectionId, installationId]);
   
 
   if (!installation) return <p>Loading...</p>;

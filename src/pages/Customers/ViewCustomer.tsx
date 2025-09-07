@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
-import { getCustomerById, fetchConsumerNumber, getInstallationByConsumerId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid"
 import { Eye,User, Phone, Mail, X } from 'lucide-react';
 import { getUserById } from "../../services/jwtService";
@@ -22,14 +22,6 @@ export const ViewCustomer = () => {
   const [referredByUser, setReferredByUser] = useState<any | null>(null);
 
 
-  const addedByUser = {
-    name: "Prasad Krishnat Sutar",
-    email: "rajesh.kumar@company.com",
-    mobileNumber: "9876543210"
-  };
-
-
-
   const tabs = [
     "Customer Details",
     "Connection Details",
@@ -44,14 +36,14 @@ useEffect(() => {
     const newInstallationsMap: Record<string, any[]> = {};
 
     for (const connection of connections) {
-      if (!connection.consumerId) continue;
+      if (!connection.id) continue;
 
       try {
-        const data = await getInstallationByConsumerId(Number(connection.consumerId));
-        newInstallationsMap[connection.consumerId] = data || [];
+        const data = await getInstallationByConnectionId(Number(connection.id));
+        newInstallationsMap[connection.id] = data || [];
       } catch (error) {
-        console.log("No installations found for consumer:", connection.consumerId);
-        newInstallationsMap[connection.consumerId] = [];
+        console.log("No installations found for consumer:", connection.id);
+        newInstallationsMap[connection.id] = [];
       }
     }
 
@@ -477,7 +469,7 @@ useEffect(() => {
 
 
   {/* Nested Installations */}
-{(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
+{(installationsByConsumer[connection.id] || []).map((installation, idx) => (
   <details key={installation.id} className="group bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
     <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group mt-2 mb-2">
 

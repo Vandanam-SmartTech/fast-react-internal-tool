@@ -254,11 +254,11 @@ export const fetchInstallationSpaceTypesNames = async (): Promise<{ id: number; 
 
 
 export const fetchInstallationSpaceTypes = async (
-  consumerId: number
+  connectionId: number
 ): Promise<number[]> => {
   const crsAPI = getCrsAPI();
   try {
-    const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
+    const response = await crsAPI.get(`/api/installations/${connectionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching installation space types:', error);
@@ -306,10 +306,10 @@ export const getCustomerWithConnections = async (customerId: number): Promise<an
   }
 };
 
-export const getConnectionByConsumerId = async (consumerId: number): Promise<any> => {
+export const getConnectionByConnectionId = async (connectionId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
   try {
-    const response = await crsAPI.get(`/api/connections/${consumerId}`);
+    const response = await crsAPI.get(`/api/connections/${connectionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching connection details:', error);
@@ -317,12 +317,12 @@ export const getConnectionByConsumerId = async (consumerId: number): Promise<any
   }
 };
 
-export const getInstallationByConsumerId = async (
-  consumerId: number
+export const getInstallationByConnectionId = async (
+  connectionId: number
 ): Promise<any> => {
   const crsAPI = getCrsAPI();
   try {
-    const response = await crsAPI.get(`/api/installations/consumer/${consumerId}`);
+    const response = await crsAPI.get(`/api/installations/${connectionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching installation details:', error);

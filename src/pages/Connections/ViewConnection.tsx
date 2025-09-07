@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchInstallationSpaceTypesNames,  fetchConsumerNumber,  getCustomerById, getInstallationByConsumerId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService"; // Import API functions
+import { fetchInstallationSpaceTypesNames,  fetchConsumerNumber,  getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService"; // Import API functions
 import { useLocation } from "react-router-dom";
 import { fetchClaims } from "../../services/jwtService";
 import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
@@ -233,18 +233,18 @@ const handleDownload = async (fileId: string, fileName: string) => {
 
 useEffect(() => {
   const fetchInstallations = async () => {
-    if (!consumerId) return;
-    const installationsData = await getInstallationByConsumerId(Number(consumerId));
+    if (!connectionId) return;
+    const installationsData = await getInstallationByConnectionId(Number(connectionId));
     if (installationsData) {
       setInstallationsByConsumer(prev => ({
         ...prev,
-        [consumerId]: installationsData,
+        [connectionId]: installationsData,
       }));
     }
   };
 
   fetchInstallations();
-}, [consumerId]);
+}, [connectionId]);
 
 
     useEffect(() => {
@@ -612,7 +612,7 @@ const handleNo = async () => {
 
 
 <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-6">
-  {(installationsByConsumer[connection.consumerId] || []).map((installation, idx) => (
+  {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
     <details
       key={installation.id}
       className="group w-full max-w-4xl rounded-xl border border-gray-200 bg-white shadow-lg"

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCustomerById, updateConsumerPersonalDetails, checkMobileNumberExists, checkEmailAddressExists } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from "react-toastify";
 
 import {
@@ -31,14 +30,18 @@ export const EditCustomer = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
-  const [mobileExists, setMobileExists] = useState(false);
-  const [emailExists, setEmailExists] = useState(false);
-
   const [showMobile, setShowMobile] = useState(false);
   const handleToggleMobile = () => setShowMobile(!showMobile);
 
   const [showEmail, setShowEmail] = useState(false);
   const handleToggleEmail = () => setShowEmail(!showEmail);
+
+  const [originalMobile, setOriginalMobile] = useState("");
+  const [mobileExists, setMobileExists] = useState(false);
+
+  const [originalEmail, setOriginalEmail] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
+
 
 
   const tabs = [
@@ -67,12 +70,62 @@ export const EditCustomer = () => {
         setConfirmMobileNumber(data.mobileNumber || "");
         setConfirmEmailAddress(data.emailAddress || null);
 
+        setOriginalMobile(data.mobileNumber || "");
+        setOriginalEmail(data.emailAddress || null);
         setExistingCustomer(true);
       }
     };
 
     fetchCustomer();
   }, [customerId]);
+
+useEffect(() => {
+  const checkExists = async () => {
+    const current = (formData.mobileNumber ?? "").toString().trim();
+    const original = (originalMobile ?? "").toString().trim();
+
+    if (current.length !== 10) {
+      setMobileExists(false);
+      return;
+    }
+
+    if (current === original) {
+      setMobileExists(false);
+      return;
+    }
+
+    const exists = await checkMobileNumberExists(current);
+    setMobileExists(exists);
+  };
+
+  checkExists();
+}, [formData.mobileNumber, originalMobile]);
+
+useEffect(() => {
+  const checkEmailExists = async () => {
+    const email = (formData.emailAddress ?? "").trim();
+    const original = (originalEmail ?? "").trim();
+
+    const emailPattern =
+      /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+
+    if (!emailPattern.test(email)) {
+      setEmailExists(false);
+      return;
+    }
+
+    if (email === original) {
+      setEmailExists(false);
+      return;
+    }
+
+    const exists = await checkEmailAddressExists(email);
+    setEmailExists(exists);
+  };
+
+  checkEmailExists();
+}, [formData.emailAddress, originalEmail]);
+
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const { name, value } = e.target;
@@ -322,16 +375,16 @@ setDialogOpen(true);
       onPaste={(e) => e.preventDefault()}
     />
     
-    {/* <span
-      onClick={handleToggleMobile}
-      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-    >
-      {showMobile ? <FaEyeSlash /> : <FaEye />}
-    </span> */}
   </div>
 
   {formData.mobileNumber?.length > 0 && !/^[6-9]{1}[0-9]{0,9}$/.test(formData.mobileNumber) && (
     <p className="text-red-600 text-sm mt-1">Enter a valid 10-digit mobile number starting with 6-9</p>
+  )}
+
+  {mobileExists && formData.mobileNumber !== originalMobile && (
+  <p className="text-red-600 text-sm mt-1">
+    Mobile number already exists
+  </p>
   )}
 </div>
 
@@ -349,9 +402,10 @@ setDialogOpen(true);
       required
       className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200"
       title="Re-enter the same 10-digit mobile number"
-      disabled={!(
-    /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
-  )}
+      disabled={ !(
+      /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) &&
+      (!mobileExists || formData.mobileNumber === originalMobile)
+    )}
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onPaste={(e) => e.preventDefault()}
@@ -424,12 +478,11 @@ setDialogOpen(true);
       <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
     )}
 
-    {/* <span
-      onClick={handleToggleEmail}
-      className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-    >
-      {showEmail ? <FaEyeSlash /> : <FaEye />}
-    </span> */}
+    {emailExists && formData.emailAddress !== originalEmail && (
+  <p className="text-red-600 text-sm mt-1">
+    Email address already exists
+  </p>
+)}
   </div>
   
 </div>

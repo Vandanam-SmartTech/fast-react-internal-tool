@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getInstallationByConsumerId, updateInstallationSpaceDetails, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
-import { fetchClaims } from "../../services/jwtService";
+import { getInstallationByConnectionId, updateInstallationSpaceDetails, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import {
   UserCircleIcon,
@@ -65,8 +64,8 @@ export const EditInstallation = () => {
 
   useEffect(() => {
     const fetchInstallation = async () => {
-      if (consumerId && installationId) {
-        const data = await getInstallationByConsumerId(Number(consumerId));
+      if (connectionId && installationId) {
+        const data = await getInstallationByConnectionId(Number(connectionId));
         if (data && Array.isArray(data)) {
           const selectedInstallation = data.find(inst => inst.id === Number(installationId));
           if (selectedInstallation) {
@@ -104,7 +103,7 @@ export const EditInstallation = () => {
       }
     };
     fetchInstallation();
-  }, [consumerId, installationId]);
+  }, [connectionId, installationId]);
 
   if (!installation) return <p>Loading...</p>;
 

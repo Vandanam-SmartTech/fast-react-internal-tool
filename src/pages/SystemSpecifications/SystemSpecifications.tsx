@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConsumerId } from '../../services/customerRequisitionService';
+import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
 import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels } from '../../services/quotationService';
 import { uploadDocuments } from "../../services/oneDriveService";
@@ -123,9 +123,9 @@ const formatIndianNumber = (value) => {
   
 useEffect(() => {
   const loadInstallationSpaceDetails = async () => {
-    if (!consumerId || Object.keys(installationTypeMap).length === 0) return;
+    if (!connectionId || Object.keys(installationTypeMap).length === 0) return;
 
-    const installationSpaces = await fetchInstallationSpaceTypes(Number(consumerId));
+    const installationSpaces = await fetchInstallationSpaceTypes(Number(connectionId));
 
     const enrichedSpaces = installationSpaces.map((space: any) => ({
       ...space,
@@ -137,24 +137,24 @@ useEffect(() => {
   };
 
   loadInstallationSpaceDetails();
-}, [consumerId, installationTypeMap]);
+}, [connectionId, installationTypeMap]);
   
 
 
 
 useEffect(() => {
   const fetchConnection = async () => {
-    if (!consumerId) {
-      console.error("Consumer ID not found!");
+    if (!connectionId) {
+      console.error("Connection ID not found!");
       return;
     }
 
-    const data = await getConnectionByConsumerId(Number(consumerId));
+    const data = await getConnectionByConnectionId(Number(connectionId));
     setConnectionDetails(data);
   };
 
   fetchConnection();
-}, [consumerId]);
+}, [connectionId]);
 
     useEffect(() => {
       const fetchCustomer = async () => {

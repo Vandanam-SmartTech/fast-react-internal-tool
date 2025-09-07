@@ -277,6 +277,7 @@ const Login = () => {
                   >
                     Continue
                   </Button>
+
                 </div>
               </div>
             ) : (
@@ -285,11 +286,12 @@ const Login = () => {
                   label="Login ID"
                   type="text"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  onChange={(e) => setIdentifier(e.target.value.trim())}
                   placeholder="Enter username or email or contact number"
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
+
                 <Input
                   label="Password"
                   type="password"
