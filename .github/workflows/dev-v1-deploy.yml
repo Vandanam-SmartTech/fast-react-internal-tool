@@ -1,42 +1,56 @@
-name: Deploy SolarPro Dev
+name: Build & Deploy React App (Dev)
 
 on:
   push:
-    branches:
-      - dev   # Trigger only on dev branch
+    branches: [ dev ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-and-deploy:
-    if: contains(github.event.head_commit.message, 'push-dev')   # ✅ Run only if commit msg has 'push-dev'
+    if: contains(github.event.head_commit.message, 'push-dev')   # ✅ Only run when commit msg contains 'deploy-dev'
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # 1. Checkout
+      - uses: actions/checkout@v4
 
       # 2. Setup Node.js
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: npm
 
       # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
+        working-directory: ./   # 👈 adjust if frontend is in subfolder
 
-      # 4. Build React+Vite
-      - name: Build project
+      # 4. Build Vite app
+      - name: Build Vite app
         run: npm run build
+        working-directory: ./   # 👈 adjust if needed
 
-      # 5. Setup SSH agent
-      - name: Setup SSH
+      # 5. Debug build output
+      - name: Debug - Show dist output
+        run: ls -R ./dist || echo "⚠️ Dist folder missing!"
+        working-directory: ./   # 👈 adjust if needed
+
+      # 6. Start SSH agent
+      - name: Start SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
-      # 6. Deploy dist to server
-      - name: Deploy to server
+      # 7. Deploy build to server
+      - name: Deploy Vite app to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /opt/solarpro-frontend/dev/current"
-          scp -r dist/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/solarpro-frontend/dev/current/
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo mkdir -p /var/www/dev/solarpro && sudo rm -rf /var/www/dev/solarpro/*"
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./dist/* \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dev/solarpro/
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl reload nginx"
