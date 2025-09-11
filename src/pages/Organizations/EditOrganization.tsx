@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation} from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
-import { createOrganization } from '../../services/organizationService';
+import { updateOrganization, getOrganizationById } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
 import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
@@ -22,8 +22,11 @@ interface Village {
   pincode: string;
 }
 
-const OrganizationForm: React.FC = () => {
+const EditOrganization: React.FC = () => {
+const location = useLocation();
   const navigate = useNavigate();
+  //const isEdit = Boolean(id);
+  const organizationId = location.state?.organizationId;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,6 +60,11 @@ const OrganizationForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (organizationId) {
+      loadOrganization(parseInt(organizationId));
+    }
+  }, [organizationId]);
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -165,6 +173,26 @@ const OrganizationForm: React.FC = () => {
     };
 
 
+const loadOrganization = async (organizationId: number) => {
+  try {
+    const org = await getOrganizationById(organizationId);
+
+    setFormData({
+      ...org,
+      pincode: org.postalCode || "", 
+    });
+
+    setDistrictCode(org.districtCode);
+    setTalukaCode(org.talukaCode);
+    setVillageCode(org.villageCode);
+    setPincode(org.postalCode || "");
+
+  } catch (error) {
+    toast.error('Failed to load organization');
+    navigate('/organizations');
+  }
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -177,18 +205,18 @@ const OrganizationForm: React.FC = () => {
     const orgData = {
       ...formData,
       createdBy: userId,
-      postalCode:formData.pincode
+      postalCode: formData.pincode
     };
 
     console.log('JWT Claims:', claims);
     console.log('User ID:', userId);
-    console.log('Creating organization with data:', orgData);
+    console.log('Updating organization with data:', orgData);
 
-    await createOrganization(orgData);
-    toast.success('Organization created successfully');
+    await updateOrganization(parseInt(organizationId), orgData);
+    toast.success('Organization updated successfully');
     navigate('/organizations');
   } catch (error) {
-    toast.error('Failed to create organization');
+    toast.error('Failed to update organization');
   } finally {
     setLoading(false);
   }
@@ -229,7 +257,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
-          Create Organization
+          Edit Organization
         </h1>
       </div>
 
@@ -459,7 +487,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
   >
     <Save className="h-4 w-4" />
-    {loading ? 'Saving...' : 'Save'}
+    {loading ? 'Updating' : 'Update'}
   </button>
 </div>
 
@@ -468,4 +496,4 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   );
 };
 
-export default OrganizationForm;
+export default EditOrganization;

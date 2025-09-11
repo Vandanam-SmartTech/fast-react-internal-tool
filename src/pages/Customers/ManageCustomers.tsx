@@ -4,22 +4,6 @@ import { UserPlus, Users, UserRoundCheck } from 'lucide-react';
 
 const ManageCustomers: React.FC = () => {
   const navigate = useNavigate();
-  const [showOrgSelector, setShowOrgSelector] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [pendingPath, setPendingPath] = useState<string>('');
-
-  // useEffect(() => {
-  //   const checkUserRole = async () => {
-  //     try {
-  //       const claims = await fetchClaims();
-  //       const isSuper = claims.global_roles?.includes('ROLE_SUPER_ADMIN');
-  //       setIsSuperAdmin(isSuper);
-  //     } catch (error) {
-  //       console.error('Error checking user role:', error);
-  //     }
-  //   };
-  //   checkUserRole();
-  // }, []);
 
   const customerActions = [
     {
@@ -45,31 +29,10 @@ const ManageCustomers: React.FC = () => {
     }
   ];
 
-  // const handleActionClick = (path: string) => {
-  //   if (isSuperAdmin) {
-  //     setPendingPath(path);
-  //     setShowOrgSelector(true);
-  //   } else {
-  //     navigate(path);
-  //   }
-  // };
 
   const handleActionClick = (path: string) => {
   navigate(path); 
 };
-
-
-  // const handleOrgSelect = (orgId: string, orgName: string) => {
-  //   localStorage.setItem('selectedOrganization', orgId);
-  //   localStorage.setItem('selectedOrganizationName', orgName);
-  //   setShowOrgSelector(false);
-  //   navigate(pendingPath);
-  // };
-
-  // const handleOrgCancel = () => {
-  //   setShowOrgSelector(false);
-  //   setPendingPath('');
-  // };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -96,12 +59,6 @@ const ManageCustomers: React.FC = () => {
         ))}
       </div>
 
-      {/* {showOrgSelector && (
-        <OrganizationSelector
-          onSelect={handleOrgSelect}
-          onCancel={handleOrgCancel}
-        />
-      )} */}
     </div>
   );
 };

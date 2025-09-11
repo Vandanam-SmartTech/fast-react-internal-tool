@@ -200,7 +200,7 @@ export const ConnectionForm = () => {
     pincode: "",
     isNameCorrection: "No",
     correctionType: "",
-    monthlyAvgConsumptionUnits: NaN,
+    monthlyAvgConsumptionUnits: "",
     discomId: "",
     isActive: true,
   });
@@ -258,7 +258,7 @@ export const ConnectionForm = () => {
       }
     }
 
-    if (!formData.monthlyAvgConsumptionUnits || isNaN(formData.monthlyAvgConsumptionUnits)) {
+    if (!formData.monthlyAvgConsumptionUnits) {
       errors.push("Monthly Average Consumption Units is required");
     } else {
       const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.monthlyAvgConsumptionUnits);
@@ -946,30 +946,28 @@ export const ConnectionForm = () => {
                   Monthly Average Consumption Units <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
+                  type="text"
+                  inputMode="numeric"   
+                  pattern="[1-9][0-9]*" 
                   name="monthlyAvgConsumptionUnits"
                   value={formData.monthlyAvgConsumptionUnits}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    // allow only digits, no leading zeros
+                    const val = e.target.value;
+                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                      handleChange(e);
+                    }
+                  }}
                   onBlur={(e) => {
                     if (e.target.value) {
-                      validateFieldOnChange('monthlyAvgConsumptionUnits', e.target.value);
+                      validateFieldOnChange("monthlyAvgConsumptionUnits", e.target.value);
                     }
                   }}
                   required
                   placeholder="e.g. 1"
                   title="Enter a positive integer greater than 0"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
-                {fieldErrors.monthlyAvgConsumptionUnits && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
-                )}
-                {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
-                  <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
-                )}
               </div>
 
               <div>
@@ -980,24 +978,27 @@ export const ConnectionForm = () => {
                   )}
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric" // mobile numeric keypad
                   name="discomId"
                   value={formData.discomId}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                      handleChange(e);
+                    }
+                  }}
                   placeholder="e.g. 7137"
-                  min="1"
-                  step="1"
                   required={formData.isMsebConnection === "Yes"}
                   disabled={formData.isMsebConnection === "No"}
-                  onWheel={(e) => e.currentTarget.blur()}
                   title="DISCOM ID must be a positive integer greater than 0"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed ${fieldErrors.discomId ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
                 />
-                {fieldErrors.discomId && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
-                )}
+                {/* {fieldErrors.discomId && (
+    <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
+  )} */}
               </div>
+
             </div>
           </div>
 
@@ -1026,8 +1027,7 @@ export const ConnectionForm = () => {
                   title="GSTIN must be in format: 22AAAAA0000A1Z6"
                   placeholder="e.g. 22AAAAA0000A1Z6"
                   maxLength={15}
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.gstin ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.gstin && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
@@ -1048,8 +1048,7 @@ export const ConnectionForm = () => {
                   title="Billed To must be 2-50 characters, alphabets and spaces only"
                   maxLength={50}
                   required
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.billedTo && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
@@ -1076,8 +1075,7 @@ export const ConnectionForm = () => {
                 <input
                   type="text"
                   value="Maharashtra"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
@@ -1155,8 +1153,7 @@ export const ConnectionForm = () => {
                   maxLength={6}
                   inputMode="numeric"
                   required
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.pincode && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
@@ -1195,8 +1192,7 @@ export const ConnectionForm = () => {
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
                   required
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine1 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.addressLine1 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
@@ -1216,8 +1212,7 @@ export const ConnectionForm = () => {
                   pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine2 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.addressLine2 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
@@ -1238,8 +1233,7 @@ export const ConnectionForm = () => {
                   max="90"
                   step="any"
                   title="Latitude must be between -90 and 90"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.latitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.latitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
@@ -1260,8 +1254,7 @@ export const ConnectionForm = () => {
                   max="180"
                   step="any"
                   title="Longitude must be between -180 and 180"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.longitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.longitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
@@ -1301,7 +1294,7 @@ export const ConnectionForm = () => {
           </div>
 
           {/* Name Correction Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1363,7 +1356,7 @@ export const ConnectionForm = () => {
           <div className="flex justify-center pt-1">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
             >
               Save Connection
             </button>

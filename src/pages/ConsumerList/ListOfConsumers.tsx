@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { fetchConsumersWithConnections } from "../../services/customerRequisitionService";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { fetchConsumersWithConnections, searchCustomers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Eye, Mail, Phone, Lightbulb, Search, Users, UserCheck, RefreshCw,Zap,FileText,Plus} from "lucide-react";
+import { Eye, Mail, Phone, Lightbulb, Search, Users, UserCheck, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 
@@ -31,309 +31,306 @@ const ListOfConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [allConsumers, setAllConsumers] = useState<Consumer[]>([]);
   const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterOptions>({
     hasConnections: null,
     hasEmail: null,
   });
 
-const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
+  // refs to handle debounced searching and race conditions
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestSearchSeqRef = useRef<number>(0);
 
-const [agencies,setAgencies] = useState<Organization[]>([]);
-const[selectedAgencyId, setSelectedAgencyId] =useState<number | null>(null);
-const [userRole, setUserRole] = useState<string>("");
+  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
 
-const [users, setUsers] = useState<any[]>([]);
-const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [agencies, setAgencies] = useState<Organization[]>([]);
+  const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
+  const [userRole, setUserRole] = useState<string>("");
+
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
 
-const userInfo = JSON.parse(localStorage.getItem("selectedOrg")); 
-const userRoleFromLocalStorage = userInfo?.role;
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const userRoleFromLocalStorage = userInfo?.role;
 
   const handleViewConsumer = (consumer: Consumer) => {
     const customerId = consumer.customerId || consumer.id;
     console.log('Viewing consumer:', { consumer, customerId });
-    
+
     if (!customerId) {
       console.error('No customer ID found for consumer:', consumer);
       return;
     }
-    
-    navigate(`/view-customer/${customerId}`, { 
-      state: { consumer, customerId } 
+
+    navigate(`/view-customer/${customerId}`, {
+      state: { consumer, customerId }
     });
   };
 
-useEffect(() => {
-  const loadRoleAndOrganizations = async () => {
-    try {
-      const claims = await fetchClaims();
+  useEffect(() => {
+    const loadRoleAndOrganizations = async () => {
+      try {
+        const claims = await fetchClaims();
 
-      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-        setUserRole("ROLE_SUPER_ADMIN");
+        if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+          setUserRole("ROLE_SUPER_ADMIN");
 
-        // Only fetch organizations if SUPER ADMIN
-        const orgs = await fetchOrganizations();
-        setOrganizations(orgs);
-      } else {
-        // For other roles, you can set role here
-        setUserRole(claims.role || "");
+          // Only fetch organizations if SUPER ADMIN
+          const orgs = await fetchOrganizations();
+          setOrganizations(orgs.map((o) => ({ id: o.id as number, name: o.name })));
+        } else {
+          // For other roles, you can set role here
+          setUserRole(claims.role || "");
+        }
+      } catch (error) {
+        console.error("Error fetching claims or organizations:", error);
       }
-    } catch (error) {
-      console.error("Error fetching claims or organizations:", error);
-    }
-  };
-
-  loadRoleAndOrganizations();
-}, []);
-
-
-
-useEffect(() => {
-  const loadAgencies = async () => {
-    try {
-      if (!selectedOrgId) return;
-
-      const data = await getChildOrganizations(selectedOrgId);
-      setAgencies(data);
-    } catch (error) {
-      console.error("Error loading agencies:", error);
-    }
-  };
-
-  loadAgencies();
-}, [selectedOrgId]);
-
-useEffect(() => {
-  if (userInfo?.role === "ROLE_ORG_ADMIN") {
-    
-    setSelectedOrgId(userInfo.orgId);
-
-    
-    getChildOrganizations(userInfo.orgId).then((res) => {
-      if (res.data?.length) {
-        setAgencies(res.data);
-      } else {
-        
-        loadConsumers(0); 
-      }
-    });
-  }
-}, []);
-
-// role org staff
-// useEffect(() => {
-//   if (userInfo?.role === "ROLE_ORG_STAFF") {
-//     setSelectedOrgId(userInfo.orgId);
-
-//
-//     loadConsumers(0);
-//   }
-// }, []);
-
-
-
-
-useEffect(() => {
-  const loadUsers = async () => {
-    try {
-      let orgIdToFetch: number | null = null;
-
-      // Priority: if dropdown selections exist, use them
-      if (selectedAgencyId) {
-        orgIdToFetch = selectedAgencyId;
-      } else if (selectedOrgId) {
-        orgIdToFetch = selectedOrgId;
-      } else if (userInfo?.role === "ROLE_ORG_STAFF") {
-        orgIdToFetch = userInfo.orgId; 
-      } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
-        orgIdToFetch = userInfo.orgId; 
-      }
-
-      if (orgIdToFetch) {
-        const data = await fetchUsersByOrgId(orgIdToFetch);
-        setUsers(data);
-      } else {
-        setUsers([]);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setUsers([]);
-    }
-  };
-
-  loadUsers();
-}, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
-
-useEffect(() => {
-  if (selectedUserId !== null) {
-    loadConsumers(0); 
-  }
-}, [selectedUserId]);
-
-
-const loadConsumers = async (page: number) => {
-  try {
-    setLoading(true);
-
-    let orgId = selectedOrgId ?? null;
-    let agencyId = selectedAgencyId ?? null;
-    let userId = selectedUserId ?? null;
-
-    if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
-      orgId = userInfo.orgId;
-    }
-
-    if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
-      agencyId = userInfo.orgId;
-      orgId = null;
-    }
-
-    if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
-      orgId = userInfo.orgId;
-    }
-
-    if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
-      agencyId = userInfo.orgId;
-      orgId = null;
-    }
-
-    if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
-      orgId = userInfo.orgId;
-    }
-
-    if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
-      agencyId = userInfo.orgId;
-      orgId = null;
-    }
-
-    const orgName = orgId
-      ? organizations.find((o) => o.id === orgId)?.name || null
-      : null;
-
-    const agencyName = agencyId
-      ? agencies.find((a) => a.id === agencyId)?.name || null
-      : null;
-
-    const params = {
-      orgId,
-      agencyId,
-      userRole: userInfo?.role || userRole || null,
-      userId,
     };
 
-    console.log("Fetching consumers with params:", params);
+    loadRoleAndOrganizations();
+  }, []);
 
-    const data = await fetchConsumersWithConnections(page, params);
-    setConsumers(data.content);
-    setTotalPages(data.totalPages);
-    setCurrentPage(page);
-  } catch (error) {
-    console.error("Error fetching consumers:", error);
-  } finally {
-    setLoading(false);
-  }
-};
 
-  const loadAllConsumers = async () => {
-    if (allConsumers.length > 0) return; 
-    
-    try {
-      setIsLoadingAll(true);
-      const allData: Consumer[] = [];
-      let currentPage = 0;
-      let hasMorePages = true;
 
-      while (hasMorePages) {
-        const data = await fetchConsumersWithConnections(currentPage);
-        allData.push(...data.content);
-        
-        if (currentPage >= data.totalPages - 1) {
-          hasMorePages = false;
+  useEffect(() => {
+    const loadAgencies = async () => {
+      try {
+        if (!selectedOrgId) return;
+
+        const data = await getChildOrganizations(selectedOrgId);
+        setAgencies(data);
+      } catch (error) {
+        console.error("Error loading agencies:", error);
+      }
+    };
+
+    loadAgencies();
+  }, [selectedOrgId]);
+
+  useEffect(() => {
+    if (userInfo?.role === "ROLE_ORG_ADMIN") {
+
+      setSelectedOrgId(userInfo.orgId);
+
+
+      getChildOrganizations(userInfo.orgId).then((res) => {
+        if (res?.length) {
+          setAgencies(res);
         } else {
-          currentPage++;
+
+          loadConsumers(0);
         }
+      });
+    }
+  }, []);
+
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        let orgIdToFetch: number | null = null;
+
+        // Priority: if dropdown selections exist, use them
+        if (selectedAgencyId) {
+          orgIdToFetch = selectedAgencyId;
+        } else if (selectedOrgId) {
+          orgIdToFetch = selectedOrgId;
+        } else if (userInfo?.role === "ROLE_ORG_STAFF") {
+          orgIdToFetch = userInfo.orgId;
+        } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
+          orgIdToFetch = userInfo.orgId;
+        }
+
+        if (orgIdToFetch) {
+          const data = await fetchUsersByOrgId(orgIdToFetch);
+          setUsers(data);
+        } else {
+          setUsers([]);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      }
+    };
+
+    loadUsers();
+  }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
+
+  useEffect(() => {
+    if (selectedUserId !== null) {
+      loadConsumers(0);
+    }
+  }, [selectedUserId]);
+
+
+  const loadConsumers = async (page: number) => {
+    try {
+      setLoading(true);
+
+      let orgId = selectedOrgId ?? null;
+      let agencyId = selectedAgencyId ?? null;
+      let userId = selectedUserId ?? null;
+
+      if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+        orgId = userInfo.orgId;
       }
 
-      setAllConsumers(allData);
+      if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
+        agencyId = userInfo.orgId;
+        orgId = null;
+      }
+
+      if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
+        orgId = userInfo.orgId;
+      }
+
+      if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
+        agencyId = userInfo.orgId;
+        orgId = null;
+      }
+
+      if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
+        orgId = userInfo.orgId;
+      }
+
+      if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
+        agencyId = userInfo.orgId;
+        orgId = null;
+      }
+
+      // derive names only if needed in future
+
+      const params = {
+        orgId,
+        agencyId,
+        userRole: userRole || userInfo?.role || null,
+        userId,
+      };
+
+      console.log("Fetching consumers with params:", params);
+
+      const data = await fetchConsumersWithConnections(page, params);
+      setConsumers(data.content);
+      setTotalPages(data.totalPages);
+      setCurrentPage(page);
     } catch (error) {
-      console.error("Error loading all consumers:", error);
+      console.error("Error fetching consumers:", error);
     } finally {
-      setIsLoadingAll(false);
+      setLoading(false);
     }
   };
 
-  const handleSearch = async (query: string) => {
+
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (!query.trim()) {
+  };
+
+  // Debounced remote search with race protection
+  useEffect(() => {
+    // Clear any pending timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    const trimmed = searchQuery.trim();
+
+    // If query is empty, clear results immediately
+    if (trimmed === "") {
       setSearchResults([]);
       return;
     }
 
-
-    if (allConsumers.length === 0) {
-      await loadAllConsumers();
+    // Avoid firing for very short inputs
+    if (trimmed.length < 2) {
+      return;
     }
 
+    // Debounce actual API search
+    searchTimeoutRef.current = setTimeout(async () => {
+      const currentSeq = ++latestSearchSeqRef.current;
 
-    const searchTerm = query.toLowerCase().trim();
-    const results = allConsumers.filter(consumer => {
+      try {
+        let orgId = selectedOrgId ?? null;
+        let agencyId = selectedAgencyId ?? null;
+        let userId = selectedUserId ?? null;
 
-      if (consumer.govIdName?.toLowerCase().includes(searchTerm)) return true;
-      
+        if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
+        if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
+        if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
 
-      if (consumer.emailAddress?.toLowerCase().includes(searchTerm)) return true;
-      
+        const params = {
+          orgId,
+          agencyId,
+          userRole: userRole || userInfo?.role || null,
+          userId,
+        };
 
-      if (consumer.mobileNumber?.toString().includes(searchTerm)) return true;
-      
+        console.log("Sending search request with params:", { query: trimmed, ...params });
+        const results = await searchCustomers(trimmed, params);
 
-      if (consumer.connections) {
-        return consumer.connections.some(connection => 
-          connection.consumerId?.toString().includes(searchTerm)
-        );
+        // Only apply results if this is the latest search
+        if (currentSeq === latestSearchSeqRef.current) {
+          setSearchResults(results);
+        }
+      } catch (error) {
+        console.error("Error searching customers:", error);
+        if (currentSeq === latestSearchSeqRef.current) {
+          setSearchResults([]);
+        }
       }
-      
-      return false;
-    });
-    
-    console.log('Search results:', results);
-    setSearchResults(results);
-  };
+    }, 100);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
+
+
 
 
   const filteredAndSortedData = useMemo(() => {
     const data = searchQuery.trim() !== "" ? searchResults : consumers;
-    
+
     let filtered = data.filter(consumer => {
-      
       if (filters.hasConnections !== null) {
         const hasConnections = consumer.connections && consumer.connections.length > 0;
         if (filters.hasConnections !== hasConnections) return false;
       }
-      
-     
+
       if (filters.hasEmail !== null) {
         const hasEmail = consumer.emailAddress && consumer.emailAddress !== "NA";
         if (filters.hasEmail !== hasEmail) return false;
       }
-      
+
       return true;
     });
 
-    // Remove sorting - keep as received from API
     return filtered;
   }, [consumers, searchResults, searchQuery, filters]);
 
-  const clearFilters = () => {
-    setFilters({
-      hasConnections: null,
-      hasEmail: null,
-    });
-  };
+
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -346,13 +343,12 @@ const loadConsumers = async (page: number) => {
     loadConsumers(currentPage);
   }, [currentPage]);
 
-useEffect(() => {
-  
-  if (!selectedOrgId) return;
+  useEffect(() => {
+    if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
 
-  
-  loadConsumers(0);
-}, [selectedOrgId, selectedAgencyId, userRole]);
+    loadConsumers(0);
+  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId]);
+
 
 
 
@@ -361,14 +357,14 @@ useEffect(() => {
       setCurrentPage(0);
       loadConsumers(0);
     };
-    
+
     window.addEventListener('organizationChanged', handleOrgChange);
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, []);
 
   const renderPagination = () => {
     if (searchQuery.trim() !== "" || getActiveFiltersCount() > 0) return null;
-    
+
     const pages = [];
     const maxVisiblePages = 5;
 
@@ -461,7 +457,7 @@ useEffect(() => {
               )}
             </div>
           </div>
-          
+
           {/* Action buttons */}
           <div className="flex items-center gap-2">
             <Button
@@ -474,10 +470,10 @@ useEffect(() => {
               View
             </Button>
 
-            
 
-        
-  
+
+
+
           </div>
         </div>
 
@@ -489,9 +485,9 @@ useEffect(() => {
               {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
-                            <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
+            <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No mobile number provided"}
             </span>
@@ -515,11 +511,11 @@ useEffect(() => {
                       customerId: consumer.customerId || consumer.id,
                       govIdName: consumer.govIdName,
                     },
-                  }) 
+                  })
                 }
                 className="whitespace-nowrap"
               >
-               + Add New Connection
+                + Add New Connection
               </Button>
             </div>
             {consumer.connections.map((connection, index) => (
@@ -535,7 +531,7 @@ useEffect(() => {
                     {connection.consumerId}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -553,7 +549,7 @@ useEffect(() => {
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -582,7 +578,6 @@ useEffect(() => {
                             customerId: consumer.customerId || consumer.id,
                             govIdName: consumer.govIdName,
                             consumerId: connection.consumerId,
-                            connectionType: "Solar Connection",
                             mobileNumber: consumer.mobileNumber,
                             emailAddress: consumer.emailAddress,
                           },
@@ -597,7 +592,7 @@ useEffect(() => {
                 </div>
               </div>
             ))}
-            
+
           </div>
         )}
 
@@ -621,119 +616,245 @@ useEffect(() => {
             </Button>
           </div>
         )}
-        
+
       </CardBody>
     </Card>
   );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header Section */}
 
 
-      <div className="mb-8">
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    
-    {/* Heading + Subtitle */}
-    <div>
-      <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
-        Customer Directory
-      </h1>
-      {/* <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-        Manage and view all your customers and their connections
-      </p> */}
-    </div>
+      <div className="mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-    {/* Organization + Agency Selects */}
-    <div className="flex gap-4">
-      
-      
-      {userRole ==="ROLE_SUPER_ADMIN" && (<div className="w-60"> 
-        <label className="sr-only">Select Organization</label>
-        <select
-          value={selectedOrgId ?? ""}
-          onChange={async (e) => {
-            const value = e.target.value ? Number(e.target.value) : null;
-            setSelectedOrgId(value);
+          {/* Heading + Subtitle */}
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
+              Customer Directory
+            </h1>
 
-            setSelectedUserId(null);
+          </div>
 
-            if (value) {
-              const childOrgs = await getChildOrganizations(value);
-              setAgencies(childOrgs);
-              setSelectedAgencyId(null);
-            } else {
-              setAgencies([]);
-              setSelectedAgencyId(null);
-              loadConsumers(0);
-            }
-          }}
-          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
-        >
-          <option value="">Select Organization</option>
-          {organizations.map((org) => (
-            <option key={org.id} value={org.id}>
-              {org.name}
-            </option>
-          ))}
-        </select>
-      </div>)}
+          {/* Organization + Agency Selects */}
+          <div className="flex gap-4">
 
-      {/* Agency Dropdown */}
-      {agencies.length > 0 && (<div className="w-60"> 
-        <label className="sr-only">Select Agency</label>
-        <select
-          value={selectedAgencyId ?? ""}
-          onChange={(e) => {
-    const agencyId = e.target.value || null;
-    setSelectedAgencyId(agencyId);
 
-    setSelectedUserId(null);
-    
-    // Clear org selection if agency is chosen
-    if (agencyId) {
-      setSelectedOrgId(null);
-    }
-  }}
-          disabled={agencies.length === 0}
-          className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
-        >
-          <option value="">Self</option>
-          {agencies.map((agency) => (
-            <option key={agency.id} value={agency.id}>
-              {agency.name}
-            </option>
-          ))}
-        </select>
-      </div>)}
+            {userRole === "ROLE_SUPER_ADMIN" && (
+              <div className="relative w-60">
+                <select
+                  name="organization"
+                  value={selectedOrgId ?? ""}
+                  onChange={async (e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    setSelectedOrgId(value);
 
-      {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" && userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && (
-  <div className="w-60">
-    <label className="sr-only">Select User</label>
-    <select
-      value={selectedUserId ?? ""}
-      onChange={(e) => {
-        const userId = e.target.value ? Number(e.target.value) : null;
-        setSelectedUserId(userId);
-      }}
-      disabled={users.length === 0}
-      className="w-full border border-secondary-300 dark:border-secondary-600 rounded-lg px-4 py-2 text-secondary-900 dark:text-secondary-100 bg-white dark:bg-secondary-800"
-    >
-      <option value="">Select User</option>
-      {users.map((user) => (
-        <option key={user.id} value={user.id}>
-          {`${user.nameAsPerGovId} (${user.username})`}
-        </option>
-      ))}
-    </select>
-  </div>
-)}
+                    setSelectedUserId(null);
+
+                    if (value) {
+                      const childOrgs = await getChildOrganizations(value);
+                      setAgencies(childOrgs);
+                      setSelectedAgencyId(null);
+                    } else {
+                      setAgencies([]);
+                      setSelectedAgencyId(null);
+                      loadConsumers(0);
+                    }
+                  }}
+                  className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+                >
+                  <option value="">Select Organization</option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Custom dropdown arrow (only when no org is selected) */}
+                {!selectedOrgId && (
+                  <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-900">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* X button to clear selection */}
+                {selectedOrgId && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={async () => {
+                      setSelectedOrgId(null);
+                      setSelectedAgencyId(null);
+                      setAgencies([]);
+                      setSelectedUserId(null);
+                      loadConsumers(0);
+                    }}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
+                    title="Clear selection"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
 
 
 
-    </div>
-  </div>
-</div>
+            {agencies.length > 0 && (
+              <div className="relative w-60">
+                <select
+                  name="agency"
+                  value={selectedAgencyId ?? ""}
+                  onChange={(e) => {
+                    const agencyId = e.target.value ? Number(e.target.value) : null;
+                    setSelectedAgencyId(agencyId);
+
+                    // reset user when agency changes
+                    setSelectedUserId(null);
+                  }}
+                  disabled={agencies.length === 0}
+                  className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+                >
+                  <option value="">Self</option>
+                  {agencies.map((agency) => (
+                    <option key={agency.id} value={agency.id}>
+                      {agency.name}
+                    </option>
+                  ))}
+                </select>
+
+
+                {!selectedAgencyId && (
+                  <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
+          ${agencies.length === 0 ? "text-gray-400" : "text-gray-900"}
+        `}>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                )}
+
+                {selectedAgencyId && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setSelectedAgencyId(null)}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
+                    title="Clear selection"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+
+
+            {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" &&
+              userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
+                <div className="relative w-60">
+                  <select
+                    name="customer"
+                    value={selectedUserId ?? ""}
+                    onChange={(e) => {
+                      const userId = e.target.value ? Number(e.target.value) : null;
+                      setSelectedUserId(userId);
+                    }}
+                    disabled={users.length === 0}
+                    className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+                  >
+                    <option value="">All</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {`${user.nameAsPerGovId} (${user.username})`}
+                      </option>
+                    ))}
+                  </select>
+
+
+                  {!selectedUserId && (
+                    <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
+          ${users.length === 0 ? "text-gray-400" : "text-gray-900"}
+        `}>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* X button to clear selection */}
+                  {selectedUserId && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSelectedUserId(null)}
+                      className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
+                      title="Clear selection"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+          </div>
+        </div>
+      </div>
 
 
 
@@ -744,7 +865,7 @@ useEffect(() => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
           <input
             type="text"
-            placeholder="Search customers by name, email, mobile number, or connection ID..."
+            placeholder="Search customers by name, email, mobile number, or consumer number..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-secondary-200 dark:border-secondary-700 rounded-xl bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
@@ -754,15 +875,15 @@ useEffect(() => {
       </div>
 
       {/* Results Summary */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="text-sm text-secondary-700 dark:text-secondary-300">
+      <div className="mb-4 flex items-center justify-between">
+        {/* <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
           ) : (
             `Showing ${filteredAndSortedData.length} customer${filteredAndSortedData.length !== 1 ? 's' : ''}`
           )}
-        </div>
-        
+        </div> */}
+
         {!loading && !isLoadingAll && filteredAndSortedData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">
             {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
@@ -801,7 +922,7 @@ useEffect(() => {
                   No customers found
                 </h3>
                 <p className="text-secondary-700 dark:text-secondary-300">
-                  {searchQuery.trim() !== "" 
+                  {searchQuery.trim() !== ""
                     ? `No customers match your search for "${searchQuery}"`
                     : "No customers available at the moment."
                   }
@@ -818,7 +939,7 @@ useEffect(() => {
           {renderPagination() && (
             <div className="flex justify-center items-center mt-8 gap-2">
               {renderPagination()}
-          </div>
+            </div>
           )}
         </>
       )}

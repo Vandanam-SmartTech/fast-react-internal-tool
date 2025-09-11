@@ -47,7 +47,6 @@ const Profile: React.FC = () => {
       setLoading(true);
       const claims = await fetchClaims();
 
-      // Set profile data
       setProfile(claims);
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -240,7 +239,7 @@ const Profile: React.FC = () => {
       const blob = await response.blob();
       const file = new File([blob], "signature.png", { type: "image/png" });
 
-      await editUserSignature(file); // PUT
+      await editUserSignature(file); 
 
       toast.success("Signature updated successfully");
 
@@ -266,35 +265,35 @@ const Profile: React.FC = () => {
 
 
   const getRoleDisplay = () => {
-    if (profile?.global_roles?.includes('ROLE_SUPER_ADMIN')) {
-      return 'Super Administrator';
-    }
+  if (!profile) return 'User';
 
-    const selectedOrgStr = localStorage.getItem('selectedOrg');
-    if (selectedOrgStr) {
-      try {
-        const selectedOrg = JSON.parse(selectedOrgStr);
-        return selectedOrg.role?.replace('ROLE_', '').replace('_', ' ') || 'User';
-      } catch {
-        return 'User';
-      }
-    }
+  // Check global roles first
+  if (profile.global_roles?.includes('ROLE_SUPER_ADMIN')) {
+    return 'Super Administrator';
+  }
 
-    return 'User';
-  };
+  // Otherwise, pick the first org role (if exists)
+  const orgRoles = profile.org_roles ? Object.values(profile.org_roles) : [];
+  if (orgRoles.length > 0) {
+    const role = orgRoles[0].role || 'ROLE_USER';
+    return role.replace('ROLE_', '').replace(/_/g, ' ');
+  }
 
-  const getOrganizationDisplay = () => {
-    const selectedOrgStr = localStorage.getItem('selectedOrg');
-    if (selectedOrgStr) {
-      try {
-        const selectedOrg = JSON.parse(selectedOrgStr);
-        return selectedOrg.orgName || 'No Organization';
-      } catch {
-        return 'No Organization';
-      }
-    }
-    return 'No Organization';
-  };
+  return 'User';
+};
+
+const getOrganizationDisplay = () => {
+  if (!profile) return 'No Organization';
+
+  // Pick the first org role’s organization
+  const orgRoles = profile.org_roles ? Object.values(profile.org_roles) : [];
+  if (orgRoles.length > 0) {
+    return orgRoles[0].org_name || 'No Organization';
+  }
+
+  return 'No Organization';
+};
+
 
   if (loading) {
     return (
@@ -364,28 +363,42 @@ const Profile: React.FC = () => {
           </Card>
 
           {/* Account Information Card */}
-          <Card>
-            <CardBody className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Role</p>
-                    <p className="text-sm text-gray-600">{getRoleDisplay()}</p>
-                  </div>
-                </div>
+<Card>
+  <CardBody className="p-6">
+    <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      {/* Global Role (if any) */}
+      {profile?.global_roles?.includes('ROLE_SUPER_ADMIN') && (
+        <div className="flex items-center gap-3">
+          <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-gray-900">Global Role</p>
+            <p className="text-sm text-gray-600">Super Administrator</p>
+          </div>
+        </div>
+      )}
 
-                <div className="flex items-center gap-3">
-                  <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Organization</p>
-                    <p className="text-sm text-gray-600">{getOrganizationDisplay()}</p>
-                  </div>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+      {/* All Organization Roles with Names */}
+      {profile?.org_roles &&
+        Object.entries(profile.org_roles).map(([orgId, org]) => (
+          <div key={orgId} className="flex items-center gap-3">
+            <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {org.org_name}
+              </p>
+              <p className="text-sm text-gray-600">
+                {org.role.replace('ROLE_', '').replace(/_/g, ' ')}
+              </p>
+            </div>
+          </div>
+        ))}
+    </div>
+  </CardBody>
+</Card>
+
+
 
           {/* Digital Signature Card */}
           <Card>
@@ -557,121 +570,125 @@ const Profile: React.FC = () => {
         </div>
 
         {/* Crop Modal */}
-        {showCropModal && previewUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Crop Signature</h3>
-                <button
-                  onClick={() => setShowCropModal(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
+{showCropModal && previewUrl && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+    <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-gray-200">
+        <h3 className="text-base font-semibold text-gray-900">Crop Signature</h3>
+        <button
+          onClick={() => setShowCropModal(false)}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-500" />
+        </button>
+      </div>
 
-              {/* Scrollable Content */}
-              <div className="p-4 overflow-y-auto flex-1">
-                {/* Instructions */}
-                <div className="mb-4 text-center">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Adjust the crop area to select your signature. The final output will be 140×70px.
-                  </p>
-                  <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
-                    <span>Drag to move</span>
-                    <span>•</span>
-                    <span>Scroll to zoom</span>
-                    <span>•</span>
-                    <span>Rotate if needed</span>
-                  </div>
-                </div>
-
-                {/* Crop Container */}
-                <div className="relative w-full h-96 mb-4 bg-gray-100 rounded-lg overflow-hidden">
-                  <Cropper
-                    image={previewUrl}
-                    crop={crop}
-                    zoom={zoom}
-                    rotation={rotation}
-                    aspect={2}
-                    onCropChange={handleCropChange}
-                    onZoomChange={handleZoomChange}
-                    onCropComplete={handleCropComplete}
-                    objectFit="contain"
-                    showGrid={true}
-                    cropSize={{ width: 200, height: 100 }}
-                    minZoom={0.5}
-                    maxZoom={3}
-                  />
-                </div>
-
-                {/* Zoom Controls */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-4">
-                    <button
-                      onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                      disabled={zoom <= 0.5}
-                    >
-                      <ZoomOut className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <span className="text-sm text-gray-600 min-w-[60px] text-center">
-                      {Math.round(zoom * 100)}%
-                    </span>
-                    <button
-                      onClick={() => setZoom(Math.min(3, zoom + 0.1))}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                      disabled={zoom >= 3}
-                    >
-                      <ZoomIn className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </div>
-
-                  {/* Rotation Controls */}
-                  <div className="flex items-center justify-center gap-4">
-                    <button
-                      onClick={() => setRotation(rotation - 15)}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                      <RotateCcw className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <span className="text-sm text-gray-600 min-w-[60px] text-center">
-                      {rotation}°
-                    </span>
-                    <button
-                      onClick={() => setRotation(rotation + 15)}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                      <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sticky Footer for Action Buttons */}
-              <div className="p-4 border-t border-gray-200 flex gap-3 justify-center">
-                <Button
-                  onClick={handleCropReset}
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<RotateCcw className="w-4 h-4" />}
-                >
-                  Reset
-                </Button>
-                <Button
-                  onClick={handleCropSave}
-                  size="sm"
-                  leftIcon={<Crop className="w-4 h-4" />}
-                  loading={isProcessing}
-                  disabled={!croppedAreaPixels}
-                >
-                  {isProcessing ? 'Processing...' : 'Save Cropped Image'}
-                </Button>
-              </div>
-            </div>
+      {/* Content (no scroll for desktop) */}
+      <div className="p-4 flex flex-col gap-4">
+        {/* Instructions */}
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-1">
+            Adjust the crop area to select your signature. Final output will be 140×70px.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+            <span>Drag</span>
+            <span>•</span>
+            <span>Zoom</span>
+            <span>•</span>
+            <span>Rotate</span>
           </div>
-        )}
+        </div>
+
+        {/* Crop Container (smaller height) */}
+        <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+          <Cropper
+            image={previewUrl}
+            crop={crop}
+            zoom={zoom}
+            rotation={rotation}
+            aspect={2}
+            onCropChange={handleCropChange}
+            onZoomChange={handleZoomChange}
+            onCropComplete={handleCropComplete}
+            objectFit="contain"
+            showGrid={true}
+            cropSize={{ width: 200, height: 100 }}
+            minZoom={0.5}
+            maxZoom={3}
+          />
+        </div>
+
+        {/* Controls */}
+        <div className="space-y-3">
+          {/* Zoom */}
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              disabled={zoom <= 0.5}
+            >
+              <ZoomOut className="w-4 h-4 text-gray-600" />
+            </button>
+            <span className="text-sm text-gray-600 min-w-[50px] text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              disabled={zoom >= 3}
+            >
+              <ZoomIn className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Rotation */}
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => setRotation(rotation - 15)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4 text-gray-600" />
+            </button>
+            <span className="text-sm text-gray-600 min-w-[50px] text-center">
+              {rotation}°
+            </span>
+            <button
+              onClick={() => setRotation(rotation + 15)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+        <Button
+          onClick={handleCropReset}
+          variant="outline"
+          size="sm"
+          leftIcon={<RotateCcw className="w-4 h-4" />}
+        >
+          Reset
+        </Button>
+        <Button
+          onClick={handleCropSave}
+          size="sm"
+          leftIcon={<Crop className="w-4 h-4" />}
+          loading={isProcessing}
+          disabled={!croppedAreaPixels}
+        >
+          {isProcessing ? 'Processing...' : 'Save Cropped Image'}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
       </div>
     </div>
   );

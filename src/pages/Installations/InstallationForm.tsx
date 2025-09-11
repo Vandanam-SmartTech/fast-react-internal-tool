@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveInstallation, fetchInstallationSpaceTypesNames} from "../../services/customerRequisitionService";
+import { saveInstallation, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { fetchClaims } from "../../services/jwtService";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
@@ -27,7 +27,7 @@ export const InstallationForm = () => {
 
   const [activeTab, setActiveTab] = useState("Installation Details");
 
-    const tabs = [
+  const tabs = [
     "Customer Details",
     "Connection Details",
     "Installation Details",
@@ -40,12 +40,13 @@ export const InstallationForm = () => {
     dcWireLengthFt: '',
     earthingWireLengthFt: NaN,
     numberOfGpPipes: NaN,
-    descriptionOfInstallation:'',
+    descriptionOfInstallation: '',
     availableSouthNorthLengthFt: '',
     availableEastWestLengthFt: '',
     installationSpaceTypeId: 1,
-    installationSpaceTitle:'',
-    customInstallationSpaceTitle:'',
+    installationSpaceTitle: '',
+    customInstallationSpaceTitle: '',
+    elevationInFeet: '',
   });
 
   ///////////////////////////////////////////////////////////
@@ -55,21 +56,21 @@ export const InstallationForm = () => {
       setFormData(JSON.parse(savedForm));
     }
   }, []);
-///////////////////////////////////////////////////////////
-  
+  ///////////////////////////////////////////////////////////
+
 
   useEffect(() => {
-      const getInstallationSpaceTypesNames = async () => {
-        try {
-          const data = await fetchInstallationSpaceTypesNames();
-          setInstallationSpaceTypes(data);
-        } catch (error) {
-          console.error("Failed to fetch connection types", error);
-        }
-      };
-    
-      getInstallationSpaceTypesNames();
-    }, []);
+    const getInstallationSpaceTypesNames = async () => {
+      try {
+        const data = await fetchInstallationSpaceTypesNames();
+        setInstallationSpaceTypes(data);
+      } catch (error) {
+        console.error("Failed to fetch connection types", error);
+      }
+    };
+
+    getInstallationSpaceTypesNames();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -94,328 +95,354 @@ export const InstallationForm = () => {
     console.log("Received customerId:", customerId);
 
     if (!connectionId || !consumerId) {
-        // alert("Connection ID and Consumer ID are required!");
-        toast.error("Connection ID and Consumer ID are required!",{
-          autoClose:1000,
-          hideProgressBar:true,
-        });
-        return;
+      // alert("Connection ID and Consumer ID are required!");
+      toast.error("Connection ID and Consumer ID are required!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+      return;
     }
 
     // Construct installation data object
     const installationData = {
-        customerId: customerId || null,
-        connectionId,
-        consumerId,
-        installationSpaceTypeId:formData.installationSpaceTypeId,
-        availableEastWestLengthFt: formData.availableEastWestLengthFt,
-        availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
-        acWireLengthFt: formData.acWireLengthFt,
-        dcWireLengthFt: formData.dcWireLengthFt,
-        earthingWireLengthFt: formData.earthingWireLengthFt,
-        descriptionOfInstallation: formData.descriptionOfInstallation,
-        numberOfGpPipes: formData.numberOfGpPipes,
-        installationSpaceTitle:
-            formData.installationSpaceTitle === 'Other'
-              ? formData.customInstallationSpaceTitle
-              : formData.installationSpaceTitle,
-          };
+      customerId: customerId || null,
+      connectionId,
+      consumerId,
+      installationSpaceTypeId: formData.installationSpaceTypeId,
+      availableEastWestLengthFt: formData.availableEastWestLengthFt,
+      availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
+      acWireLengthFt: formData.acWireLengthFt,
+      dcWireLengthFt: formData.dcWireLengthFt,
+      earthingWireLengthFt: formData.earthingWireLengthFt,
+      descriptionOfInstallation: formData.descriptionOfInstallation,
+      numberOfGpPipes: formData.numberOfGpPipes,
+      elevationInFeet: formData.elevationInFeet,
+      installationSpaceTitle:
+        formData.installationSpaceTitle === 'Other'
+          ? formData.customInstallationSpaceTitle
+          : formData.installationSpaceTitle,
+    };
 
     try {
-        console.log("Saving new installation...");
-        const result = await saveInstallation(installationData);
-        if (result.id) {
+      console.log("Saving new installation...");
+      const result = await saveInstallation(installationData);
+      if (result.id) {
 
-            setCreatedInstallationId(result.id); 
-            setNavigateAfterClose(true);     
-            
-            toast.success(result.message || "Installation data saved successfully!", {
-              autoClose: 1000,
-              hideProgressBar: true,
-          });
-          navigate(`/view-installation/${result.id}`, {
-        state: {
-        customerId,connectionId, consumerId, installationId: result.id
-      },
-    });
+        setCreatedInstallationId(result.id);
+        setNavigateAfterClose(true);
 
-    setNavigateAfterClose(false);
-    setCreatedInstallationId(null);
-        }
-        else {
-            toast.error("Failed to save installation data.",{
-              autoClose:1000,
-              hideProgressBar:true,
-            })
-    }
-    } catch (error) {
-        console.error("Error in installation process:", error);
-        // alert("Failed to process installation. Please try again.");
-        toast.error("Failed to save installation. Please try again.",{
-          autoClose:1000,
-          hideProgressBar:true,
+        toast.success(result.message || "Installation data saved successfully!", {
+          autoClose: 1000,
+          hideProgressBar: true,
         });
+        navigate(`/view-installation/${result.id}`, {
+          state: {
+            customerId, connectionId, consumerId, installationId: result.id
+          },
+        });
+
+        setNavigateAfterClose(false);
+        setCreatedInstallationId(null);
+      }
+      else {
+        toast.error("Failed to save installation data.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        })
+      }
+    } catch (error) {
+      console.error("Error in installation process:", error);
+      // alert("Failed to process installation. Please try again.");
+      toast.error("Failed to save installation. Please try again.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
     }
     /////////////
     localStorage.removeItem('installationFormData');
     ////////////
-};
+  };
 
 
 
 
-return (
-  <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+  return (
+    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
 
-  <div className="flex items-center w-full md:w-auto">
-    <button
-      onClick={() =>
-        navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId },
-        })
-      }
-      className="p-2 rounded-full hover:bg-gray-200 transition"
-    >
-      <ArrowLeft className="w-6 h-6 text-gray-700" />
-    </button>
-
-    {/* Heading - Adjusts Position on Small Screens */}
-    <h1 className="text-2xl font-bold text-gray-700">Add New Installation</h1>
-  </div>
-</div>
-
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
-  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-    
-    {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
-
-    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab;
-
-        const Icon =
-          tab === "Customer Details"
-            ? UserCircleIcon
-            : tab === "Connection Details"
-            ? BoltIcon
-            : tab === "Installation Details"
-            ? HomeModernIcon
-            : Cog6ToothIcon;
-
-            const shouldHighlightIcon = tab === "Customer Details" || tab==="Connection Details";
-
-
-            return (
-              <button
-          key={tab}
-          onClick={() => {
-            setActiveTab(tab);
-            if (tab === "Customer Details") {
-              navigate(`/view-customer/${customerId}`, {
-                state: {
-                  customerId,
-                },
-              });
-            } else if (tab === "Connection Details") {
+        <div className="flex items-center w-full md:w-auto">
+          <button
+            onClick={() =>
               navigate(`/view-connection/${connectionId}`, {
                 state: { consumerId, customerId, connectionId },
-              });
+              })
             }
-          }}
-          className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-        >
-          <div
-            className={`rounded-full p-2 transition-all duration-300 ${
-              shouldHighlightIcon
-                ? "bg-blue-500 text-white"
-                : "bg-white border border-gray-300 text-gray-500"
-            }`}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
           >
-            <Icon className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
+          {/* Heading - Adjusts Position on Small Screens */}
+          <h1 className="text-2xl font-bold text-gray-700">Add New Installation</h1>
+        </div>
+      </div>
+
+      <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+        <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+
+          {/* Connector Line: between the first and last icon only */}
+          <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+
+          <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab;
+
+              const Icon =
+                tab === "Customer Details"
+                  ? UserCircleIcon
+                  : tab === "Connection Details"
+                    ? BoltIcon
+                    : tab === "Installation Details"
+                      ? HomeModernIcon
+                      : Cog6ToothIcon;
+
+              const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details";
+
+
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (tab === "Customer Details") {
+                      navigate(`/view-customer/${customerId}`, {
+                        state: {
+                          customerId,
+                        },
+                      });
+                    } else if (tab === "Connection Details") {
+                      navigate(`/view-connection/${connectionId}`, {
+                        state: { consumerId, customerId, connectionId },
+                      });
+                    }
+                  }}
+                  className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+                >
+                  <div
+                    className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
+                        ? "bg-blue-500 text-white"
+                        : "bg-white border border-gray-300 text-gray-500"
+                      }`}
+                  >
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span
+                    className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
+                      }`}
+                  >
+                    {tab}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <span
-            className={`text-xs md:text-sm font-semibold mt-1 ${
-              isActive ? "text-gray-700" : "text-gray-700"
-            }`}
+        </div>
+      </div>
+
+
+
+      <form onSubmit={handleSubmit} className="space-y-3">
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+
+
+        <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <HomeModernIcon className="w-5 h-5 text-green-500" />
+          Installation Details
+        </h3>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
+        {/* Input Fields */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
+          <select
+            name="installationSpaceTypeId"
+            value={formData.installationSpaceTypeId}
+            onChange={handleChange}
+            className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           >
-            {tab}
-          </span>
-        </button>
-            );
-      })}
-    </div>
-  </div>
-</div>
-
-
-    <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-      Installation Details
-    </h2>
-
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      {/* Input Fields */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
-        <select
-          name="installationSpaceTypeId"
-          value={formData.installationSpaceTypeId}
-          onChange={handleChange}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          {installationSpaceTypes.map((type) => (
+            {installationSpaceTypes.map((type) => (
               <option key={type.id} value={type.id}>
                 {type.nameEnglish}
               </option>
-              ))}
-        </select>
-      </div>
+            ))}
+          </select>
+        </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700">
-    Installation Space Title <span className="text-red-500">*</span>
-  </label>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Installation Space Title <span className="text-red-500">*</span>
+          </label>
 
-<select
-  name="installationSpaceTitle"
-  value={formData.installationSpaceTitle}
-  onChange={(e) => {
-    const value = e.target.value;
-    if (value === 'Other') {
-      // Keep value as 'Other' so the select reflects it
-      setFormData((prev) => ({
-        ...prev,
-        installationSpaceTitle: 'Other',
-        customInstallationSpaceTitle: '', // introduce a new field
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        installationSpaceTitle: value,
-        customInstallationSpaceTitle: '', // clear if previously typed
-      }));
-    }
-  }}
-  required
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
->
-  <option value="" disabled>Select Installation Title</option>
-  <option value="At center">At center</option>
-  <option value="At SW corner">At SW corner</option>
-  <option value="At SE corner">At SE corner</option>
-  <option value="At NW corner">At NW corner</option>
-  <option value="At NE corner">At NE corner</option>
-  <option value="At East side">At East side</option>
-  <option value="At West side">At West side</option>
-  <option value="At North side">At North side</option>
-  <option value="At South side">At South side</option>
-  <option value="Other">Other</option>
-</select>
-
-
-  {/* Show input only when "Other" is selected */}
-{formData.installationSpaceTitle === 'Other' && (
-  <input
-    type="text"
-    name="customInstallationSpaceTitle"
-    value={formData.customInstallationSpaceTitle || ''}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
-        handleChange(e);
-      }
-    }}
-    required
-    placeholder="Specify installation space title"
-    className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  />
-)}
-
-</div>
+          <select
+            name="installationSpaceTitle"
+            value={formData.installationSpaceTitle}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === 'Other') {
+                // Keep value as 'Other' so the select reflects it
+                setFormData((prev) => ({
+                  ...prev,
+                  installationSpaceTitle: 'Other',
+                  customInstallationSpaceTitle: '', // introduce a new field
+                }));
+              } else {
+                setFormData((prev) => ({
+                  ...prev,
+                  installationSpaceTitle: value,
+                  customInstallationSpaceTitle: '', // clear if previously typed
+                }));
+              }
+            }}
+            required
+            className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          >
+            <option value="" disabled>Select Installation Title</option>
+            <option value="At center">At center</option>
+            <option value="At SW corner">At SW corner</option>
+            <option value="At SE corner">At SE corner</option>
+            <option value="At NW corner">At NW corner</option>
+            <option value="At NE corner">At NE corner</option>
+            <option value="At East side">At East side</option>
+            <option value="At West side">At West side</option>
+            <option value="At North side">At North side</option>
+            <option value="At South side">At South side</option>
+            <option value="Other">Other</option>
+          </select>
 
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          inputMode="numeric"
-          name="availableEastWestLengthFt"
-          //onWheel={(e) => e.currentTarget.blur()}
-          value={formData.availableEastWestLengthFt}
-          onChange={(e) => {
-            const value = e.target.value;
+          {/* Show input only when "Other" is selected */}
+          {formData.installationSpaceTitle === 'Other' && (
+            <input
+              type="text"
+              name="customInstallationSpaceTitle"
+              value={formData.customInstallationSpaceTitle || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                  handleChange(e);
+                }
+              }}
+              required
+              placeholder="Specify installation space title"
+              className="mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          )}
+
+        </div>
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            inputMode="numeric"
+            name="availableEastWestLengthFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.availableEastWestLengthFt}
+            onChange={(e) => {
+              const value = e.target.value;
               if (/^\d*$/.test(value)) {
-              handleChange(e);
-             }
-          }}
-          required
-          placeholder="e.g. 10"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+                handleChange(e);
+              }
+            }}
+            required
+            placeholder="e.g. 10"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          inputMode="numeric"
-          name="availableSouthNorthLengthFt"
-          //onWheel={(e) => e.currentTarget.blur()}
-          value={formData.availableSouthNorthLengthFt}
-          placeholder="e.g. 10"
-          required
-          onChange={(e) => {
-            const value = e.target.value;
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            inputMode="numeric"
+            name="availableSouthNorthLengthFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.availableSouthNorthLengthFt}
+            placeholder="e.g. 10"
+            required
+            onChange={(e) => {
+              const value = e.target.value;
               if (/^\d*$/.test(value)) {
-              handleChange(e);
-             }
-          }}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Panel To Inverter Distance (Feet)</label>
-        <input
-          type="text"
-          inputMode="numeric"
-          id="dcWireLengthFt"
-          name="dcWireLengthFt"
-          //onWheel={(e) => e.currentTarget.blur()}
-          value={formData.dcWireLengthFt}
-          placeholder="e.g. 10"
-          onChange={(e) => {
-            const value = e.target.value;
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Panel To Inverter Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="dcWireLengthFt"
+            name="dcWireLengthFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.dcWireLengthFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+              const value = e.target.value;
               if (/^\d*$/.test(value)) {
-              handleChange(e);
-             }
-          }}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Inverter to NetMeter Distance (Feet)</label>
-        <input
-          type="text"
-          inputMode="numeric"
-          id="acWireLengthFt"
-          name="acWireLengthFt"
-          //onWheel={(e) => e.currentTarget.blur()}
-          value={formData.acWireLengthFt}
-          placeholder="e.g. 10"
-          onChange={(e) => {
-            const value = e.target.value;
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to NetMeter Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="acWireLengthFt"
+            name="acWireLengthFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.acWireLengthFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+              const value = e.target.value;
               if (/^\d*$/.test(value)) {
-              handleChange(e);
-             }
-          }}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
 
-      {/* <div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="elevationInFeet"
+            name="elevationInFeet"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.elevationInFeet}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
+
+        {/* <div>
         <label className="block text-sm font-medium text-gray-700">Required AC Wire Length (Feet)</label>
         <input
           type="number"
@@ -445,7 +472,7 @@ return (
         />
       </div> */}
 
-      {/* <div>
+        {/* <div>
         <label className="block text-sm font-medium text-gray-700">Required Earthing Wire Length (Feet)</label>
         <input
           type="number"
@@ -460,7 +487,7 @@ return (
         />
       </div> */}
 
-      {/* <div>
+        {/* <div>
         <label className="block text-sm font-medium text-gray-700">Required Number of GP Pipes</label>
         <input
           type="number"
@@ -475,32 +502,36 @@ return (
         />
       </div> */}
 
-      <div className="sm:col-span-2">
-        <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
-        <input
-          type="text"
-          id="descriptionOfInstallation"
-          name="descriptionOfInstallation"
-          value={formData.descriptionOfInstallation}
-          onChange={handleChange}
-          placeholder="e.g. Designated area is on rooftop"
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
+          <input
+            type="text"
+            id="descriptionOfInstallation"
+            name="descriptionOfInstallation"
+            value={formData.descriptionOfInstallation}
+            onChange={handleChange}
+            placeholder="e.g. Designated area is on rooftop"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
 
-      {/* Submit Button */}
-      <div className="sm:col-span-2 flex justify-center sm:justify-start mt-4">
-        <button
-          type="submit"
-          className="w-full sm:w-auto py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
-        >
-          Save Installation
-        </button>
-      </div>
-    </form>
+        </div>
 
-  </div>
-);
+        </div>
 
-  
+        {/* Submit Button */}
+        <div className="flex justify-center pt-1">
+          <button
+            type="submit"
+            className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+          >
+            Save Installation
+          </button>
+        </div>
+      </form>
+
+    </div>
+  );
+
+
 };

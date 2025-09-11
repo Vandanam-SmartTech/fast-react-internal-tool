@@ -206,7 +206,7 @@ export const EditConnection = () => {
     pincode: "",
     isNameCorrection: "No",
     correctionType: "",
-    monthlyAvgConsumptionUnits: NaN,
+    monthlyAvgConsumptionUnits: "",
     isOnboardedCustomers: false,
     discomId: "",
     isActive: true,
@@ -762,8 +762,8 @@ export const EditConnection = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -949,58 +949,62 @@ export const EditConnection = () => {
                 Monthly Average Consumption Units <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                min="1"
-                step="1"
+                type="text"
+                inputMode="numeric"   // mobile keyboard numeric
+                pattern="[1-9][0-9]*" // regex: only positive integers > 0
                 name="monthlyAvgConsumptionUnits"
                 value={formData.monthlyAvgConsumptionUnits}
-                onChange={handleChange}
+                onChange={(e) => {
+                  // allow only digits, no leading zeros
+                  const val = e.target.value;
+                  if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                    handleChange(e);
+                  }
+                }}
                 onBlur={(e) => {
                   if (e.target.value) {
-                    validateFieldOnChange('monthlyAvgConsumptionUnits', e.target.value);
+                    validateFieldOnChange("monthlyAvgConsumptionUnits", e.target.value);
                   }
                 }}
                 required
                 placeholder="e.g. 1"
                 title="Enter a positive integer greater than 0"
-                onWheel={(e) => e.currentTarget.blur()}
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.monthlyAvgConsumptionUnits ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
-              {fieldErrors.monthlyAvgConsumptionUnits && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
-              )}
-              {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
-                <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
-              )}
+
+              {/* {fieldErrors.monthlyAvgConsumptionUnits && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
+                )}
+                {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
+                  <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
+                )} */}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                DISCOM ID{" "}
-                {formData.isMsebConnection === "Yes" && (
-                  <span className="text-red-500">*</span>
-                )}
-              </label>
-              <input
-                type="number"
-                name="discomId"
-                value={formData.discomId}
-                onChange={handleChange}
-                placeholder="e.g. 7137"
-                min="1"
-                step="1"
-                required={formData.isMsebConnection === "Yes"}
-                disabled={formData.isMsebConnection === "No"}
-                onWheel={(e) => e.currentTarget.blur()}
-                title="DISCOM ID must be a positive integer greater than 0"
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed ${fieldErrors.discomId ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.discomId && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  DISCOM ID{" "}
+                  {formData.isMsebConnection === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric" // mobile numeric keypad
+                  name="discomId"
+                  value={formData.discomId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                      handleChange(e);
+                    }
+                  }}
+                  placeholder="e.g. 7137"
+                  required={formData.isMsebConnection === "Yes"}
+                  disabled={formData.isMsebConnection === "No"}
+                  title="DISCOM ID must be a positive integer greater than 0"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
+                />
+              </div>
           </div>
         </div>
 
@@ -1012,51 +1016,49 @@ export const EditConnection = () => {
             Business Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GST Number
-              </label>
-              <input
-                type="text"
-                name="gstIn"
-                value={formData.gstIn}
-                onChange={(e) => {
-                  const target = e.target as HTMLInputElement;
-                  handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
-                }}
-                pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-                title="GSTIN must be in format: 22AAAAA0000A1Z6"
-                placeholder="e.g. 22AAAAA0000A1Z6"
-                maxLength={15}
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.gstin ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.gstin && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
-              )}
-            </div>
+                          <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  GST Number
+                </label>
+                <input
+                  type="text"
+                  name="gstIn"
+                  value={formData.gstIn}
+                  onChange={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+                  title="GSTIN must be in format: 22AAAAA0000A1Z6"
+                  placeholder="e.g. 22AAAAA0000A1Z6"
+                  maxLength={15}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.gstin && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
+                )}
+              </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Billed To <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="billedTo"
-                value={formData.billedTo}
-                onChange={handleChange}
-                placeholder="Enter the name of the billed person or company"
-                pattern="^[A-Za-z\s]{2,50}$"
-                title="Billed To must be 2-50 characters, alphabets and spaces only"
-                maxLength={50}
-                required
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.billedTo && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Billed To <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="billedTo"
+                  value={formData.billedTo}
+                  onChange={handleChange}
+                  placeholder="Enter the name of the billed person or company"
+                  pattern="^[A-Za-z\s]{2,50}$"
+                  title="Billed To must be 2-50 characters, alphabets and spaces only"
+                  maxLength={50}
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.billedTo && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
+                )}
+              </div>
           </div>
         </div>
 
@@ -1078,8 +1080,7 @@ export const EditConnection = () => {
               <input
                 type="text"
                 value="Maharashtra"
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.billedTo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
@@ -1143,27 +1144,26 @@ export const EditConnection = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pincode <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="pincode"
-                value={formData.pincode || ''}
-                onChange={handlepincodeChange}
-                placeholder="e.g. 416000"
-                pattern="^[0-9]{6}$"
-                title="Pincode must be exactly 6 digits (0-9)"
-                maxLength={6}
-                inputMode="numeric"
-                required
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.pincode && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pincode <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={formData.pincode || ''}
+                  onChange={handlepincodeChange}
+                  placeholder="e.g. 416000"
+                  pattern="^[0-9]{6}$"
+                  title="Pincode must be exactly 6 digits (0-9)"
+                  maxLength={6}
+                  inputMode="numeric"
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.pincode && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
+                )}
+              </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1184,91 +1184,87 @@ export const EditConnection = () => {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address Line 1 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="addressLine1"
-                value={formData.addressLine1}
-                onChange={handleChange}
-                placeholder="e.g. Flat No, House No, Street Name"
-                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                maxLength={100}
-                required
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine1 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.addressLine1 && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 1 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="addressLine1"
+                  value={formData.addressLine1}
+                  onChange={handleChange}
+                  placeholder="e.g. Flat No, House No, Street Name"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine1 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+                )}
+              </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address Line 2
-              </label>
-              <input
-                type="text"
-                name="addressLine2"
-                value={formData.addressLine2}
-                onChange={handleChange}
-                placeholder="e.g. Apartment, Suite, Unit, Building"
-                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                maxLength={100}
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.addressLine2 ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.addressLine2 && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 2
+                </label>
+                <input
+                  type="text"
+                  name="addressLine2"
+                  value={formData.addressLine2}
+                  onChange={handleChange}
+                  placeholder="e.g. Apartment, Suite, Unit, Building"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine2 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+                )}
+              </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Latitude
-              </label>
-              <input
-                type="number"
-                name="latitude"
-                value={formData.latitude}
-                onChange={handleChange}
-                placeholder="e.g. 16.7049873"
-                min="-90"
-                max="90"
-                step="any"
-                title="Latitude must be between -90 and 90"
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.latitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.latitude && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  name="latitude"
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  placeholder="e.g. 16.7049873"
+                  min="-90"
+                  max="90"
+                  step="any"
+                  title="Latitude must be between -90 and 90"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.latitude && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
+                )}
+              </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Longitude
-              </label>
-              <input
-                type="number"
-                name="longitude"
-                value={formData.longitude}
-                onChange={handleChange}
-                placeholder="e.g. 74.2432527"
-                min="-180"
-                max="180"
-                step="any"
-                title="Longitude must be between -180 and 180"
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.longitude ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
-              />
-              {fieldErrors.longitude && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
-              )}
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  name="longitude"
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  placeholder="e.g. 74.2432527"
+                  min="-180"
+                  max="180"
+                  step="any"
+                  title="Longitude must be between -180 and 180"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.longitude && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
+                )}
+              </div>
 
             <div className="md:col-span-2">
               {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
@@ -1304,64 +1300,62 @@ export const EditConnection = () => {
 
         {/* Name Correction and Correction Type */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-              <Cog6ToothIcon className="w-4 h-4 text-red-600" />
-            </div>
-            <h4 className="text-base font-medium text-gray-900">Name Correction and Correction Type</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Does the connection require a name correction?
-              </label>
-              <div className="mt-2 flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="nameCorrection"
-                    value="Yes"
-                    onChange={handleNameCorrection}
-                    className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                    checked={formData.isNameCorrection === "Yes"}
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="nameCorrection"
-                    value="No"
-                    onChange={handleNameCorrection}
-                    className="focus:ring-blue-500 text-blue-600 border-gray-300"
-                    checked={formData.isNameCorrection === "No"}
-                  />
-                  <span className="text-sm text-gray-700">No</span>
-                </label>
-              </div>
-            </div>
-
-            {formData.isNameCorrection === "Yes" && (
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Name Correction
+            </h3>
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Select Correction Type
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Does the connection require a name correction?
                 </label>
-                <select
-                  name="correctionType"
-                  value={formData.correctionType || ""}
-                  onChange={handleCorrectionTypeChange}
-                  className="mt-1 block w-full px-3 py-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="" disabled>
-                    Select an option
-                  </option>
-                  <option value="Spell Correction">Spell Correction</option>
-                  <option value="Transfer Ownership">Transfer Ownership</option>
-                </select>
+                <div className="flex items-center space-x-5">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="nameCorrection"
+                      value="Yes"
+                      onChange={handleNameCorrection}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isNameCorrection === "Yes"}
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="nameCorrection"
+                      value="No"
+                      onChange={handleNameCorrection}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isNameCorrection === "No"}
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
               </div>
-            )}
+
+              {formData.isNameCorrection === "Yes" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Correction Type
+                  </label>
+                  <select
+                    name="correctionType"
+                    value={formData.correctionType || ""}
+                    onChange={handleCorrectionTypeChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    <option value="" disabled>Select an option</option>
+                    <option value="Spell Correction">Spell Correction</option>
+                    <option value="Transfer Ownership">Transfer Ownership</option>
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
         {/* Submit Button */}
         <div className="flex justify-center pt-1">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
-import { createOrganization } from '../../services/organizationService';
+import { createOrganization, updateOrganization, getOrganizationById, Organization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
 import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
@@ -22,220 +22,213 @@ interface Village {
   pincode: string;
 }
 
-const OrganizationForm: React.FC = () => {
+const EditAgency: React.FC = () => {
+  const { orgId, agencyId } = useParams();
   const navigate = useNavigate();
+  const isEdit = Boolean(agencyId);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Organization>({
     name: '',
     displayName: '',
-    legalName: '',
+    legalName:'',
     addressLine1: '',
     addressLine2: '',
     districtCode:0,
     talukaCode:0,
     villageCode:0,
-    pincode:'',
+    pincode: '',
     contactNumber: '',
-    gstNumber: '',
-    govtRegNumber: '',
     logoUrl:'',
+    parentId: parseInt(orgId!)
   });
-
-    const [districts, setDistricts] = useState<District[]>([]);
-    const [talukas, setTalukas] = useState<Taluka[]>([]);
-    const [villages, setVillages] = useState<Village[]>([]);
-  
-    const [districtCode, setDistrictCode] = useState<number>(0);
-    const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [pincode, setPincode] = useState<string>("");
-    const [villageCode, setVillageCode] = useState<number>(0);
-    const [districtName, setDistrictName] = useState<string>("");
-    const [talukaName, setTalukaName] = useState<string>("");
-    const [villageName, setVillageName] = useState<string>("");
-
-    const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [talukas, setTalukas] = useState<Taluka[]>([]);
+  const [villages, setVillages] = useState<Village[]>([]);
+    
+  const [districtCode, setDistrictCode] = useState<number>(0);
+  const [talukaCode, setTalukaCode] = useState<number>(0);
+  const [pincode, setPincode] = useState<string>("");
+  const [villageCode, setVillageCode] = useState<number>(0);
+  const [districtName, setDistrictName] = useState<string>("");
+  const [talukaName, setTalukaName] = useState<string>("");
+  const [villageName, setVillageName] = useState<string>("");
 
   useEffect(() => {
-    const fetchDistrictsData = async () => {
-      try {
-        const districtData = await fetchDistricts();
-        setDistricts(districtData);
-      } catch (error) {
-        console.error('Error fetching districts:', error);
-      }
-    };
-    fetchDistrictsData();
-  }, []);
-
-  useEffect(() => {
-    if (districtCode) {
-        getDistrictNameByCode(districtCode)
-            .then((name) => setDistrictName(name))
-            .catch(() => setDistrictName("Unknown District"));
+    if (isEdit && agencyId) {
+      loadAgency(parseInt(agencyId));
     }
-}, [districtCode]);
+  }, [agencyId, isEdit]);
+
+  const loadAgency = async (id: number) => {
+    try {
+      const agency = await getOrganizationById(id);
+      setFormData(agency);
+    } catch (error) {
+      toast.error('Failed to load agency');
+      navigate(`/agencies/${orgId}`);
+    }
+  };
 
   useEffect(() => {
-    const fetchTalukasData = async () => {
+      const fetchDistrictsData = async () => {
+        try {
+          const districtData = await fetchDistricts();
+          setDistricts(districtData);
+        } catch (error) {
+          console.error('Error fetching districts:', error);
+        }
+      };
+      fetchDistrictsData();
+    }, []);
+  
+    useEffect(() => {
       if (districtCode) {
-        try {
-          const talukaData = await fetchTalukas(districtCode);
-          setTalukas(talukaData);
-        } catch (err) {
-          console.error('Error fetching talukas:', err);
-        }
-      } else {
-        setTalukas([]);
+          getDistrictNameByCode(districtCode)
+              .then((name) => setDistrictName(name))
+              .catch(() => setDistrictName("Unknown District"));
       }
-    };
-    fetchTalukasData();
   }, [districtCode]);
-
-  useEffect(() => {
-    const fetchVillagesData = async () => {
-      if (talukaCode) {
-        try {
-          const villageData = await fetchVillages(talukaCode);
-          setVillages(villageData);
-        } catch (err) {
-          console.error('Error fetching villages:', err);
+  
+    useEffect(() => {
+      const fetchTalukasData = async () => {
+        if (districtCode) {
+          try {
+            const talukaData = await fetchTalukas(districtCode);
+            setTalukas(talukaData);
+          } catch (err) {
+            console.error('Error fetching talukas:', err);
+          }
+        } else {
+          setTalukas([]);
         }
-      } else {
-        setVillages([]);
-      }
-    };
-    fetchVillagesData();
-  }, [talukaCode]);
-
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
-    setDistrictCode(value);
-    setTalukaCode(0);
-    setVillageCode(0);
-    setTalukaName(""); 
-    setVillageName(""); 
-    setPincode("");
-    setFormData((prev) => ({
-      ...prev,
-      districtCode: value,
-      talukaCode: 0,
-      villageCode: 0,
-      pincode: "",
-    }));
-  };
-
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
-    setTalukaCode(value);
-
-    setVillageCode(0);
-    setVillageName("");
-    setPincode("");
-    setFormData((prev) => ({
-      ...prev,
-      talukaCode: value,
-      villageCode: 0,
-      pincode: "",
-    }));
-  };
-
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
-    const selectedVillage = villages.find((village) => village.code === value);
-
-    if (selectedVillage) {
-      setVillageCode(value);
-      setPincode(selectedVillage.pincode || "");
+      };
+      fetchTalukasData();
+    }, [districtCode]);
+  
+    useEffect(() => {
+      const fetchVillagesData = async () => {
+        if (talukaCode) {
+          try {
+            const villageData = await fetchVillages(talukaCode);
+            setVillages(villageData);
+          } catch (err) {
+            console.error('Error fetching villages:', err);
+          }
+        } else {
+          setVillages([]);
+        }
+      };
+      fetchVillagesData();
+    }, [talukaCode]);
+  
+    const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = parseInt(e.target.value, 10);
+      setDistrictCode(value);
+      setTalukaCode(0);
+      setVillageCode(0);
+      setTalukaName(""); 
+      setVillageName(""); 
+      setPincode("");
       setFormData((prev) => ({
         ...prev,
-        villageCode: value,
-        pincode: selectedVillage.pincode,
+        districtCode: value,
+        talukaCode: 0,
+        villageCode: 0,
+        pincode: "",
       }));
+    };
+  
+    const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = parseInt(e.target.value, 10);
+      setTalukaCode(value);
+  
+      setVillageCode(0);
+      setVillageName("");
+      setPincode("");
+      setFormData((prev) => ({
+        ...prev,
+        talukaCode: value,
+        villageCode: 0,
+        pincode: "",
+      }));
+    };
+  
+    const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = parseInt(e.target.value, 10);
+      const selectedVillage = villages.find((village) => village.code === value);
+  
+      if (selectedVillage) {
+        setVillageCode(value);
+        setPincode(selectedVillage.pincode || "");
+        setFormData((prev) => ({
+          ...prev,
+          villageCode: value,
+          pincode: selectedVillage.pincode,
+        }));
+      }
+    };
+  
+    const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value, 10);
+        setPincode(value);
+        setFormData((prev) => ({ ...prev, pincode: value }));
+        console.log("Current state pincode:", pincode);
+      };
+  
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const claims = await fetchClaims();
+      const userId = claims?.id || claims?.user_id || claims?.userId;
+      
+      const agencyData = {
+        ...formData,
+        parentId: parseInt(orgId!),
+        createdBy: userId
+      };
+      
+      if (isEdit && agencyId) {
+        await updateOrganization(parseInt(agencyId), agencyData);
+        toast.success('Agency updated successfully');
+      } else {
+        await createOrganization(agencyData);
+        toast.success('Agency created successfully');
+      }
+      navigate(`/agencies/${orgId}`);
+    } catch (error) {
+      toast.error(`Failed to ${isEdit ? 'update' : 'create'} agency`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setPincode(value);
-      setFormData((prev) => ({ ...prev, pincode: value }));
-      console.log("Current state pincode:", pincode);
-    };
-
-
-
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const claims = await fetchClaims();
-    const userId = claims?.id || claims?.user_id || claims?.userId;
-
-    const orgData = {
-      ...formData,
-      createdBy: userId,
-      postalCode:formData.pincode
-    };
-
-    console.log('JWT Claims:', claims);
-    console.log('User ID:', userId);
-    console.log('Creating organization with data:', orgData);
-
-    await createOrganization(orgData);
-    toast.success('Organization created successfully');
-    navigate('/organizations');
-  } catch (error) {
-    toast.error('Failed to create organization');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-
-  if (name === 'legalName') {
-    setFormData((prev) => ({
-      ...prev,
-      legalName: value,
-      displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
-    }));
-  } else if (name === 'displayName') {
-    setIsDisplayNameManuallyEdited(true);
-    setFormData((prev) => ({
-      ...prev,
-      displayName: value,
-    }));
-  } else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-};
-
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => navigate('/organizations')}
+          onClick={() => navigate(`/agencies/${orgId}`)}
           className="rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
-          Create Organization
+          {isEdit ? 'Edit Agency' : 'Create Agency'}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Legal Name <span className="text-red-500">*</span>
@@ -296,24 +289,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
-                    <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              GST Number
-            </label>
-            <input
-              type="text"
-              name="gstNumber"
-              value={formData.gstNumber || ''}
-              onChange={handleChange}
-              placeholder="e.g. 22AAAAA0000A1Z6"
-              maxLength={20}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Address Line 1 <span className="text-red-500">*</span>
@@ -321,10 +296,10 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             <input
               type="text"
               name="addressLine1"
-              value={formData.addressLine1}
-              placeholder="e.g. Flat No, House No, Street Name"
+              value={formData.addressLine1 || ''}
               onChange={handleChange}
-              required
+              
+              placeholder="e.g. Flat No, House No, Street Name"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -336,9 +311,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             <input
               type="text"
               name="addressLine2"
+              placeholder="e.g. Apartment, Suite, Unit, Building"
               value={formData.addressLine2 || ''}
               onChange={handleChange}
-              placeholder="e.g. Apartment, Suite, Unit, Building"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -414,58 +389,28 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Logo URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="logoUrl"
-              value={formData.logoUrl}
-              placeholder="e.g. https://example.com/logo.png"
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
-            </label>
-            <input
-              type="text"
-              name="govtRegNumber"
-              value={formData.govtRegNumber || ''}
-              onChange={handleChange}
-              maxLength={50}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
         </div>
 
         <div className="col-span-2 flex justify-start gap-4 mt-8">
-  <button
-    type="button"
-    onClick={() => navigate('/organizations')}
-    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-  >
-    Cancel
-  </button>
-  <button
-    type="submit"
-    disabled={loading}
-    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-  >
-    <Save className="h-4 w-4" />
-    {loading ? 'Saving...' : 'Save'}
-  </button>
-</div>
-
+          <button
+            type="button"
+            onClick={() => navigate(`/agencies/${orgId}`)}
+            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {loading ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </form>
     </div>
   );
 };
 
-export default OrganizationForm;
+export default EditAgency;

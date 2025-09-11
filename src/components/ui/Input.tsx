@@ -1,5 +1,4 @@
 import React, { forwardRef } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 

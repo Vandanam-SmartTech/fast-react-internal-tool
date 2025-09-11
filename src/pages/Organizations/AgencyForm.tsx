@@ -27,7 +27,7 @@ const AgencyForm: React.FC = () => {
   const navigate = useNavigate();
   const isEdit = Boolean(agencyId);
 
-  const [formData, setFormData] = useState<Organization>({
+  const [formData, setFormData] = useState({
     name: '',
     displayName: '',
     legalName:'',

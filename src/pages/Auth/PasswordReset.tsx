@@ -43,10 +43,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   const expiryTime = Date.now() + 3 * 60 * 1000; // 3 minutes
   const resendTime = Date.now() + 60 * 1000;     // 1 minute
 
-  // toast.success('If this user is registered, an OTP has been sent.', {
-  //   autoClose: 1500,
-  //   hideProgressBar: true,
-  // });
 
   navigate('/Verification', {
     state: {

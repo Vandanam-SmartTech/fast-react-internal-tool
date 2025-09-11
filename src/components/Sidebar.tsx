@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { Logo } from "./ui"; 
+import { Logo } from "./ui";
 import { UserPlus, Users, UserRoundCheck, LogOut, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
 import { fetchClaims } from "../services/jwtService";
 import Button from "./ui/Button";
@@ -16,11 +16,11 @@ const Sidebar: React.FC = () => {
   const [customersExpanded, setCustomersExpanded] = useState(true);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Check if we're on an auth page
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
   const isAuthPage = authPages.includes(location.pathname);
-  
+
   const toggleSidebar = () => {
     const newState = !isOpen;
     setIsOpen(newState);
@@ -38,7 +38,7 @@ const Sidebar: React.FC = () => {
     const storedState = localStorage.getItem("sidebarOpen");
     setIsOpen(storedState === "true");
 
-    
+
     const customersState = localStorage.getItem("customersExpanded");
     setCustomersExpanded(customersState === "true");
   }, []);
@@ -71,46 +71,44 @@ const Sidebar: React.FC = () => {
   const goToListOfConsumers = () => navigate("/list-of-consumers");
   const goToOnboardedConsumers = () => navigate("/OnboardedConsumers");
   const goToCustomerForm = () => navigate("/CustomerForm");
-  const goToUserForm = () => navigate("/UserForm");
-  const goToListOfUsers = () => navigate("/list-of-users");
   const goToOrganizations = () => navigate("/organizations");
   const goToAdminManagement = () => navigate("/admin-management");
   const goToUserManagement = () => navigate("/user-management");
 
-// useEffect(() => {
-//     const fetchRole = async () => {
-//       try {
-//         const claims = await fetchClaims();
-//         const allRoles: string[] = [];
+  // useEffect(() => {
+  //     const fetchRole = async () => {
+  //       try {
+  //         const claims = await fetchClaims();
+  //         const allRoles: string[] = [];
 
-//         if (Array.isArray(claims.global_roles)) {
-//           allRoles.push(...claims.global_roles);
-//         }
+  //         if (Array.isArray(claims.global_roles)) {
+  //           allRoles.push(...claims.global_roles);
+  //         }
 
-//         const selectedOrgStr = localStorage.getItem("selectedOrg");
-//         if (selectedOrgStr) {
-//   try {
-//     const selectedOrg = JSON.parse(selectedOrgStr);
-//     if (selectedOrg.role) {
-//       allRoles.push(selectedOrg.role); 
-//     } else if (claims.org_roles?.[selectedOrg.orgId]) {
-//       allRoles.push(claims.org_roles[selectedOrg.orgId].role);
-//     }
-//   } catch {
-//     console.error("Invalid selectedOrg format in localStorage");
-//   }
-// }
+  //         const selectedOrgStr = localStorage.getItem("selectedOrg");
+  //         if (selectedOrgStr) {
+  //   try {
+  //     const selectedOrg = JSON.parse(selectedOrgStr);
+  //     if (selectedOrg.role) {
+  //       allRoles.push(selectedOrg.role); 
+  //     } else if (claims.org_roles?.[selectedOrg.orgId]) {
+  //       allRoles.push(claims.org_roles[selectedOrg.orgId].role);
+  //     }
+  //   } catch {
+  //     console.error("Invalid selectedOrg format in localStorage");
+  //   }
+  // }
 
 
-//         setRoles(allRoles);
-//         setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
-//       } catch (err) {
-//         console.error("Error fetching claims:", err);
-//       }
-//     };
+  //         setRoles(allRoles);
+  //         setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
+  //       } catch (err) {
+  //         console.error("Error fetching claims:", err);
+  //       }
+  //     };
 
-//     fetchRole();
-//   }, []);
+  //     fetchRole();
+  //   }, []);
 
   const handleHomeClick = async () => {
     try {
@@ -174,110 +172,110 @@ const Sidebar: React.FC = () => {
     }
   };
 
-  
 
-useEffect(() => {
-  const fetchRole = async (checkPageAccess = false) => {
-    try {
-      const claims = await fetchClaims();
-      const allRoles: string[] = [];
 
-      if (Array.isArray(claims.global_roles)) {
-        allRoles.push(...claims.global_roles);
-      }
+  useEffect(() => {
+    const fetchRole = async (checkPageAccess = false) => {
+      try {
+        const claims = await fetchClaims();
+        const allRoles: string[] = [];
 
-      const selectedOrgStr = localStorage.getItem("selectedOrg");
-      if (selectedOrgStr) {
-        try {
-          const selectedOrg = JSON.parse(selectedOrgStr);
-          if (selectedOrg.role) {
-            allRoles.push(selectedOrg.role);
-          } else if (claims.org_roles?.[selectedOrg.orgId]) {
-            allRoles.push(claims.org_roles[selectedOrg.orgId].role);
-          }
-        } catch {
-          console.error("Invalid selectedOrg format in localStorage");
+        if (Array.isArray(claims.global_roles)) {
+          allRoles.push(...claims.global_roles);
         }
-      }
 
-      setRoles(allRoles);
-      setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
+        const selectedOrgStr = localStorage.getItem("selectedOrg");
+        if (selectedOrgStr) {
+          try {
+            const selectedOrg = JSON.parse(selectedOrgStr);
+            if (selectedOrg.role) {
+              allRoles.push(selectedOrg.role);
+            } else if (claims.org_roles?.[selectedOrg.orgId]) {
+              allRoles.push(claims.org_roles[selectedOrg.orgId].role);
+            }
+          } catch {
+            console.error("Invalid selectedOrg format in localStorage");
+          }
+        }
 
-      if (checkPageAccess) {
-        const currentPath = location.pathname;
+        setRoles(allRoles);
+        setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
 
-        const customerPages = [
-          "/CustomerForm",
-          "/list-of-consumers",
-          "/OnboardedConsumers",
-        ];
-        const restrictedPages = [
-          "/admin-management",
-          "/user-management",
-        ];
-        const dashboardPages = [
-          "/AdminDashboard",
-          "/SuperAdminDashboard",
-          "/RepresentativeDashboard",
-          "/AgencyAdminDashboard",
-          "/StaffDashboard",
-        ];
+        if (checkPageAccess) {
+          const currentPath = location.pathname;
 
-        if (restrictedPages.includes(currentPath)) {
-          if (
-            currentPath === "/admin-management" &&
-            !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN"))
-          ) {
+          const customerPages = [
+            "/CustomerForm",
+            "/list-of-consumers",
+            "/OnboardedConsumers",
+          ];
+          const restrictedPages = [
+            "/admin-management",
+            "/user-management",
+          ];
+          const dashboardPages = [
+            "/AdminDashboard",
+            "/SuperAdminDashboard",
+            "/RepresentativeDashboard",
+            "/AgencyAdminDashboard",
+            "/StaffDashboard",
+          ];
+
+          if (restrictedPages.includes(currentPath)) {
+            if (
+              currentPath === "/admin-management" &&
+              !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN"))
+            ) {
+              redirectToDashboard(allRoles);
+            }
+            if (
+              currentPath === "/user-management" &&
+              !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN") || allRoles.includes("ROLE_AGENCY_ADMIN"))
+            ) {
+              redirectToDashboard(allRoles);
+            }
+          } else if (dashboardPages.includes(currentPath)) {
+            // Always redirect dashboard page to the correct one when role changes
             redirectToDashboard(allRoles);
           }
-          if (
-            currentPath === "/user-management" &&
-            !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN") || allRoles.includes("ROLE_AGENCY_ADMIN"))
-          ) {
-            redirectToDashboard(allRoles);
-          }
-        } else if (dashboardPages.includes(currentPath)) {
-          // Always redirect dashboard page to the correct one when role changes
-          redirectToDashboard(allRoles);
+          // customerPages → stay put
         }
-        // customerPages → stay put
+      } catch (err) {
+        console.error("Error fetching claims:", err);
       }
-    } catch (err) {
-      console.error("Error fetching claims:", err);
-    }
-  };
+    };
 
-  const redirectToDashboard = (allRoles: string[]) => {
-    if (allRoles.includes("ROLE_SUPER_ADMIN")) {
-      navigate("/SuperAdminDashboard");
-    } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
-      navigate("/AdminDashboard");
-    } else if (allRoles.includes("ROLE_ORG_REPRESENTATIVE")) {
-      navigate("/RepresentativeDashboard");
-    } else if (allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")) {
-      navigate("/RepresentativeDashboard");
-    } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
-      navigate("/AgencyAdminDashboard");
-    } else if (allRoles.includes("ROLE_ORG_STAFF")) {
-      navigate("/StaffDashboard");
-    } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
-      navigate("/StaffDashboard");
-    }else {
-      navigate("/login");
-    }
-  };
+    const redirectToDashboard = (allRoles: string[]) => {
+      if (allRoles.includes("ROLE_SUPER_ADMIN")) {
+        navigate("/SuperAdminDashboard");
+      } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
+        navigate("/AdminDashboard");
+      } else if (allRoles.includes("ROLE_ORG_REPRESENTATIVE")) {
+        navigate("/RepresentativeDashboard");
+      } else if (allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")) {
+        navigate("/RepresentativeDashboard");
+      } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
+        navigate("/AgencyAdminDashboard");
+      } else if (allRoles.includes("ROLE_ORG_STAFF")) {
+        navigate("/StaffDashboard");
+      } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
+        navigate("/StaffDashboard");
+      } else {
+        navigate("/login");
+      }
+    };
 
-  fetchRole();
+    fetchRole();
 
-  const handleOrgChange = () => {
-    fetchRole(true); // true means check page and redirect if needed
-  };
+    const handleOrgChange = () => {
+      fetchRole(true); // true means check page and redirect if needed
+    };
 
-  window.addEventListener("organizationChanged", handleOrgChange);
-  return () => {
-    window.removeEventListener("organizationChanged", handleOrgChange);
-  };
-}, [navigate, location.pathname]);
+    window.addEventListener("organizationChanged", handleOrgChange);
+    return () => {
+      window.removeEventListener("organizationChanged", handleOrgChange);
+    };
+  }, [navigate, location.pathname]);
 
 
 
@@ -287,18 +285,12 @@ useEffect(() => {
   // };
 
   const isActive = (paths: string | string[]) => {
-  if (Array.isArray(paths)) {
-    return paths.some(path => location.pathname.startsWith(path));
-  }
-  return location.pathname.startsWith(paths);
-};
-
-
-
-
-  const isCustomersActive = () => {
-    return ['/manage-customers', '/CustomerForm', '/list-of-consumers', '/OnboardedConsumers'].includes(location.pathname);
+    if (Array.isArray(paths)) {
+      return paths.some(path => location.pathname.startsWith(path));
+    }
+    return location.pathname.startsWith(paths);
   };
+
 
   // Don't render sidebar on auth pages
   if (isAuthPage) {
@@ -331,7 +323,7 @@ useEffect(() => {
             <div className="flex items-center justify-center w-full">
               <Logo size="xl" className="mx-auto" />
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -347,98 +339,92 @@ useEffect(() => {
           <div className="flex flex-col h-full">
             <nav className="flex-1 px-4 py-6 space-y-2">
               {/* Dashboard */}
-             <button
-  onClick={handleHomeClick}
-  className={`nav-link w-full justify-start ${
-    isActive([
-      "/AdminDashboard",
-      "/RepresentativeDashboard",
-      "/SuperAdminDashboard",
-      "/AgencyAdminDashboard",
-      "/StaffDashboard"
-    ])
-      ? "nav-link-active"
-      : "nav-link-inactive"
-  }`}
->
-  <LayoutDashboard size={20} />
-  <span>Dashboard</span>
-</button>
+              <button
+                onClick={handleHomeClick}
+                className={`nav-link w-full justify-start ${isActive([
+                  "/AdminDashboard",
+                  "/RepresentativeDashboard",
+                  "/SuperAdminDashboard",
+                  "/AgencyAdminDashboard",
+                  "/StaffDashboard"
+                ])
+                    ? "nav-link-active"
+                    : "nav-link-inactive"
+                  }`}
+              >
+                <LayoutDashboard size={20} />
+                <span>Dashboard</span>
+              </button>
 
 
               {/* Manage Customers Section */}
-<div className="space-y-1">
-  {/* Main Customers menu */}
-  <button
-    onClick={() => setCustomersExpanded(!customersExpanded)}
-    className={`nav-link w-full justify-between ${
-      [
-        "/CustomerForm",
-        "/list-of-consumers",
-        "/OnboardedConsumers",
-      ].includes(location.pathname)
-        ? "nav-link-active"
-        : "nav-link-inactive"
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <Users size={20} />
-      <span>Manage Customers</span>
-    </div>
-    {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-  </button>
+              <div className="space-y-1">
+                {/* Main Customers menu */}
+                <button
+                  onClick={() => setCustomersExpanded(!customersExpanded)}
+                  className={`nav-link w-full justify-between ${[
+                      "/CustomerForm",
+                      "/list-of-consumers",
+                      "/OnboardedConsumers",
+                    ].includes(location.pathname)
+                      ? "nav-link-active"
+                      : "nav-link-inactive"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Users size={20} />
+                    <span>Manage Customers</span>
+                  </div>
+                  {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
 
-  {customersExpanded && (
-    <div className="ml-6 space-y-1 mt-2">
-      {/* Add Customer */}
-      <button
-        onClick={goToCustomerForm}
-        className={`nav-link w-full justify-start ${
-          location.pathname === "/CustomerForm"
-            ? "nav-link-active"
-            : "nav-link-inactive"
-        }`}
-      >
-        <UserPlus size={18} />
-        <span>Add Customer</span>
-      </button>
+                {customersExpanded && (
+                  <div className="ml-6 space-y-1 mt-2">
+                    {/* Add Customer */}
+                    <button
+                      onClick={goToCustomerForm}
+                      className={`nav-link w-full justify-start ${location.pathname === "/CustomerForm"
+                          ? "nav-link-active"
+                          : "nav-link-inactive"
+                        }`}
+                    >
+                      <UserPlus size={18} />
+                      <span>Add Customer</span>
+                    </button>
 
-      {/* All Customers */}
-      <button
-        onClick={goToListOfConsumers}
-        className={`nav-link w-full justify-start ${
-          location.pathname === "/list-of-consumers"
-            ? "nav-link-active"
-            : "nav-link-inactive"
-        }`}
-      >
-        <Users size={18} />
-        <span>All Customers</span>
-      </button>
+                    {/* All Customers */}
+                    <button
+                      onClick={goToListOfConsumers}
+                      className={`nav-link w-full justify-start ${location.pathname === "/list-of-consumers"
+                          ? "nav-link-active"
+                          : "nav-link-inactive"
+                        }`}
+                    >
+                      <Users size={18} />
+                      <span>All Customers</span>
+                    </button>
 
-      {/* Onboarded */}
-      <button
-        onClick={goToOnboardedConsumers}
-        className={`nav-link w-full justify-start ${
-          location.pathname === "/OnboardedConsumers"
-            ? "nav-link-active"
-            : "nav-link-inactive"
-        }`}
-      >
-        <UserRoundCheck size={18} />
-        <span>Onboarded</span>
-      </button>
-    </div>
-  )}
-</div>   
+                    {/* Onboarded */}
+                    <button
+                      onClick={goToOnboardedConsumers}
+                      className={`nav-link w-full justify-start ${location.pathname === "/OnboardedConsumers"
+                          ? "nav-link-active"
+                          : "nav-link-inactive"
+                        }`}
+                    >
+                      <UserRoundCheck size={18} />
+                      <span>Onboarded</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Organizations (Super Admin) */}
               {roles.includes("ROLE_SUPER_ADMIN") && (
-                <button 
+                <button
                   onClick={goToOrganizations}
-                  className={`nav-link w-full justify-start ${
-                    isActive("/organizations") ? "nav-link-active" : "nav-link-inactive"
-                  }`}
+                  className={`nav-link w-full justify-start ${isActive("/organizations") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
                 >
                   <Building size={20} />
                   <span>Organizations</span>
@@ -447,11 +433,10 @@ useEffect(() => {
 
               {/* Role Management (Super Admin) */}
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
-                <button 
+                <button
                   onClick={goToAdminManagement}
-                  className={`nav-link w-full justify-start ${
-                    isActive("/admin-management") ? "nav-link-active" : "nav-link-inactive"
-                  }`}
+                  className={`nav-link w-full justify-start ${isActive("/admin-management") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
                 >
                   <Shield size={20} />
                   <span>Role Management</span>
@@ -460,24 +445,16 @@ useEffect(() => {
 
               {/* User Management */}
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
-                <button 
+                <button
                   onClick={goToUserManagement}
-                  className={`nav-link w-full justify-start ${
-                    isActive("/user-management") ? "nav-link-active" : "nav-link-inactive"
-                  }`}
+                  className={`nav-link w-full justify-start ${isActive("/user-management") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
                 >
                   <UserCheck size={20} />
                   <span>User Management</span>
                 </button>
               )}
 
-
-              {/* <button
-                className="nav-link-inactive w-full justify-start"
-              >
-                <Settings size={20} />
-                <span>Settings</span>
-              </button> */}
             </nav>
 
             {/* Footer */}

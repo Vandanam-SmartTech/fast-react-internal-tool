@@ -1,20 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
-import { 
-  Users, 
-  Building, 
-  Building2, 
-  UserCog, 
-  Settings, 
-  TrendingUp,
-  UserPlus,
-  FileText,
-  BarChart3,
-  Calendar,
-  Clock,
-  Shield
-} from 'lucide-react';
+import { Users, Building, Building2, UserCog, Settings, TrendingUp, UserPlus, FileText, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 
 const AdminDashboard: React.FC = () => {

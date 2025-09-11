@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchClaims } from '../../services/jwtService';
-import { Users,
-   Building2,
-    UserCog, 
-    Settings,
-    Calendar,
-  Clock, } from 'lucide-react';
+import { Users, Building2, UserCog, Settings, Calendar, Clock } from 'lucide-react';
 
 const AgencyAdminDashboard: React.FC = () => {
   const [preferredName, setPreferredName] = useState('');

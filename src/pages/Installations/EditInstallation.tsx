@@ -46,6 +46,7 @@ export const EditInstallation = () => {
     installationSpaceTypeId:1,
     installationSpaceTitle:'',
     customInstallationSpaceTitle:'',
+    elevationInFeet: '',
   });
 
       useEffect(() => {
@@ -95,8 +96,9 @@ export const EditInstallation = () => {
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || '',
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || '',
               installationSpaceTypeId: selectedInstallation.installationSpaceTypeId,
+              elevationInFeet: selectedInstallation.elevationInFeet || '',
               installationSpaceTitle: isCustomTitle ? 'Other' : selectedInstallation.installationSpaceTitle,
-            customInstallationSpaceTitle: isCustomTitle ? selectedInstallation.installationSpaceTitle : '',
+              customInstallationSpaceTitle: isCustomTitle ? selectedInstallation.installationSpaceTitle : '',
             });
           }
         }
@@ -129,6 +131,7 @@ export const EditInstallation = () => {
     descriptionOfInstallation: formData.descriptionOfInstallation || '',
     availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || '',
     availableEastWestLengthFt: formData.availableEastWestLengthFt || '',
+    elevationInFeet: formData.elevationInFeet || '',
     installationSpaceTitle:
             formData.installationSpaceTitle === 'Other'
               ? formData.customInstallationSpaceTitle
@@ -164,13 +167,13 @@ export const EditInstallation = () => {
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
-<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-18">
   <h1 className="text-2xl font-bold text-gray-700">Update Installation</h1>
 
   </div>
   
 
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -235,19 +238,24 @@ export const EditInstallation = () => {
 </div>
 
 
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 sm:mb-8">
-        Installation Details
-      </h2>
   
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        {/* Input Fields */}
+      <form onSubmit={handleSubmit} className="space-y-3">
+<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+
+
+        <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <HomeModernIcon className="w-5 h-5 text-green-500" />
+          Installation Details
+        </h3>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Installation Space Type <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
         <select
           name="installationSpaceTypeId"
           value={formData.installationSpaceTypeId}
           onChange={handleChange}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
         >
           {installationSpaceTypes.map((type) => (
               <option key={type.id} value={type.id}>
@@ -258,7 +266,7 @@ export const EditInstallation = () => {
       </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">
+  <label className="block text-sm font-medium text-gray-700 mb-2">
     Installation Space Title <span className="text-red-500">*</span>
   </label>
 
@@ -283,7 +291,7 @@ export const EditInstallation = () => {
     }
   }}
   required
-  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
 >
   <option value="" disabled>Select Installation Title</option>
   <option value="At center">At center</option>
@@ -308,7 +316,7 @@ export const EditInstallation = () => {
     onChange={handleChange}
     required
     placeholder="Specify installation space title"
-    className="mt-2 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    className=" mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
   />
 )}
 
@@ -316,7 +324,7 @@ export const EditInstallation = () => {
 
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">East-West-Length (Feet) <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="text"
             inputMode="numeric"
@@ -331,12 +339,12 @@ export const EditInstallation = () => {
              }
           }}
             placeholder="e.g. 10"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           />
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">South-North-Length (Feet) <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
           <input
             type="text"
             inputMode="numeric"
@@ -351,12 +359,12 @@ export const EditInstallation = () => {
               handleChange(e);
              }
           }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Panel To Inverter Distance (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Panel To Inverter Distance (Feet)</label>
           <input
             type="text"
             inputMode="numeric"
@@ -372,12 +380,12 @@ export const EditInstallation = () => {
               handleChange(e);
              }
           }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           />
         </div>
   
         <div>
-          <label className="block text-sm font-medium text-gray-700">Inverter to NetMeter Distance (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to NetMeter Distance (Feet)</label>
           <input
             type="text"
             inputMode="numeric"
@@ -393,7 +401,28 @@ export const EditInstallation = () => {
               handleChange(e);
              }
           }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="elevationInFeet"
+            name="elevationInFeet"
+            //min="0"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.elevationInFeet}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+            const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+              handleChange(e);
+             }
+          }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           />
         </div>
   
@@ -458,7 +487,7 @@ export const EditInstallation = () => {
         </div> */}
   
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Description about Installation</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
           <input
             type="text"
             id="descriptionOfInstallation"
@@ -466,15 +495,18 @@ export const EditInstallation = () => {
             value={formData.descriptionOfInstallation}
             onChange={handleChange}
             placeholder="e.g. Designated area is on rooftop"
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
           />
+        </div>
+
+        </div>
         </div>
   
         {/* Submit Button */}
-        <div className="sm:col-span-2 flex justify-center sm:justify-start mt-4">
+        <div className="flex justify-center pt-1">
           <button
             type="submit"
-            className="w-full sm:w-auto py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
+            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
           >
             Update Installation
           </button>

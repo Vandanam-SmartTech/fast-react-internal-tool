@@ -36,6 +36,7 @@ import AdminManagement from './pages/Organizations/AdminManagement';
 import AgencyList from './pages/Organizations/AgencyList';
 import AgencyForm from './pages/Organizations/AgencyForm';
 import OrganizationView from './pages/Organizations/OrganizationView';
+import EditOrganization from './pages/Organizations/EditOrganization';
 import UserManagement from './pages/Organizations/UserManagement';
 import UserFormManagement from './pages/Organizations/UserFormManagement';
 import UserView from './pages/Organizations/UserView';
@@ -353,6 +354,15 @@ const AppContent: React.FC = () => {
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
                   <OrganizationForm />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+            path="/edit-organization/:id"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                  <EditOrganization />
                 </RoleProtectedRoute>
               }
             />

@@ -7,11 +7,13 @@ export const getQuotationAPI = () => {
 
   const quotationAPI = axios.create({
     baseURL: VITE_QUOTATION_API,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   quotationAPI.interceptors.request.use((config) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,27 +60,30 @@ export const previewQuotationPDF = async (connectionId: number): Promise<Blob> =
 };
 
 export const fetchPanelWattages = async (
-  connectionId: string,
   phaseType: string,
   dcrNonDcrType: string,
   brand: string
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
-    console.log('Fetching panel wattages...');
+    console.log("Fetching panel wattages...");
 
-    const response = await quotationAPI.post(`/api/panelWattage/${connectionId}`, {
-      phaseType,
-      dcrNonDcrType,
-      customerSelectedBrand: brand,
+    const response = await quotationAPI.get("/api/panelWattage", {
+      params: {
+        phaseType,
+        dcrNonDcrType,
+        customerSelectedBrand: brand,
+      },
     });
 
     return response.data;
   } catch (error) {
-    console.error('API Error:', error);
-    throw new Error('Failed to fetch panel wattages from server');
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch panel wattages from server");
   }
 };
+
+
 
 export const fetchInverters = async (
   phaseType: string,
@@ -228,3 +233,48 @@ export const saveCustomerSpecs = async (connectionId: string, requestData: any):
     throw new Error("Failed to save specifications.");
   }
 };
+
+export const checkSystemSpecificationsExists = async (
+  connectionId: string
+): Promise<boolean> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get('/api/connectionId-exist', {
+      params: { connectionId },
+    });
+
+    return response.data === true;
+  } catch (error) {
+    console.error('Error checking system specifications available for connectionId:', error);
+    return false;
+  }
+};
+
+export const fetchBatteryBrands = async (): Promise<string[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get('/api/battery-details/battery-brand');
+    return response.data; 
+  } catch (error) {
+    console.error('Error fetching battery brands:', error);
+    return []; 
+  }
+};
+
+export const fetchBatteryWattages = async (
+  batteryBrand: string
+): Promise<string[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get('/api/battery-details/battery-capacity', {
+      params: { batteryBrand },
+    });
+
+    return response.data || []; // Example: ["5", "10", "15", ...]
+  } catch (error) {
+    console.error('Error fetching battery capacities:', error);
+    return [];
+  }
+};
+
+

@@ -178,3 +178,66 @@ export const editUserSignature = async (file: File): Promise<void> => {
     throw error;
   }
 };
+
+export const uploadUserProfilePhoto = async (file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const formData = new FormData();
+    formData.append("filedata", file);
+
+    await oneDriveAPI.post(`/api/document-manager/user-media/${userId}/profile`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error: any) {
+    console.error("Failed to upload signature:", error);
+    throw error;
+  }
+};
+
+export const getUserProfilePhoto = async (): Promise<string | null> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const res = await oneDriveAPI.get(
+      `/api/document-manager/user-media/${userId}/profile`,
+      { responseType: "blob" }
+    );
+
+    
+    return URL.createObjectURL(res.data);
+  } catch (error: any) {
+    console.error("Failed to fetch signature:", error);
+    return null;
+  }
+};
+
+export const editUserProfilePhoto = async (file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    const formData = new FormData();
+    formData.append("filedata", file);
+
+    await oneDriveAPI.put(
+      `/api/document-manager/user-media/${userId}/profile`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  } catch (error: any) {
+    console.error("Failed to edit signature:", error);
+    throw error;
+  }
+};

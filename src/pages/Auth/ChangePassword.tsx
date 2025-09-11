@@ -26,19 +26,6 @@ const Verification: React.FC = () => {
     return passwordRegex.test(pw);
   };
 
-//   useEffect(() => {
-//   // const resetDone = localStorage.getItem('OTP sent successfully') === 'true';
-//   // const otpDone = localStorage.getItem('otpVerified') === 'true';
-
-//   if (!resetDone || !otpDone) {
-//     navigate('/PasswordReset');
-//     return;
-//   }
-
-//   // localStorage.removeItem('OTP sent successfully');
-//   // localStorage.removeItem('otpVerified');
-// }, [navigate]);
-
 useEffect(() => {
   if (!email && !msg && !msg1) {
     navigate('/Verification',{state:{email, msg, msg1}});

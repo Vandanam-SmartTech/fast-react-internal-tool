@@ -34,7 +34,6 @@ const Verification: React.FC = () => {
   : 'Too many attempts. Please try again later.';
 
 
-  // Redirect if email not found
 useEffect(() => {
   if (!email && !msg) {
     navigate('/PasswordReset');

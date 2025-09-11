@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Users, BarChart3,Calendar,
-  Clock } from 'lucide-react';
+import { UserCheck, Users, BarChart3, Calendar, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
@@ -46,11 +45,11 @@ const RepresentativeDashboard: React.FC = () => {
     const setTimeBasedGreeting = () => {
       const hour = new Date().getHours();
       if (hour < 12) {
-        setGreeting('Good Morning!');
+        setGreeting('Good Morning');
       } else if (hour < 16) {
-        setGreeting('Good Afternoon!');
+        setGreeting('Good Afternoon');
       } else {
-        setGreeting('Good Evening!');
+        setGreeting('Good Evening');
       }
     };
 
@@ -119,11 +118,9 @@ const RepresentativeDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         
        <div>
-        <div className="text-2xl font-semibold mb-2">
-          {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
-        </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Representative Dashboard</h1>
+<h1 className="text-3xl font-bold text-secondary-900">
+            {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
+          </h1>
         <p className="text-gray-600">Manage customers and track progress</p>
       </div>
       {/* Right - Time & Date */}

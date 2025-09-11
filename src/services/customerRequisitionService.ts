@@ -269,16 +269,7 @@ export const fetchInstallationSpaceTypes = async (
 export const getCustomerById = async (customerId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
   try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters for getCustomerById:', { orgId, orgName, agencyId, agencyName, customerId });
-    
-    const response = await crsAPI.get(`/api/customers/${customerId}`, {
-      params: { orgId, orgName, agencyId, agencyName }
-    });
+    const response = await crsAPI.get(`/api/customers/${customerId}`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching customer details:', error);
@@ -286,25 +277,25 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
   }
 };
 
-export const getCustomerWithConnections = async (customerId: number): Promise<any> => {
-  const crsAPI = getCrsAPI();
-  try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
+// export const getCustomerWithConnections = async (customerId: number): Promise<any> => {
+//   const crsAPI = getCrsAPI();
+//   try {
+//     const orgId = localStorage.getItem('selectedOrganization');
+//     const orgName = localStorage.getItem('selectedOrganizationName');
+//     const agencyId = localStorage.getItem('selectedAgency');
+//     const agencyName = localStorage.getItem('selectedAgencyName');
     
-    console.log('CRS API Parameters for getCustomerWithConnections:', { orgId, orgName, agencyId, agencyName, customerId });
+//     console.log('CRS API Parameters for getCustomerWithConnections:', { orgId, orgName, agencyId, agencyName, customerId });
     
-    const response = await crsAPI.get(`/api/customers/${customerId}/with-connections`, {
-      params: { orgId, orgName, agencyId, agencyName }
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching customer details:', error);
-    return null;
-  }
-};
+//     const response = await crsAPI.get(`/api/customers/${customerId}/with-connections`, {
+//       params: { orgId, orgName, agencyId, agencyName }
+//     });
+//     return response.data;
+//   } catch (error: any) {
+//     console.error('Error fetching customer details:', error);
+//     return null;
+//   }
+// };
 
 export const getConnectionByConnectionId = async (connectionId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
@@ -353,33 +344,6 @@ export const fetchConsumerNumber = async (customerId: number) => {
       console.error(`Error fetching connections for customerId ${customerId}:`, error.message);
     }
     return [];
-  }
-};
-
-export const fetchConsumers = async (page = 0) => {
-  const crsAPI = getCrsAPI();
-  try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters for fetchConsumers:', { orgId, orgName, agencyId, agencyName, page });
-    
-    const response = await crsAPI.get('/api/customers/paginated', {
-      params: { page, orgId, orgName, agencyId, agencyName },
-    });
-
-    return {
-      content: response.data.content,
-      totalPages: response.data.totalPages,
-      totalElements: response.data.totalElements,
-      currentPage: response.data.number,
-      size: response.data.size,
-    };
-  } catch (error) {
-    console.error('Error fetching consumers:', error);
-    throw new Error('Failed to fetch consumers.');
   }
 };
 
@@ -652,31 +616,48 @@ export const updateMaterialData = async (
 };
 
 
-export const searchCustomers = async (query: string): Promise<any[]> => {
+export const searchCustomers = async (
+  query: string,
+  params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
+): Promise<any[]> => {
   const crsAPI = getCrsAPI();
   try {
-    const orgId = localStorage.getItem('selectedOrganization');
-    const orgName = localStorage.getItem('selectedOrganizationName');
-    const agencyId = localStorage.getItem('selectedAgency');
-    const agencyName = localStorage.getItem('selectedAgencyName');
-    
-    console.log('CRS API Parameters for searchCustomers:', { orgId, orgName, agencyId, agencyName, query });
-    
+    console.log("CRS API Parameters for searchCustomers:", { ...params, query });
+
     const response = await crsAPI.get(`/api/customers/search`, {
-      params: { query, orgId, orgName, agencyId, agencyName },
+      params: { query, ...params },
     });
 
     const data = response.data;
 
     if (Array.isArray(data)) {
-      return data.map((item: any) => ({
-        id: item?.id,
-        govIdName: item?.govIdName,
-        emailAddress: item?.emailAddress,
-        mobileNumber: item?.mobileNumber,
-        consumerId: item?.consumerId,
-        connectionType: item?.connectionType,
-      }));
+      return data;
+    } else {
+      console.error("Invalid API response format:", data);
+      throw new Error("Failed to parse search results");
+    }
+  } catch (error) {
+    console.error("Error fetching search results:", error);
+    throw new Error("Failed to fetch search results");
+  }
+};
+
+export const searchOnboardedConsumers = async (
+  query: string,
+  params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
+): Promise<any[]> => {
+  const crsAPI = getCrsAPI();
+  try {
+    console.log("CRS API Parameters for searchCustomers:", { ...params, query });
+
+    const response = await crsAPI.get(`/api/customers/search/onboarded`, {
+      params: { query, ...params },
+    });
+
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
     } else {
       console.error("Invalid API response format:", data);
       throw new Error("Failed to parse search results");

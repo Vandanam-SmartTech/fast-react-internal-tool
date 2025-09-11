@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import { fetchClaims } from "../../services/jwtService";
-import { generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails, saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels } from '../../services/quotationService';
+import {
+  generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails,
+  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, fetchBatteryBrands, fetchBatteryWattages
+} from '../../services/quotationService';
 import { uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -43,8 +46,9 @@ export const SystemSpecifications = () => {
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
   const [dialogMessage, setDialogMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [selectedSpace, setSelectedSpace] = useState(null);
+  const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
+  const [isSpaceListOpen, setIsSpaceListOpen] = useState(false);
 
   const [inverterBrands, setInverterBrands] = useState<string[]>([]);
 
@@ -52,7 +56,10 @@ export const SystemSpecifications = () => {
 
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
 
-  const [batteryCapacity, setBatteryCapacity] =  useState([]);
+  const [batteryBrands, setBatteryBrands] = useState<string[]>([]);
+
+  const [batteryCapacities, setBatteryCapacities] = useState<string[]>([]);
+
 
 
   const [activeTab, setActiveTab] = useState("System Specifications");
@@ -69,299 +76,348 @@ export const SystemSpecifications = () => {
   const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
 
+  const getSpaceEmoji = (spaceType?: string) => {
+    if (!spaceType) return "🏠";
+    const type = spaceType.toLowerCase();
+
+    if (
+      type.includes("slab") || type.includes("roof") || type.includes("bathroom slab")
+    )
+      return "🏠";
+
+    if (
+      type.includes("metal sheet") || type.includes("plastic sheet") || type.includes("cement sheet") || type.includes("clay tile")
+    )
+      return "🏚️";
+
+    if (type.includes("ground") || type.includes("open")) return "🌳";
+
+    return "📍";
+  };
+
+
   const [formData, setFormData] = useState({
     solarSystemCost: 0,
     fabricationCost: 0,
     totalCost: 0,
     installationSpaceType: "",
     installationStructureType: "Static",
-    dcrNonDcrType:"",
-    panelBrand:"",
-    Kw:"",
+    dcrNonDcrType: "",
+    panelBrand: "",
+    Kw: "",
     numberOfGpPipes: 0,
-    waterSprinklerSystem: false,       
-    heavyDutyRamp: false,        
-    heavyDutyStairs: false,
-    inversionType:"On-Grid",   
-    inverterBrand:"",
-    inverterKw:"",
-    batteryBrand: "VSole",
-    batteryCapacity: 5,
+    hasWaterSprinklerSystem: false,
+    hasHeavyDutyRamp: false,
+    hasHeavyDutyStairs: false,
+    inversionType: "On-Grid",
+    inverterBrand: "",
+    inverterKw: "",
+    batteryBrand: "",
+    batteryCapacity: "",
   });
 
 
-  const connectionId = location.state?.connectionId; 
+  const connectionId = location.state?.connectionId;
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
 
-const formatIndianNumber = (value) => {
-  if (!value) return "";
-  return new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(value);
-};
+  const formatIndianNumber = (value) => {
+    if (!value) return "";
+    return new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
 
 
 
   useEffect(() => {
-  const loadInstallationSpaceTypeMap = async () => {
-    try {
-      const types = await fetchInstallationSpaceTypesNames(); 
-      const typeMap: Record<number, string> = {};
-      types.forEach((type) => {
-        typeMap[type.id] = type.nameEnglish;
-      });
-      setInstallationTypeMap(typeMap);
-    } catch (error) {
-      console.error("Failed to load installation space types", error);
-    }
-  };
+    const loadInstallationSpaceTypeMap = async () => {
+      try {
+        const types = await fetchInstallationSpaceTypesNames();
+        const typeMap: Record<number, string> = {};
+        types.forEach((type) => {
+          typeMap[type.id] = type.nameEnglish;
+        });
+        setInstallationTypeMap(typeMap);
+      } catch (error) {
+        console.error("Failed to load installation space types", error);
+      }
+    };
 
-  loadInstallationSpaceTypeMap();
-}, []);
-
-  
-useEffect(() => {
-  const loadInstallationSpaceDetails = async () => {
-    if (!connectionId || Object.keys(installationTypeMap).length === 0) return;
-
-    const installationSpaces = await fetchInstallationSpaceTypes(Number(connectionId));
-
-    const enrichedSpaces = installationSpaces.map((space: any) => ({
-      ...space,
-      installationSpaceType: installationTypeMap[space.installationSpaceTypeId] || "Unknown",
-    }));
+    loadInstallationSpaceTypeMap();
+  }, []);
 
 
-    setAvailableSpaceTypes(enrichedSpaces);
-  };
+  useEffect(() => {
+    const loadInstallationSpaceDetails = async () => {
+      if (!connectionId || Object.keys(installationTypeMap).length === 0) return;
 
-  loadInstallationSpaceDetails();
-}, [connectionId, installationTypeMap]);
-  
+      const installationSpaces = await fetchInstallationSpaceTypes(Number(connectionId));
+
+      const enrichedSpaces = installationSpaces.map((space: any) => ({
+        ...space,
+        installationSpaceType: installationTypeMap[space.installationSpaceTypeId] || "Unknown",
+      }));
 
 
+      setAvailableSpaceTypes(enrichedSpaces);
+    };
 
-useEffect(() => {
-  const fetchConnection = async () => {
-    if (!connectionId) {
-      console.error("Connection ID not found!");
-      return;
-    }
-
-    const data = await getConnectionByConnectionId(Number(connectionId));
-    setConnectionDetails(data);
-  };
-
-  fetchConnection();
-}, [connectionId]);
-
-    useEffect(() => {
-      const fetchCustomer = async () => {
-        if (customerId) {
-          const data = await getCustomerById(Number(customerId));
-          setGovIdName(data?.govIdName || "");
-        }
-      };
-      fetchCustomer();
-
-    }, [customerId]);
+    loadInstallationSpaceDetails();
+  }, [connectionId, installationTypeMap]);
 
 
 
-useEffect(() => {
-  const getClaims = async () => {
-    try {
-      const claims = await fetchClaims();
-      const allRoles: string[] = [];
 
-      
-      if (Array.isArray(claims.global_roles)) {
-        allRoles.push(...claims.global_roles);
+  useEffect(() => {
+    const fetchConnection = async () => {
+      if (!connectionId) {
+        console.error("Connection ID not found!");
+        return;
       }
 
+      const data = await getConnectionByConnectionId(Number(connectionId));
+      setConnectionDetails(data);
+    };
 
-      const selectedOrgStr = localStorage.getItem('selectedOrg');
-      if (selectedOrgStr) {
-        try {
-          const selectedOrg = JSON.parse(selectedOrgStr);
-          if (selectedOrg.role) {
-            allRoles.push(selectedOrg.role);
+    fetchConnection();
+  }, [connectionId]);
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      if (customerId) {
+        const data = await getCustomerById(Number(customerId));
+        setGovIdName(data?.govIdName || "");
+      }
+    };
+    fetchCustomer();
+
+  }, [customerId]);
+
+
+
+  useEffect(() => {
+    const getClaims = async () => {
+      try {
+        const claims = await fetchClaims();
+        const allRoles: string[] = [];
+
+
+        if (Array.isArray(claims.global_roles)) {
+          allRoles.push(...claims.global_roles);
+        }
+
+
+        const selectedOrgStr = localStorage.getItem('selectedOrg');
+        if (selectedOrgStr) {
+          try {
+            const selectedOrg = JSON.parse(selectedOrgStr);
+            if (selectedOrg.role) {
+              allRoles.push(selectedOrg.role);
+            }
+          } catch {
+            console.error("Invalid selectedOrg format in localStorage");
           }
-        } catch {
-          console.error("Invalid selectedOrg format in localStorage");
         }
+
+        setRoles(allRoles);
+      } catch (error) {
+        console.error("Failed to fetch user claims", error);
       }
+    };
 
-      setRoles(allRoles);
-    } catch (error) {
-      console.error("Failed to fetch user claims", error);
-    }
-  };
+    getClaims();
+  }, []);
 
-  getClaims();
-}, []);
+  let hasShownError = false;
 
-let hasShownError = false;
+  useEffect(() => {
 
-useEffect(() => {
- 
     if (!connectionId || !connectionDetails) return;
 
-     const fetchData = async () => {
+    const fetchData = async () => {
 
-    setIsFetchingRecommendations(true);
+      setIsFetchingRecommendations(true);
 
-    try {
-      // Step 1: Try to fetch customer-agreed data
-      const customerData = await fetchCustomerAgreedDetails(connectionId);
+      try {
+        // Step 1: Try to fetch customer-agreed data
+        const customerData = await fetchCustomerAgreedDetails(connectionId);
 
-      const phaseType = connectionDetails?.phaseTypeName || "";
-
-
-      if (customerData.success === false || customerData.message?.includes("Data not found")) {
-        // Fallback to recommendation API if not found
-        const recommendation = await fetchRecommendedDetails(connectionId);
-        console.log("Recommended Data:", recommendation);
-
-        const recommendedKW = recommendation.recommendedKW || "";
-
-        // const inverterWattages = await fetchInverterWattages(
-        //     phaseType,
-        //     recommendation.inverterBrand
-        // );
-        const selectedInverterKw = inverterWattages[0] || "";
+        const phaseType = connectionDetails?.phaseTypeName || "";
 
 
-        setFormData((prev) => ({
-          ...prev,
-          installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
-          installationStructureType: recommendation.recommendedInstallationStructureType || "",
-          Kw: recommendedKW,
-          numberOfGpPipes: recommendation.numberOfGpPipes || 0,
-          dcrNonDcrType:
-            recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
-          panelBrand: recommendation.panelBrand || "",
-          inverterBrand: recommendation.inverterBrand || "",
-          inverterKw: selectedInverterKw,
-          inversionType: recommendation.inversionType,
-        }));
+        if (customerData.success === false || customerData.message?.includes("Data not found")) {
+          // Fallback to recommendation API if not found
+          const recommendation = await fetchRecommendedDetails(connectionId);
+          console.log("Recommended Data:", recommendation);
 
-        setConnectionType(recommendation.connectionType || "");
-        setPhaseType(phaseType);
+          const recommendedKW = recommendation.recommendedKW || "";
 
-        if (phaseType && recommendation.inversionType) {
-          const inverters = await fetchInverters(phaseType, recommendation.inversionType);
-          setInverterBrands(inverters || []);
-        }
-
-        if(phaseType && recommendation.dcrNonDcrType) {
-          const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
-          setPanelBrands(panels || []);
-        }
-
-
-        if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
-          const wattages = await fetchPanelWattages(
-            connectionId,
-            phaseType,
-            recommendation.dcrNonDcrType,
-            recommendation.panelBrand
-          );
-          const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
-          setPanelWattages([recommendedKW, ...uniqueWattages]);
-        }
-
-        if (recommendation.inverterBrand && phaseType) {
           const inverterWattages = await fetchInverterWattages(
-            phaseType,
-            recommendation.inverterBrand
+              phaseType,
+              recommendation.inverterBrand
           );
-          setInverterWattages(inverterWattages);
+          const selectedInverterKw = inverterWattages[0] || "";
+
+
+          setFormData((prev) => ({
+            ...prev,
+            installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
+            installationStructureType: recommendation.recommendedInstallationStructureType || "",
+            Kw: recommendedKW,
+            numberOfGpPipes: recommendation.numberOfGpPipes || 0,
+            dcrNonDcrType:
+              recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
+            panelBrand: recommendation.panelBrand || "",
+            inverterBrand: recommendation.inverterBrand || "",
+            inverterKw: selectedInverterKw,
+            inversionType: recommendation.inversionType,
+          }));
+
+          setConnectionType(recommendation.connectionType || "");
+          setPhaseType(phaseType);
+
+          if (phaseType && recommendation.inversionType) {
+            const inverters = await fetchInverters(phaseType, recommendation.inversionType);
+            setInverterBrands(inverters || []);
+          }
+
+          if (phaseType && recommendation.dcrNonDcrType) {
+            const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
+            setPanelBrands(panels || []);
+          }
+
+
+          if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
+            const wattages = await fetchPanelWattages(
+              phaseType,
+              recommendation.dcrNonDcrType,
+              recommendation.panelBrand
+            );
+            const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
+            setPanelWattages([recommendedKW, ...uniqueWattages]);
+          }
+
+          if (recommendation.inverterBrand && phaseType) {
+            const inverterWattages = await fetchInverterWattages(
+              phaseType,
+              recommendation.inverterBrand
+            );
+            setInverterWattages(inverterWattages);
+          }
+        } else {
+          // Use customer-agreed data
+          console.log("Customer Agreed Data:", customerData);
+
+          setIsCustomSpecs(true);
+          setIsSpecsSaved(true);
+          setPriceAlreadySetFromCustomerData(true);
+
+          const customerSelectedKW = customerData.customerSelectedKW || "";
+          const inverterCapacity = customerData.inverterCapacity || "";
+
+          setFormData((prev) => ({
+            ...prev,
+            installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
+            installationStructureType: customerData.customerSelectedInstallationStructureType || "",
+            Kw: customerSelectedKW,
+            panelBrand: customerData.customerSelectedBrand || "",
+            dcrNonDcrType: customerData.dcrNonDcrType || "",
+            inverterBrand: customerData.inverterBrand || "",
+            inverterKw: inverterCapacity,
+            solarSystemCost: customerData.solarSystemCost || 0,
+            fabricationCost: customerData.fabricationCost || 0,
+            totalCost: customerData.totalCost || 0,
+            hasWaterSprinklerSystem: customerData.hasWaterSprinklerSystem || false,
+            hasHeavyDutyRamp: customerData.hasHeavyDutyRamp || false,
+            hasHeavyDutyStairs: customerData.hasHeavyDutyStairs || false,
+            inversionType: customerData.inversionType || "On Grid",
+            batteryBrand: customerData.batteryBrand || "",
+            batteryCapacity: customerData.batteryCapacity || 5,
+          }));
+
+          setPhaseType(phaseType);
+
+          if (phaseType && customerData.inversionType) {
+            const inverters = await fetchInverters(phaseType, customerData.inversionType);
+            setInverterBrands(inverters || []);
+          }
+
+          if (phaseType && customerData.dcrNonDcrType) {
+            const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
+            setPanelBrands(panels || []);
+          }
+
+
+          if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
+            const wattages = await fetchPanelWattages(
+              phaseType,
+              customerData.dcrNonDcrType,
+              customerData.customerSelectedBrand
+            );
+            const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
+            setPanelWattages([customerSelectedKW, ...uniqueWattages]);
+          }
+
+          if (customerData.inverterBrand && phaseType) {
+            const inverterWattages = await fetchInverterWattages(
+              phaseType,
+              customerData.inverterBrand
+            );
+            const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
+            setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
+          }
         }
-      } else {
-        // Use customer-agreed data
-        console.log("Customer Agreed Data:", customerData);
-
-        setIsCustomSpecs(true);
-        setIsSpecsSaved(true);
-        setPriceAlreadySetFromCustomerData(true);
-
-        const customerSelectedKW = customerData.customerSelectedKW || "";
-        const inverterCapacity = customerData.inverterCapacity || "";
-
-        setFormData((prev) => ({
-          ...prev,
-          installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
-          installationStructureType: customerData.customerSelectedInstallationStructureType || "",
-          Kw: customerSelectedKW,
-          panelBrand: customerData.customerSelectedBrand || "",
-          dcrNonDcrType: customerData.dcrNonDcrType || "",
-          inverterBrand: customerData.inverterBrand || "",
-          inverterKw: inverterCapacity,
-          solarSystemCost: customerData.solarSystemCost || 0,
-          fabricationCost: customerData.fabricationCost || 0,
-          totalCost: customerData.totalCost || 0,
-          waterSprinklerSystem: customerData.waterSprinklerSystem || false,
-          heavyDutyRamp: customerData.heavyDutyRamp || false,
-          heavyDutyStairs: customerData.heavyDutyStairs || false,
-          inversionType: customerData.inversionType || "On Grid",
-          batteryBrand: customerData.batteryBrand || "VSole",
-          batteryCapacity: customerData.batteryCapacity || 5,
-        }));
-
-        setPhaseType(phaseType);
-
-        if (phaseType && customerData.inversionType) {
-          const inverters = await fetchInverters(phaseType, customerData.inversionType);
-          setInverterBrands(inverters || []);
+      } catch (error) {
+        console.error("Error during fetch:", error);
+        if (!hasShownError) {
+          hasShownError = true;
+          toast.error("Failed to fetch details. Please try again later.", {
+            autoClose: 1000,
+            hideProgressBar: true,
+          });
         }
-
-        if(phaseType && customerData.dcrNonDcrType) {
-          const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
-          setPanelBrands(panels || []);
-        }
-
-
-        if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
-          const wattages = await fetchPanelWattages(
-            connectionId,
-            phaseType,
-            customerData.dcrNonDcrType,
-            customerData.customerSelectedBrand
-          );
-          const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
-          setPanelWattages([customerSelectedKW, ...uniqueWattages]);
-        }
-
-        if (customerData.inverterBrand && phaseType) {
-          const inverterWattages = await fetchInverterWattages(
-            phaseType,
-            customerData.inverterBrand
-          );
-          const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
-          setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
-        }
+      } finally {
+        setIsFetchingRecommendations(false);
       }
-    } catch (error) {
-      console.error("Error during fetch:", error);
-      if (!hasShownError) {
-        hasShownError = true;
-        toast.error("Failed to fetch details. Please try again later.", {
-          autoClose: 1000,
-          hideProgressBar: true,
-        });
-      }
-    } finally {
-      setIsFetchingRecommendations(false);
+    };
+
+    fetchData();
+  }, [connectionId, connectionDetails]);
+
+  useEffect(() => {
+    if (formData.inversionType === "Hybrid") {
+      const loadBatteryBrands = async () => {
+        const brands = await fetchBatteryBrands();
+        setBatteryBrands(brands || []);
+        if (brands.length > 0 && !formData.batteryBrand) {
+          setFormData((prev) => ({ ...prev, batteryBrand: brands[0] }));
+        }
+      };
+      loadBatteryBrands();
     }
-  };
+  }, [formData.inversionType]);
 
-  fetchData();
-}, [connectionId, connectionDetails]);
+  useEffect(() => {
+    if (formData.batteryBrand) {
+      const loadCapacities = async () => {
+        const capacities = await fetchBatteryWattages(formData.batteryBrand);
+        setBatteryCapacities(capacities);
+
+        // Auto-select first if none selected
+        if (capacities.length > 0 && !formData.batteryCapacity) {
+          setFormData((prev) => ({ ...prev, batteryCapacity: capacities[0] }));
+        }
+      };
+      loadCapacities();
+    }
+  }, [formData.batteryBrand]);
 
 
-useEffect(() => {
+
+
+
+  useEffect(() => {
     setFormData((prev) => ({
       ...prev,
       totalCost: (Number(prev.solarSystemCost) || 0) + (Number(prev.fabricationCost) || 0),
@@ -371,133 +427,117 @@ useEffect(() => {
 
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target;
 
-  let updatedFormData: any;
+    let updatedFormData: any;
 
 
 
-  setFormData((prev) => {
-    const updatedData = {
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    };
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
 
-    const matchedSpace = availableSpaceTypes.find(
-    (space) => space.installationSpaceType === value
-  );
-
-  
-
-  if (matchedSpace) {
-    setSelectedSpace(matchedSpace);
-    setShowModal(true);
-  }
-
-    // Auto-update totalCost
-    updatedData.totalCost =
-      (Number(updatedData.solarSystemCost) || 0) +
-      (Number(updatedData.fabricationCost) || 0);
-
-    // Update numberOfGpPipes based on installation space
-    if (name === "installationSpaceType") {
-      const selectedSpace = availableSpaceTypes.find(
-        (space: any) => space.installationSpaceType === value
+      const matchedSpace = availableSpaceTypes.find(
+        (space) => space.installationSpaceType === value
       );
-      if (selectedSpace) {
-        updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
+      if (matchedSpace) {
+        setSelectedSpace(matchedSpace);
       }
-    }
 
-// if (name === "panelBrand" && value === "En-Icon") {
-//       updatedData.dcrNonDcrType = "Non-DCR";
-//     }
-//     if (name === "dcrNonDcrType" && value === "Non-DCR") {
-//       updatedData.panelBrand = "En-Icon";
-//     }
-//     if (name === "dcrNonDcrType" && value === "DCR") {
-//       updatedData.panelBrand = "Sova";
-//     }
+      // Auto-update totalCost
+      updatedData.totalCost =
+        (Number(updatedData.solarSystemCost) || 0) +
+        (Number(updatedData.fabricationCost) || 0);
 
-    // Inverter <-> Type mapping
-    if (name === "inversionType") {
-      updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
-    }
+      // Update numberOfGpPipes based on installation space
+      if (name === "installationSpaceType") {
+        const selectedSpace = availableSpaceTypes.find(
+          (space: any) => space.installationSpaceType === value
+        );
+        if (selectedSpace) {
+          updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
+        }
+      }
 
-    updatedFormData = updatedData; 
-    return updatedData;
-  });
+      if (name === "inversionType") {
+        updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
+      }
 
-  setIsCustomSpecs(true);
-  setIsSpecsSaved(false);
-  setPriceAlreadySetFromCustomerData(false);
+      updatedFormData = updatedData;
+      return updatedData;
+    });
 
-if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
-  let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-  let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-  const inverterBrandValue =
-    name === "inverterBrand"
-      ? value
-      : name === "inversionType"
-      ? value === "Hybrid"
-        ? "VSole"
-        : "KSolare"
-      : formData.inverterBrand;
-  const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
+    setIsCustomSpecs(true);
+    setIsSpecsSaved(false);
+    setPriceAlreadySetFromCustomerData(false);
 
-  try {
-    if (name === "dcrNonDcrType") {
-      const panels = await fetchPanels(phaseType, value);
-      console.log("Fetched Panels:", panels);
-      setPanelBrands(panels || []);
+    if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
+      let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+      let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+      const inverterBrandValue =
+        name === "inverterBrand"
+          ? value
+          : name === "inversionType"
+            ? value === "Hybrid"
+              ? "VSole"
+              : "KSolare"
+            : formData.inverterBrand;
+      const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
 
-      if (panels.length > 0) {
-        panelBrandValue = panels[0].brand; 
+      try {
+        if (name === "dcrNonDcrType") {
+          const panels = await fetchPanels(phaseType, value);
+          console.log("Fetched Panels:", panels);
+          setPanelBrands(panels || []);
+
+          if (panels.length > 0) {
+            panelBrandValue = panels[0].brand;
+            setFormData((prev) => ({
+              ...prev,
+              panelBrand: panels[0].brand,
+            }));
+          }
+
+          dcrNonDcrValue = value;
+        }
+
+        console.log("Fetching panel wattages with:");
+        console.log("Connection ID:", connectionId);
+        console.log("Phase Type:", phaseType);
+        console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+        console.log("Panel Brand:", panelBrandValue);
+
+        const wattages = await fetchPanelWattages(
+          phaseType,
+          dcrNonDcrValue,
+          panelBrandValue
+        );
+
+        setPanelWattages(wattages);
+
+        const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
+        setInverterWattages(inverterWattages);
+
+        if (phaseType && inversionTypeValue) {
+          const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
+          setInverterBrands(inverterBrands || []);
+        }
+
         setFormData((prev) => ({
           ...prev,
-          panelBrand: panels[0].brand,
+          Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
+          inverterKw: inverterWattages.includes(prev.inverterKw)
+            ? prev.inverterKw
+            : inverterWattages[0] || "",
         }));
+      } catch (error) {
+        console.error("Error fetching panel wattages:", error);
       }
-
-      dcrNonDcrValue = value; 
     }
 
-    console.log("Fetching panel wattages with:");
-    console.log("Connection ID:", connectionId);
-    console.log("Phase Type:", phaseType);
-    console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-    console.log("Panel Brand:", panelBrandValue);
-
-    const wattages = await fetchPanelWattages(
-      connectionId,
-      phaseType,
-      dcrNonDcrValue,
-      panelBrandValue
-    );
-
-    setPanelWattages(wattages);
-
-    const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
-    setInverterWattages(inverterWattages);
-
-    if (phaseType && inversionTypeValue) {
-      const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
-      setInverterBrands(inverterBrands || []);
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
-      inverterKw: inverterWattages.includes(prev.inverterKw)
-        ? prev.inverterKw
-        : inverterWattages[0] || "",
-    }));
-  } catch (error) {
-    console.error("Error fetching panel wattages:", error);
-  }
-}
-
-};
+  };
 
 
 
@@ -515,15 +555,15 @@ if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(n
           dcrNonDcrType: formData.dcrNonDcrType,
           connectionType,
           numberOfGpPipes: formData.numberOfGpPipes || 0,
-          waterSprinklerSystem:formData.waterSprinklerSystem,
-          heavyDutyRamp:formData.heavyDutyRamp,
-          heavyDutyStairs:formData.heavyDutyStairs,
+          hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
+          hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
+          hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
         };
-  
+
         console.log("Request Data:", requestData);
-  
+
         const priceDetails = await getPriceDetails(requestData);
-  
+
         if (priceDetails) {
           setFormData((prev) => ({
             ...prev,
@@ -532,21 +572,21 @@ if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(n
             totalCost:
               (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
           }));
-  
+
           setShowCostDetails(true);
         }
       } catch (error) {
         console.error("Error fetching price details:", error);
       }
     };
-  
+
     if (
       !priceAlreadySetFromCustomerData &&
       formData.installationStructureType &&
       formData.Kw &&
       formData.panelBrand &&
       formData.dcrNonDcrType &&
-      phaseType 
+      phaseType
     ) {
       handleGetPrice();
     }
@@ -557,127 +597,121 @@ if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(n
     formData.panelBrand,
     formData.dcrNonDcrType,
     phaseType,
-    formData.waterSprinklerSystem,        
-    formData.heavyDutyRamp,         
-    formData.heavyDutyStairs  
+    formData.hasWaterSprinklerSystem,
+    formData.hasHeavyDutyRamp,
+    formData.hasHeavyDutyStairs
   ]);
 
   const handleSaveSpecs = async () => {
     const phaseType = connectionDetails?.phaseTypeName || "";
     const requestData = {
-        customerSelectedInstallationStructureType: formData.installationStructureType,
-        customerSelectedKW: formData.Kw,
-        customerSelectedBrand: formData.panelBrand,
-        customerSelectedInstallationSpaceType: formData.installationSpaceType,
-        dcrNonDcrType: formData.dcrNonDcrType,
-        phaseType: phaseType,
-        connectionType: connectionType,
-        inversionType: formData.inversionType,
-        solarSystemCost: formData.solarSystemCost,
-        fabricationCost: formData.fabricationCost,
-        totalCost: formData.totalCost,
-        waterSprinklerSystem: formData.waterSprinklerSystem,
-        heavyDutyRamp: formData.heavyDutyRamp,
-        heavyDutyStairs: formData.heavyDutyStairs,
-        inverterCapacity: formData.inverterKw,
-        inverterBrand: formData.inverterBrand,
-        batteryCapacity: formData.batteryCapacity,
-        batteryBrand: formData.batteryBrand,
+      customerSelectedInstallationStructureType: formData.installationStructureType,
+      customerSelectedKW: formData.Kw,
+      customerSelectedBrand: formData.panelBrand,
+      customerSelectedInstallationSpaceType: formData.installationSpaceType,
+      dcrNonDcrType: formData.dcrNonDcrType,
+      phaseType: phaseType,
+      connectionType: connectionType,
+      inversionType: formData.inversionType,
+      solarSystemCost: formData.solarSystemCost,
+      fabricationCost: formData.fabricationCost,
+      totalCost: formData.totalCost,
+      hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
+      hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
+      hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
+      inverterCapacity: formData.inverterKw,
+      inverterBrand: formData.inverterBrand,
+      batteryCapacity: formData.batteryCapacity,
+      batteryBrand: formData.batteryBrand,
     };
 
     try {
-        await saveCustomerSpecs(connectionId, requestData);
-        //alert("System specifications saved successfully!");
-      toast.success("System specifications saved successfully.",{
-        autoClose:1000,
+      await saveCustomerSpecs(connectionId, requestData);
+      toast.success("System specifications saved successfully.", {
+        autoClose: 1000,
         hideProgressBar: true,
       });
-        //////
-        setIsSpecsSaved(true);
-        ///////
+      //////
+      setIsSpecsSaved(true);
+      ///////
     } catch (error) {
 
-        toast.error("Erroe while saving specifications.",{
-          autoClose:1000,
-          hideProgressBar: true,
-        });
+      toast.error("Erroe while saving specifications.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
     }
-};
+  };
 
 
 
 
-const handleGenerateQuotation = async () => {
-  if (!connectionId) {
-    console.error("Connection ID is missing");
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    console.log("Fetching Quotation PDF for Connection ID:", connectionId);
-
-    const pdfBlob = await generateQuotationPDF(connectionId);
-    console.log('PDF Blob size:', pdfBlob.size);
-
-    const fileName = `Quotation_${govIdName}`;
-    const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
-
-
-    try {
-      await uploadDocuments(connectionId, fileName, [pdfFile]);
-      console.log("PDF uploaded to OneDrive successfully");
-    } catch (uploadError) {
-      console.error("Error uploading to OneDrive:", uploadError);
-    }
-
-    // Always download the file regardless of upload success
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = `quotation_${connectionId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(pdfUrl);
-
-    console.log("Quotation PDF downloaded successfully");
-
-  } catch (error) {
-    console.error("Error generating quotation PDF:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
-  
-const handlePreview = async () => {
-  setIsPreviewLoading(true);
-  try {
+  const handleGenerateQuotation = async () => {
     if (!connectionId) {
       console.error("Connection ID is missing");
       return;
     }
 
-    console.log("Fetching PDF for Connection ID:", connectionId);
+    setIsLoading(true);
 
-    const pdfBlob = await previewQuotationPDF(connectionId);
-    const pdfUrl = URL.createObjectURL(pdfBlob);
+    try {
+      console.log("Fetching Quotation PDF for Connection ID:", connectionId);
 
-    window.open(pdfUrl, "_blank");
-  } catch (err) {
-    console.error("Failed to preview the quotation:", err);
-  } finally {
-    setIsPreviewLoading(false);
-  }
-};
+      const pdfBlob = await generateQuotationPDF(connectionId);
+      console.log('PDF Blob size:', pdfBlob.size);
 
-  
+      const fileName = `Quotation_${govIdName}`;
+      const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
 
 
+      try {
+        await uploadDocuments(connectionId, fileName, [pdfFile]);
+        console.log("PDF uploaded to OneDrive successfully");
+      } catch (uploadError) {
+        console.error("Error uploading to OneDrive:", uploadError);
+      }
 
+      // Always download the file regardless of upload success
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = `quotation_${connectionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(pdfUrl);
+
+      console.log("Quotation PDF downloaded successfully");
+
+    } catch (error) {
+      console.error("Error generating quotation PDF:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  const handlePreview = async () => {
+    setIsPreviewLoading(true);
+    try {
+      if (!connectionId) {
+        console.error("Connection ID is missing");
+        return;
+      }
+
+      console.log("Fetching PDF for Connection ID:", connectionId);
+
+      const pdfBlob = await previewQuotationPDF(connectionId);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      window.open(pdfUrl, "_blank");
+    } catch (err) {
+      console.error("Failed to preview the quotation:", err);
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -687,121 +721,119 @@ const handlePreview = async () => {
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-    
-
-<div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-2">
-  {/* Backward Arrow Button (Before Title on Mobile) */}
-  <div className="flex items-center w-full md:w-auto">
-    <button
-      onClick={() =>
-        navigate(`/view-connection/${connectionId}`, {
-          state: { consumerId, customerId, connectionId },
-        })
-      }
-      className="p-2 rounded-full hover:bg-gray-200 transition"
-    >
-      <ArrowLeft className="w-6 h-6 text-gray-700" />
-    </button>
-
-    {/* Heading - Adjusts Position on Small Screens */}
-    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-    {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
-    </h2>
-  </div>
-</div>
-
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
-  <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-    
-    {/* Connector Line: between the first and last icon only */}
-    <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
-
-    <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-      {tabs.map((tab, index) => {
-        const isActive = activeTab === tab;
-
-        const Icon =
-          tab === "Customer Details"
-            ? UserCircleIcon
-            : tab === "Connection Details"
-            ? BoltIcon
-            : tab === "Installation Details"
-            ? HomeModernIcon
-            : Cog6ToothIcon;
-
-            const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details" || tab=== "Installation Details";
 
 
-        return (
+      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2">
+        {/* Backward Arrow Button (Before Title on Mobile) */}
+        <div className="flex items-center w-full md:w-auto">
           <button
-      key={tab}
-      onClick={() => {
-        setActiveTab(tab);
-        if (tab === "Customer Details") {
-          navigate(`/view-customer/${customerId}`, {
-            state: {
-              customerId,
-            },
-          });
-        } else if (tab === "Connection Details") {
-          navigate(`/view-connection/${connectionId}`, {
-            state: { consumerId, customerId, connectionId },
-          });
-        }
-      }}
-      className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-    >
-      <div
-        className={`rounded-full p-2 transition-all duration-300 ${
-          shouldHighlightIcon
-            ? "bg-blue-500 text-white"
-            : "bg-white border border-gray-300 text-gray-500"
-        }`}
-      >
-        <Icon className="w-6 h-6" />
+            onClick={() =>
+              navigate(`/view-connection/${connectionId}`, {
+                state: { consumerId, customerId, connectionId },
+              })
+            }
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
+          {/* Heading - Adjusts Position on Small Screens */}
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+            {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
+          </h2>
+        </div>
       </div>
-      <span
-        className={`text-xs md:text-sm font-semibold mt-1 ${
-          isActive ? "text-gray-700" : "text-gray-700"
-        }`}
-      >
-        {tab}
-      </span>
-    </button>
-        );
-      })}
-    </div>
-  </div>
-</div>
+
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
+        <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+
+          {/* Connector Line: between the first and last icon only */}
+          <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+
+          <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+            {tabs.map((tab, index) => {
+              const isActive = activeTab === tab;
+
+              const Icon =
+                tab === "Customer Details"
+                  ? UserCircleIcon
+                  : tab === "Connection Details"
+                    ? BoltIcon
+                    : tab === "Installation Details"
+                      ? HomeModernIcon
+                      : Cog6ToothIcon;
+
+              const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details" || tab === "Installation Details";
 
 
-{isFetchingRecommendations && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
-    <div className="flex flex-col items-center space-y-4">
-      <svg
-        className="animate-spin h-10 w-10 text-blue-600"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        ></path>
-      </svg>
-      <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
-    </div>
-  </div>
-)}
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (tab === "Customer Details") {
+                      navigate(`/view-customer/${customerId}`, {
+                        state: {
+                          customerId,
+                        },
+                      });
+                    } else if (tab === "Connection Details") {
+                      navigate(`/view-connection/${connectionId}`, {
+                        state: { consumerId, customerId, connectionId },
+                      });
+                    }
+                  }}
+                  className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+                >
+                  <div
+                    className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
+                      }`}
+                  >
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span
+                    className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
+                      }`}
+                  >
+                    {tab}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+
+      {isFetchingRecommendations && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
+          <div className="flex flex-col items-center space-y-4">
+            <svg
+              className="animate-spin h-10 w-10 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              ></path>
+            </svg>
+            <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
+          </div>
+        </div>
+      )}
 
 
 
@@ -817,185 +849,220 @@ const handlePreview = async () => {
         <div className="border-b border-gray-200 mb-4" />
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="md:col-span-1">
-        
-  <label className="block text-sm font-medium text-gray-700">Installation Space</label>
-  <select
-    id="installationSpaceType"
-    name="installationSpaceType"
-    value={formData.installationSpaceType || "Installations Not Available"}
-    onChange={handleChange}
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  >
-    {availableSpaceTypes.length === 0 ? (
-      <option disabled>Installations Not Available</option>
-    ) : (
-      availableSpaceTypes.map((space) => (
-        <option key={space.id} value={space.installationSpaceType}>
-          On {space.installationSpaceType} ({space.installationSpaceTitle})
-        </option>
-      ))
-    )}
-  </select>
+          <div className="md:col-span-1">
 
-  {/* Display selected space card */}
-{showModal && selectedSpace && (
-  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
-    <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
-      <button
-        className="absolute top-2 right-4 text-gray-500 hover:text-gray-700"
-        onClick={() => setShowModal(false)}
-      >
-        ✖
-      </button>
+            <label className="block text-sm font-medium text-gray-700">Installation Space</label>
 
-      <h2 className="text-lg font-semibold mb-4">
-        Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
-      </h2>
+            {/* Custom dropdown with per-item View button */}
+            <div className="mt-1 relative">
+              <button
+                type="button"
+                onClick={() => setIsSpaceListOpen(!isSpaceListOpen)}
+                className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
+              >
+                <span className="flex items-center gap-2">
+                  <span>{getSpaceEmoji(formData.installationSpaceType)}</span>
+                  <span>
+                    {formData.installationSpaceType
+                      ? `On ${formData.installationSpaceType}`
+                      : "Installations Not Available"}
+                  </span>
+                </span>
+                <svg className={`w-4 h-4 text-gray-500 transition-transform ${isSpaceListOpen ? "rotate-180" : "rotate-0"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-        {/* Square Diagram */}
-{(() => {
-  const ew = selectedSpace.availableEastWestLengthFt;
-  const sn = selectedSpace.availableSouthNorthLengthFt;
+              {isSpaceListOpen && (
+                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-auto">
+                  {availableSpaceTypes.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">Installations Not Available</div>
+                  ) : (
+                    availableSpaceTypes.map((space) => (
+                      <div key={space.id} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
+                        <button
+                          type="button"
+                          className="text-left flex-1 flex items-center gap-2 text-sm text-gray-800"
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, installationSpaceType: space.installationSpaceType }));
+                            setSelectedSpace(space);
+                            setIsSpaceListOpen(false);
+                          }}
+                        >
+                          <span>{getSpaceEmoji(space.installationSpaceType)}</span>
+                          <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="ml-3 px-2 py-1 text-xs rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700"
+                          onClick={() => { setSelectedSpace(space); setShowModal(true); }}
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
-  let shapeClass = "w-16 h-16";
-  if (ew > sn * 1.3) shapeClass = "w-24 h-16";
-  else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
+            {/* Selected installation details modal (opens via View) */}
+            {showModal && selectedSpace && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
+                <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
+                  <button
+                    className="absolute top-2 right-4 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowModal(false)}
+                  >
+                    ✖
+                  </button>
 
-  return (
-    <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
-      
+                  <h2 className="text-lg font-semibold mb-4">
+                    {getSpaceEmoji(selectedSpace.installationSpaceType)} Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
+                  </h2>
 
-      {/* Top - North Indicator with side arrow */}
-      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
-        <span className="mr-1">N</span>
-        <span className="text-base">↑</span>
-      </div>
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    {/* Square Diagram */}
+                    {(() => {
+                      const ew = selectedSpace.availableEastWestLengthFt;
+                      const sn = selectedSpace.availableSouthNorthLengthFt;
 
-      {/* Right - East Indicator with arrow below */}
-      <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
-        <span className="mb-[2px]">E</span>
-        <span className="text-base">→</span>
-      </div>
+                      let shapeClass = "w-16 h-16";
+                      if (ew > sn * 1.3) shapeClass = "w-24 h-16";
+                      else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
 
-      {/* Shape Box */}
-      <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
-  <span className="text-[10px] text-gray-800 font-semibold">
-     {ew * sn} ft²
-  </span>
-</div>
-
-
-      {/* Bottom - East-West Available Length */}
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
-        <span className="mr-1">←</span>
-        <span>{ew} Ft</span>
-        <span className="ml-1">→</span>
-      </div>
-
-      {/* Left - South-North Available Length */}
-      <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
-        <span>↑</span>
-        <span>{sn} Ft</span>
-        <span>↓</span>
-      </div>
-    </div>
-  );
-})()}
+                      return (
+                        <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
 
 
+                          {/* Top - North Indicator with side arrow */}
+                          <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
+                            <span className="mr-1">N</span>
+                            <span className="text-base">↑</span>
+                          </div>
+
+                          {/* Right - East Indicator with arrow below */}
+                          <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
+                            <span className="mb-[2px]">E</span>
+                            <span className="text-base">→</span>
+                          </div>
+
+                          {/* Shape Box */}
+                          <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
+                            <span className="text-[10px] text-gray-800 font-semibold">
+                              {ew * sn} ft²
+                            </span>
+                          </div>
+
+
+                          {/* Bottom - East-West Available Length */}
+                          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
+                            <span className="mr-1">←</span>
+                            <span>{ew} Ft</span>
+                            <span className="ml-1">→</span>
+                          </div>
+
+                          {/* Left - South-North Available Length */}
+                          <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
+                            <span>↑</span>
+                            <span>{sn} Ft</span>
+                            <span>↓</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
 
 
-        {/* Installation Details */}
-        <div className="text-s text-gray-600 space-y-2">
-          <div><span className="text-lg">🔌</span> <strong>Required AC Wire Length:</strong> {selectedSpace.acWireLengthFt} ft</div>
-          <div><span className="text-lg">⚡</span> <strong>Required DC Wire Length:</strong> {selectedSpace.dcWireLengthFt} ft</div>
-          <div><span className="text-lg">🧰</span> <strong>Required Earthing Wire Length:</strong> {selectedSpace.earthingWireLengthFt} ft</div>
-          <div><span className="text-lg">🛠️</span> <strong>Required GP Pipes:</strong> {selectedSpace.numberOfGpPipes ?? "....."}</div>
-          <div><span className="text-lg">📝</span> <strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-</div>
-<div className="hidden md:block md:col-span-1"></div>
-
-                <div>
-          <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
-          <select
-            id="inversionType"
-            name="inversionType"
-            value={formData.inversionType}
-            onChange={(e) => {
-              setInversionType(e.target.value); 
-              handleChange(e); 
-            }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="On-Grid">On-Grid</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
-        </div>
-
-        {/* DCR/Non-DCR moved up to row with Inversion Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
-          <select
-            id="dcrNonDcrType"
-            name="dcrNonDcrType"
-            value={formData.dcrNonDcrType}
-            onChange={(e) => { setDcrNonDcrType(e.target.value); handleChange(e); }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="DCR">DCR</option>
-            <option value="Non-DCR">Non-DCR</option>
-          </select>
-        </div>
-
-        <div>
-  <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-  <select
-    id="inverterBrand"
-    name="inverterBrand"
-    value={formData.inverterBrand}
-    onChange={(e) => {
-      handleChange(e);
-    }}
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  >
-    {inverterBrands.map((brand) => (
-      <option key={brand} value={brand}>
-        {brand}
-      </option>
-    ))}
-  </select>
-</div>
 
 
-                <div>
-          <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
-          <select
-                id="inverterKw"
-                name="inverterKw"
-                value={formData.inverterKw}
-                onChange={(e) => {
-                  setInverterKw(e.target.value); 
-                  handleChange(e); 
-                }}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {inverterWattages.map((inverterWattages) => (
-                    <option key={inverterWattages} value={inverterWattages}>
-                    {inverterWattages}
-                      </option>
-                   ))}
-              </select>
-        </div>
+                    {/* Installation Details */}
+                    <div className="text-s text-gray-600 space-y-2">
+                      <div><span className="text-lg">🔌</span> <strong>Panel to Inverter Distance:</strong> {selectedSpace.dcWireLengthFt || "..."} ft</div>
+                      <div><span className="text-lg">📏</span> <strong>Inverter to NetMeter Distance:</strong> {selectedSpace.acWireLengthFt || "..."} ft</div>
+                      <div><span className="text-lg">🏗️</span> <strong>height of Structure:</strong> {selectedSpace.elevationInFeet || "..."} ft</div>
+                      <div><span className="text-lg">📝</span> <strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="hidden md:block md:col-span-1"></div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
+            <select
+              id="inversionType"
+              name="inversionType"
+              value={formData.inversionType}
+              onChange={(e) => {
+                setInversionType(e.target.value);
+                handleChange(e);
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="On-Grid">On-Grid</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          {/* DCR/Non-DCR moved up to row with Inversion Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
+            <select
+              id="dcrNonDcrType"
+              name="dcrNonDcrType"
+              value={formData.dcrNonDcrType}
+              onChange={(e) => { setDcrNonDcrType(e.target.value); handleChange(e); }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="DCR">DCR</option>
+              <option value="Non-DCR">Non-DCR</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+            <select
+              id="inverterBrand"
+              name="inverterBrand"
+              value={formData.inverterBrand}
+              onChange={(e) => {
+                handleChange(e);
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {inverterBrands.map((brand) => (
+                <option key={brand} value={brand}>
+                  {brand}
+                </option>
+              ))}
+            </select>
+          </div>
 
 
-        {/* <div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
+            <select
+              id="inverterKw"
+              name="inverterKw"
+              value={formData.inverterKw}
+              onChange={(e) => {
+                setInverterKw(e.target.value);
+                handleChange(e);
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              {inverterWattages.map((inverterWattages) => (
+                <option key={inverterWattages} value={inverterWattages}>
+                  {inverterWattages}
+                </option>
+              ))}
+            </select>
+          </div>
+
+
+          {/* <div>
           <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
           <select
             id="panelBrand"
@@ -1011,251 +1078,253 @@ const handlePreview = async () => {
           </select>
         </div> */}
 
-        <div>
-  <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
-  <select
-    id="panelBrand"
-    name="panelBrand"
-    value={formData.panelBrand}
-    onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
-    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  >
-    {panelBrands.map((panel) => (
-      <option key={panel.id} value={panel.brand}>
-        {panel.brand}
-      </option>
-    ))}
-  </select>
-</div>
-
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
-          <select
-                id="Kw"
-                name="Kw"
-                value={formData.Kw}
-                onChange={(e) => {
-                  setKw(e.target.value); 
-                  handleChange(e); 
-                }}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {panelWattages.map((wattages) => (
-                    <option key={wattages} value={wattages}>
-                    {wattages}
-                      </option>
-                   ))}
-              </select>
-        </div>
-
-        {formData.inversionType === "Hybrid" && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Battery Brand</label>
-              <input
-                type="text"
-                name="batteryBrand"
-                value={formData.batteryBrand}
-                onChange={(e) => { const value = e.target.value; if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") { handleChange(e); } }}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
-              <select
-                id="batteryCapacity"
-                name="batteryCapacity"
-                value={formData.batteryCapacity}
-                onChange={(e) =>
-                  handleChange({
-                    target: {
-                      name: "batteryCapacity",
-                      value: Number(e.target.value),
-                    },
-                  })
-                 }
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          <div>
+            <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
+            <select
+              id="panelBrand"
+              name="panelBrand"
+              value={formData.panelBrand}
+              onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-             {Array.from({ length: 200 }, (_, i) => (i + 1) * 5).map((capacity) => (
-              <option key={capacity} value={capacity}>
-                {capacity}
+              {panelBrands.map((panel) => (
+                <option key={panel.id} value={panel.brand}>
+                  {panel.brand}
                 </option>
               ))}
             </select>
+          </div>
 
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
+            <select
+              id="Kw"
+              name="Kw"
+              value={formData.Kw}
+              onChange={(e) => {
+                setKw(e.target.value);
+                handleChange(e);
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              {panelWattages.map((wattages) => (
+                <option key={wattages} value={wattages}>
+                  {wattages}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {formData.inversionType === "Hybrid" && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Battery Brand</label>
+                <select
+                  id="batteryBrand"
+                  name="batteryBrand"
+                  value={formData.batteryBrand}
+                  onChange={handleChange}
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {batteryBrands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
+                <select
+                  id="batteryCapacity"
+                  name="batteryCapacity"
+                  value={formData.batteryCapacity}
+                  onChange={handleChange}
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {batteryCapacities.map((capacity) => (
+                    <option key={capacity} value={capacity}>
+                      {capacity}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
+            </>
+          )}
+
+          <div className="col-span-full space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="hasWaterSprinklerSystem"
+                  checked={formData.hasWaterSprinklerSystem || false}
+                  onChange={handleChange}
+                  className="h-5 w-5 text-blue-600"
+                />
+                <span className="text-base text-gray-800">Water Sprinkler System</span>
+              </label>
+
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="hasHeavyDutyRamp"
+                  checked={formData.hasHeavyDutyRamp || false}
+                  onChange={handleChange}
+                  className="h-5 w-5 text-blue-600"
+                />
+                <span className="text-base text-gray-800">Heavy Duty Ramp</span>
+              </label>
+
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="hasHeavyDutyStairs"
+                  checked={formData.hasHeavyDutyStairs || false}
+                  onChange={handleChange}
+                  className="h-5 w-5 text-blue-600"
+                />
+                <span className="text-base text-gray-800">Heavy Duty Stairs</span>
+              </label>
             </div>
-          </>
-        )}
-
-<div className="col-span-full space-y-6">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
-    <label className="flex items-center space-x-3">
-      <input
-        type="checkbox"
-        name="waterSprinklerSystem"
-        checked={formData.waterSprinklerSystem || false}
-        onChange={handleChange}
-        className="h-5 w-5 text-blue-600"
-      />
-      <span className="text-base text-gray-800">Water Sprinkler System</span>
-    </label>
-
-    <label className="flex items-center space-x-3">
-      <input
-        type="checkbox"
-        name="heavyDutyRamp"
-        checked={formData.heavyDutyRamp || false}
-        onChange={handleChange}
-        className="h-5 w-5 text-blue-600"
-      />
-      <span className="text-base text-gray-800">Heavy Duty Ramp</span>
-    </label>
-
-    <label className="flex items-center space-x-3">
-      <input
-        type="checkbox"
-        name="heavyDutyStairs"
-        checked={formData.heavyDutyStairs || false}
-        onChange={handleChange}
-        className="h-5 w-5 text-blue-600"
-      />
-      <span className="text-base text-gray-800">Heavy Duty Stairs</span>
-    </label>
-  </div>
-</div>
+          </div>
 
 
           <div className="col-span-full space-y-6 mt-6">
             <div>
-  <div className="flex items-center gap-3">
-    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-      <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
-    </div>
-    <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
-  </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                  <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
+              </div>
 
-  {/* Horizontal line */}
-  <div className="mt-2 border-b border-gray-200"></div>
-</div>
+              {/* Horizontal line */}
+              <div className="mt-2 border-b border-gray-200"></div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div>
-    <label className="block text-sm font-medium text-gray-700">
-      Solar System Cost (₹)
-    </label>
-    <input
-      type="text" 
-      name="solarSystemCost"
-      value={formatIndianNumber(formData.solarSystemCost)}
-      onChange={(e) =>
-        setFormData({
-          ...formData,
-          solarSystemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-        })
-      }
-      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    />
-  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Solar System Cost (₹)
+                </label>
+                <input
+                  type="text"
+                  name="solarSystemCost"
+                  value={formatIndianNumber(formData.solarSystemCost)}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      solarSystemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
+                    })
+                  }
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
 
-  <div>
-    <label className="block text-sm font-medium text-gray-700">
-      Fabrication Cost (₹)
-    </label>
-    <input
-      type="text" 
-      name="fabricationCost"
-      value={formatIndianNumber(formData.fabricationCost)}
-      onChange={(e) =>
-        setFormData({
-          ...formData,
-          fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-        })
-      }
-      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    />
-  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Fabrication Cost (₹)
+                </label>
+                <input
+                  type="text"
+                  name="fabricationCost"
+                  value={formatIndianNumber(formData.fabricationCost)}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
+                    })
+                  }
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
 
-  <div>
-    <label className="block text-sm font-medium text-gray-700">
-      Total Cost (₹)
-    </label>
-    <input
-      type="text" 
-      name="totalCost"
-      value={formatIndianNumber(formData.totalCost)}
-      readOnly 
-      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-    />
-  </div>
-</div>
-            <div className="flex flex-wrap gap-4 justify-start">
-            <button
-            type="button"
-            onClick={handleSaveSpecs}
-            className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            Save System Specs
-        </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Total Cost (₹)
+                </label>
+                <input
+                  type="text"
+                  name="totalCost"
+                  value={formatIndianNumber(formData.totalCost)}
+                  readOnly
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
 
-    <button
-        type="button"
-        onClick={handlePreview}
-        disabled={!isSpecsSaved || isPreviewLoading}
-        className="hidden md:block w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        //disabled={isPreviewLoading}
-    >
-        {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
-    </button>
 
-    {/* Generate & Save Quotation Button - Only visible for Super Admin and Org Admin */}
-    {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
-      <button
-          type="submit"
-          onClick={handleGenerateQuotation}
-          disabled={!isSpecsSaved || isLoading}
-          //disabled={isLoading}
-          className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-          {isLoading ? "Generating..." : "Generate & Save Quotation"}
-      </button>
-    )}
-</div>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button
+                type="button"
+                onClick={handleSaveSpecs}
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save System Specs
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePreview}
+                disabled={!isSpecsSaved || isPreviewLoading}
+                className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              //disabled={isPreviewLoading}
+              >
+                {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
+              </button>
+
+              {/* Generate & Save Quotation Button - Only visible for Super Admin and Org Admin */}
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+                <button
+                  type="submit"
+                  onClick={handleGenerateQuotation}
+                  disabled={!isSpecsSaved || isLoading}
+                  //disabled={isLoading}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Generating..." : "Generate & Save Quotation"}
+                </button>
+              )}
+            </div>
           </div>
-       
+
         </form>
       </div>
 
       <Dialog
-  open={dialogOpen}
-  onClose={() => setDialogOpen(false)}
-  maxWidth="xs"
-  fullWidth
->
-  <DialogTitle>
-    {dialogType === "success" && "Success"}
-    {dialogType === "error" && "Error"}
-    {dialogType === "confirm" && "Confirm"}
-  </DialogTitle>
-  <DialogContent dividers>
-    <Alert
-      severity={
-        dialogType === "success"
-          ? "success"
-          : dialogType === "error"
-          ? "error"
-          : "info"
-      }
-    >
-      {dialogMessage}
-    </Alert>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setDialogOpen(false)} autoFocus>
-      OK
-    </Button>
-  </DialogActions>
-</Dialog>
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </div>
   );

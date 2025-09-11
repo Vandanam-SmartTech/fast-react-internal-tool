@@ -171,7 +171,11 @@ const OrganizationList: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            navigate(`/organization-form/${org.id}`);
+                            navigate(`/edit-organization/${org.id}`, {
+                              state:{
+                                organizationId: org.id
+                              }
+                            });
                             setOpenDropdown(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
@@ -236,7 +240,11 @@ const OrganizationList: React.FC = () => {
                   </button>
                   
                   <button
-                    onClick={() => navigate(`/organization-form/${org.id}`)}
+                    onClick={() => navigate(`/edit-organization/${org.id}`,{
+                      state:{
+                        organizationId:org.id
+                      }
+                    })}
                     className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
                   >
                     <Edit className="h-3 w-3" />

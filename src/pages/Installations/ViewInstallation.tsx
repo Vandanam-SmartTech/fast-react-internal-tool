@@ -84,7 +84,7 @@ export const ViewInstallation = () => {
   </div>
 </div>
 
-<div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+<div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
   <div className="relative flex justify-center min-w-[500px] md:min-w-0">
     
     {/* Connector Line: between the first and last icon only */}
@@ -150,8 +150,14 @@ export const ViewInstallation = () => {
 
 <div className="flex items-center min-h-[20vh] px-4">
   <div className="bg-white shadow-md rounded-lg p-6 w-full mx-auto max-w-4xl">
-    <h3 className="text-xl font-semibold text-gray-800 mb-2">Installation Details</h3>
-    <div className="border-b border-gray-200 mb-4" />
+    <div className="flex items-center gap-3">
+  <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+    <HomeModernIcon className="w-4 h-4 text-yellow-600" />
+  </div>
+  <h3 className="text-base font-semibold text-gray-800">Installation Details</h3>
+</div>
+
+    <div className="border-b border-gray-200 mb-4 mt-2" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-10">
       <div>
         <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
@@ -192,6 +198,12 @@ export const ViewInstallation = () => {
           {installation.acWireLengthFt || "....."}
         </p>
       </div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
+        <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+          {installation.elevationInFeet || "....."}
+        </p>
+      </div>
       <div className="md:col-span-2">
         <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
         <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
@@ -205,7 +217,7 @@ export const ViewInstallation = () => {
 
       
 
-      <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-6 space-y-4 sm:space-y-0 sm:space-x-6">
+      <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-4 space-y-4 sm:space-y-0 sm:space-x-6">
   <button
     onClick={() =>
       navigate(`/edit-installation/${installationId}`, {

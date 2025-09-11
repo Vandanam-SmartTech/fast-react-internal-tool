@@ -341,7 +341,7 @@ const handleUpdateDocument = async (fileId: string) => {
   const file = replaceFiles[fileId];
   if (!file) return;
   try {
-    await updateDocumentById(fileId, file); // now sends both fileId + fileData
+    await updateDocumentById(fileId, file); 
     toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
     setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
     await loadDocuments();
@@ -415,7 +415,7 @@ const handleUpdateDocument = async (fileId: string) => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
         <button
           onClick={() => navigate(`/list-of-consumers`)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
@@ -429,7 +429,7 @@ const handleUpdateDocument = async (fileId: string) => {
       {/* Consumer Information */}
       {consumer && (
         <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Consumer Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Consumer Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Consumer Name:</span>
