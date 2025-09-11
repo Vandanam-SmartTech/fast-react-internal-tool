@@ -277,4 +277,20 @@ export const fetchBatteryWattages = async (
   }
 };
 
+export const fetchSystemRelatedDetails = async (connectionId: number) => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log(`Fetching system related details for connection Id: ${connectionId}`);
+
+    const response = await quotationAPI.get(`/api/checkRequiredMaterial/${connectionId}`);
+
+    return response.data;
+  } catch (error: any) {
+    const status = error.response?.status;
+    const message = error.response?.data || error.message;
+    console.error(`Error fetching system related details. Status: ${status}, Message: ${message}`);
+    throw new Error(`Failed to fetch system details. Status: ${status}, Message: ${message}`);
+  }
+};
+
 

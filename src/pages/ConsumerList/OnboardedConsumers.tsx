@@ -324,10 +324,6 @@ const OnboardedConsumers: React.FC = () => {
   const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
-
-
-
-
   useEffect(() => {
     const loadRoleAndOrganizations = async () => {
       try {
@@ -526,10 +522,7 @@ const OnboardedConsumers: React.FC = () => {
               {consumer.govIdName}
             </h3>
             <div className="flex items-center gap-3 mt-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-300 px-2.5 py-1 text-xs">
-                <CheckCircle className="w-3.5 h-3.5" />
-                Onboarded
-              </span>
+
               {materialsMap[consumer.id] && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-50 text-solar-700 dark:bg-solar-900/20 dark:text-solar-300 px-2.5 py-1 text-xs">
                   <Package className="w-3.5 h-3.5" />
@@ -625,11 +618,11 @@ const OnboardedConsumers: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header Section */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
-              Onboarded Customers
+              Onboarded Consumers
             </h1>
             {/* <p className="text-secondary-700 dark:text-secondary-300 mt-1">
               Manage customers who have completed the onboarding process
@@ -788,7 +781,7 @@ const OnboardedConsumers: React.FC = () => {
             )}
 
             {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" &&
-              userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && (
+              userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
                 <div className="relative w-60">
                   <select
                     name="customer"
@@ -876,7 +869,7 @@ const OnboardedConsumers: React.FC = () => {
       </div>
 
       {/* Results Summary */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all onboarded customers for search..." : "Loading onboarded customers..."

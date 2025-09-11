@@ -307,37 +307,39 @@ const ListOfConsumers: React.FC = () => {
     };
   }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
 
+    const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
 
-  const filteredAndSortedData = useMemo(() => {
-    const data = searchQuery.trim() !== "" ? searchResults : consumers;
 
-    let filtered = data.filter(consumer => {
-      if (filters.hasConnections !== null) {
-        const hasConnections = consumer.connections && consumer.connections.length > 0;
-        if (filters.hasConnections !== hasConnections) return false;
-      }
+  // const filteredAndSortedData = useMemo(() => {
+  //   const data = searchQuery.trim() !== "" ? searchResults : consumers;
 
-      if (filters.hasEmail !== null) {
-        const hasEmail = consumer.emailAddress && consumer.emailAddress !== "NA";
-        if (filters.hasEmail !== hasEmail) return false;
-      }
+  //   let filtered = data.filter(consumer => {
+  //     if (filters.hasConnections !== null) {
+  //       const hasConnections = consumer.connections && consumer.connections.length > 0;
+  //       if (filters.hasConnections !== hasConnections) return false;
+  //     }
 
-      return true;
-    });
+  //     if (filters.hasEmail !== null) {
+  //       const hasEmail = consumer.emailAddress && consumer.emailAddress !== "NA";
+  //       if (filters.hasEmail !== hasEmail) return false;
+  //     }
 
-    return filtered;
-  }, [consumers, searchResults, searchQuery, filters]);
+  //     return true;
+  //   });
+
+  //   return filtered;
+  // }, [consumers, searchResults, searchQuery, filters]);
 
 
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (filters.hasConnections !== null) count++;
-    if (filters.hasEmail !== null) count++;
-    return count;
-  };
+  // const getActiveFiltersCount = () => {
+  //   let count = 0;
+  //   if (filters.hasConnections !== null) count++;
+  //   if (filters.hasEmail !== null) count++;
+  //   return count;
+  // };
 
   useEffect(() => {
     loadConsumers(currentPage);
@@ -363,7 +365,7 @@ const ListOfConsumers: React.FC = () => {
   }, []);
 
   const renderPagination = () => {
-    if (searchQuery.trim() !== "" || getActiveFiltersCount() > 0) return null;
+    if (searchQuery.trim() !== "") return null;
 
     const pages = [];
     const maxVisiblePages = 5;
@@ -449,12 +451,12 @@ const ListOfConsumers: React.FC = () => {
                 <Users className="w-3.5 h-3.5" />
                 {consumer.connections?.length || 0} connections
               </span>
-              {consumer.emailAddress && consumer.emailAddress !== "NA" && (
+              {/* {consumer.emailAddress && consumer.emailAddress !== "NA" && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-300 px-2.5 py-1 text-xs">
                   <UserCheck className="w-3.5 h-3.5" />
                   Active
                 </span>
-              )}
+              )} */}
             </div>
           </div>
 
@@ -876,15 +878,15 @@ const ListOfConsumers: React.FC = () => {
 
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
-        {/* <div className="text-sm text-secondary-700 dark:text-secondary-300">
+        <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
           ) : (
-            `Showing ${filteredAndSortedData.length} customer${filteredAndSortedData.length !== 1 ? 's' : ''}`
+            `Showing ${displayData.length} customer${displayData.length !== 1 ? 's' : ''}`
           )}
-        </div> */}
+        </div>
 
-        {!loading && !isLoadingAll && filteredAndSortedData.length > 0 && (
+        {!loading && !isLoadingAll && displayData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">
             {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
           </div>
@@ -914,7 +916,7 @@ const ListOfConsumers: React.FC = () => {
       {/* Results Grid */}
       {!loading && !isLoadingAll && (
         <>
-          {filteredAndSortedData.length === 0 ? (
+          {displayData.length === 0 ? (
             <Card className="text-center py-12">
               <CardBody>
                 <Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
@@ -931,7 +933,7 @@ const ListOfConsumers: React.FC = () => {
             </Card>
           ) : (
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {filteredAndSortedData.map(renderConsumerCard)}
+              {displayData.map(renderConsumerCard)}
             </div>
           )}
 

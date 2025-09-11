@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { fetchSystemRelatedDetails } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
 
@@ -75,19 +76,36 @@ export default function MaterialForm() {
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  useEffect(() => {
-    const fetchMaterialData = async () => {
-      if (!connectionId) return;
+useEffect(() => {
+  const fetchMaterialData = async () => {
+    if (!connectionId) return;
 
-      const materials = await getMaterialsByConnectionId(connectionId);
-      if (materials.length > 0) {
-        setFormData({ ...materials[0] }); 
-        setExistingMaterialData(materials[0]); 
+    const materials = await getMaterialsByConnectionId(connectionId);
+    if (materials.length > 0) {
+      setFormData({ ...materials[0] });
+      setExistingMaterialData(materials[0]);
+    } else {
+      // Fallback to fetch system details
+      try {
+        const systemDetails = await fetchSystemRelatedDetails(connectionId);
+        setFormData((prev) => ({
+          ...prev,
+          systemKw: systemDetails.customerSelectedKW || "",
+          makeOfModule: systemDetails.customerSelectedBrand || "",
+          inverterCapacity: systemDetails.inverterCapacity || "",
+          inverterMake: systemDetails.inverterBrand || "",
+          noOfModules: systemDetails.panelCount || "",
+          reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
+        }));
+      } catch (error) {
+        console.error("Error fetching system details:", error);
       }
-    };
+    }
+  };
 
-    fetchMaterialData();
-  }, [connectionId]);
+  fetchMaterialData();
+}, [connectionId]);
+
 
 
 
@@ -199,6 +217,7 @@ export default function MaterialForm() {
                   name="systemKw"
                   value={formData.systemKw}
                   onChange={handleChange}
+                  readOnly
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
@@ -215,6 +234,7 @@ export default function MaterialForm() {
                       handleChange(e);
                     }
                   }}
+                  readOnly
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
@@ -262,6 +282,7 @@ export default function MaterialForm() {
                   name="inverterMake"
                   value={formData.inverterMake}
                   onChange={handleChange}
+                  readOnly
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
@@ -287,6 +308,7 @@ export default function MaterialForm() {
                   name="inverterCapacity"
                   value={formData.inverterCapacity}
                   onChange={handleChange}
+                  readOnly
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
@@ -415,6 +437,7 @@ export default function MaterialForm() {
                   name="noOfModules"
                   value={formData.noOfModules}
                   onChange={handleChange}
+                  readOnly
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
