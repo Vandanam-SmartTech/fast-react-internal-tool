@@ -109,6 +109,7 @@ const Sidebar: React.FC = () => {
 
   //     fetchRole();
   //   }, []);
+  //
 
   const handleHomeClick = async () => {
     try {
