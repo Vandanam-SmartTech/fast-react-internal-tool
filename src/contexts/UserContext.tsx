@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { fetchClaims } from '../services/jwtService';
 
+
+interface SelectedOrg {
+  orgId?: string;
+  orgName: string;
+  role: string;
+}
+
 interface UserClaims {
   name_as_per_gov_id?: string;
   preferred_name?: string;
@@ -16,6 +23,8 @@ interface UserContextType {
   loading: boolean;
   refreshUserClaims: () => Promise<void>;
   clearUserClaims: () => void;
+  selectedOrg: SelectedOrg | null;
+  setSelectedOrg: (org: SelectedOrg | null) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,34 +44,42 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [userClaims, setUserClaims] = useState<UserClaims | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedOrg, setSelectedOrg] = useState<SelectedOrg | null>(null);
 
-  const refreshUserClaims = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
-        setUserClaims(null);
-        return;
-      }
-
-      const claims = await fetchClaims();
-      setUserClaims(claims);
-    } catch (error) {
-      console.error('Failed to fetch user claims:', error);
+const refreshUserClaims = async (): Promise<UserClaims | null> => {
+  try {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
       setUserClaims(null);
-    } finally {
       setLoading(false);
+      return null;
     }
-  };
+
+    const claims = await fetchClaims();
+    setUserClaims(claims);
+    return claims; 
+  } catch (error) {
+    console.error('Failed to fetch user claims:', error);
+    setUserClaims(null);
+    return null;
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const clearUserClaims = () => {
     setUserClaims(null);
+    setSelectedOrg(null); 
+
   };
 
   useEffect(() => {
     refreshUserClaims();
   }, []);
 
-  // Listen for storage changes (when login/logout happens)
+  
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'jwtToken') {
@@ -78,7 +95,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Also listen for custom events for immediate updates
+
   useEffect(() => {
     const handleUserUpdate = () => {
       refreshUserClaims();
@@ -88,11 +105,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return () => window.removeEventListener('userUpdated', handleUserUpdate);
   }, []);
 
+
+
   const value = {
     userClaims,
     loading,
     refreshUserClaims,
     clearUserClaims,
+    selectedOrg,
+    setSelectedOrg,
   };
 
   return (

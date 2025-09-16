@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Building, Shield, Users, Building2, UserCog, Settings, Clock, Calendar} from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import OrganizationSelector from '../../components/OrganizationSelector';
-import { fetchClaims } from '../../services/jwtService';
+import { useUser } from '../../contexts/UserContext';
 
 const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showOrgSelector, setShowOrgSelector] = useState(false);
-  const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { userClaims } = useUser();
     
   
     useEffect(() => {
@@ -27,16 +27,6 @@ const SuperAdminDashboard: React.FC = () => {
   
       setTimeBasedGreeting();
   
-      const getClaims = async () => {
-        try {
-          const claims = await fetchClaims();
-          setPreferredName(claims.preferred_name);
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      };
-  
-      getClaims();
   
       const timeInterval = setInterval(() => {
         setCurrentTime(new Date());
@@ -116,14 +106,16 @@ const SuperAdminDashboard: React.FC = () => {
       {/* Header */}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary-900">
-              {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
-            </h1>
-            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Complete system administration and management
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-secondary-900">
+            {userClaims?.preferred_name
+              ? `${greeting}, ${userClaims.preferred_name}!`
+              : 'Welcome back!'}
+          </h1>
+          <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+            Complete System Administration and Management
+          </p>
+        </div>
           
                           <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
             <div className="flex items-center gap-2">

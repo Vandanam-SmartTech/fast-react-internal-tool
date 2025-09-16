@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./ui";
-import { UserPlus, Users, UserRoundCheck, LogOut, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
-import { fetchClaims } from "../services/jwtService";
+import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
 import Button from "./ui/Button";
+import { fetchClaims } from "../services/jwtService";
+import { useUser } from "../contexts/UserContext";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -14,10 +15,10 @@ const Sidebar: React.FC = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [customersExpanded, setCustomersExpanded] = useState(true);
+  const { selectedOrg, userClaims } = useUser();
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  // Check if we're on an auth page
   const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
   const isAuthPage = authPages.includes(location.pathname);
 
@@ -27,12 +28,6 @@ const Sidebar: React.FC = () => {
     localStorage.setItem("sidebarOpen", newState.toString());
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("selectedRepresentative");
-    localStorage.removeItem("selectedOrg");
-    localStorage.removeItem("jwtToken");
-    navigate("/login");
-  };
 
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarOpen");
@@ -75,52 +70,20 @@ const Sidebar: React.FC = () => {
   const goToAdminManagement = () => navigate("/admin-management");
   const goToUserManagement = () => navigate("/user-management");
 
-  // useEffect(() => {
-  //     const fetchRole = async () => {
-  //       try {
-  //         const claims = await fetchClaims();
-  //         const allRoles: string[] = [];
-
-  //         if (Array.isArray(claims.global_roles)) {
-  //           allRoles.push(...claims.global_roles);
-  //         }
-
-  //         const selectedOrgStr = localStorage.getItem("selectedOrg");
-  //         if (selectedOrgStr) {
-  //   try {
-  //     const selectedOrg = JSON.parse(selectedOrgStr);
-  //     if (selectedOrg.role) {
-  //       allRoles.push(selectedOrg.role); 
-  //     } else if (claims.org_roles?.[selectedOrg.orgId]) {
-  //       allRoles.push(claims.org_roles[selectedOrg.orgId].role);
-  //     }
-  //   } catch {
-  //     console.error("Invalid selectedOrg format in localStorage");
-  //   }
-  // }
-
-
-  //         setRoles(allRoles);
-  //         setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
-  //       } catch (err) {
-  //         console.error("Error fetching claims:", err);
-  //       }
-  //     };
-
-  //     fetchRole();
-  //   }, []);
 
   const handleHomeClick = async () => {
     try {
-      const claims = await fetchClaims();
+      if (!userClaims) {
+        navigate("/login");
+        return;
+      }
 
-      // Super Admin → Go directly
-      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
         navigate("/SuperAdminDashboard");
         return;
       }
 
-      // Parse selectedOrg from localStorage
+
       const selectedOrgStr = localStorage.getItem("selectedOrg");
       if (!selectedOrgStr) {
         navigate("/login");
@@ -137,7 +100,9 @@ const Sidebar: React.FC = () => {
         return;
       }
 
-      const orgData = claims.org_roles?.[selectedOrgId];
+      
+
+      const orgData = userClaims.org_roles?.[selectedOrgId];
       if (!orgData) {
         alert("Invalid organization selection.");
         return;
@@ -204,11 +169,6 @@ const Sidebar: React.FC = () => {
         if (checkPageAccess) {
           const currentPath = location.pathname;
 
-          const customerPages = [
-            "/CustomerForm",
-            "/list-of-consumers",
-            "/OnboardedConsumers",
-          ];
           const restrictedPages = [
             "/admin-management",
             "/user-management",
@@ -235,10 +195,10 @@ const Sidebar: React.FC = () => {
               redirectToDashboard(allRoles);
             }
           } else if (dashboardPages.includes(currentPath)) {
-            // Always redirect dashboard page to the correct one when role changes
+            
             redirectToDashboard(allRoles);
           }
-          // customerPages → stay put
+          
         }
       } catch (err) {
         console.error("Error fetching claims:", err);
@@ -268,7 +228,7 @@ const Sidebar: React.FC = () => {
     fetchRole();
 
     const handleOrgChange = () => {
-      fetchRole(true); // true means check page and redirect if needed
+      fetchRole(true); 
     };
 
     window.addEventListener("organizationChanged", handleOrgChange);
@@ -279,27 +239,18 @@ const Sidebar: React.FC = () => {
 
 
 
-
-  // const isActive = (path: string) => {
-  //   return location.pathname === path;
-  // };
-
-  const isActive = (paths: string | string[]) => {
-    if (Array.isArray(paths)) {
-      return paths.some(path => location.pathname.startsWith(path));
-    }
-    return location.pathname.startsWith(paths);
-  };
+  const isActive = (paths: string | string[]) =>
+    Array.isArray(paths)
+      ? paths.some((path) => location.pathname.startsWith(path))
+      : location.pathname.startsWith(paths);
 
 
-  // Don't render sidebar on auth pages
   if (isAuthPage) {
     return null;
   }
 
   return (
     <>
-      {/* Toggle button for smaller screens */}
       {!isOpen && (
         <Button
           variant="ghost"
@@ -312,13 +263,12 @@ const Sidebar: React.FC = () => {
         </Button>
       )}
 
-      {/* Sidebar */}
       {isOpen && (
         <div
           ref={sidebarRef}
           className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-secondary-800 shadow-large border-r border-secondary-200 dark:border-secondary-700 z-40 transition-transform duration-300 ease-in-out"
         >
-          {/* Header */}
+
           <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-200 dark:border-secondary-700 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20">
             <div className="flex items-center justify-center w-full">
               <Logo size="xl" className="mx-auto" />
@@ -348,8 +298,8 @@ const Sidebar: React.FC = () => {
                   "/AgencyAdminDashboard",
                   "/StaffDashboard"
                 ])
-                    ? "nav-link-active"
-                    : "nav-link-inactive"
+                  ? "nav-link-active"
+                  : "nav-link-inactive"
                   }`}
               >
                 <LayoutDashboard size={20} />
@@ -357,18 +307,18 @@ const Sidebar: React.FC = () => {
               </button>
 
 
-              {/* Manage Customers Section */}
+              
               <div className="space-y-1">
-                {/* Main Customers menu */}
+                
                 <button
                   onClick={() => setCustomersExpanded(!customersExpanded)}
                   className={`nav-link w-full justify-between ${[
-                      "/CustomerForm",
-                      "/list-of-consumers",
-                      "/OnboardedConsumers",
-                    ].includes(location.pathname)
-                      ? "nav-link-active"
-                      : "nav-link-inactive"
+                    "/CustomerForm",
+                    "/list-of-consumers",
+                    "/OnboardedConsumers",
+                  ].includes(location.pathname)
+                    ? "nav-link-active"
+                    : "nav-link-inactive"
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -380,36 +330,36 @@ const Sidebar: React.FC = () => {
 
                 {customersExpanded && (
                   <div className="ml-6 space-y-1 mt-2">
-                    {/* Add Customer */}
+                    
                     <button
                       onClick={goToCustomerForm}
                       className={`nav-link w-full justify-start ${location.pathname === "/CustomerForm"
-                          ? "nav-link-active"
-                          : "nav-link-inactive"
+                        ? "nav-link-active"
+                        : "nav-link-inactive"
                         }`}
                     >
                       <UserPlus size={18} />
                       <span>Add Customer</span>
                     </button>
 
-                    {/* All Customers */}
+                    
                     <button
                       onClick={goToListOfConsumers}
                       className={`nav-link w-full justify-start ${location.pathname === "/list-of-consumers"
-                          ? "nav-link-active"
-                          : "nav-link-inactive"
+                        ? "nav-link-active"
+                        : "nav-link-inactive"
                         }`}
                     >
                       <Users size={18} />
                       <span>All Customers</span>
                     </button>
 
-                    {/* Onboarded */}
+                    
                     <button
                       onClick={goToOnboardedConsumers}
                       className={`nav-link w-full justify-start ${location.pathname === "/OnboardedConsumers"
-                          ? "nav-link-active"
-                          : "nav-link-inactive"
+                        ? "nav-link-active"
+                        : "nav-link-inactive"
                         }`}
                     >
                       <UserRoundCheck size={18} />
@@ -419,7 +369,7 @@ const Sidebar: React.FC = () => {
                 )}
               </div>
 
-              {/* Organizations (Super Admin) */}
+             
               {roles.includes("ROLE_SUPER_ADMIN") && (
                 <button
                   onClick={goToOrganizations}
@@ -431,7 +381,7 @@ const Sidebar: React.FC = () => {
                 </button>
               )}
 
-              {/* Role Management (Super Admin) */}
+              
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToAdminManagement}
@@ -443,7 +393,7 @@ const Sidebar: React.FC = () => {
                 </button>
               )}
 
-              {/* User Management */}
+              
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
                 <button
                   onClick={goToUserManagement}
@@ -457,16 +407,6 @@ const Sidebar: React.FC = () => {
 
             </nav>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-secondary-200 dark:border-secondary-700">
-              <button
-                onClick={handleLogout}
-                className="nav-link-inactive w-full justify-start text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300 hover:bg-error-50 dark:hover:bg-error-900/20"
-              >
-                <LogOut size={20} />
-                <span>Sign Out</span>
-              </button>
-            </div>
           </div>
         </div>
       )}

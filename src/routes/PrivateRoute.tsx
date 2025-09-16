@@ -26,22 +26,19 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           return;
         }
 
-        
         if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
           setAuthorized(true);
           return;
         }
 
-        
         const orgRoles = claims.org_roles ? Object.values(claims.org_roles) : [];
-
         if (orgRoles.length === 0) {
           setRedirectPath('/login');
           return;
         }
 
         
-        if (orgRoles.length > 1 && !localStorage.getItem('selectedOrg')) {
+        if (!localStorage.getItem('selectedOrg')) {
           setRedirectPath('/login');
           return;
         }
@@ -60,7 +57,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   }
 
   if (authorized === null) {
-    return <div>Loading...</div>; // Or a spinner
+    return <div>Loading...</div>;
   }
 
   return <>{children}</>;

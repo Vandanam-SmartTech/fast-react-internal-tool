@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
-import { User, Lock, Sun, Shield, Zap, Sparkles } from 'lucide-react';
+import { User, Lock, Sun, Shield, Zap, Sparkles, ArrowLeft } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import bgImage from '../../assets/Solar_Image.jpg';
+import { useUser } from "../../contexts/UserContext"; 
 
 interface OrgRoleData {
   role: string;
@@ -33,6 +34,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { userClaims, refreshUserClaims, setSelectedOrg } = useUser();
+
+  // useEffect(() => {
+  //   if (userClaims) {
+  //     handleRoleRouting(userClaims);
+  //   }
+  // }, [userClaims]);
+
   useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
       const token = localStorage.getItem('jwtToken');
@@ -52,37 +61,38 @@ const Login = () => {
   }, []);
 
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const { jwt } = await login({ identifier, password });
-      localStorage.setItem('jwtToken', jwt);
-      setAuthToken(jwt);
+  try {
+    const { jwt } = await login({ identifier, password });
+    localStorage.setItem('jwtToken', jwt);
+    setAuthToken(jwt);
 
+    window.dispatchEvent(new Event('userUpdated'));
 
-      window.dispatchEvent(new Event('userUpdated'));
-
-      const claims = await fetchClaims();
+    const claims = await fetchClaims();
 
       if (!claims.is_password_changed) {
         navigate('/PasswordReset');
         return;
       }
 
+
       handleRoleRouting(claims);
-    } catch (err) {
-      setError('Invalid login credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  } catch (err) {
+    setError('Invalid login credentials.');
+  } finally {
+    setLoading(false);
+  }
+};
 
 
-  const handleRoleRouting = (claims: UserClaims) => {
-    // Global Super Admin
+
+    const handleRoleRouting = (claims: UserClaims) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       navigate('/SuperAdminDashboard');
       return;
@@ -108,19 +118,19 @@ const Login = () => {
   };
 
   const routeByOrgRole = (role: string, orgId?: string, orgName?: string) => {
-    // Store role information in localStorage for single-role users
     if (orgId && orgName) {
       localStorage.setItem(
         'selectedOrg',
         JSON.stringify({ orgId, orgName, role })
       );
-    } else if (orgName) {
+    }else if (orgName) {
       // For cases where we have orgName but no orgId (fallback)
       localStorage.setItem(
         'selectedOrg',
         JSON.stringify({ orgId, orgName, role })
       );
     }
+    
 
     switch (role) {
       case 'ROLE_ORG_ADMIN':
@@ -251,7 +261,7 @@ const Login = () => {
                 </select>
 
                 <div className="flex gap-3">
-                  {/* <Button
+                   <Button
                     variant="outline"
                     onClick={() => {
                       setShowOrgSelection(false);
@@ -259,9 +269,10 @@ const Login = () => {
                       setError('');
                     }}
                     className="flex-1"
+                    leftIcon={<ArrowLeft className="h-4 w-4" />}
                   >
                     Back
-                  </Button> */}
+                  </Button> 
                   <Button
                     variant="primary"
                     onClick={() => {

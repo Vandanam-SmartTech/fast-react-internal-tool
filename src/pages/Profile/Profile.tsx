@@ -1,34 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
-import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
 import { uploadUserSignature, getUserSignature, editUserSignature } from '../../services/oneDriveService';
-
-interface UserProfile {
-  name_as_per_gov_id?: string;
-  preferred_name?: string;
-  email_address?: string;
-  contact_number?: string;
-  global_roles?: string[];
-  org_roles?: Record<string, any>;
-  signature?: string;
-}
+import { useUser } from '../../contexts/UserContext';
 
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  //const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+
+  const { userClaims: user, loading} = useUser();
+  
 
   // Cropping states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -38,34 +30,16 @@ const Profile: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const claims = await fetchClaims();
-
-      setProfile(claims);
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-      toast.error('Failed to load profile information');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check if file is an image
+
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
       }
 
-      // Check file size (max 5MB)
+
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size should be less than 5MB');
         return;
@@ -73,14 +47,13 @@ const Profile: React.FC = () => {
 
       setSelectedFile(file);
 
-      // Create preview URL and open crop modal
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setShowCropModal(true);
     }
   };
 
-  // Cropping functions
+
   const handleCropChange = (crop: { x: number; y: number }) => {
     setCrop(crop);
   };
@@ -141,7 +114,6 @@ const Profile: React.FC = () => {
       0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y
     );
 
-    // Resize to final dimensions (140x70)
     const finalCanvas = document.createElement('canvas');
     const finalCtx = finalCanvas.getContext('2d');
 
@@ -152,7 +124,7 @@ const Profile: React.FC = () => {
     finalCanvas.width = 140;
     finalCanvas.height = 70;
 
-    // Use high-quality image smoothing
+
     finalCtx.imageSmoothingEnabled = true;
     finalCtx.imageSmoothingQuality = 'high';
 
@@ -170,11 +142,11 @@ const Profile: React.FC = () => {
     try {
       setIsProcessing(true);
       const croppedImage = await getCroppedImg(previewUrl, croppedAreaPixels, rotation);
-      // Update preview with cropped image
+
       setPreviewUrl(croppedImage);
       setShowCropModal(false);
 
-      // Clear file input
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -193,7 +165,7 @@ const Profile: React.FC = () => {
   };
 
 
-  // reusable fetch
+
   const fetchSignature = async () => {
     const url = await getUserSignature();
     setSignatureUrl(url);
@@ -205,7 +177,6 @@ const Profile: React.FC = () => {
     try {
       setUploading(true);
 
-      // Convert base64 cropped image to File object
       const response = await fetch(previewUrl);
       const blob = await response.blob();
       const file = new File([blob], 'signature.png', { type: 'image/png' });
@@ -214,10 +185,10 @@ const Profile: React.FC = () => {
 
       toast.success("Signature uploaded successfully");
 
-      // Immediately fetch the latest signature after upload
+
       await fetchSignature();
 
-      // Reset states
+
       setSelectedFile(null);
       setPreviewUrl(null);
     } catch (err) {
@@ -234,19 +205,18 @@ const Profile: React.FC = () => {
     try {
       setUploading(true);
 
-      // Convert base64 cropped image to File object
       const response = await fetch(previewUrl);
       const blob = await response.blob();
       const file = new File([blob], "signature.png", { type: "image/png" });
 
-      await editUserSignature(file); 
+      await editUserSignature(file);
 
       toast.success("Signature updated successfully");
 
-      // Refresh signature from API
+
       await fetchSignature();
 
-      // Reset states
+
       setSelectedFile(null);
       setPreviewUrl(null);
     } catch (err) {
@@ -261,38 +231,6 @@ const Profile: React.FC = () => {
     fetchSignature();
   }, []);
 
-
-
-
-  const getRoleDisplay = () => {
-  if (!profile) return 'User';
-
-  // Check global roles first
-  if (profile.global_roles?.includes('ROLE_SUPER_ADMIN')) {
-    return 'Super Administrator';
-  }
-
-  // Otherwise, pick the first org role (if exists)
-  const orgRoles = profile.org_roles ? Object.values(profile.org_roles) : [];
-  if (orgRoles.length > 0) {
-    const role = orgRoles[0].role || 'ROLE_USER';
-    return role.replace('ROLE_', '').replace(/_/g, ' ');
-  }
-
-  return 'User';
-};
-
-const getOrganizationDisplay = () => {
-  if (!profile) return 'No Organization';
-
-  // Pick the first org role’s organization
-  const orgRoles = profile.org_roles ? Object.values(profile.org_roles) : [];
-  if (orgRoles.length > 0) {
-    return orgRoles[0].org_name || 'No Organization';
-  }
-
-  return 'No Organization';
-};
 
 
   if (loading) {
@@ -334,28 +272,28 @@ const getOrganizationDisplay = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
-                    <p className="text-gray-900">{profile?.name_as_per_gov_id || 'Not provided'}</p>
+                    <p className="text-gray-900">{user?.name_as_per_gov_id || 'Not provided'}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Preferred Name
                     </label>
-                    <p className="text-gray-900">{profile?.preferred_name || 'Not provided'}</p>
+                    <p className="text-gray-900">{user?.preferred_name || 'Not provided'}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email Address
                     </label>
-                    <p className="text-gray-900">{profile?.email_address || 'Not provided'}</p>
+                    <p className="text-gray-900">{user?.email_address || 'Not provided'}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Contact Number
                     </label>
-                    <p className="text-gray-900">{profile?.contact_number || 'Not provided'}</p>
+                    <p className="text-gray-900">{user?.contact_number || 'Not provided'}</p>
                   </div>
                 </div>
               </div>
@@ -363,40 +301,40 @@ const getOrganizationDisplay = () => {
           </Card>
 
           {/* Account Information Card */}
-<Card>
-  <CardBody className="p-6">
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      
-      {/* Global Role (if any) */}
-      {profile?.global_roles?.includes('ROLE_SUPER_ADMIN') && (
-        <div className="flex items-center gap-3">
-          <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-gray-900">Global Role</p>
-            <p className="text-sm text-gray-600">Super Administrator</p>
-          </div>
-        </div>
-      )}
+          <Card>
+            <CardBody className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-      {/* All Organization Roles with Names */}
-      {profile?.org_roles &&
-        Object.entries(profile.org_roles).map(([orgId, org]) => (
-          <div key={orgId} className="flex items-center gap-3">
-            <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {org.org_name}
-              </p>
-              <p className="text-sm text-gray-600">
-                {org.role.replace('ROLE_', '').replace(/_/g, ' ')}
-              </p>
-            </div>
-          </div>
-        ))}
-    </div>
-  </CardBody>
-</Card>
+                {/* Global Role (if any) */}
+                {user?.global_roles?.includes('ROLE_SUPER_ADMIN') && (
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Global Role</p>
+                      <p className="text-sm text-gray-600">Super Administrator</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* All Organization Roles with Names */}
+                {user?.org_roles &&
+                  Object.entries(user.org_roles).map(([orgId, org]) => (
+                    <div key={orgId} className="flex items-center gap-3">
+                      <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {org.org_name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {org.role.replace('ROLE_', '').replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardBody>
+          </Card>
 
 
 
@@ -570,122 +508,122 @@ const getOrganizationDisplay = () => {
         </div>
 
         {/* Crop Modal */}
-{showCropModal && previewUrl && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-    <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <h3 className="text-base font-semibold text-gray-900">Crop Signature</h3>
-        <button
-          onClick={() => setShowCropModal(false)}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <X className="w-5 h-5 text-gray-500" />
-        </button>
-      </div>
+        {showCropModal && previewUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+            <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-3 border-b border-gray-200">
+                <h3 className="text-base font-semibold text-gray-900">Crop Signature</h3>
+                <button
+                  onClick={() => setShowCropModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
 
-      {/* Content (no scroll for desktop) */}
-      <div className="p-4 flex flex-col gap-4">
-        {/* Instructions */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">
-            Adjust the crop area to select your signature. Final output will be 140×70px.
-          </p>
-          <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
-            <span>Drag</span>
-            <span>•</span>
-            <span>Zoom</span>
-            <span>•</span>
-            <span>Rotate</span>
+              {/* Content (no scroll for desktop) */}
+              <div className="p-4 flex flex-col gap-4">
+                {/* Instructions */}
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-1">
+                    Adjust the crop area to select your signature. Final output will be 140×70px.
+                  </p>
+                  <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+                    <span>Drag</span>
+                    <span>•</span>
+                    <span>Zoom</span>
+                    <span>•</span>
+                    <span>Rotate</span>
+                  </div>
+                </div>
+
+                {/* Crop Container (smaller height) */}
+                <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                  <Cropper
+                    image={previewUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    rotation={rotation}
+                    aspect={2}
+                    onCropChange={handleCropChange}
+                    onZoomChange={handleZoomChange}
+                    onCropComplete={handleCropComplete}
+                    objectFit="contain"
+                    showGrid={true}
+                    cropSize={{ width: 200, height: 100 }}
+                    minZoom={0.5}
+                    maxZoom={3}
+                  />
+                </div>
+
+                {/* Controls */}
+                <div className="space-y-3">
+                  {/* Zoom */}
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                      disabled={zoom <= 0.5}
+                    >
+                      <ZoomOut className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                      {Math.round(zoom * 100)}%
+                    </span>
+                    <button
+                      onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                      disabled={zoom >= 3}
+                    >
+                      <ZoomIn className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+
+                  {/* Rotation */}
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => setRotation(rotation - 15)}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                      {rotation}°
+                    </span>
+                    <button
+                      onClick={() => setRotation(rotation + 15)}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+                <Button
+                  onClick={handleCropReset}
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<RotateCcw className="w-4 h-4" />}
+                >
+                  Reset
+                </Button>
+                <Button
+                  onClick={handleCropSave}
+                  size="sm"
+                  leftIcon={<Crop className="w-4 h-4" />}
+                  loading={isProcessing}
+                  disabled={!croppedAreaPixels}
+                >
+                  {isProcessing ? 'Processing...' : 'Save Cropped Image'}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Crop Container (smaller height) */}
-        <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-          <Cropper
-            image={previewUrl}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={2}
-            onCropChange={handleCropChange}
-            onZoomChange={handleZoomChange}
-            onCropComplete={handleCropComplete}
-            objectFit="contain"
-            showGrid={true}
-            cropSize={{ width: 200, height: 100 }}
-            minZoom={0.5}
-            maxZoom={3}
-          />
-        </div>
-
-        {/* Controls */}
-        <div className="space-y-3">
-          {/* Zoom */}
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              disabled={zoom <= 0.5}
-            >
-              <ZoomOut className="w-4 h-4 text-gray-600" />
-            </button>
-            <span className="text-sm text-gray-600 min-w-[50px] text-center">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={() => setZoom(Math.min(3, zoom + 0.1))}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              disabled={zoom >= 3}
-            >
-              <ZoomIn className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Rotation */}
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setRotation(rotation - 15)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4 text-gray-600" />
-            </button>
-            <span className="text-sm text-gray-600 min-w-[50px] text-center">
-              {rotation}°
-            </span>
-            <button
-              onClick={() => setRotation(rotation + 15)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4 text-gray-600 transform scale-x-[-1]" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
-        <Button
-          onClick={handleCropReset}
-          variant="outline"
-          size="sm"
-          leftIcon={<RotateCcw className="w-4 h-4" />}
-        >
-          Reset
-        </Button>
-        <Button
-          onClick={handleCropSave}
-          size="sm"
-          leftIcon={<Crop className="w-4 h-4" />}
-          loading={isProcessing}
-          disabled={!croppedAreaPixels}
-        >
-          {isProcessing ? 'Processing...' : 'Save Cropped Image'}
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
+        )}
 
 
 

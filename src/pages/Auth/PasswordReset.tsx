@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bgImage from '../../assets/Solar_Image.jpg';
 import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
-import { validateUser, fetchClaims } from '../../services/jwtService';
+import { validateUser } from '../../services/jwtService';
 import { sendOtpToEmail } from '../../services/otpService';
 import 'react-toastify/dist/ReactToastify.css';
+import { useUser } from '../../contexts/UserContext';
+
 
 
 const PasswordReset: React.FC = () => {
@@ -13,26 +15,35 @@ const PasswordReset: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState('');
+  const { userClaims } = useUser();
 
   const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null);
 
-  useEffect(() => {
-  const checkPasswordChangeStatus = async () => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) return;
+//   useEffect(() => {
+//   const checkPasswordChangeStatus = async () => {
+//     const token = localStorage.getItem('jwtToken');
+//     if (!token) return;
 
-    try {
-      const claims = await fetchClaims();
-      if (claims && typeof claims.is_password_changed !== 'undefined') {
-        setIsFirstLogin(!claims.is_password_changed);
-      }
-    } catch (err) {
-      console.error('Error fetching claims:', err);
+//     try {
+//       const claims = await fetchClaims();
+//       if (claims && typeof claims.is_password_changed !== 'undefined') {
+//         setIsFirstLogin(!claims.is_password_changed);
+//       }
+//     } catch (err) {
+//       console.error('Error fetching claims:', err);
+//     }
+//   };
+
+//   checkPasswordChangeStatus();
+// }, []);
+
+useEffect(() => {
+    if (!userClaims) return;
+
+    if (typeof userClaims.is_password_changed !== "undefined") {
+      setIsFirstLogin(!userClaims.is_password_changed);
     }
-  };
-
-  checkPasswordChangeStatus();
-}, []);
+  }, [userClaims]);
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -47,7 +58,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   navigate('/Verification', {
     state: {
       email: emailInput,
-      msg: 'OTP sent (if registered)',
+      msg: 'If the user is registered, an email has been sent.',
       expiryTime,
       resendTime,
     },

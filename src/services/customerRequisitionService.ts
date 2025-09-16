@@ -392,55 +392,30 @@ export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number
   }
 };
 
-export const getCustomerCount = async (): Promise<number> => {
+export const getCustomerCount = async (params: Record<string, any>): Promise<number> => {
   const crsAPI = getCrsAPI();
-
-  
-  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
-  const { orgId, role } = selectedOrg;
-
-  
-  let params: Record<string, any> = {};
-  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
-    params.orgId = orgId;
-  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
-    params.agencyId = orgId;
-  }
 
   try {
     const response = await crsAPI.get("/api/customers/count", { params });
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching customer count:", error);
     throw new Error("Failed to fetch customer count");
   }
 };
 
-
-
-export const getOnboardedCustomerCount = async (): Promise<number> => {
+export const getOnboardedCustomerCount = async (params: Record<string, any>): Promise<number> => {
   const crsAPI = getCrsAPI();
-
-  
-  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
-  const { orgId, role } = selectedOrg;
-
-  
-  let params: Record<string, any> = {};
-  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
-    params.orgId = orgId;
-  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
-    params.agencyId = orgId;
-  }
 
   try {
     const response = await crsAPI.get("/api/customers/onboarded-count", { params });
-    return response.data; 
+    return response.data;
   } catch (error) {
-    console.error("Error fetching customer count:", error);
-    throw new Error("Failed to fetch customer count");
+    console.error("Error fetching onboarded customer count:", error);
+    throw new Error("Failed to fetch onboarded customer count");
   }
 };
+
 
 
 
@@ -685,18 +660,8 @@ export const getMaterialsByConnectionId = async (connectionId: number) => {
   }
 };
 
-export const getCustomerStats = async () => {
+export const getCustomerStats = async (params: Record<string, any>) => {
   const crsAPI = getCrsAPI();
-
-  const selectedOrg = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
-  const { orgId, role } = selectedOrg;
-
-  let params: Record<string, any> = {};
-  if (role === "ROLE_ORG_STAFF" || role === "ROLE_ORG_REPRESENTATIVE") {
-    params.orgId = orgId;
-  } else if (role === "ROLE_AGENCY_STAFF" || role === "ROLE_AGENCY_REPRESENTATIVE") {
-    params.agencyId = orgId;
-  }
 
   try {
     const response = await crsAPI.get('/api/customers/stats', { params });
@@ -706,6 +671,7 @@ export const getCustomerStats = async () => {
     throw new Error('Failed to fetch customer stats');
   }
 };
+
 
 
 

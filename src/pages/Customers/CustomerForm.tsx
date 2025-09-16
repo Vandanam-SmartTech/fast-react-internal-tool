@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { saveCustomer } from "../../services/customerRequisitionService";
 import { checkMobileNumberExists, checkEmailAddressExists } from '../../services/customerRequisitionService';
 import { fetchClaims } from '../../services/jwtService'
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { FaExclamationTriangle } from "react-icons/fa";
 import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg } from "../../services/organizationService";
+import { useUser } from "../../contexts/UserContext";
 
 interface Organization {
   id: string;
@@ -57,6 +56,8 @@ export const CustomerForm = () => {
   const [agencyUser, setAgencyUser] = useState<number | "">("");
 
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
+
+  const { userClaims } = useUser();
 
 
 
@@ -116,27 +117,18 @@ export const CustomerForm = () => {
     checkExists();
   }, [formData.mobileNumber]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const claims = await fetchClaims();
+useEffect(() => {
+  if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+    setUserRole("ROLE_SUPER_ADMIN");
 
-        if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-          setUserRole("ROLE_SUPER_ADMIN");
-
-
-          const data = await fetchOrganizations();
-          setOrganizations(data);
-        } else {
-          setUserRole("USER");
-        }
-      } catch (error) {
-        console.error("Failed to fetch claims or organizations:", error);
-      }
-    };
-
-    loadData();
-  }, []);
+    // Fetch organizations only for Super Admin
+    fetchOrganizations()
+      .then((data) => setOrganizations(data))
+      .catch((err) => console.error("Failed to fetch organizations:", err));
+  } else {
+    setUserRole("USER");
+  }
+}, [userClaims]);
 
   useEffect(() => {
     if (!organizationId) return;
@@ -200,11 +192,11 @@ export const CustomerForm = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedOrg?.orgId) {
-      setOrganizationId(Number(selectedOrg.orgId));
-    }
-  }, [selectedOrg]);
+useEffect(() => {
+  if (selectedOrg?.orgId) {
+    setOrganizationId(Number(selectedOrg.orgId));
+  }
+}, [selectedOrg]);
 
   useEffect(() => {
     if (selectedOrg?.role === "ROLE_ORG_STAFF") {
@@ -312,8 +304,8 @@ export const CustomerForm = () => {
   const handleConfirmMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmMobileNumber(value);
-
   };
+  
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmEmailAddress(value);

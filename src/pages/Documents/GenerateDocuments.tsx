@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Eye, Trash2, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Download, Trash2, Pencil } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
-import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById} from "../../services/oneDriveService";
+import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById } from "../../services/oneDriveService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from 'react-toastify';
 import { formatFileName } from "../../utils/formatFileName";
@@ -74,7 +74,7 @@ export default function GenerateDocuments() {
   const connectionId = consumer?.id?.toString();
 
 
-const documentSteps: DocumentStep[] = [
+  const documentSteps: DocumentStep[] = [
     {
       id: 1,
       title: "Identity & Financial Documents",
@@ -82,7 +82,7 @@ const documentSteps: DocumentStep[] = [
         { label: "Aadhaar Card", name: "AadhaarCard", canGenerate: false, canPreview: false },
         { label: "Bank Passbook/Cancelled Cheque", name: "BankPassbook", canGenerate: false, canPreview: false },
         { label: "E-Bill", name: "Ebill", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"] },
-        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false, fileExtensions: ["jpeg","jpg","png"], fileMimeTypes: ["image/jpeg","image/png","image/jpg"] }
+        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] }
       ],
       isCompleted: false,
       isExpanded: true
@@ -92,7 +92,7 @@ const documentSteps: DocumentStep[] = [
       title: "Quotations",
       documents: [
         { label: "Normal Quotation", name: "Normal Quotation", canGenerate: false, canPreview: false },
-         { label: "Signed/Agreed Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
+        { label: "Signed/Agreed Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -110,7 +110,7 @@ const documentSteps: DocumentStep[] = [
       id: 4,
       title: "Sanction Letter",
       documents: [
-        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false , fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50)}
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50) }
       ],
       isCompleted: false,
       isExpanded: false
@@ -120,7 +120,7 @@ const documentSteps: DocumentStep[] = [
       title: "Meter Testing",
       documents: [
         { label: "Gen Meter Testing Letter", name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
-        { label:"Gen Meter Testing Report",name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
+        { label: "Gen Meter Testing Report", name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
         { label: "Fee Receipt", name: "Fee Receipt", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
@@ -130,15 +130,15 @@ const documentSteps: DocumentStep[] = [
       id: 6,
       title: "MNRE and Discom Documents",
       documents: [
-        { label:"Net Agreement",name: "Net Agreement", canGenerate: true, canPreview: true },
-        { label:"WCR",name: "WCR", canGenerate: true, canPreview: true },
-        { label:"Annexure-I",name: "Annexure-I", canGenerate: true, canPreview: true },
-        { label:"RTS Declaration",name: "RTS Declaration", canGenerate: true, canPreview: true },
-        { label:"Earthing Report",name: "Earthing Report", canGenerate: true, canPreview:true },
-        { label:"Geo Tag Photo",name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg","jpg","png"], fileMimeTypes: ["image/jpeg","image/png","image/jpg"] },
-        { label:"D1-Form",name: "D1Form", canGenerate: false, canPreview: false },
-        { label:"Vendor Feasibility",name: "Vendor Feasibility", canGenerate: true, canPreview: true },
-        { label:"Digital Approval Letter",name: "Digital Approval Letter", canGenerate: false, canPreview: false },
+        { label: "Net Agreement", name: "Net Agreement", canGenerate: true, canPreview: true },
+        { label: "WCR", name: "WCR", canGenerate: true, canPreview: true },
+        { label: "Annexure-I", name: "Annexure-I", canGenerate: true, canPreview: true },
+        { label: "RTS Declaration", name: "RTS Declaration", canGenerate: true, canPreview: true },
+        { label: "Earthing Report", name: "Earthing Report", canGenerate: true, canPreview: true },
+        { label: "Geo Tag Photo", name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] },
+        { label: "D1-Form", name: "D1Form", canGenerate: false, canPreview: false },
+        { label: "Vendor Feasibility", name: "Vendor Feasibility", canGenerate: true, canPreview: true },
+        { label: "Digital Approval Letter", name: "Digital Approval Letter", canGenerate: false, canPreview: false },
       ],
       isCompleted: false,
       isExpanded: false
@@ -147,9 +147,9 @@ const documentSteps: DocumentStep[] = [
       id: 7,
       title: "DCR & Warranty Certificates",
       documents: [
-        { label:"DCR Certificate",name: "DCR Certificate", canGenerate: false, canPreview: false },
-        { label:"Inverter Warranty Certificate",name: "Inverter Warranty Certificate", canGenerate: false, canPreview: false },
-        { label:"Panel Warranty Certificate",name: "Panel Warranty Certificate", canGenerate: false, canPreview: false }
+        { label: "DCR Certificate", name: "DCR Certificate", canGenerate: false, canPreview: false },
+        { label: "Inverter Warranty Certificate", name: "Inverter Warranty Certificate", canGenerate: false, canPreview: false },
+        { label: "Panel Warranty Certificate", name: "Panel Warranty Certificate", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -158,12 +158,12 @@ const documentSteps: DocumentStep[] = [
       id: 8,
       title: "Release Order",
       documents: [
-        { label:"Release Order",name: "Release Order", canGenerate: false, canPreview: false }
+        { label: "Release Order", name: "Release Order", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
-    
+
   ];
 
 
@@ -190,87 +190,87 @@ const documentSteps: DocumentStep[] = [
   }, [connectionId, loadDocuments]);
 
 
-const handleDownload = async (fileId: string, fileName: string) => {
-  try {
-    const blob = await downloadDocumentById(fileId);
-    const url = window.URL.createObjectURL(blob);
+  const handleDownload = async (fileId: string, fileName: string) => {
+    try {
+      const blob = await downloadDocumentById(fileId);
+      const url = window.URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
 
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Download failed:", error);
-    alert("Failed to download file.");
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download file.");
+    }
+  };
 
 
-const handleGenerate = async (doc: string) => {
-  if (!consumer?.id) return;
-  setLoadingGenerateDoc(doc);
-  try {
-    const blob = await fetchPdf(consumer.id, doc);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${doc}.pdf`; // or use getSessionName(doc)
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  } catch (err) {
-    console.error("Generate error:", err);
-    toast.error("Failed to generate document");
-  } finally {
-    setLoadingGenerateDoc(null);
-  }
-};
+  const handleGenerate = async (doc: string) => {
+    if (!consumer?.id) return;
+    setLoadingGenerateDoc(doc);
+    try {
+      const blob = await fetchPdf(consumer.id, doc);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc}.pdf`; // or use getSessionName(doc)
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Generate error:", err);
+      toast.error("Failed to generate document");
+    } finally {
+      setLoadingGenerateDoc(null);
+    }
+  };
 
-const handlePreview = async (doc: string) => {
-  if (!consumer?.id) return;
-  setLoadingPreviewDoc(doc);
-  try {
-    const blob = await fetchPdf(consumer.id, doc);
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-  } catch (err) {
-    console.error("Preview error:", err);
-    toast.error("Failed to preview document");
-  } finally {
-    setLoadingPreviewDoc(null);
-  }
-};
+  const handlePreview = async (doc: string) => {
+    if (!consumer?.id) return;
+    setLoadingPreviewDoc(doc);
+    try {
+      const blob = await fetchPdf(consumer.id, doc);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error("Preview error:", err);
+      toast.error("Failed to preview document");
+    } finally {
+      setLoadingPreviewDoc(null);
+    }
+  };
 
 
 
   const handleDocumentFileChange = (docName: string, file: File | null) => {
-  setDocumentFiles((prev) => ({
-    ...prev,
-    [docName]: file,
-  }));
-};
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [docName]: file,
+    }));
+  };
 
 
-const clearSelectedFile = (docName: string) => {
-  
-  setDocumentFiles((prev) => {
-    const updated = { ...prev };
-    delete updated[docName];
-    return updated;
-  });
+  const clearSelectedFile = (docName: string) => {
 
-  
-  setInputKeys((prev) => ({
-    ...prev,
-    [docName]: Date.now(),
-  }));
-};
+    setDocumentFiles((prev) => {
+      const updated = { ...prev };
+      delete updated[docName];
+      return updated;
+    });
 
 
-const handleDocumentUpload = async (documentName: string) => {
+    setInputKeys((prev) => ({
+      ...prev,
+      [docName]: Date.now(),
+    }));
+  };
+
+
+  const handleDocumentUpload = async (documentName: string) => {
     const file = documentFiles[documentName];
     if (!file) return;
 
@@ -281,7 +281,7 @@ const handleDocumentUpload = async (documentName: string) => {
         consumer?.id?.toString() || "",
         documentName,
         file
-        );
+      );
 
       toast.success("Document Uploaded Successfully!", {
         autoClose: 1000,
@@ -289,15 +289,15 @@ const handleDocumentUpload = async (documentName: string) => {
       });
 
 
-        setDocumentFiles((prev) => {
-          const updated = { ...prev };
-          delete updated[documentName];
-          return updated;
-          });
+      setDocumentFiles((prev) => {
+        const updated = { ...prev };
+        delete updated[documentName];
+        return updated;
+      });
 
 
-        await loadDocuments();
-        clearSelectedFile(documentName);
+      await loadDocuments();
+      clearSelectedFile(documentName);
 
 
     } catch (error) {
@@ -322,34 +322,46 @@ const handleDocumentUpload = async (documentName: string) => {
     });
   };
 
-  const handleDeleteDocument = async (fileId: string) => {
-    try {
-      await deleteDocumentById(fileId);
-      toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
-      await loadDocuments();
-    } catch (error) {
-      console.error("Delete failed", error);
-      toast.error("Failed to delete document");
-    }
-  };
+const handleDeleteDocument = async (fileId: string, documentType: string) => {
+  try {
+
+    await deleteDocumentById(fileId);
+
+    setUploadedDocuments((prev) => {
+      const currentList = prev[documentType] || [];
+      const updatedList = currentList.filter((d: any) => d.fileId !== fileId);
+      return { ...prev, [documentType]: updatedList };
+    });
+
+    await loadDocuments();
+
+    toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
+
+  } catch (error) {
+    console.error("Delete failed", error);
+    toast.error("Failed to delete document");
+    await loadDocuments(); 
+  }
+};
+
 
   const handleReplaceFileChange = (docId: string, file: File | null) => {
     setReplaceFiles((prev) => ({ ...prev, [docId]: file }));
   };
 
-const handleUpdateDocument = async (fileId: string) => {
-  const file = replaceFiles[fileId];
-  if (!file) return;
-  try {
-    await updateDocumentById(fileId, file); 
-    toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
-    setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
-    await loadDocuments();
-  } catch (error) {
-    console.error("Update failed", error);
-    toast.error("Failed to update document");
-  }
-};
+  const handleUpdateDocument = async (fileId: string) => {
+    const file = replaceFiles[fileId];
+    if (!file) return;
+    try {
+      await updateDocumentById(fileId, file);
+      toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
+      setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
+      await loadDocuments();
+    } catch (error) {
+      console.error("Update failed", error);
+      toast.error("Failed to update document");
+    }
+  };
 
   const getStepStatus = (step: DocumentStep) => {
     const totalRequired = step.documents.length;
@@ -479,18 +491,18 @@ const handleUpdateDocument = async (fileId: string) => {
                 status === 'completed'
                   ? 'bg-green-50 border-green-200 hover:bg-green-100'
                   : status === 'in_progress'
-                  ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                  : 'bg-white border-gray-200 hover:bg-gray-50';
+                    ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+                    : 'bg-white border-gray-200 hover:bg-gray-50';
               return (
-            <button
+                <button
                   key={step.id}
                   type="button"
                   className={`${base} ${variant}`}
                   onClick={() => { setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); } }}
                   aria-current={currentStep === step.id ? 'step' : undefined}
-              aria-controls={`step-content-${step.id}`}
-            >
+                  aria-controls={`step-content-${step.id}`}
+                >
                   <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
                     {getStepIcon(step)}
                   </div>
@@ -528,259 +540,259 @@ const handleUpdateDocument = async (fileId: string) => {
                 <div className="px-6 py-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                     {activeStep.documents.map((docDef) => (
-                    <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-medium text-gray-900">{docDef.label}</h4>
-                      </div>
-                      
-                      {/* File Upload Section */}
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-700 mb-2">
-                          Choose File
-                        </label>
-                        
-                            <input
-                              key={inputKeys[docDef.name] || 0}   
-                              type="file"
-                              accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] || null;
-                                if (file) {
-                                  if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-                                    const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-                                    if (!typeOk) {
-                                      toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
-                                      setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
-                                      return;
-                                    }
-                                  }
-                                  if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-                                    toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                      <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                          <h4 className="font-medium text-gray-900">{docDef.label}</h4>
+                        </div>
+
+                        {/* File Upload Section */}
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-700 mb-2">
+                            Choose File
+                          </label>
+
+                          <input
+                            key={inputKeys[docDef.name] || 0}
+                            type="file"
+                            accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              if (file) {
+                                if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                                  const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                                  if (!typeOk) {
+                                    toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
                                     setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
                                     return;
                                   }
                                 }
-                                handleDocumentFileChange(docDef.name, file);
-                              }}
+                                if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                                  toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                                  setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                                  return;
+                                }
+                              }
+                              handleDocumentFileChange(docDef.name, file);
+                            }}
                             className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                      </div>
+                          />
+                        </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap gap-2">
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-2">
 
-                        {docDef.canPreview && (
-                          <button
-                            onClick={() => handlePreview(docDef.name)}
-                            disabled={loadingPreviewDoc === docDef.name}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-                            title="Preview document"
-                          >
-                            {loadingPreviewDoc === docDef.name ? (
-                              <Play className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Play className="w-3 h-3" />
-                            )}
-                            <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
-                          </button>
-                        )}
-                        
-                        {docDef.canGenerate && (
-                          <button
-                            onClick={() => handleGenerate(docDef.name)}
-                            disabled={loadingGenerateDoc === docDef.name}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
-                            title="Generate document"
-                          >
-                            {loadingGenerateDoc === docDef.name ? (
-                              <Play className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Play className="w-3 h-3" />
-                            )}
-                            <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
-                          </button>
-                        )}
+                          {docDef.canPreview && (
+                            <button
+                              onClick={() => handlePreview(docDef.name)}
+                              disabled={loadingPreviewDoc === docDef.name}
+                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                              title="Preview document"
+                            >
+                              {loadingPreviewDoc === docDef.name ? (
+                                <Play className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Play className="w-3 h-3" />
+                              )}
+                              <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
+                            </button>
+                          )}
+
+                          {docDef.canGenerate && (
+                            <button
+                              onClick={() => handleGenerate(docDef.name)}
+                              disabled={loadingGenerateDoc === docDef.name}
+                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                              title="Generate document"
+                            >
+                              {loadingGenerateDoc === docDef.name ? (
+                                <Play className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Play className="w-3 h-3" />
+                              )}
+                              <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
+                            </button>
+                          )}
+
+                          {documentFiles[docDef.name] && (
+                            <button
+                              onClick={() => handleDocumentUpload(docDef.name)}
+                              disabled={loadingUploadDoc === docDef.name}
+                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
+                              title="Upload selected file"
+                            >
+                              {loadingUploadDoc === docDef.name ? (
+                                <>
+                                  <Upload className="w-3 h-3 animate-spin" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3 h-3" />
+                                  <span>Upload</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
 
                         {documentFiles[docDef.name] && (
-                        <button
-                            onClick={() => handleDocumentUpload(docDef.name)}
-                            disabled={loadingUploadDoc === docDef.name}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
-                            title="Upload selected file"
-                        >
-                          {loadingUploadDoc === docDef.name ? (
-                          <>
-                        <Upload className="w-3 h-3 animate-spin" />
-                            <span>Uploading...</span>
-                        </>
-                      ) : (
-                      <>
-                      <Upload className="w-3 h-3" />
-                    <span>Upload</span>
-                      </>
-                    )}
-                    </button>
-                  )}
-                      </div>
-
-                 {documentFiles[docDef.name] && (
-  <div className="mt-2 text-xs text-gray-600 flex items-center">
-    <span className="font-medium mr-1">Selected:</span>
-    <span className="truncate flex-1">
-      {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
-    </span>
-    <button
-      onClick={() => clearSelectedFile(docDef.name)}
-      className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
-    >
-      ✖
-    </button>
-  </div>
-)}
+                          <div className="mt-2 text-xs text-gray-600 flex items-center">
+                            <span className="font-medium mr-1">Selected:</span>
+                            <span className="truncate flex-1">
+                              {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
+                            </span>
+                            <button
+                              onClick={() => clearSelectedFile(docDef.name)}
+                              className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
+                            >
+                              ✖
+                            </button>
+                          </div>
+                        )}
 
 
 
 
                         {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
-        <div className="mt-3">
+                          <div className="mt-3">
                             <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
-          <ul className="space-y-1">
-            {uploadedDocuments[docDef.name].map((doc) => (
-            <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
+                            <ul className="space-y-1">
+                              {uploadedDocuments[docDef.name].map((doc) => (
+                                <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
 
-                <div className="mb-2">
-  {/* Row with filename + actions */}
-  <div className="flex items-center justify-between">
-    <span className="truncate" title={doc.fileName}>
-      {formatFileTail(doc.fileName, 18)}
-    </span>
+                                  <div className="mb-2">
+                                    {/* Row with filename + actions */}
+                                    <div className="flex items-center">
+                                      <span className="flex-1 truncate" title={doc.fileName}>
+                                        {formatFileTail(doc.fileName, 18)}
+                                      </span>
 
-    <div className="flex items-center gap-1.5 flex-nowrap">
-      {/* Hidden file input for Update */}
-      <input
-        id={`update-input-${doc.fileId}`}
-        type="file"
-        accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0] || null;
-          if (!file) return;
-          if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-            const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-            if (!ok) {
-              toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
-              e.currentTarget.value = '';
-              return;
-            }
-          }
-          if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-            toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
-            e.currentTarget.value = '';
-            return;
-          }
-          handleReplaceFileChange(doc.fileId, file);
-          e.currentTarget.value = "";
-        }}
-      />
+                                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        {/* Hidden file input for Update */}
+                                        <input
+                                          id={`update-input-${doc.fileId}`}
+                                          type="file"
+                                          accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0] || null;
+                                            if (!file) return;
+                                            if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                                              const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                                              if (!ok) {
+                                                toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                                                e.currentTarget.value = '';
+                                                return;
+                                              }
+                                            }
+                                            if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                                              toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                                              e.currentTarget.value = '';
+                                              return;
+                                            }
+                                            handleReplaceFileChange(doc.fileId, file);
+                                            e.currentTarget.value = "";
+                                          }}
+                                        />
 
-      {/* View */}
-      <IconButton
-        aria-label={`View ${doc.fileName}`}
-        title="View"
-        size="sm"
-        variant="outline"
-        className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
-        icon={<Eye className="w-4 h-4" />}
-        onClick={() => handleDownload(doc.fileId, doc.fileName)}
-      />
+                                        {/* View */}
+                                        <IconButton
+                                          aria-label={`View ${doc.fileName}`}
+                                          title="Download"
+                                          size="sm"
+                                          variant="outline"
+                                          className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                                          icon={<Download className="w-4 h-4" />}
+                                          onClick={() => handleDownload(doc.fileId, doc.fileName)}
+                                        />
 
-      {/* Update */}
-      <IconButton
-        aria-label={`Update ${doc.fileName}`}
-        title="Update"
-        size="sm"
-        variant="outline"
-        className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
-        icon={<Pencil className="w-4 h-4" />}
-        onClick={() => {
-          setDialogMessage(`Do you want to replace the current file?`);
-          setDialogAction(() => () => {
-            const input = document.getElementById(
-              `update-input-${doc.fileId}`
-            ) as HTMLInputElement | null;
-            input?.click();
-          });
-          setDialogOpen(true);
-        }}
-      />
+                                        {/* Update */}
+                                        <IconButton
+                                          aria-label={`Update ${doc.fileName}`}
+                                          title="Update"
+                                          size="sm"
+                                          variant="outline"
+                                          className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
+                                          icon={<Pencil className="w-4 h-4" />}
+                                          onClick={() => {
+                                            setDialogMessage(`Do you want to replace the current file?`);
+                                            setDialogAction(() => () => {
+                                              const input = document.getElementById(
+                                                `update-input-${doc.fileId}`
+                                              ) as HTMLInputElement | null;
+                                              input?.click();
+                                            });
+                                            setDialogOpen(true);
+                                          }}
+                                        />
 
-      {/* Delete */}
-      <IconButton
-        aria-label={`Delete ${doc.fileName}`}
-        title="Delete"
-        size="sm"
-        variant="outline"
-        className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
-        icon={<Trash2 className="w-4 h-4" />}
-        onClick={() => {
-          setDialogMessage(`Do you really want to delete the file?`);
-          setDialogAction(() => () => handleDeleteDocument(doc.fileId));
-          setDialogOpen(true);
-        }}
-      />
-    </div>
-  </div>
+                                        {/* Delete */}
+                                        <IconButton
+                                          aria-label={`Delete ${doc.fileName}`}
+                                          title="Delete"
+                                          size="sm"
+                                          variant="outline"
+                                          className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
+                                          icon={<Trash2 className="w-4 h-4" />}
+                                          onClick={() => {
+                                            setDialogMessage(`Do you really want to delete the file?`);
+                                            setDialogAction(() => () => handleDeleteDocument(doc.fileId, docDef.name));
+                                            setDialogOpen(true);
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
 
-  {replaceFiles[doc.fileId] && (
-    <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
-  <div className="flex-1 min-w-0">
-    <span className="font-medium">Selected:</span>{" "}
-    <span className="truncate inline-block max-w-[180px] align-bottom">
-      {replaceFiles[doc.fileId]?.name}
-    </span>
-  </div>
-  <div className="flex items-center space-x-2 flex-shrink-0">
-    <button
-      onClick={() => handleUpdateDocument(doc.fileId)}
-      disabled={loadingUploadDoc === doc.fileId}
-      className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
-      title="Update selected file"
-    >
-      {loadingUploadDoc === doc.fileId ? (
-        <>
-          <Upload className="w-3 h-3 animate-spin" />
-          <span className="truncate max-w-[80px]">Updating...</span>
-        </>
-      ) : (
-        <>
-          <Upload className="w-3 h-3" />
-          <span>Update</span>
-        </>
-      )}
-    </button>
+                                    {replaceFiles[doc.fileId] && (
+                                      <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
+                                        <div className="flex-1 min-w-0">
+                                          <span className="font-medium">Selected:</span>{" "}
+                                          <span className="truncate inline-block max-w-[180px] align-bottom">
+                                            {replaceFiles[doc.fileId]?.name}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                          <button
+                                            onClick={() => handleUpdateDocument(doc.fileId)}
+                                            disabled={loadingUploadDoc === doc.fileId}
+                                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
+                                            title="Update selected file"
+                                          >
+                                            {loadingUploadDoc === doc.fileId ? (
+                                              <>
+                                                <Upload className="w-3 h-3 animate-spin" />
+                                                <span className="truncate max-w-[80px]">Updating...</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Upload className="w-3 h-3" />
+                                                <span>Update</span>
+                                              </>
+                                            )}
+                                          </button>
 
-    <button
-      onClick={() =>
-        setReplaceFiles((prev) => ({ ...prev, [doc.fileId]: null }))
-      }
-      className="ml-2 text-red-500 hover:text-red-700 text-xs"
-    >
-      ✖
-    </button>
-  </div>
-</div>
+                                          <button
+                                            onClick={() =>
+                                              setReplaceFiles((prev) => ({ ...prev, [doc.fileId]: null }))
+                                            }
+                                            className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                                          >
+                                            ✖
+                                          </button>
+                                        </div>
+                                      </div>
 
-  )}
-</div>
+                                    )}
+                                  </div>
 
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-  </div>
-                  ))}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -789,41 +801,41 @@ const handleUpdateDocument = async (fileId: string) => {
         </section>
 
         <Dialog
-  open={dialogOpen}
-  onClose={() => setDialogOpen(false)}
-  maxWidth="xs"
-  fullWidth
->
-  <DialogTitle>Confirm</DialogTitle>
-  <DialogContent dividers>
-    <Alert severity="info">{dialogMessage}</Alert>
-  </DialogContent>
-  <DialogActions>
-    <Button
-      onClick={() => {
-        setDialogOpen(false);
-        setDialogAction(null); // cancel
-      }}
-    >
-      No
-    </Button>
-    <Button
-      onClick={() => {
-        setDialogOpen(false);
-        if (dialogAction) dialogAction(); // run delete
-      }}
-      autoFocus
-    >
-      Yes
-    </Button>
-  </DialogActions>
-</Dialog>
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Confirm</DialogTitle>
+          <DialogContent dividers>
+            <Alert severity="info">{dialogMessage}</Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+                setDialogAction(null); // cancel
+              }}
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction(); // run delete
+              }}
+              autoFocus
+            >
+              Yes
+            </Button>
+          </DialogActions>
+        </Dialog>
 
       </div>
 
-      
 
-     
+
+
     </div>
   );
 }

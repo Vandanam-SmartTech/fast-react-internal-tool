@@ -5,9 +5,10 @@ import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organizat
 import { fetchClaims } from "../../services/jwtService";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Eye, Mail, Phone, Lightbulb, Search, Users, UserCheck, RefreshCw, Zap, FileText, Plus } from "lucide-react";
+import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
+import { useUser } from "../../contexts/UserContext";
 
 interface Consumer {
   id: number;
@@ -18,10 +19,6 @@ interface Consumer {
   connections?: { id: number; consumerId: string; customerId: number }[];
 }
 
-interface FilterOptions {
-  hasConnections: boolean | null;
-  hasEmail: boolean | null;
-}
 
 const ListOfConsumers: React.FC = () => {
   const navigate = useNavigate();
@@ -32,10 +29,7 @@ const ListOfConsumers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
   const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);
-  const [filters, setFilters] = useState<FilterOptions>({
-    hasConnections: null,
-    hasEmail: null,
-  });
+
 
   // refs to handle debounced searching and race conditions
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -451,12 +445,6 @@ const ListOfConsumers: React.FC = () => {
                 <Users className="w-3.5 h-3.5" />
                 {consumer.connections?.length || 0} connections
               </span>
-              {/* {consumer.emailAddress && consumer.emailAddress !== "NA" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-300 px-2.5 py-1 text-xs">
-                  <UserCheck className="w-3.5 h-3.5" />
-                  Active
-                </span>
-              )} */}
             </div>
           </div>
 
@@ -471,11 +459,6 @@ const ListOfConsumers: React.FC = () => {
               <Eye className="w-4 h-4" />
               View
             </Button>
-
-
-
-
-
           </div>
         </div>
 

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchClaims } from '../../services/jwtService';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { Users, UserCheck, BarChart3, Calendar,Clock } from 'lucide-react';
+import { Users, UserCheck, BarChart3, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import SkeletonLoader from '../../components/ui/SkeletonLoader';
+import { useUser } from '../../contexts/UserContext';
 
 const StaffDashboard: React.FC = () => {
-  const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
@@ -20,6 +19,7 @@ const StaffDashboard: React.FC = () => {
   const [data, setData] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
+  const { userClaims, selectedOrg } = useUser();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -35,16 +35,6 @@ const StaffDashboard: React.FC = () => {
 
     setTimeBasedGreeting();
 
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setPreferredName(claims.preferred_name);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    getClaims();
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -53,38 +43,57 @@ const StaffDashboard: React.FC = () => {
   }, []);
 
 
-  useEffect(() => {
-    getCustomerStats()
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+useEffect(() => {
+  const selectedOrgStr = localStorage.getItem("selectedOrg");
+  if (!selectedOrgStr) return;
 
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
+  let selectedOrg;
+  try {
+    selectedOrg = JSON.parse(selectedOrgStr);
+  } catch {
+    console.error("Invalid selectedOrg format in localStorage");
+    return;
+  }
 
-        setData(filtered);
-      })
-      .catch(console.error)
-      .finally(() => setStatsLoading(false));
-  }, []);
+  const params: Record<string, any> = {};
+  if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
+    params.orgId = selectedOrg.orgId;
+  } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
+    params.agencyId = selectedOrg.orgId;
+  }
 
-  useEffect(() => {
-    getCustomerCount()
-      .then(actualCount => {
-        setCount(actualCount);
-        animateCountUp(actualCount, setAnimatedCount);
-      })
-      .catch(console.error);
+  // ✅ Fetch customer counts
+  getCustomerCount(params)
+    .then((actualCount) => {
+      setCount(actualCount);
+      animateCountUp(actualCount, setAnimatedCount);
+    })
+    .catch(console.error);
 
-    getOnboardedCustomerCount()
-      .then(actualCount => {
-        setOnboardedCount(actualCount);
-        animateCountUp(actualCount, setAnimatedOnboardedCount);
-      })
-      .catch(console.error);
-  }, []);
+  getOnboardedCustomerCount(params)
+    .then((actualCount) => {
+      setOnboardedCount(actualCount);
+      animateCountUp(actualCount, setAnimatedOnboardedCount);
+    })
+    .catch(console.error);
+
+  // ✅ Fetch stats with same params
+  getCustomerStats(params)
+    .then((rawData) => {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const filtered = rawData.filter((entry: any) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= oneYearAgo;
+      });
+
+      setData(filtered);
+    })
+    .catch(console.error)
+    .finally(() => setStatsLoading(false));
+}, []);
+
 
   const animateCountUp = (target: number, setDisplay: (val: number) => void) => {
     let current = 0;
@@ -128,24 +137,19 @@ const StaffDashboard: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
 
-        {/* <div className="mb-8">
-        <div className="text-2xl font-semibold mb-2">
-          {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
-        <p className="text-gray-600">Manage customers and view progress</p>
-      </div> */}
 
         <div>
           <h1 className="text-3xl font-bold text-secondary-900">
-            {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
+            {userClaims?.preferred_name
+              ? `${greeting}, ${userClaims.preferred_name}!`
+              : 'Welcome back!'}
           </h1>
           <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-            Manage customers and view progress.
+            Manage Customers and View Progress
           </p>
         </div>
 
-        {/* Right side - Time & Date */}
+
         <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -220,31 +224,6 @@ const StaffDashboard: React.FC = () => {
         ))}
       </div>
 
-
-      {/* Statistics Cards */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <button 
-          onClick={() => navigate('/list-of-consumers')}
-          className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-7 rounded-xl shadow-md hover:bg-blue-300 transition-all h-40"
-        >
-          <Users className="w-7 h-7 mb-1" />
-          <div className="text-5xl font-extrabold mb-1">
-            {count !== null ? animatedCount : '0'}
-          </div>
-          <div className="text-base font-medium tracking-wide text-center">All Customers</div>
-        </button>
-
-        <button 
-          onClick={() => navigate('/OnboardedConsumers')}
-          className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-7 rounded-xl shadow-md hover:bg-green-300 transition-all h-40"
-        >
-          <UserCheck className="w-7 h-7 mb-1" />
-          <div className="text-5xl font-extrabold mb-1">
-            {onboardedCount !== null ? animatedOnboardedCount : '0'}
-          </div>
-          <div className="text-base font-medium tracking-wide text-center">Onboarded Consumers</div>
-        </button>
-      </div> */}
 
       {/* Progress Chart */}
       {/* <div className="card p-6">

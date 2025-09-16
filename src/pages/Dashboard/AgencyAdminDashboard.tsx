@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchClaims } from '../../services/jwtService';
 import { Users, Building2, UserCog, Settings, Calendar, Clock } from 'lucide-react';
+import { useUser } from '../../contexts/UserContext';
 
 const AgencyAdminDashboard: React.FC = () => {
-  const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
+  const { userClaims, selectedOrg, setSelectedOrg, clearUserClaims } = useUser();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -23,16 +23,6 @@ const AgencyAdminDashboard: React.FC = () => {
 
     setTimeBasedGreeting();
 
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setPreferredName(claims.preferred_name);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    getClaims();
   const timeInterval = setInterval(() => {
         setCurrentTime(new Date());
       }, 1000);
@@ -71,16 +61,22 @@ const AgencyAdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="text-2xl font-semibold mb-2">
-          {preferredName ? `Hello ${preferredName}, ${greeting} 😊` : 'Loading...'}
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Agency Admin Dashboard</h1>
-        <p className="text-gray-600">Manage your agencies and users</p>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+        <h1 className="text-3xl font-bold text-secondary-900">
+          {userClaims?.preferred_name
+            ? `${greeting}, ${userClaims.preferred_name}!`
+            : 'Welcome back!'}
+        </h1>
+        <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+          Here's what's happening with your agency today
+        </p>
       </div>
-
-      <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+      
+                
+                <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span>{currentTime.toLocaleTimeString()}</span>
@@ -90,6 +86,8 @@ const AgencyAdminDashboard: React.FC = () => {
                     <span>{currentTime.toLocaleDateString()}</span>
                   </div>
                 </div>
+              </div>
+              </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardItems.map((item, index) => (

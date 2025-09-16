@@ -41,8 +41,7 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
         return;
       }
 
-      // ✅ 3. Multiple roles → check for selectedOrg in localStorage
-      if (orgRoles.length > 1) {
+      if (orgRoles.length >= 1) {
         const selectedOrg = localStorage.getItem('selectedOrg');
         if (!selectedOrg) {
           setRedirectPath('/login');
@@ -50,13 +49,13 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
         }
       }
 
-      // ✅ 4. Check if any of the orgRoles match allowedRoles
+
       const isAuthorized = allowedRoles.some(role => orgRoles.includes(role));
 
       if (isAuthorized) {
         setAuthorized(true);
       } else {
-        // ✅ 5. Redirect to first available dashboard if unauthorized
+        
         const firstRole = orgRoles[0];
         switch (firstRole) {
           case 'ROLE_ORG_ADMIN':

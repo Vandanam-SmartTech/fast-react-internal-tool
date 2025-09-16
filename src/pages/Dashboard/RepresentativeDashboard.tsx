@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { UserCheck, Users, BarChart3, Calendar, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import { useUser } from '../../contexts/UserContext';
 
 const RepresentativeDashboard: React.FC = () => {
-  const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const navigate = useNavigate();
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
@@ -16,22 +16,9 @@ const RepresentativeDashboard: React.FC = () => {
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
   const [data, setData] = useState([]);
+  const { userClaims, selectedOrg } = useUser();
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  useEffect(() => {
-    getCustomerStats()
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
-
-        setData(filtered);
-      })
-      .catch(console.error);
-  }, []);
 
   const goToListOfConsumers = () => {
     navigate('/list-of-consumers');
@@ -55,16 +42,6 @@ const RepresentativeDashboard: React.FC = () => {
 
     setTimeBasedGreeting();
 
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setPreferredName(claims.preferred_name);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    getClaims();
   const timeInterval = setInterval(() => {
         setCurrentTime(new Date());
       }, 1000);
@@ -72,21 +49,57 @@ const RepresentativeDashboard: React.FC = () => {
       return () => clearInterval(timeInterval);
     }, []);
 
-  useEffect(() => {
-    getCustomerCount()
-      .then(actualCount => {
-        setCount(actualCount);
-        animateCountUp(actualCount, setAnimatedCount);
-      })
-      .catch(console.error);
+useEffect(() => {
+  const selectedOrgStr = localStorage.getItem("selectedOrg");
+  if (!selectedOrgStr) return;
 
-    getOnboardedCustomerCount()
-      .then(actualCount => {
-        setOnboardedCount(actualCount);
-        animateCountUp(actualCount, setAnimatedOnboardedCount);
-      })
-      .catch(console.error);
-  }, []);
+  let selectedOrg;
+  try {
+    selectedOrg = JSON.parse(selectedOrgStr);
+  } catch {
+    console.error("Invalid selectedOrg format in localStorage");
+    return;
+  }
+
+  const params: Record<string, any> = {};
+  if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
+    params.orgId = selectedOrg.orgId;
+  } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
+    params.agencyId = selectedOrg.orgId;
+  }
+
+  // ✅ Fetch customer counts
+  getCustomerCount(params)
+    .then((actualCount) => {
+      setCount(actualCount);
+      animateCountUp(actualCount, setAnimatedCount);
+    })
+    .catch(console.error);
+
+  getOnboardedCustomerCount(params)
+    .then((actualCount) => {
+      setOnboardedCount(actualCount);
+      animateCountUp(actualCount, setAnimatedOnboardedCount);
+    })
+    .catch(console.error);
+
+  // ✅ Fetch stats with same params
+  getCustomerStats(params)
+    .then((rawData) => {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const filtered = rawData.filter((entry: any) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= oneYearAgo;
+      });
+
+      setData(filtered);
+    })
+    .catch(console.error)
+    .finally(() => setStatsLoading(false));
+}, []);
+
 
   const animateCountUp = (target: number, setDisplay: (val: number) => void) => {
     let current = 0;
@@ -118,9 +131,11 @@ const RepresentativeDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         
        <div>
-<h1 className="text-3xl font-bold text-secondary-900">
-            {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
-          </h1>
+  <h1 className="text-3xl font-bold text-secondary-900">
+    {userClaims?.preferred_name
+      ? `${greeting}, ${userClaims.preferred_name}!`
+      : 'Welcome back!'}
+  </h1>
         <p className="text-gray-600">Manage customers and track progress</p>
       </div>
       {/* Right - Time & Date */}

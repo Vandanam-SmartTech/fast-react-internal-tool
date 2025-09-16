@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
-import { fetchClaims } from "../../services/jwtService";
 import {
   generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails,
   saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, fetchBatteryBrands, fetchBatteryWattages
@@ -17,6 +16,7 @@ import {
   Cog6ToothIcon,
   CurrencyRupeeIcon
 } from "@heroicons/react/24/solid";
+import { useUser } from "../../contexts/UserContext";
 
 
 
@@ -59,6 +59,9 @@ export const SystemSpecifications = () => {
   const [batteryBrands, setBatteryBrands] = useState<string[]>([]);
 
   const [batteryCapacities, setBatteryCapacities] = useState<string[]>([]);
+
+  const { userClaims } = useUser();
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
 
 
 
@@ -195,40 +198,6 @@ export const SystemSpecifications = () => {
   }, [customerId]);
 
 
-
-  useEffect(() => {
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        const allRoles: string[] = [];
-
-
-        if (Array.isArray(claims.global_roles)) {
-          allRoles.push(...claims.global_roles);
-        }
-
-
-        const selectedOrgStr = localStorage.getItem('selectedOrg');
-        if (selectedOrgStr) {
-          try {
-            const selectedOrg = JSON.parse(selectedOrgStr);
-            if (selectedOrg.role) {
-              allRoles.push(selectedOrg.role);
-            }
-          } catch {
-            console.error("Invalid selectedOrg format in localStorage");
-          }
-        }
-
-        setRoles(allRoles);
-      } catch (error) {
-        console.error("Failed to fetch user claims", error);
-      }
-    };
-
-    getClaims();
-  }, []);
-
   let hasShownError = false;
 
   useEffect(() => {
@@ -254,8 +223,8 @@ export const SystemSpecifications = () => {
           const recommendedKW = recommendation.recommendedKW || "";
 
           const inverterWattages = await fetchInverterWattages(
-              phaseType,
-              recommendation.inverterBrand
+            phaseType,
+            recommendation.inverterBrand
           );
           const selectedInverterKw = inverterWattages[0] || "";
 
@@ -1277,18 +1246,19 @@ export const SystemSpecifications = () => {
                 {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
               </button>
 
-              {/* Generate & Save Quotation Button - Only visible for Super Admin and Org Admin */}
-              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
-                <button
-                  type="submit"
-                  onClick={handleGenerateQuotation}
-                  disabled={!isSpecsSaved || isLoading}
-                  //disabled={isLoading}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? "Generating..." : "Generate & Save Quotation"}
-                </button>
-              )}
+      {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+        userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+        userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+                  <button
+                    type="submit"
+                    onClick={handleGenerateQuotation}
+                    disabled={!isSpecsSaved || isLoading}
+                    //disabled={isLoading}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Generating..." : "Generate & Save Quotation"}
+                  </button>
+                )}
             </div>
           </div>
 

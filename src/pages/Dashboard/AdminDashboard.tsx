@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchClaims } from '../../services/jwtService';
-import { Users, Building, Building2, UserCog, Settings, TrendingUp, UserPlus, FileText, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
+import { Users, Building2, UserCog, UserPlus, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
+import { useUser } from '../../contexts/UserContext';
 
 const AdminDashboard: React.FC = () => {
-  const [preferredName, setPreferredName] = useState('');
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
+  const { userClaims, selectedOrg, setSelectedOrg, clearUserClaims } = useUser();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -24,16 +24,6 @@ const AdminDashboard: React.FC = () => {
 
     setTimeBasedGreeting();
 
-    const getClaims = async () => {
-      try {
-        const claims = await fetchClaims();
-        setPreferredName(claims.preferred_name);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    getClaims();
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
@@ -107,13 +97,16 @@ const AdminDashboard: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-secondary-900">
-              {preferredName ? `${greeting}, ${preferredName}!` : 'Welcome back!'}
-            </h1>
-            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Here's what's happening with your organization today
-            </p>
-          </div>
+  <h1 className="text-3xl font-bold text-secondary-900">
+    {userClaims?.preferred_name
+      ? `${greeting}, ${userClaims.preferred_name}!`
+      : 'Welcome back!'}
+  </h1>
+  <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+    Here's what's happening with your organization today
+  </p>
+</div>
+
           
           <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
             <div className="flex items-center gap-2">

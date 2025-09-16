@@ -5,13 +5,13 @@ import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
-import Cropper, { Area } from 'react-easy-crop';
+import Cropper from 'react-easy-crop';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto } from '../services/oneDriveService';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userClaims, clearUserClaims } = useUser();
+
   const [selectedOrgName, setSelectedOrgName] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
@@ -19,6 +19,9 @@ const Header: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const orgDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  const { userClaims, selectedOrg, setSelectedOrg, clearUserClaims } = useUser();
+
 
   const [showCropModal, setShowCropModal] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -89,7 +92,7 @@ const Header: React.FC = () => {
   const handleOrgChange = (orgId: string, orgName: string, role: string) => {
     const newOrg = { orgId, orgName, role };
 
-
+    setSelectedOrg(newOrg);
     localStorage.setItem('selectedOrg', JSON.stringify(newOrg));
 
     setSelectedOrgName(orgName);
@@ -99,40 +102,42 @@ const Header: React.FC = () => {
 
     window.dispatchEvent(new CustomEvent('organizationChanged', { detail: newOrg }));
 
-    if (newOrg.role === "ROLE_AGENCY_REPRESENTATIVE" || newOrg.role === "ROLE_ORG_REPRESENTATIVE") {
+
+    if (role === 'ROLE_AGENCY_REPRESENTATIVE' || role === 'ROLE_ORG_REPRESENTATIVE') {
       navigate('/RepresentativeDashboard');
-    } else if (newOrg.role === "ROLE_ORG_ADMIN") {
+    } else if (role === 'ROLE_ORG_ADMIN') {
       navigate('/AdminDashboard');
-    } else if (newOrg.role === "ROLE_AGENCY_ADMIN") {
+    } else if (role === 'ROLE_AGENCY_ADMIN') {
       navigate('/AgencyAdminDashboard');
-    } else if (newOrg.role === "ROLE_ORG_STAFF" || newOrg.role === "ROLE_AGENCY_STAFF") {
+    } else if (role === 'ROLE_ORG_STAFF' || role === 'ROLE_AGENCY_STAFF') {
       navigate('/StaffDashboard');
-    } else if (newOrg.role === "ROLE_SUPER_ADMIN") {
+    } else if (role === 'ROLE_SUPER_ADMIN') {
       navigate('/SuperAdminDashboard');
     }
 
     window.location.reload();
+
   };
 
 
+
   const handleLogout = () => {
-    localStorage.removeItem("selectedRepresentative");
-    localStorage.removeItem("selectedOrg");
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("selectedOrg");
     clearUserClaims();
     navigate("/login");
   };
 
-useEffect(() => {
-  const loadProfilePhoto = async () => {
-    const photoUrl = await getUserProfilePhoto();
-    if (photoUrl) {
-      setProfilePhoto(photoUrl);
-      setHasUploadedPhoto(true);
-    }
-  };
-  loadProfilePhoto();
-}, []);
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      const photoUrl = await getUserProfilePhoto();
+      if (photoUrl) {
+        setProfilePhoto(photoUrl);
+        setHasUploadedPhoto(true);
+      }
+    };
+    loadProfilePhoto();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -141,7 +146,7 @@ useEffect(() => {
 
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
-        setShowCropModal(true); // open modal only after image is loaded
+        setShowCropModal(true); 
       };
 
       reader.readAsDataURL(file);
@@ -159,7 +164,6 @@ useEffect(() => {
       true
     );
 
-    // Convert base64 → File before upload
     const byteString = atob(croppedImage.split(",")[1]);
     const mimeString = croppedImage.split(",")[0].split(":")[1].split(";")[0];
     const ab = new ArrayBuffer(byteString.length);
@@ -177,7 +181,7 @@ useEffect(() => {
         setHasUploadedPhoto(true);
       }
 
-      setProfilePhoto(croppedImage); // Show in avatar
+      setProfilePhoto(croppedImage); 
       setShowCropModal(false);
     } catch (err) {
       console.error("Upload failed:", err);

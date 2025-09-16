@@ -3,26 +3,69 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { saveRepresentative, getUserById } from '../../services/jwtService';
 import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
 import { toast } from 'react-toastify';
 
 const UserFormManagement: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
+  const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
+  const [confirmContactNumber, setConfirmContactNumber] = useState("");
+
+  const [showAlternateContact, setShowAlternateContact] = useState(false);
+  const [alternateContactNumber, setAlternateContactNumber] = useState("");
 
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     nameAsPerGovId: '',
     emailAddress: '',
+    userCode: '',
     contactNumber: '',
+    alternateContactNumber: '',
     preferredName: '',
+    villageCode: 0,
+    pincode: '',
+    addressLine1: '',
+    addressLine2: '',
     isActive: true,
-    roleIds: [4] // Default to ROLE_REPRESENTATIVE
+    roleIds: [4]
   });
+
+  interface District {
+    code: number;
+    nameEnglish: string;
+  }
+
+  interface Taluka {
+    code: number;
+    nameEnglish: string;
+  }
+
+  interface Village {
+    code: number;
+    nameEnglish: string;
+    pincode: string;
+  }
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [showMobile, setShowMobile] = useState(false);
+  const handleToggleMobile = () => setShowMobile(!showMobile);
+
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [talukas, setTalukas] = useState<Taluka[]>([]);
+  const [villages, setVillages] = useState<Village[]>([]);
+
+  const [districtCode, setDistrictCode] = useState<number>(0);
+  const [talukaCode, setTalukaCode] = useState<number>(0);
+  const [pincode, setPincode] = useState<string>("");
+  const [villageCode, setVillageCode] = useState<number>(0);
+  const [districtName, setDistrictName] = useState<string>("");
+  const [talukaName, setTalukaName] = useState<string>("");
+  const [villageName, setVillageName] = useState<string>("");
 
   useEffect(() => {
     loadOrganizations();
@@ -30,6 +73,112 @@ const UserFormManagement: React.FC = () => {
       loadUser(parseInt(id));
     }
   }, [id, isEdit]);
+
+  useEffect(() => {
+    const fetchDistrictsData = async () => {
+      try {
+        const districtData = await fetchDistricts();
+        setDistricts(districtData);
+      } catch (error) {
+        console.error('Error fetching districts:', error);
+      }
+    };
+    fetchDistrictsData();
+  }, []);
+
+  useEffect(() => {
+    if (districtCode) {
+      getDistrictNameByCode(districtCode)
+        .then((name) => setDistrictName(name))
+        .catch(() => setDistrictName("Unknown District"));
+    }
+  }, [districtCode]);
+
+  useEffect(() => {
+    const fetchTalukasData = async () => {
+      if (districtCode) {
+        try {
+          const talukaData = await fetchTalukas(districtCode);
+          setTalukas(talukaData);
+        } catch (err) {
+          console.error('Error fetching talukas:', err);
+        }
+      } else {
+        setTalukas([]);
+      }
+    };
+    fetchTalukasData();
+  }, [districtCode]);
+
+  useEffect(() => {
+    const fetchVillagesData = async () => {
+      if (talukaCode) {
+        try {
+          const villageData = await fetchVillages(talukaCode);
+          setVillages(villageData);
+        } catch (err) {
+          console.error('Error fetching villages:', err);
+        }
+      } else {
+        setVillages([]);
+      }
+    };
+    fetchVillagesData();
+  }, [talukaCode]);
+
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setDistrictCode(value);
+    setTalukaCode(0);
+    setVillageCode(0);
+    setTalukaName("");
+    setVillageName("");
+    setPincode("");
+    setFormData((prev) => ({
+      ...prev,
+      districtCode: value,
+      talukaCode: 0,
+      villageCode: 0,
+      pincode: "",
+    }));
+  };
+
+  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setTalukaCode(value);
+
+    setVillageCode(0);
+    setVillageName("");
+    setPincode("");
+    setFormData((prev) => ({
+      ...prev,
+      talukaCode: value,
+      villageCode: 0,
+      pincode: "",
+    }));
+  };
+
+  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    const selectedVillage = villages.find((village) => village.code === value);
+
+    if (selectedVillage) {
+      setVillageCode(value);
+      setPincode(selectedVillage.pincode || "");
+      setFormData((prev) => ({
+        ...prev,
+        villageCode: value,
+        pincode: selectedVillage.pincode,
+      }));
+    }
+  };
+
+  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setPincode(value);
+    setFormData((prev) => ({ ...prev, pincode: value }));
+    console.log("Current state pincode:", pincode);
+  };
 
   const loadOrganizations = async () => {
     try {
@@ -49,8 +198,14 @@ const UserFormManagement: React.FC = () => {
           password: '',
           nameAsPerGovId: data.nameAsPerGovId || '',
           emailAddress: data.emailAddress || '',
+          userCode: data.userCode || '',
           contactNumber: data.contactNumber || '',
+          alternateContactNumber: data.alternateContactNumber || '',
           preferredName: data.preferredName || '',
+          villageCode: data.villageCode,
+          pincode: data.pincode || '',
+          addressLine1: data.addressLine1 || '',
+          addressLine2: data.addressLine2 || '',
           isActive: data.isActive ?? true,
           roleIds: data.roles?.map((role: any) => role.id) || [4]
         });
@@ -59,6 +214,16 @@ const UserFormManagement: React.FC = () => {
       toast.error('Failed to load user');
       navigate('/user-management');
     }
+  };
+
+  const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmEmailAddress(value);
+  };
+
+  const handleConfirmContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmContactNumber(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +235,7 @@ const UserFormManagement: React.FC = () => {
         ...formData,
         ...(isEdit && { id: parseInt(id!) })
       };
-      
+
       await saveRepresentative(userData);
       toast.success(`User ${isEdit ? 'updated' : 'created'} successfully`);
       navigate('/user-management');
@@ -83,11 +248,24 @@ const UserFormManagement: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+
+    if (name === 'emailAddress') {
+
+      setConfirmEmailAddress('');
+    }
+
+    if (name === 'contactNumber' && value === '') {
+      setConfirmContactNumber('');
+
+    }
+
   };
+
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -103,104 +281,448 @@ const UserFormManagement: React.FC = () => {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
+      <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username *
+              Name as per Gov ID <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="govIdName"
+              value={formData.nameAsPerGovId}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                  handleChange(e);
+                }
+              }}
+              placeholder="Name as per Gov ID"
+              required
+              maxLength={50}
+              title="Please enter only your first and last name (e.g., John Doe)"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+
+            {formData.nameAsPerGovId?.trim().length > 0 &&
+              formData.nameAsPerGovId.trim().length < 2 && (
+                <p className="text-red-600 text-sm mt-1">
+                  Name must be at least 2 characters long
+                </p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Name</label>
+            <input
+              type="text"
+              name="preferredName"
+              value={formData.preferredName}
+              placeholder="Preferred name"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                  handleChange(e);
+                }
+              }}
+              maxLength={50}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+            {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
+              <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
+            )}
+
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="username"
               value={formData.username}
+              placeholder="Username"
               onChange={handleChange}
               required
               maxLength={30}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password {!isEdit && '*'}
+              User Code <span className="text-red-500">*</span>
             </label>
             <input
-              type="password"
-              name="password"
-              value={formData.password}
+              type="text"
+              name="userCode"
+              value={formData.userCode}
+              placeholder="User Code"
               onChange={handleChange}
-              required={!isEdit}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              maxLength={30}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contact Number <span className="text-red-500">*</span>
+            </label>
+
+            <div className="relative flex mt-1">
+              {/* Country Code Box */}
+              <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">
+                +91
+              </span>
+
+              <input
+                type={showMobile ? "text" : "password"}
+                inputMode="numeric"
+                pattern="[6-9]{1}[0-9]{9}"
+                maxLength={10}
+                name="contactNumber"
+                value={formData.contactNumber}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^[6-9][0-9]*$/.test(value) || value === "") {
+                    if (value.length <= 10) {
+                      handleChange(e);
+                    }
+                  }
+                }}
+                placeholder="9567023456"
+                required
+                className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                title="Enter a valid 10-digit mobile number starting with 6-9"
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+              />
+            </div>
+
+            {formData.contactNumber?.length > 0 &&
+              !/^[6-9]{1}[0-9]{0,9}$/.test(formData.contactNumber) && (
+                <p className="text-red-600 text-sm mt-1">
+                  Enter a valid 10-digit mobile number starting with 6-9
+                </p>
+              )}
+
+            {/* {mobileExists && (
+                  <p className="text-red-600 text-sm mt-1">Mobile number already exists</p>
+                )} */}
+          </div>
+
+
+          {/* Confirm Mobile Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Contact Number <span className="text-red-500">*</span></label>
+            <input
+              type="tel"
+              name="confirmContactNumber"
+              value={confirmContactNumber}
+              onChange={handleConfirmContactChange}
+              placeholder="Confirm contact number"
+              maxLength={10}
+              pattern="[6-9]{1}[0-9]{9}"
+              required
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+              title="Re-enter the same 10-digit mobile number"
+              disabled={!(
+                /^[6-9]{1}[0-9]{9}$/.test(formData.contactNumber)
+              )}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+
+            />
+            {confirmContactNumber &&
+              confirmContactNumber !== formData.contactNumber && (
+                <p className="text-red-600 text-sm mt-1">Contact numbers do not match</p>
+              )}
+          </div>
+
+          <div className="mt-3">
+  {!showAlternateContact ? (
+    <button
+      type="button"
+      onClick={() => setShowAlternateContact(true)}
+      className="text-blue-600 text-sm hover:underline"
+    >
+      + Add Alternate Contact Number
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() => {
+        setShowAlternateContact(false);
+        setAlternateContactNumber("");
+      }}
+      className="text-red-600 text-sm hover:underline"
+    >
+      - Remove Alternate Contact Number
+    </button>
+  )}
+</div>
+
+{/* Alternate Contact Number (Optional) */}
+{showAlternateContact && (
+  <div className="mt-3">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Alternate Contact Number (Optional)
+    </label>
+
+    <div className="relative flex mt-1">
+      <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">
+        +91
+      </span>
+
+      <input
+        type="text"
+        inputMode="numeric"
+        maxLength={10}
+        value={formData.alternateContactNumber}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (/^[6-9][0-9]*$/.test(value) || value === "") {
+            if (value.length <= 10) {
+              setAlternateContactNumber(value);
+            }
+          }
+        }}
+        placeholder="Optional number"
+        className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+        title="Enter a valid 10-digit mobile number starting with 6-9"
+        onCopy={(e) => e.preventDefault()}
+        onCut={(e) => e.preventDefault()}
+        onPaste={(e) => e.preventDefault()}
+      />
+    </div>
+
+    {alternateContactNumber &&
+      !/^[6-9]{1}[0-9]{0,9}$/.test(alternateContactNumber) && (
+        <p className="text-red-600 text-sm mt-1">
+          Enter a valid 10-digit mobile number starting with 6-9
+        </p>
+      )}
+  </div>
+)}
+
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="emailAddress"
+              value={formData.emailAddress}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (
+                  value === "" ||
+                  /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                    value
+                  )
+                ) {
+                  handleChange(e);
+                } else {
+                  handleChange(e);
+                }
+              }}
+              placeholder="johndoe@example.com"
+              maxLength={50}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+
+            {/* Error messages */}
+            {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email must start with a letter or number
+              </p>
+            )}
+
+            {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot contain consecutive dots
+              </p>
+            )}
+
+            {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot end with a dot before @
+              </p>
+            )}
+
+            {formData.emailAddress &&
+              !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                formData.emailAddress
+              ) &&
+              !/\.\./.test(formData.emailAddress) &&
+              !/\.@/.test(formData.emailAddress) &&
+              /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+                <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+              )}
+
+          </div>
+
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Email Address <span className="text-red-500">*</span></label>
+            <input
+              type="email"
+              name="confirmEmailAddress"
+              value={confirmEmailAddress}
+              onChange={handleConfirmEmailChange}
+              placeholder="Confirm email address"
+              maxLength={50}
+              pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+              title="Re-enter the same email"
+              disabled={!(
+                /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress)
+              )}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+            />
+            {formData.emailAddress &&
+              confirmEmailAddress &&
+              confirmEmailAddress !== formData.emailAddress && (
+                <p className="text-red-600 text-sm mt-1">Email Address do not match</p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              District <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="district"
+              value={districtCode}
+              onChange={handleDistrictChange}
+              required
+              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value={0}>{districtName || "Select District"}</option>
+              {districts.map((district) => (
+                <option key={district.nameEnglish} value={district.code}>
+                  {district.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Taluka <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="talukaCode"
+              value={talukaCode}
+              onChange={handleTalukaChange}
+              required
+              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value={0}>{talukaName || "Select Taluka"}</option>
+              {talukas.map((taluka) => (
+                <option key={taluka.nameEnglish} value={taluka.code}>
+                  {taluka.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Village
+            </label>
+            <select
+              name="villageCode"
+              value={villageCode}
+              onChange={handleVillageChange}
+              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value={0}>{villageName || "Select Village"}</option>
+              {villages.map((village) => (
+                <option key={village.code} value={village.code}>
+                  {village.nameEnglish}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pincode <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode || ''}
+              onChange={handlepincodeChange}
+              placeholder="e.g. 416000"
+              pattern="^[0-9]{6}$"
+              title="Pincode must be exactly 6 digits (0-9)"
+              maxLength={6}
+              inputMode="numeric"
+              required
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name *
-            </label>
-            <input
-              type="text"
-              name="nameAsPerGovId"
-              value={formData.nameAsPerGovId}
-              onChange={handleChange}
-              required
-              maxLength={100}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 1 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="addressLine1"
+                  value={formData.addressLine1}
+                  onChange={handleChange}
+                  placeholder="e.g. Flat No, House No, Street Name"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine1 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+                )}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="emailAddress"
-              value={formData.emailAddress}
-              onChange={handleChange}
-              maxLength={100}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 2
+                </label>
+                <input
+                  type="text"
+                  name="addressLine2"
+                  value={formData.addressLine2}
+                  onChange={handleChange}
+                  placeholder="e.g. Apartment, Suite, Unit, Building"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine2 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+                )}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contact Number
-            </label>
-            <input
-              type="text"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={handleChange}
-              maxLength={15}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preferred Name
-            </label>
-            <input
-              type="text"
-              name="preferredName"
-              value={formData.preferredName}
-              onChange={handleChange}
-              maxLength={50}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="isActive"
-              checked={formData.isActive}
-              onChange={handleChange}
-              className="mr-2"
-            />
-            <label className="text-sm font-medium text-gray-700">Active</label>
-          </div>
+
         </div>
 
         <div className="flex justify-end gap-4 mt-8">

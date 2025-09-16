@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypesNames, fetchConsumerNumber, getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
 import { checkSystemSpecificationsExists } from "../../services/quotationService";
 import { useLocation } from "react-router-dom";
-import { fetchClaims } from "../../services/jwtService";
 import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
+import { useUser } from "../../contexts/UserContext";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -52,7 +52,11 @@ export const ViewConnection = () => {
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
   const [installationsByConsumer, setInstallationsByConsumer] = useState({});
+
+  const { userClaims } = useUser();
+
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
+
 
   const sessionMap = {
     Aadhar: "Aadhaar Card",
@@ -119,18 +123,6 @@ export const ViewConnection = () => {
     setMessageBoxOpen(false);
   };
 
-  useEffect(() => {
-    const loadClaims = async () => {
-      try {
-        const data = await fetchClaims();
-        setClaims(data);
-      } catch (error) {
-        console.error("Failed to load claims", error);
-      }
-    };
-
-    loadClaims();
-  }, []);
 
 
   const fetchAndSetUploadedFiles = async () => {
@@ -420,8 +412,8 @@ export const ViewConnection = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -742,8 +734,8 @@ export const ViewConnection = () => {
                   key={key}
                   onClick={() => setActiveDocTab(key)}
                   className={`px-4 py-2 rounded-t ${activeDocTab === key
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                 >
                   {sessionMap[key]}
@@ -853,9 +845,10 @@ export const ViewConnection = () => {
 
 
 
-      {(userInfo?.role === "ROLE_ORG_ADMIN" || userInfo?.role === "ROLE_AGENCY_ADMIN"
-        || claims?.global_roles?.includes("ROLE_SUPER_ADMIN")
-      ) && connection && (
+      {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+        userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+        userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) &&
+        connection && (
           <div className="col-span-1 md:col-span-2 flex justify-start px-4">
             {connection.isOnboardedCustomers === true ? (
               <button
