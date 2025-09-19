@@ -16,7 +16,7 @@ const RepresentativeDashboard: React.FC = () => {
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
   const [data, setData] = useState([]);
-  const { userClaims, selectedOrg } = useUser();
+  const { userClaims } = useUser();
   const [statsLoading, setStatsLoading] = useState(true);
 
 
@@ -25,7 +25,7 @@ const RepresentativeDashboard: React.FC = () => {
   };
 
   const goToOnboardedCustomers = () => {
-    navigate('/OnboardedConsumers');
+    navigate('/onboarded-consumers');
   };
 
   useEffect(() => {
@@ -68,7 +68,6 @@ useEffect(() => {
     params.agencyId = selectedOrg.orgId;
   }
 
-  // ✅ Fetch customer counts
   getCustomerCount(params)
     .then((actualCount) => {
       setCount(actualCount);
@@ -83,7 +82,7 @@ useEffect(() => {
     })
     .catch(console.error);
 
-  // ✅ Fetch stats with same params
+
   getCustomerStats(params)
     .then((rawData) => {
       const oneYearAgo = new Date();

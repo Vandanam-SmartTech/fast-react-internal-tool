@@ -290,6 +290,87 @@ export const updateUser = async (userId: number, data: any) => {
   }
 };
 
+export const fetchDistricts = async (): Promise<District[]> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get('/api/district/27');
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching districts:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch districts'
+    );
+  }
+};
+
+export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/taluka/${districtCode}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching talukas:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch talukas'
+    );
+  }
+};
+
+export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/village/${talukaCode}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching villages:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch villages'
+    );
+  }
+};
+
+export const getDistrictNameByCode = async (code: number): Promise<string> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/district/name/${code}`, {
+      responseType: 'text', 
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching district name:', error);
+    return 'Unknown District'; 
+  }
+};
+
+export const getTalukaNameByCode = async (code: number): Promise<string> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/taluka/name/${code}`, {
+      responseType: 'text', 
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching taluka name:', error);
+    return 'Unknown Taluka';
+  }
+};
+
+export const getVillageNameByCode = async (code: number): Promise<string> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/village/name/${code}`, {
+      responseType: 'text', 
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching village name:', error);
+    return 'Unknown Village'; 
+  }
+};
+
 
 
 

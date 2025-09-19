@@ -33,8 +33,10 @@ import MaterialDetails from './pages/Materials/MaterialDetails';
 import OrganizationList from './pages/Organizations/OrganizationList';
 import OrganizationForm from './pages/Organizations/OrganizationForm';
 import AdminManagement from './pages/Organizations/AdminManagement';
-import AgencyList from './pages/Organizations/AgencyList';
-import AgencyForm from './pages/Organizations/AgencyForm';
+import AgencyList from './pages/Agencies/AgencyList';
+import AgencyForm from './pages/Agencies/AgencyForm';
+import AgencyView from './pages/Agencies/AgencyView';
+import EditAgency from './pages/Agencies/EditAgency';
 import OrganizationView from './pages/Organizations/OrganizationView';
 import EditOrganization from './pages/Organizations/EditOrganization';
 import UserManagement from './pages/Organizations/UserManagement';
@@ -56,7 +58,7 @@ const AppContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Define auth pages where sidebar/header should not show
-  const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
+  const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const showSidebar = !authPages.includes(location.pathname);
 
   
@@ -111,9 +113,9 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/PasswordReset" element={<PasswordReset />} />
-            <Route path="/Verification" element={<Verification />} />
-            <Route path="/ChangePassword" element={<ChangePassword />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
+            <Route path="/verification" element={<Verification />} />
+            <Route path="/change-password" element={<ChangePassword />} />
             
             
             <Route
@@ -150,7 +152,7 @@ const AppContent: React.FC = () => {
 
             {/* Dashboard Routes */}
             <Route
-              path="/AdminDashboard"
+              path="/org-admin-dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
                   <AdminDashboard />
@@ -159,7 +161,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/SuperAdminDashboard"
+              path="/super-admin-dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
                   <SuperAdminDashboard />
@@ -168,7 +170,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/RepresentativeDashboard"
+              path="/representative-dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE','ROLE_AGENCY_REPRESENTATIVE']}>
                   <RepresentativeDashboard />
@@ -177,7 +179,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/AgencyAdminDashboard"
+              path="/agency-admin-dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_AGENCY_ADMIN']}>
                   <AgencyAdminDashboard />
@@ -186,7 +188,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/StaffDashboard"
+              path="/staff-dashboard"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF','ROLE_AGENCY_STAFF']}>
                   <StaffDashboard />
@@ -196,7 +198,7 @@ const AppContent: React.FC = () => {
 
             {/* Document Routes */}
             <Route
-              path="/generatedocuments"
+              path="/generate-documents"
               element={
                 <PrivateRoute>
                   <GenerateDocuments />
@@ -204,18 +206,10 @@ const AppContent: React.FC = () => {
               }
             />
 
-            <Route
-              path="/generatedocuments/:id"
-              element={
-                <PrivateRoute>
-                  <GenerateDocuments />
-                </PrivateRoute>
-              }
-            />
 
             {/* Customer Routes */}
             <Route
-              path="/view-customer/:id"
+              path="/view-customer"
               element={
                 <PrivateRoute>
                   <ViewCustomer />
@@ -224,7 +218,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/edit-customer/:id"
+              path="/edit-customer"
               element={
                 <PrivateRoute>
                   <EditCustomer />
@@ -233,7 +227,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/CustomerForm"
+              path="/customer-form"
               element={
                 <PrivateRoute>
                   <CustomerForm />
@@ -243,7 +237,7 @@ const AppContent: React.FC = () => {
 
             {/* Connection Routes */}
             <Route
-              path="/edit-connection/:id"
+              path="/edit-connection"
               element={
                 <PrivateRoute>
                   <EditConnection />
@@ -252,7 +246,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/view-connection/:id"
+              path="/view-connection"
               element={
                 <PrivateRoute>
                   <ViewConnection />
@@ -261,7 +255,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/ConnectionForm"
+              path="/connection-form"
               element={
                 <PrivateRoute>
                   <ConnectionForm />
@@ -271,7 +265,7 @@ const AppContent: React.FC = () => {
 
             {/* Installation Routes */}
             <Route
-              path="/edit-installation/:id"
+              path="/edit-installation"
               element={
                 <PrivateRoute>
                   <EditInstallation />
@@ -280,7 +274,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/view-installation/:id"
+              path="/view-installation"
               element={
                 <PrivateRoute>
                   <ViewInstallation />
@@ -289,7 +283,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/InstallationForm"
+              path="/installation-form"
               element={
                 <PrivateRoute>
                   <InstallationForm />
@@ -299,7 +293,7 @@ const AppContent: React.FC = () => {
 
             {/* System Routes */}
             <Route
-              path="/SystemSpecifications"
+              path="/system-specifications"
               element={
                 <PrivateRoute>
                   <SystemSpecifications />
@@ -312,7 +306,7 @@ const AppContent: React.FC = () => {
 
             {/* Consumer Routes */}
             <Route
-              path="/OnboardedConsumers"
+              path="/onboarded-consumers"
               element={
                 <PrivateRoute>
                   <OnboardedConsumers />
@@ -322,7 +316,7 @@ const AppContent: React.FC = () => {
 
             {/* Material Routes */}
             <Route
-              path="/material-form/:id"
+              path="/material-form"
               element={
                 <PrivateRoute>
                   <MaterialDetails />
@@ -359,10 +353,19 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-            path="/edit-organization/:id"
+            path="/edit-organization"
             element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}>
                   <EditOrganization />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+            path="/edit-agency"
+            element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}>
+                  <EditAgency />
                 </RoleProtectedRoute>
               }
             />
@@ -377,7 +380,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/agencies/:orgId"
+              path="/agencies"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
                   <AgencyList />
@@ -404,7 +407,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/organization-view/:id"
+              path="/organization-view"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <OrganizationView />
@@ -469,7 +472,7 @@ const AppContent: React.FC = () => {
         </div>
       </main>
       
-      {/* Footer - Only show on authenticated pages */}
+      
       {showSidebar && <Footer />}
     </div>
   );

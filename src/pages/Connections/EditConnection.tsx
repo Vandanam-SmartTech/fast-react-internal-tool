@@ -696,7 +696,7 @@ export const EditConnection = () => {
             hideProgressBar: true,
           });
 
-          navigate(`/view-connection/${connectionId}`, {
+          navigate(`/view-connection`, {
             state: {
               customerId,
               connectionId, consumerId: formData.consumerId,
@@ -751,7 +751,7 @@ export const EditConnection = () => {
                   onClick={() => {
                     setActiveTab(tab);
                     if (tab === "Customer Details") {
-                      navigate(`/view-customer/${customerId}`, {
+                      navigate(`/view-customer`, {
                         state: {
                           customerId,
                         },
@@ -950,8 +950,8 @@ export const EditConnection = () => {
               </label>
               <input
                 type="text"
-                inputMode="numeric"   // mobile keyboard numeric
-                pattern="[1-9][0-9]*" // regex: only positive integers > 0
+                inputMode="numeric"   
+                pattern="[1-9][0-9]*" 
                 name="monthlyAvgConsumptionUnits"
                 value={formData.monthlyAvgConsumptionUnits}
                 onChange={(e) => {
@@ -989,7 +989,7 @@ export const EditConnection = () => {
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric" // mobile numeric keypad
+                  inputMode="numeric" 
                   name="discomId"
                   value={formData.discomId}
                   onChange={(e) => {

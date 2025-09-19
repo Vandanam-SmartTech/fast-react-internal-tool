@@ -190,7 +190,7 @@ export const ViewCustomer = () => {
                 onClick={() => setShowUserModal(true)}
               >
                 <User className="w-4 h-4" />
-                <span className="font-medium">Referred By: {referredByUser?.nameAsPerGovId || 'User'}</span>
+                <span className="font-medium">Referrer: {referredByUser?.nameAsPerGovId || 'User'}</span>
               </div>
             </div>
 
@@ -268,7 +268,7 @@ export const ViewCustomer = () => {
           <div className="flex gap-3 justify-start mt-6 max-w-4xl mx-auto">
             <button
               onClick={() =>
-                navigate(`/edit-customer/${customerId}`, {
+                navigate(`/edit-customer`, {
                   state: {
                     customerId,
                   },
@@ -282,7 +282,7 @@ export const ViewCustomer = () => {
             {connections.length === 0 && (
               <button
                 onClick={() =>
-                  navigate(`/ConnectionForm`, {
+                  navigate(`/connection-form`, {
                     state: {
                       customerId,
                       govIdName: customer.govIdName,
@@ -322,7 +322,7 @@ export const ViewCustomer = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/view-connection/${connection.id}`, {
+                            navigate(`/view-connection`, {
                               state: {
                                 consumerId: connection.consumerId,
                                 customerId,
@@ -435,7 +435,7 @@ export const ViewCustomer = () => {
                       <div className="w-full grid grid-cols-2 gap-4 md:flex md:justify-start md:gap-4">
                         <button
                           onClick={() =>
-                            navigate(`/edit-connection/${connection.id}`, {
+                            navigate(`/edit-connection`, {
                               state: {
                                 consumerId: connection.consumerId,
                                 connectionId: connection.id,
@@ -450,7 +450,7 @@ export const ViewCustomer = () => {
 
                         <button
                           onClick={() =>
-                            navigate(`/SystemSpecifications`, {
+                            navigate(`/system-specifications`, {
                               state: {
                                 connectionId: connection.id,
                                 consumerId: connection.consumerId,
@@ -553,7 +553,7 @@ export const ViewCustomer = () => {
                               <div className="flex mt-6">
                                 <button
                                   onClick={() =>
-                                    navigate(`/edit-installation/${installation.id}`, {
+                                    navigate(`/edit-installation`, {
                                       state: {
                                         installationId: installation.id,
                                         connectionId: connection.id,
@@ -574,7 +574,7 @@ export const ViewCustomer = () => {
 
                       <button
                         onClick={() => {
-                          navigate(`/InstallationForm`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
+                          navigate(`/installation-form`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
                         }}
                         className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
                       >
@@ -593,7 +593,7 @@ export const ViewCustomer = () => {
               <div className="flex justify-start mt-6">
                 <button
                   onClick={() =>
-                    navigate(`/ConnectionForm`, {
+                    navigate(`/connection-form`, {
                       state: {
                         customerId: customerId,
                         govIdName: customer.govIdName,

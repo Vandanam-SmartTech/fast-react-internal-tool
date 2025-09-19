@@ -675,7 +675,7 @@ export const ConnectionForm = () => {
           hideProgressBar: true,
         });
 
-        navigate(`/view-connection/${result.id}`, {
+        navigate(`/view-connection`, {
           state: {
             consumerId: formData.consumerId, customerId, connectionId: result.id,
           },
@@ -749,7 +749,7 @@ export const ConnectionForm = () => {
                     onClick={() => {
                       setActiveTab(tab);
                       if (tab === "Customer Details") {
-                        navigate(`/view-customer/${customerId}`, {
+                        navigate(`/view-customer`, {
                           state: {
                             customerId,
                           },

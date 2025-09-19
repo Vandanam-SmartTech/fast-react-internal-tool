@@ -395,7 +395,7 @@ useEffect(() => {
           hideProgressBar: true,
         });
 
-        navigate(`/view-customer/${result.id}`, {
+        navigate(`/view-customer`, {
           state: {
             customerId: result.id
           },
@@ -500,7 +500,7 @@ useEffect(() => {
             {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
               selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && (<div className="col-span-2 w-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-                  Select Referred by User Type <span className="text-red-500">*</span>
+                  Select Referrer User Type <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
                   {[

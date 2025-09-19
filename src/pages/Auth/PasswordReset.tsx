@@ -19,29 +19,12 @@ const PasswordReset: React.FC = () => {
 
   const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null);
 
-//   useEffect(() => {
-//   const checkPasswordChangeStatus = async () => {
-//     const token = localStorage.getItem('jwtToken');
-//     if (!token) return;
-
-//     try {
-//       const claims = await fetchClaims();
-//       if (claims && typeof claims.is_password_changed !== 'undefined') {
-//         setIsFirstLogin(!claims.is_password_changed);
-//       }
-//     } catch (err) {
-//       console.error('Error fetching claims:', err);
-//     }
-//   };
-
-//   checkPasswordChangeStatus();
-// }, []);
 
 useEffect(() => {
     if (!userClaims) return;
 
-    if (typeof userClaims.is_password_changed !== "undefined") {
-      setIsFirstLogin(!userClaims.is_password_changed);
+    if (typeof userClaims.has_password_changed !== "undefined") {
+      setIsFirstLogin(!userClaims.has_password_changed);
     }
   }, [userClaims]);
 
@@ -51,11 +34,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   setError('');
   setMessage('');
 
-  const expiryTime = Date.now() + 3 * 60 * 1000; // 3 minutes
-  const resendTime = Date.now() + 60 * 1000;     // 1 minute
+  const expiryTime = Date.now() + 3 * 60 * 1000; 
+  const resendTime = Date.now() + 60 * 1000;     
 
 
-  navigate('/Verification', {
+  navigate('/verification', {
     state: {
       email: emailInput,
       msg: 'If the user is registered, an email has been sent.',

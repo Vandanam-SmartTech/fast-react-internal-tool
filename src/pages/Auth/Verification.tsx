@@ -30,28 +30,28 @@ const Verification: React.FC = () => {
   const countdownInterval = useRef<NodeJS.Timeout | null>(null);
 
   const tooManyAttemptsMessage = emailToVerify
-  ? 'Too many attempts. Please try again by resending the OTP.'
-  : 'Too many attempts. Please try again later.';
+    ? 'Too many attempts. Please try again by resending the OTP.'
+    : 'Too many attempts. Please try again later.';
 
 
-useEffect(() => {
-  if (!email && !msg) {
-    navigate('/PasswordReset');
-  }
-}, [email, msg, navigate]);
-
-useEffect(() => {
-  const resolveEmail = async () => {
-    try {
-      const resolvedEmail = await validateUser(email);
-      setEmailToVerify(resolvedEmail);
-    } catch (err) {
-      
+  useEffect(() => {
+    if (!email && !msg) {
+      navigate('/password-reset');
     }
-  };
+  }, [email, msg, navigate]);
 
-  if (email) resolveEmail();
-}, [email]);
+  useEffect(() => {
+    const resolveEmail = async () => {
+      try {
+        const resolvedEmail = await validateUser(email);
+        setEmailToVerify(resolvedEmail);
+      } catch (err) {
+
+      }
+    };
+
+    if (email) resolveEmail();
+  }, [email]);
 
 
 
@@ -94,7 +94,7 @@ useEffect(() => {
       toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar: true });
 
       setTimeout(() => {
-        navigate('/ChangePassword', {
+        navigate('/change-password', {
           state: { emailToVerify, msg, msg1: 'Otp verified successfully' },
         });
       }, 1000);
@@ -112,32 +112,32 @@ useEffect(() => {
   };
 
 
-const handleResend = async () => {
-  setResending(true);
-  try {
-    await sendOtpToEmail(emailToVerify);
-  } catch (err){
-    
-  } finally {
-    const now = Date.now();
-    const newExpiry = now + 3 * 60 * 1000;
-    const newResend = now + 60 * 1000;
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await sendOtpToEmail(emailToVerify);
+    } catch (err) {
 
-    setCountdown(180);         
-    setResendCountdown(60);    
-    setAttempts(0);
-    setIsLocked(false);
-    setOtp('');
-    setError('');
+    } finally {
+      const now = Date.now();
+      const newExpiry = now + 3 * 60 * 1000;
+      const newResend = now + 60 * 1000;
 
-    toast.success('OTP resent successfully!', {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
+      setCountdown(180);
+      setResendCountdown(60);
+      setAttempts(0);
+      setIsLocked(false);
+      setOtp('');
+      setError('');
 
-    setResending(false);
-  }
-};
+      toast.success('OTP resent successfully!', {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      setResending(false);
+    }
+  };
 
 
   const formatCountdown = (seconds: number) => {
@@ -197,20 +197,19 @@ const handleResend = async () => {
           <button
             type="submit"
             disabled={isLocked}
-            className={`w-full py-1 sm:py-2 rounded-lg font-semibold transition ${
-              isLocked ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            className={`w-full py-1 sm:py-2 rounded-lg font-semibold transition ${isLocked ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
           >
             Verify OTP
           </button>
 
           <p className="text-center my-2 text-sm text-gray-600">
-  {countdown > 0 && !isLocked ? (
-    `OTP expires in: ${formatCountdown(countdown)}`
-  ) : (
-    'OTP expired. Please resend OTP.'
-  )}
-</p>
+            {countdown > 0 && !isLocked ? (
+              `OTP expires in: ${formatCountdown(countdown)}`
+            ) : (
+              'OTP expired. Please resend OTP.'
+            )}
+          </p>
 
 
           <div className="flex justify-between items-center flex-wrap gap-2 mt-2 mb-3 text-sm text-blue-600 font-medium">
@@ -223,21 +222,20 @@ const handleResend = async () => {
             </button>
 
             {emailToVerify && (
-  <button
-    type="button"
-    onClick={handleResend}
-    className={`hover:underline ${
-      resendCountdown > 0 || resending ? 'text-gray-400 pointer-events-none' : 'text-blue-600'
-    }`}
-    disabled={resendCountdown > 0 || resending}
-  >
-    {resending
-      ? 'Sending...'
-      : resendCountdown > 0
-      ? `Resend in ${resendCountdown}s`
-      : 'Resend OTP'}
-  </button>
-)}
+              <button
+                type="button"
+                onClick={handleResend}
+                className={`hover:underline ${resendCountdown > 0 || resending ? 'text-gray-400 pointer-events-none' : 'text-blue-600'
+                  }`}
+                disabled={resendCountdown > 0 || resending}
+              >
+                {resending
+                  ? 'Sending...'
+                  : resendCountdown > 0
+                    ? `Resend in ${resendCountdown}s`
+                    : 'Resend OTP'}
+              </button>
+            )}
 
           </div>
         </form>

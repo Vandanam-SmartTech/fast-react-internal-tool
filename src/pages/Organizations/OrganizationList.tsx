@@ -30,7 +30,7 @@ const OrganizationList: React.FC = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    const filtered = organizations.filter(org => 
+    const filtered = organizations.filter(org =>
       org.name.toLowerCase().includes(term.toLowerCase()) ||
       org.displayName?.toLowerCase().includes(term.toLowerCase()) ||
       org.contactNumber?.includes(term) ||
@@ -79,7 +79,7 @@ const OrganizationList: React.FC = () => {
           <Building className="h-6 w-6" />
           Organizations
         </h1>
-        
+
         {/* Search and Add Button */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative">
@@ -134,7 +134,7 @@ const OrganizationList: React.FC = () => {
                       {org.name}
                     </h3>
                   </div>
-                  
+
                   {/* Dropdown Menu */}
                   <div className="relative flex-shrink-0">
                     <button
@@ -146,12 +146,14 @@ const OrganizationList: React.FC = () => {
                     >
                       <MoreVertical className="h-4 w-4 text-gray-500" />
                     </button>
-                    
+
                     {openDropdown === org.id && (
                       <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
                         <button
                           onClick={() => {
-                            navigate(`/organization-view/${org.id}`);
+                            navigate("/organization-view", {
+                              state: { orgId: org.id }
+                            });
                             setOpenDropdown(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -161,7 +163,9 @@ const OrganizationList: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            navigate(`/agencies/${org.id}`);
+                            navigate("/agencies", {
+                              state: { orgId: org.id }
+                            });
                             setOpenDropdown(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -171,8 +175,8 @@ const OrganizationList: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            navigate(`/edit-organization/${org.id}`, {
-                              state:{
+                            navigate(`/edit-organization`, {
+                              state: {
                                 organizationId: org.id
                               }
                             });
@@ -210,8 +214,8 @@ const OrganizationList: React.FC = () => {
                       <span className="truncate">{org.contactNumber}</span>
                     </div>
                   )}
-                  
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
                     <FileText className="h-4 w-4 flex-shrink-0" />
                     <span className="truncate" title={org.gstNumber || 'Not Available'}>
                       {org.gstNumber || 'Not Available'}
@@ -224,25 +228,35 @@ const OrganizationList: React.FC = () => {
               <div className="border-t border-gray-100 p-3 bg-gray-50">
                 <div className="flex justify-between items-center gap-2">
                   <button
-                    onClick={() => navigate(`/organization-view/${org.id}`)}
+                    onClick={() =>
+                      navigate("/organization-view", {
+                        state: { orgId: org.id }
+                      })
+                    }
+
                     className="flex-1 bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
                   >
                     <Eye className="h-3 w-3" />
                     <span className="hidden sm:inline">View</span>
                   </button>
-                  
+
                   <button
-                    onClick={() => navigate(`/agencies/${org.id}`)}
+                    onClick={() =>
+                      navigate("/agencies", {
+                        state: { orgId: org.id }
+                      })
+                    }
+
                     className="flex-1 bg-white text-green-600 border border-green-300 px-3 py-2 rounded text-sm hover:bg-green-50 transition-colors flex items-center justify-center gap-1"
                   >
                     <Building2 className="h-3 w-3" />
                     <span className="hidden sm:inline">Agencies</span>
                   </button>
-                  
+
                   <button
-                    onClick={() => navigate(`/edit-organization/${org.id}`,{
-                      state:{
-                        organizationId:org.id
+                    onClick={() => navigate(`/edit-organization`, {
+                      state: {
+                        organizationId: org.id
                       }
                     })}
                     className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"

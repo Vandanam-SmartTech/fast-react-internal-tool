@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./ui";
@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
+  const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const isAuthPage = authPages.includes(location.pathname);
 
   const toggleSidebar = () => {
@@ -64,8 +64,8 @@ const Sidebar: React.FC = () => {
   }, [isOpen]);
 
   const goToListOfConsumers = () => navigate("/list-of-consumers");
-  const goToOnboardedConsumers = () => navigate("/OnboardedConsumers");
-  const goToCustomerForm = () => navigate("/CustomerForm");
+  const goToOnboardedConsumers = () => navigate("/onboarded-consumers");
+  const goToCustomerForm = () => navigate("/customer-form");
   const goToOrganizations = () => navigate("/organizations");
   const goToAdminManagement = () => navigate("/admin-management");
   const goToUserManagement = () => navigate("/user-management");
@@ -79,7 +79,7 @@ const Sidebar: React.FC = () => {
       }
 
       if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-        navigate("/SuperAdminDashboard");
+        navigate("/super-admin-dashboard");
         return;
       }
 
@@ -111,22 +111,22 @@ const Sidebar: React.FC = () => {
       // Navigate by org role
       switch (orgData.role) {
         case "ROLE_ORG_ADMIN":
-          navigate("/AdminDashboard");
+          navigate("/org-admin-dashboard");
           break;
         case "ROLE_AGENCY_ADMIN":
-          navigate("/AgencyAdminDashboard");
+          navigate("/agency-admin-dashboard");
           break;
         case "ROLE_ORG_STAFF":
-          navigate("/StaffDashboard");
+          navigate("/staff-dashboard");
           break;
         case "ROLE_ORG_REPRESENTATIVE":
-          navigate("/RepresentativeDashboard");
+          navigate("/representative-dashboard");
           break;
         case "ROLE_AGENCY_STAFF":
-          navigate("/StaffDashboard");
+          navigate("/staff-dashboard");
           break;
         case "ROLE_AGENCY_REPRESENTATIVE":
-          navigate("/RepresentativeDashboard");
+          navigate("/representative-dashboard");
           break;
         default:
           alert("Unauthorized role.");
@@ -174,11 +174,11 @@ const Sidebar: React.FC = () => {
             "/user-management",
           ];
           const dashboardPages = [
-            "/AdminDashboard",
-            "/SuperAdminDashboard",
-            "/RepresentativeDashboard",
-            "/AgencyAdminDashboard",
-            "/StaffDashboard",
+            "/org-admin-dashboard",
+            "/super-admin-dashboard",
+            "/representative-dashboard",
+            "/agency-admin-dashboard",
+            "/staff-dashboard",
           ];
 
           if (restrictedPages.includes(currentPath)) {
@@ -207,19 +207,19 @@ const Sidebar: React.FC = () => {
 
     const redirectToDashboard = (allRoles: string[]) => {
       if (allRoles.includes("ROLE_SUPER_ADMIN")) {
-        navigate("/SuperAdminDashboard");
+        navigate("/super-admin-dashboard");
       } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
-        navigate("/AdminDashboard");
+        navigate("/org-admin-dashboard");
       } else if (allRoles.includes("ROLE_ORG_REPRESENTATIVE")) {
-        navigate("/RepresentativeDashboard");
+        navigate("/representative-dashboard");
       } else if (allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")) {
-        navigate("/RepresentativeDashboard");
+        navigate("/representative-dashboard");
       } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
-        navigate("/AgencyAdminDashboard");
+        navigate("/agency-admin-dashboard");
       } else if (allRoles.includes("ROLE_ORG_STAFF")) {
-        navigate("/StaffDashboard");
+        navigate("/staff-dashboard");
       } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
-        navigate("/StaffDashboard");
+        navigate("/staff-dashboard");
       } else {
         navigate("/login");
       }
@@ -292,11 +292,11 @@ const Sidebar: React.FC = () => {
               <button
                 onClick={handleHomeClick}
                 className={`nav-link w-full justify-start ${isActive([
-                  "/AdminDashboard",
-                  "/RepresentativeDashboard",
-                  "/SuperAdminDashboard",
-                  "/AgencyAdminDashboard",
-                  "/StaffDashboard"
+                  "/org-admin-dashboard",
+                  "/representative-dashboard",
+                  "/super-admin-dashboard",
+                  "/agency-admin-dashboard",
+                  "/staff-dashboard"
                 ])
                   ? "nav-link-active"
                   : "nav-link-inactive"
@@ -313,9 +313,9 @@ const Sidebar: React.FC = () => {
                 <button
                   onClick={() => setCustomersExpanded(!customersExpanded)}
                   className={`nav-link w-full justify-between ${[
-                    "/CustomerForm",
+                    "/customer-form",
                     "/list-of-consumers",
-                    "/OnboardedConsumers",
+                    "/onboarded-consumers",
                   ].includes(location.pathname)
                     ? "nav-link-active"
                     : "nav-link-inactive"
@@ -333,7 +333,7 @@ const Sidebar: React.FC = () => {
                     
                     <button
                       onClick={goToCustomerForm}
-                      className={`nav-link w-full justify-start ${location.pathname === "/CustomerForm"
+                      className={`nav-link w-full justify-start ${location.pathname === "/customer-form"
                         ? "nav-link-active"
                         : "nav-link-inactive"
                         }`}
@@ -357,7 +357,7 @@ const Sidebar: React.FC = () => {
                     
                     <button
                       onClick={goToOnboardedConsumers}
-                      className={`nav-link w-full justify-start ${location.pathname === "/OnboardedConsumers"
+                      className={`nav-link w-full justify-start ${location.pathname === "/onboarded-consumers"
                         ? "nav-link-active"
                         : "nav-link-inactive"
                         }`}

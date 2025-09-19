@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchOnboardedConsumers, getMaterialsByConnectionId, searchOnboardedConsumers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Mail, Phone, User, Zap, Search, Users, UserCheck, FileText, Package, RefreshCw, Eye, Plus, CheckCircle } from "lucide-react";
+import { Mail, Phone, User, Zap, Search, Users, FileText, Package, RefreshCw, Eye, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
@@ -29,7 +29,6 @@ const OnboardedConsumers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
   const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
-  const [allConsumers, setAllConsumers] = useState<Consumer[]>([]);
 
   // refs to handle debounced searching and race conditions
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,7 +53,7 @@ const OnboardedConsumers: React.FC = () => {
 
   const handleViewConsumer = (consumer: Consumer) => {
     console.log('Viewing onboarded consumer:', { consumer });
-    navigate(`/view-connection/${consumer.id}`, {
+    navigate(`/view-connection`, {
       state: {
         customerId: consumer.customerId,
         connectionId: consumer.id,
@@ -64,17 +63,17 @@ const OnboardedConsumers: React.FC = () => {
   };
 
   const handleGenerateDocuments = (consumer: Consumer) => {
-    navigate(`/generatedocuments/${consumer.id}`, { state: { consumer } });
+    navigate(`/generate-documents`, { state: { consumer } });
   };
 
   const handleMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form/${consumer.id}`, {
+    navigate(`/material-form`, {
       state: { consumer, connectionId: consumer.id },
     });
   };
 
   const handleViewMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form/${consumer.id}`, {
+    navigate(`/material-form`, {
       state: { consumer, connectionId: consumer.id },
     });
   };
@@ -143,40 +142,12 @@ const OnboardedConsumers: React.FC = () => {
     }
   };
 
-  // Load all onboarded consumers for comprehensive search
-  // const loadAllOnboardedConsumers = async () => {
-  //   if (allConsumers.length > 0) return; // Already loaded
-
-  //   try {
-  //     setIsLoadingAll(true);
-  //     const allData: Consumer[] = [];
-  //     let currentPage = 0;
-  //     let hasMorePages = true;
-
-  //     while (hasMorePages) {
-  //       const data = await fetchOnboardedConsumers(currentPage);
-  //       allData.push(...data.content);
-
-  //       if (currentPage >= data.totalPages - 1) {
-  //         hasMorePages = false;
-  //       } else {
-  //         currentPage++;
-  //       }
-  //     }
-
-  //     setAllConsumers(allData);
-  //   } catch (error) {
-  //     console.error("Error loading all onboarded consumers:", error);
-  //   } finally {
-  //     setIsLoadingAll(false);
-  //   }
-  // };
 
   const handleSearch = (query: string) => {
       setSearchQuery(query);
     };
   
-    // Debounced remote search with race protection
+    
     useEffect(() => {
       // Clear any pending timeout
       if (searchTimeoutRef.current) {
@@ -185,18 +156,18 @@ const OnboardedConsumers: React.FC = () => {
   
       const trimmed = searchQuery.trim();
   
-      // If query is empty, clear results immediately
+      
       if (trimmed === "") {
         setSearchResults([]);
         return;
       }
   
-      // Avoid firing for very short inputs
+      
       if (trimmed.length < 2) {
         return;
       }
   
-      // Debounce actual API search
+      
       searchTimeoutRef.current = setTimeout(async () => {
         const currentSeq = ++latestSearchSeqRef.current;
   
@@ -237,7 +208,7 @@ const OnboardedConsumers: React.FC = () => {
           console.log("Sending search request with params:", { query: trimmed, ...params });
           const results = await searchOnboardedConsumers(trimmed, params);
   
-          // Only apply results if this is the latest search
+          
           if (currentSeq === latestSearchSeqRef.current) {
             setSearchResults(results);
           }
@@ -256,7 +227,7 @@ const OnboardedConsumers: React.FC = () => {
       };
     }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
 
-  // Load materials for search results
+
   useEffect(() => {
     const loadMaterialsForSearchResults = async () => {
       if (searchResults.length === 0) return;
@@ -320,7 +291,6 @@ const OnboardedConsumers: React.FC = () => {
     loadMaterialsForConsumers();
   }, [consumers]);
 
-  // Determine which data to display
   const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
@@ -332,11 +302,11 @@ const OnboardedConsumers: React.FC = () => {
         if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
           setUserRole("ROLE_SUPER_ADMIN");
 
-          // Only fetch organizations if SUPER ADMIN
+          
           const orgs = await fetchOrganizations();
           setOrganizations(orgs);
         } else {
-          // For other roles, you can set role here
+
           setUserRole(claims.role || "");
         }
       } catch (error) {
@@ -387,7 +357,7 @@ const OnboardedConsumers: React.FC = () => {
       try {
         let orgIdToFetch: number | null = null;
 
-        // Priority: if dropdown selections exist, use them
+        
         if (selectedAgencyId) {
           orgIdToFetch = selectedAgencyId;
         } else if (selectedOrgId) {
@@ -435,9 +405,7 @@ const OnboardedConsumers: React.FC = () => {
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, []);
 
-  // useEffect(() => {
-  //   loadAllOnboardedConsumers();
-  // }, []);
+
 
   const renderPagination = () => {
     if (searchQuery.trim() !== "") return null;
@@ -491,12 +459,12 @@ const OnboardedConsumers: React.FC = () => {
         );
       }
 
-      // Ellipsis if needed
+      
       if (currentPage < totalPages - 3) {
         pages.push(<span key="dots2" className="px-2">...</span>);
       }
 
-      // Last page
+
       pages.push(
         <Button
           key="last"
@@ -515,7 +483,7 @@ const OnboardedConsumers: React.FC = () => {
   const renderConsumerCard = (consumer: Consumer) => (
     <Card key={consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
       <CardBody className="p-6">
-        {/* Header with status indicators */}
+
         <div className="flex items-start justify-between mb-5">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
@@ -533,7 +501,7 @@ const OnboardedConsumers: React.FC = () => {
           </div>
         </div>
 
-        {/* Contact Information */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
           <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
@@ -564,7 +532,7 @@ const OnboardedConsumers: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+
         <div className="space-y-3">
           <div className="flex gap-2">
             <Button
@@ -617,20 +585,18 @@ const OnboardedConsumers: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header Section */}
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
               Onboarded Consumers
             </h1>
-            {/* <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Manage customers who have completed the onboarding process
-            </p> */}
+
 
 
           </div>
-          {/* Organization + Agency Selects */}
+          
           <div className="flex gap-4">
 
 
@@ -665,7 +631,7 @@ const OnboardedConsumers: React.FC = () => {
                   ))}
                 </select>
 
-                {/* Custom dropdown arrow (only when no org is selected) */}
+                
                 {!selectedOrgId && (
                   <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-900">
                     <svg
@@ -680,7 +646,7 @@ const OnboardedConsumers: React.FC = () => {
                   </div>
                 )}
 
-                {/* X button to clear selection */}
+
                 {selectedOrgId && (
                   <button
                     type="button"
@@ -713,7 +679,7 @@ const OnboardedConsumers: React.FC = () => {
               </div>
             )}
 
-            {/* Agency Dropdown */}
+
             {agencies.length > 0 && (
               <div className="relative w-60">
                 <select
@@ -723,7 +689,6 @@ const OnboardedConsumers: React.FC = () => {
                     const agencyId = e.target.value ? Number(e.target.value) : null;
                     setSelectedAgencyId(agencyId);
 
-                    // reset user when agency changes
                     setSelectedUserId(null);
                   }}
                   disabled={agencies.length === 0}
@@ -852,9 +817,8 @@ const OnboardedConsumers: React.FC = () => {
       </div>
 
 
-      {/* Search and Filter Section */}
       <div className="mb-6 space-y-4">
-        {/* Search Bar */}
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
           <input
@@ -868,7 +832,7 @@ const OnboardedConsumers: React.FC = () => {
 
       </div>
 
-      {/* Results Summary */}
+
       <div className="mb-4 flex items-center justify-between">
         <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
@@ -885,7 +849,7 @@ const OnboardedConsumers: React.FC = () => {
         )}
       </div>
 
-      {/* Loading State */}
+
       {loading && (
         <div className="text-center py-12">
           <div className="inline-flex items-center gap-2 text-secondary-600 dark:text-secondary-400">
@@ -895,7 +859,7 @@ const OnboardedConsumers: React.FC = () => {
         </div>
       )}
 
-      {/* Loading All Data for Search */}
+
       {isLoadingAll && (
         <div className="text-center py-12">
           <div className="inline-flex items-center gap-2 text-secondary-600 dark:text-secondary-400">
@@ -905,7 +869,7 @@ const OnboardedConsumers: React.FC = () => {
         </div>
       )}
 
-      {/* Results Grid */}
+
       {!loading && !isLoadingAll && (
         <>
           {displayData.length === 0 ? (

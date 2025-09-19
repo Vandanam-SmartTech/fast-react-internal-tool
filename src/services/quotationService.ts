@@ -293,4 +293,119 @@ export const fetchSystemRelatedDetails = async (connectionId: number) => {
   }
 };
 
+export const getMaterialOrigins = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get('/api/material-origins');
+    console.log('Material origins:', response.data);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Failed to fetch material origins.';
+    alert(message);
+    console.error('Error fetching material origins:', error);
+    return null;
+  }
+};
+
+export const getGridTypes = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get('/api/grid-types');
+    console.log('Grid types:', response.data);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'Failed to fetch grid types.';
+    alert(message);
+    console.error('Error fetching grid types:', error);
+    return null;
+  }
+};
+
+export const fetchInverterBrands = async (
+  phaseTypeId: number,
+  gridTypeId: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching inverters...");
+    console.log("Request params:", { phaseTypeId, gridTypeId });
+
+    const response = await quotationAPI.get(`/api/inverter-brands/by-grid-phase`, {
+      params: { phaseTypeId, gridTypeId },
+    });
+
+    return response.data; 
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch inverter brands from server");
+  }
+};
+
+
+export const fetchInverterBrandCapacities = async (
+  inverterBrandId: number
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching inverter capacities...");
+    console.log("Request params:", {
+      inverterBrandId,
+    });
+
+    const response = await quotationAPI.get(`/api/inverter-specs/by-brand`, {
+      params: {
+        inverterBrandId
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch inverter brand capacities from server');
+  }
+};
+
+export const fetchPanelBrands = async (
+  materialOriginId: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching panels...");
+    console.log("Request params:", { materialOriginId });
+
+    const response = await quotationAPI.get(`/api/panel-brands/by-material-origin`, {
+      params: { materialOriginId },
+    });
+
+    return response.data; 
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch panel brands from server");
+  }
+};
+
+export const fetchPanelBrandCapacities = async (
+  phaseTypeId: number,
+  panelBrandId: number,
+  monthlyAvgConsumptionUnits: number
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching panel brand capacities...");
+
+    const response = await quotationAPI.get("/api/panel-specs/pv-capacity", {
+      params: {
+        phaseTypeId,
+        panelBrandId,
+        monthlyAvgUnit: monthlyAvgConsumptionUnits
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch panel brand capacities from server");
+  }
+};
+
 

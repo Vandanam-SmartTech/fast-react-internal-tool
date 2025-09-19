@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical } from 'lucide-react';
 import { getChildOrganizations, deleteOrganization, Organization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 const AgencyList: React.FC = () => {
-  const { orgId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const orgId = location.state?.orgId;
   const [agencies, setAgencies] = useState<Organization[]>([]);
   const [filteredAgencies, setFilteredAgencies] = useState<Organization[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
   useEffect(() => {
@@ -20,10 +22,10 @@ const AgencyList: React.FC = () => {
   }, [orgId]);
 
   const toggleDropdown = (id: number) => {
-  setOpenDropdown(openDropdown === id ? null : id);
-};
+    setOpenDropdown(openDropdown === id ? null : id);
+  };
 
-useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = () => setOpenDropdown(null);
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -43,7 +45,7 @@ useEffect(() => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    const filtered = agencies.filter(agency => 
+    const filtered = agencies.filter(agency =>
       agency.name.toLowerCase().includes(term.toLowerCase()) ||
       agency.displayName?.toLowerCase().includes(term.toLowerCase()) ||
       agency.contactNumber?.includes(term)
@@ -65,7 +67,7 @@ useEffect(() => {
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
 
-return (
+  return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
@@ -81,7 +83,7 @@ return (
             Agencies
           </h1>
         </div>
-        
+
         {/* Search and Add Button */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative">
@@ -95,7 +97,11 @@ return (
             />
           </div>
           <button
-            onClick={() => navigate(`/agency-form/${orgId}`)}
+            onClick={() =>
+              navigate("/agency-form", {
+                state: { orgId: orgId },
+              })
+            }
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
@@ -113,7 +119,11 @@ return (
           </p>
           {!searchTerm && (
             <button
-              onClick={() => navigate(`/agency-form/${orgId}`)}
+              onClick={() =>
+                navigate("/agency-form", {
+                  state: { orgId: orgId },
+                })
+              }
               className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Create your first agency
@@ -136,7 +146,7 @@ return (
                       {agency.name}
                     </h3>
                   </div>
-                  
+
                   {/* Dropdown Menu */}
                   <div className="relative flex-shrink-0">
                     <button
@@ -148,7 +158,7 @@ return (
                     >
                       <MoreVertical className="h-4 w-4 text-gray-500" />
                     </button>
-                    
+
                     {openDropdown === agency.id && (
                       <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
                         <button
@@ -163,7 +173,12 @@ return (
                         </button>
                         <button
                           onClick={() => {
-                            navigate(`/agency-form/${orgId}/${agency.id}`);
+                            navigate("/edit-agency", {
+                              state: {
+                                orgId: orgId,
+                                agencyId: agency.id
+                              },
+                            });
                             setOpenDropdown(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
@@ -191,7 +206,7 @@ return (
                       {agency.displayName || 'Not Available'}
                     </span>
                   </div>
-                  
+
                   {/* Contact Info */}
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Phone className="h-4 w-4 flex-shrink-0" />
@@ -212,7 +227,7 @@ return (
                     <Eye className="h-3 w-3" />
                     <span className="hidden sm:inline">View</span>
                   </button>
-                  
+
                   <button
                     onClick={() => navigate(`/agency-form/${orgId}/${agency.id}`)}
                     className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"

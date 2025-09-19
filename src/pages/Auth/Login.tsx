@@ -20,7 +20,7 @@ interface UserClaims {
   email?: string;
   global_roles?: string[];
   org_roles?: Record<string, OrgRoleData>;
-  is_password_changed?: boolean;
+  has_password_changed?: boolean;
   [key: string]: any;
 }
 
@@ -33,8 +33,6 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const { userClaims, refreshUserClaims, setSelectedOrg } = useUser();
 
   // useEffect(() => {
   //   if (userClaims) {
@@ -75,8 +73,8 @@ const handleLogin = async (e: React.FormEvent) => {
 
     const claims = await fetchClaims();
 
-      if (!claims.is_password_changed) {
-        navigate('/PasswordReset');
+      if (!claims.has_password_changed) {
+        navigate('/password-reset');
         return;
       }
 
@@ -94,7 +92,7 @@ const handleLogin = async (e: React.FormEvent) => {
 
     const handleRoleRouting = (claims: UserClaims) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
-      navigate('/SuperAdminDashboard');
+      navigate('/super-admin-dashboard');
       return;
     }
 
@@ -124,7 +122,7 @@ const handleLogin = async (e: React.FormEvent) => {
         JSON.stringify({ orgId, orgName, role })
       );
     }else if (orgName) {
-      // For cases where we have orgName but no orgId (fallback)
+      
       localStorage.setItem(
         'selectedOrg',
         JSON.stringify({ orgId, orgName, role })
@@ -134,22 +132,22 @@ const handleLogin = async (e: React.FormEvent) => {
 
     switch (role) {
       case 'ROLE_ORG_ADMIN':
-        navigate('/AdminDashboard');
+        navigate('/org-admin-dashboard');
         break;
       case 'ROLE_AGENCY_ADMIN':
-        navigate('/AgencyAdminDashboard');
+        navigate('/agency-admin-dashboard');
         break;
       case 'ROLE_ORG_STAFF':
-        navigate('/StaffDashboard');
+        navigate('/staff-dashboard');
         break;
       case 'ROLE_ORG_REPRESENTATIVE':
-        navigate('/RepresentativeDashboard');
+        navigate('/representative-dashboard');
         break;
       case 'ROLE_AGENCY_STAFF':
-        navigate('/StaffDashboard');
+        navigate('/staff-dashboard');
         break;
       case 'ROLE_AGENCY_REPRESENTATIVE':
-        navigate('/RepresentativeDashboard');
+        navigate('/representative-dashboard');
         break;
       case 'ROLE_CUSTOMER':
         navigate('/manage-customers');
@@ -316,7 +314,7 @@ const handleLogin = async (e: React.FormEvent) => {
 
                 <div className="text-center">
                   <button
-                    onClick={() => navigate("/PasswordReset")}
+                    onClick={() => navigate("/password-reset")}
                     className="text-sm text-blue-600 font-medium hover:underline"
                   >
                     Forgot your password?

@@ -9,12 +9,13 @@ interface SelectedOrg {
 }
 
 interface UserClaims {
+  id: number;
   name_as_per_gov_id?: string;
   preferred_name?: string;
   email?: string;
   global_roles?: string[];
   org_roles?: Record<string, any>;
-  is_password_changed?: boolean;
+  has_password_changed?: boolean;
   [key: string]: any;
 }
 

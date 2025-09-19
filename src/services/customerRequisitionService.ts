@@ -277,25 +277,6 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
   }
 };
 
-// export const getCustomerWithConnections = async (customerId: number): Promise<any> => {
-//   const crsAPI = getCrsAPI();
-//   try {
-//     const orgId = localStorage.getItem('selectedOrganization');
-//     const orgName = localStorage.getItem('selectedOrganizationName');
-//     const agencyId = localStorage.getItem('selectedAgency');
-//     const agencyName = localStorage.getItem('selectedAgencyName');
-    
-//     console.log('CRS API Parameters for getCustomerWithConnections:', { orgId, orgName, agencyId, agencyName, customerId });
-    
-//     const response = await crsAPI.get(`/api/customers/${customerId}/with-connections`, {
-//       params: { orgId, orgName, agencyId, agencyName }
-//     });
-//     return response.data;
-//   } catch (error: any) {
-//     console.error('Error fetching customer details:', error);
-//     return null;
-//   }
-// };
 
 export const getConnectionByConnectionId = async (connectionId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
@@ -474,7 +455,6 @@ export const updateConsumerConnectionDetails = async (
   }
 };
 
-// src/services/districtService.ts
 export const getDistrictNameByCode = async (code: number): Promise<string> => {
   const crsAPI = getCrsAPI();
   try {

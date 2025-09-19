@@ -2,15 +2,9 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveInstallation, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
-import { fetchClaims } from "../../services/jwtService";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 export const InstallationForm = () => {
   const location = useLocation();
@@ -135,7 +129,7 @@ export const InstallationForm = () => {
           autoClose: 1000,
           hideProgressBar: true,
         });
-        navigate(`/view-installation/${result.id}`, {
+        navigate(`/view-installation`, {
           state: {
             customerId, connectionId, consumerId, installationId: result.id
           },
@@ -173,7 +167,7 @@ export const InstallationForm = () => {
         <div className="flex items-center w-full md:w-auto">
           <button
             onClick={() =>
-              navigate(`/view-connection/${connectionId}`, {
+              navigate(`/view-connection`, {
                 state: { consumerId, customerId, connectionId },
               })
             }
@@ -215,13 +209,13 @@ export const InstallationForm = () => {
                   onClick={() => {
                     setActiveTab(tab);
                     if (tab === "Customer Details") {
-                      navigate(`/view-customer/${customerId}`, {
+                      navigate(`/view-customer`, {
                         state: {
                           customerId,
                         },
                       });
                     } else if (tab === "Connection Details") {
-                      navigate(`/view-connection/${connectionId}`, {
+                      navigate(`/view-connection`, {
                         state: { consumerId, customerId, connectionId },
                       });
                     }
@@ -290,17 +284,17 @@ export const InstallationForm = () => {
             onChange={(e) => {
               const value = e.target.value;
               if (value === 'Other') {
-                // Keep value as 'Other' so the select reflects it
+                
                 setFormData((prev) => ({
                   ...prev,
                   installationSpaceTitle: 'Other',
-                  customInstallationSpaceTitle: '', // introduce a new field
+                  customInstallationSpaceTitle: '', 
                 }));
               } else {
                 setFormData((prev) => ({
                   ...prev,
                   installationSpaceTitle: value,
-                  customInstallationSpaceTitle: '', // clear if previously typed
+                  customInstallationSpaceTitle: '', 
                 }));
               }
             }}

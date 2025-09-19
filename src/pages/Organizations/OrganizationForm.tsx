@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { createOrganization } from '../../services/organizationService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 
@@ -19,7 +19,7 @@ interface Taluka {
 interface Village {
   code: number;
   nameEnglish: string;
-  pincode: string;
+  pinCode: string;
 }
 
 const OrganizationForm: React.FC = () => {
@@ -31,29 +31,27 @@ const OrganizationForm: React.FC = () => {
     legalName: '',
     addressLine1: '',
     addressLine2: '',
-    districtCode:0,
-    talukaCode:0,
-    villageCode:0,
-    pincode:'',
+    villageCode: 0,
+    pinCode: '',
     contactNumber: '',
     gstNumber: '',
     govtRegNumber: '',
-    logoUrl:'',
+    logoUrl: '',
   });
 
-    const [districts, setDistricts] = useState<District[]>([]);
-    const [talukas, setTalukas] = useState<Taluka[]>([]);
-    const [villages, setVillages] = useState<Village[]>([]);
-  
-    const [districtCode, setDistrictCode] = useState<number>(0);
-    const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [pincode, setPincode] = useState<string>("");
-    const [villageCode, setVillageCode] = useState<number>(0);
-    const [districtName, setDistrictName] = useState<string>("");
-    const [talukaName, setTalukaName] = useState<string>("");
-    const [villageName, setVillageName] = useState<string>("");
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [talukas, setTalukas] = useState<Taluka[]>([]);
+  const [villages, setVillages] = useState<Village[]>([]);
 
-    const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
+  const [districtCode, setDistrictCode] = useState<number>(0);
+  const [talukaCode, setTalukaCode] = useState<number>(0);
+  const [pinCode, setPinCode] = useState<string>("");
+  const [villageCode, setVillageCode] = useState<number>(0);
+  const [districtName, setDistrictName] = useState<string>("");
+  const [talukaName, setTalukaName] = useState<string>("");
+  const [villageName, setVillageName] = useState<string>("");
+
+  const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -72,11 +70,11 @@ const OrganizationForm: React.FC = () => {
 
   useEffect(() => {
     if (districtCode) {
-        getDistrictNameByCode(districtCode)
-            .then((name) => setDistrictName(name))
-            .catch(() => setDistrictName("Unknown District"));
+      getDistrictNameByCode(districtCode)
+        .then((name) => setDistrictName(name))
+        .catch(() => setDistrictName("Unknown District"));
     }
-}, [districtCode]);
+  }, [districtCode]);
 
   useEffect(() => {
     const fetchTalukasData = async () => {
@@ -115,15 +113,15 @@ const OrganizationForm: React.FC = () => {
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
-    setTalukaName(""); 
-    setVillageName(""); 
-    setPincode("");
+    setTalukaName("");
+    setVillageName("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       districtCode: value,
       talukaCode: 0,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -133,12 +131,12 @@ const OrganizationForm: React.FC = () => {
 
     setVillageCode(0);
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       talukaCode: value,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -148,75 +146,76 @@ const OrganizationForm: React.FC = () => {
 
     if (selectedVillage) {
       setVillageCode(value);
-      setPincode(selectedVillage.pincode || "");
+      setPinCode(selectedVillage.pinCode || "");
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pincode: selectedVillage.pincode,
+        pinCode: selectedVillage.pinCode,
       }));
     }
   };
 
-  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setPincode(value);
-      setFormData((prev) => ({ ...prev, pincode: value }));
-      console.log("Current state pincode:", pincode);
-    };
+const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  setPinCode(value);
+  setFormData((prev) => ({ ...prev, pinCode: value }));
+  console.log("Current state PINcode:", value);
+};
+
 
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const claims = await fetchClaims();
-    const userId = claims?.id || claims?.user_id || claims?.userId;
+    try {
+      const claims = await fetchClaims();
+      const userId = claims?.id || claims?.user_id || claims?.userId;
 
-    const orgData = {
-      ...formData,
-      createdBy: userId,
-      postalCode:formData.pincode
-    };
+      const orgData = {
+        ...formData,
+        createdBy: userId,
+        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
+      };
 
-    console.log('JWT Claims:', claims);
-    console.log('User ID:', userId);
-    console.log('Creating organization with data:', orgData);
+      console.log('JWT Claims:', claims);
+      console.log('User ID:', userId);
+      console.log('Creating organization with data:', orgData);
 
-    await createOrganization(orgData);
-    toast.success('Organization created successfully');
-    navigate('/organizations');
-  } catch (error) {
-    toast.error('Failed to create organization');
-  } finally {
-    setLoading(false);
-  }
-};
+      await createOrganization(orgData);
+      toast.success('Organization created successfully');
+      navigate('/organizations');
+    } catch (error) {
+      toast.error('Failed to create organization');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
 
-  if (name === 'legalName') {
-    setFormData((prev) => ({
-      ...prev,
-      legalName: value,
-      displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
-    }));
-  } else if (name === 'displayName') {
-    setIsDisplayNameManuallyEdited(true);
-    setFormData((prev) => ({
-      ...prev,
-      displayName: value,
-    }));
-  } else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-};
+    if (name === 'legalName') {
+      setFormData((prev) => ({
+        ...prev,
+        legalName: value,
+        displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
+      }));
+    } else if (name === 'displayName') {
+      setIsDisplayNameManuallyEdited(true);
+      setFormData((prev) => ({
+        ...prev,
+        displayName: value,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
 
 
   return (
@@ -297,7 +296,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
-                    <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               GST Number
             </label>
@@ -312,7 +311,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
-          
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -401,13 +400,13 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
             <input
               type="text"
-              id="pincode"
-              name="pincode"
-              value={formData.pincode || ''}  
-              onChange={handlepincodeChange}
+              id="pinCode"
+              name="pinCode"
+              value={formData.pinCode}
+              onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -446,22 +445,22 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </div>
 
         <div className="col-span-2 flex justify-start gap-4 mt-8">
-  <button
-    type="button"
-    onClick={() => navigate('/organizations')}
-    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-  >
-    Cancel
-  </button>
-  <button
-    type="submit"
-    disabled={loading}
-    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-  >
-    <Save className="h-4 w-4" />
-    {loading ? 'Saving...' : 'Save'}
-  </button>
-</div>
+          <button
+            type="button"
+            onClick={() => navigate('/organizations')}
+            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {loading ? 'Saving...' : 'Save'}
+          </button>
+        </div>
 
       </form>
     </div>

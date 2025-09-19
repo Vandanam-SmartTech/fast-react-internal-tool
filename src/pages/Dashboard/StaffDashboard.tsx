@@ -19,7 +19,7 @@ const StaffDashboard: React.FC = () => {
   const [data, setData] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
-  const { userClaims, selectedOrg } = useUser();
+  const { userClaims } = useUser();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -62,7 +62,7 @@ useEffect(() => {
     params.agencyId = selectedOrg.orgId;
   }
 
-  // ✅ Fetch customer counts
+  
   getCustomerCount(params)
     .then((actualCount) => {
       setCount(actualCount);
@@ -77,7 +77,6 @@ useEffect(() => {
     })
     .catch(console.error);
 
-  // ✅ Fetch stats with same params
   getCustomerStats(params)
     .then((rawData) => {
       const oneYearAgo = new Date();
@@ -185,7 +184,7 @@ useEffect(() => {
 
         <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/OnboardedConsumers')}>
           <CardBody className="p-4">
-            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/OnboardedConsumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
+            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/onboarded-consumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
               <div>
                 <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
                 <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : 0}</p>

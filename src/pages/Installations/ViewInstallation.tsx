@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
-import { fetchClaims } from "../../services/jwtService";
 
 import {
   UserCircleIcon,
@@ -70,7 +69,7 @@ export const ViewInstallation = () => {
   <div className="flex items-center w-full md:w-auto">
     <button
       onClick={() =>
-        navigate(`/view-connection/${connectionId}`, {
+        navigate(`/view-connection`, {
           state: { consumerId, customerId, connectionId },
         })
       }
@@ -112,13 +111,13 @@ export const ViewInstallation = () => {
           onClick={() => {
             setActiveTab(tab);
             if (tab === "Customer Details") {
-              navigate(`/view-customer/${customerId}`, {
+              navigate(`/view-customer`, {
                 state: {
                   customerId,
                 },
               });
             } else if (tab === "Connection Details") {
-              navigate(`/view-connection/${connectionId}`, {
+              navigate(`/view-connection`, {
                 state: { consumerId, customerId, connectionId },
               });
             }
@@ -220,7 +219,7 @@ export const ViewInstallation = () => {
       <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row justify-center items-center mt-4 space-y-4 sm:space-y-0 sm:space-x-6">
   <button
     onClick={() =>
-      navigate(`/edit-installation/${installationId}`, {
+      navigate(`/edit-installation`, {
         state: { installationId, connectionId, consumerId ,customerId},
       })
     }
@@ -231,7 +230,7 @@ export const ViewInstallation = () => {
 
   <button
     onClick={() =>
-      navigate(`/view-connection/${connectionId}`, {
+      navigate(`/view-connection`, {
         state: { consumerId, customerId, connectionId },
       })
     }

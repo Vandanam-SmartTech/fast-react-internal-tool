@@ -7,7 +7,7 @@ const AgencyAdminDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
-  const { userClaims, selectedOrg, setSelectedOrg, clearUserClaims } = useUser();
+  const { userClaims } = useUser();
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {

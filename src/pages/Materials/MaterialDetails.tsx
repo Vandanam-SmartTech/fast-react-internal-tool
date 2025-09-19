@@ -142,7 +142,7 @@ useEffect(() => {
 
       }
 
-      navigate("/OnboardedConsumers");
+      navigate("/onboarded-consumers");
     } catch (error) {
       console.error("Material submission error:", error);
       toast.error("Failed to submit the data", {
@@ -156,7 +156,7 @@ useEffect(() => {
     setMessageBoxOpen(false);
 
     if (messageBoxSeverity === "success") {
-      navigate("/OnboardedConsumers");
+      navigate("/onboarded-consumers");
     }
   };
 
@@ -165,11 +165,9 @@ useEffect(() => {
     <div className="flex justify-start max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
       <div className="w-full">
 
-        {/* <h2 className="text-2xl font-semibold mb-4">Material Details</h2> */}
-
         <div className="flex items-center w-full md:w-auto">
           <button
-            onClick={() => navigate(`/OnboardedConsumers`)}
+            onClick={() => navigate(`/onboarded-consumers`)}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700" />
@@ -183,7 +181,7 @@ useEffect(() => {
 
         {consumer && (
           <div className="bg-white border border-gray-200 shadow-sm rounded-md p-4 mb-4 mt-6 w-full max-w-3xl">
-            {/*<h3 className="text-base font-semibold text-gray-800 mb-3">Consumer Details</h3>*/}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-sm text-gray-700">
               <div>
                 <span className="font-medium text-gray-700">Consumer Name:</span>

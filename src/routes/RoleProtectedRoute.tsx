@@ -26,12 +26,11 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
         if (allowedRoles.includes('ROLE_SUPER_ADMIN')) {
           setAuthorized(true);
         } else {
-          setRedirectPath('/SuperAdminDashboard');
+          setRedirectPath('/super-admin-dashboard');
         }
         return;
       }
 
-      // ✅ 2. Extract all org-specific roles
       const orgRoles = claims.org_roles
         ? Object.values(claims.org_roles).map(org => org.role)
         : [];
@@ -59,22 +58,22 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
         const firstRole = orgRoles[0];
         switch (firstRole) {
           case 'ROLE_ORG_ADMIN':
-            setRedirectPath('/AdminDashboard');
+            setRedirectPath('/org-admin-dashboard');
             break;
           case 'ROLE_AGENCY_ADMIN':
-            setRedirectPath('/AgencyAdminDashboard');
+            setRedirectPath('/agency-admin-dashboard');
             break;
           case 'ROLE_ORG_STAFF':
-            setRedirectPath('/StaffDashboard');
+            setRedirectPath('/staff-dashboard');
             break;
           case 'ROLE_ORG_REPRESENTATIVE':
-            setRedirectPath('/RepresentativeDashboard');
+            setRedirectPath('/representative-dashboard');
             break;
           case 'ROLE_AGENCY_STAFF':
-            setRedirectPath('/StaffDashboard');
+            setRedirectPath('/staff-dashboard');
             break;
           case 'ROLE_AGENCY_REPRESENTATIVE':
-            setRedirectPath('/RepresentativeDashboard');
+            setRedirectPath('/representative-dashboard');
             break;
           case 'ROLE_CUSTOMER':
             setRedirectPath('/manage-customers');
@@ -93,7 +92,7 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
   }
 
   if (authorized === null) {
-    return null; // Optionally add loading spinner
+    return null; 
   }
 
   return children;

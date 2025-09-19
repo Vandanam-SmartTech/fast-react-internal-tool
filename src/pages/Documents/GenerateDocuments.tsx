@@ -822,7 +822,7 @@ const handleDeleteDocument = async (fileId: string, documentType: string) => {
             <Button
               onClick={() => {
                 setDialogOpen(false);
-                if (dialogAction) dialogAction(); // run delete
+                if (dialogAction) dialogAction(); 
               }}
               autoFocus
             >

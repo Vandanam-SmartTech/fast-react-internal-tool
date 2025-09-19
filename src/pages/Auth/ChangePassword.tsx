@@ -26,11 +26,11 @@ const Verification: React.FC = () => {
     return passwordRegex.test(pw);
   };
 
-useEffect(() => {
-  if (!email && !msg && !msg1) {
-    navigate('/Verification',{state:{email, msg, msg1}});
-  }
-}, [email, msg, msg1, navigate]);
+  useEffect(() => {
+    if (!email && !msg && !msg1) {
+      navigate('/verification', { state: { email, msg, msg1 } });
+    }
+  }, [email, msg, msg1, navigate]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,48 +87,48 @@ useEffect(() => {
 
         <form onSubmit={handleSubmit}>
 
-<div className="mb-4 relative">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Enter New Password <span className="text-red-500">*</span>
-  </label>
-  <input
-    type={showNewPassword ? 'text' : 'password'}
-    value={newPassword}
-    onChange={(e) => setNewPassword(e.target.value)}
-    required
-    className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-    placeholder="New password"
-  />
-  <button
-    type="button"
-    onClick={() => setShowNewPassword(!showNewPassword)}
-    className="absolute top-9 right-3 text-gray-500"
-  >
-    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-  </button>
-</div>
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Enter New Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type={showNewPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="New password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="absolute top-9 right-3 text-gray-500"
+            >
+              {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
 
 
-<div className="mb-4 relative">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Confirm New Password <span className="text-red-500">*</span>
-  </label>
-  <input
-    type={showConfirmPassword ? 'text' : 'password'}
-    value={confirmPassword}
-    onChange={(e) => setConfirmPassword(e.target.value)}
-    required
-    className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-    placeholder="Confirm password"
-  />
-  <button
-    type="button"
-    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-    className="absolute top-9 right-3 text-gray-500"
-  >
-    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-  </button>
-</div>
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm New Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full p-2 pr-10 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="Confirm password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute top-9 right-3 text-gray-500"
+            >
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
 
 
           <div className="mb-4 text-sm text-gray-600">
@@ -146,10 +146,10 @@ useEffect(() => {
             type="submit"
             className="py-1 px-16 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
           >
-           Submit
+            Submit
           </button>
 
-                    <div className="text-left mb-3 mt-2 sm:mb-3">
+          <div className="text-left mb-3 mt-2 sm:mb-3">
             <button
               type="button"
               onClick={() => navigate('/')}

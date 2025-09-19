@@ -288,7 +288,7 @@ export const ViewConnection = () => {
   };
 
   const handleSaveSpecs = () => {
-    navigate(`/SystemSpecifications`, {
+    navigate(`/system-specifications`, {
       state: {
         connectionId: connectionId,
         consumerId: consumerId,
@@ -358,7 +358,7 @@ export const ViewConnection = () => {
         <div className="flex items-center w-full md:w-auto">
           <button
             onClick={() =>
-              navigate(`/view-customer/${customerId}`, {
+              navigate(`/view-customer`, {
                 state: { consumerId: consumerId, customerId, connectionId: connectionId },
               })
             }
@@ -401,7 +401,7 @@ export const ViewConnection = () => {
                   onClick={() => {
                     setActiveTab(tab);
                     if (tab === "Customer Details") {
-                      navigate(`/view-customer/${customerId}`, {
+                      navigate(`/view-customer`, {
                         state: {
                           customerId,
                         },
@@ -557,7 +557,7 @@ export const ViewConnection = () => {
 
               <button
                 onClick={() =>
-                  navigate(`/edit-connection/${connectionId}`, {
+                  navigate(`/edit-connection`, {
                     state: {
                       connectionId,
                       consumerId,
@@ -641,7 +641,7 @@ export const ViewConnection = () => {
               <div className="flex justify-start mt-6">
                 <button
                   onClick={() =>
-                    navigate(`/edit-installation/${installation.id}`, {
+                    navigate(`/edit-installation`, {
                       state: {
                         installationId: installation.id,
                         connectionId,
@@ -674,7 +674,7 @@ export const ViewConnection = () => {
                 alert("Connection ID and Consumer Id is missing!");
                 return;
               }
-              navigate(`/InstallationForm`, {
+              navigate(`/installation-form`, {
                 state: {
                   connectionId: connectionId,
                   consumerId: consumerId,
@@ -700,7 +700,7 @@ export const ViewConnection = () => {
           {/* Get Recommendation Button */}
           <button
             onClick={() =>
-              navigate(`/SystemSpecifications`, {
+              navigate(`/system-specifications`, {
                 state: {
                   connectionId: connectionId,
                   consumerId: consumerId,

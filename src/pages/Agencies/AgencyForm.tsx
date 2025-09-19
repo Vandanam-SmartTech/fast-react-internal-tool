@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
-import { createOrganization, updateOrganization, getOrganizationById, Organization } from '../../services/organizationService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService';
+import { createOrganization } from '../../services/organizationService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
+import { useUser } from '../../contexts/UserContext';
 
 interface District {
   code: number;
@@ -19,26 +19,26 @@ interface Taluka {
 interface Village {
   code: number;
   nameEnglish: string;
-  pincode: string;
+  pinCode: string;
 }
 
-const EditAgency: React.FC = () => {
-  const { orgId, agencyId } = useParams();
+const AgencyForm: React.FC = () => {
   const navigate = useNavigate();
-  const isEdit = Boolean(agencyId);
+  const location = useLocation();
+  const orgId = location.state?.orgId;
 
-  const [formData, setFormData] = useState<Organization>({
+  //const isEdit = Boolean(agencyId);
+
+  const [formData, setFormData] = useState({
     name: '',
     displayName: '',
-    legalName:'',
+    legalName: '',
     addressLine1: '',
     addressLine2: '',
-    districtCode:0,
-    talukaCode:0,
-    villageCode:0,
-    pincode: '',
+    villageCode: 0,
+    pinCode: '',
     contactNumber: '',
-    logoUrl:'',
+    logoUrl: '',
     parentId: parseInt(orgId!)
   });
 
@@ -47,166 +47,154 @@ const EditAgency: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [talukas, setTalukas] = useState<Taluka[]>([]);
   const [villages, setVillages] = useState<Village[]>([]);
-    
+
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pincode, setPincode] = useState<string>("");
+  const [pinCode, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
 
-  useEffect(() => {
-    if (isEdit && agencyId) {
-      loadAgency(parseInt(agencyId));
-    }
-  }, [agencyId, isEdit]);
+  const { userClaims } = useUser();
 
-  const loadAgency = async (id: number) => {
-    try {
-      const agency = await getOrganizationById(id);
-      setFormData(agency);
-    } catch (error) {
-      toast.error('Failed to load agency');
-      navigate(`/agencies/${orgId}`);
+
+
+  useEffect(() => {
+    const fetchDistrictsData = async () => {
+      try {
+        const districtData = await fetchDistricts();
+        setDistricts(districtData);
+      } catch (error) {
+        console.error('Error fetching districts:', error);
+      }
+    };
+    fetchDistrictsData();
+  }, []);
+
+  useEffect(() => {
+    if (districtCode) {
+      getDistrictNameByCode(districtCode)
+        .then((name) => setDistrictName(name))
+        .catch(() => setDistrictName("Unknown District"));
+    }
+  }, [districtCode]);
+
+  useEffect(() => {
+    const fetchTalukasData = async () => {
+      if (districtCode) {
+        try {
+          const talukaData = await fetchTalukas(districtCode);
+          setTalukas(talukaData);
+        } catch (err) {
+          console.error('Error fetching talukas:', err);
+        }
+      } else {
+        setTalukas([]);
+      }
+    };
+    fetchTalukasData();
+  }, [districtCode]);
+
+  useEffect(() => {
+    const fetchVillagesData = async () => {
+      if (talukaCode) {
+        try {
+          const villageData = await fetchVillages(talukaCode);
+          setVillages(villageData);
+        } catch (err) {
+          console.error('Error fetching villages:', err);
+        }
+      } else {
+        setVillages([]);
+      }
+    };
+    fetchVillagesData();
+  }, [talukaCode]);
+
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setDistrictCode(value);
+    setTalukaCode(0);
+    setVillageCode(0);
+    setTalukaName("");
+    setVillageName("");
+    setPinCode("");
+    setFormData((prev) => ({
+      ...prev,
+      districtCode: value,
+      talukaCode: 0,
+      villageCode: 0,
+      pinCode: "",
+    }));
+  };
+
+  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setTalukaCode(value);
+
+    setVillageCode(0);
+    setVillageName("");
+    setPinCode("");
+    setFormData((prev) => ({
+      ...prev,
+      talukaCode: value,
+      villageCode: 0,
+      pinCode: "",
+    }));
+  };
+
+  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value, 10);
+    const selectedVillage = villages.find((village) => village.code === value);
+
+    if (selectedVillage) {
+      setVillageCode(value);
+      setPinCode(selectedVillage.pinCode || "");
+      setFormData((prev) => ({
+        ...prev,
+        villageCode: value,
+        pinCode: selectedVillage.pinCode,
+      }));
     }
   };
 
-  useEffect(() => {
-      const fetchDistrictsData = async () => {
-        try {
-          const districtData = await fetchDistricts();
-          setDistricts(districtData);
-        } catch (error) {
-          console.error('Error fetching districts:', error);
-        }
-      };
-      fetchDistrictsData();
-    }, []);
-  
-    useEffect(() => {
-      if (districtCode) {
-          getDistrictNameByCode(districtCode)
-              .then((name) => setDistrictName(name))
-              .catch(() => setDistrictName("Unknown District"));
-      }
-  }, [districtCode]);
-  
-    useEffect(() => {
-      const fetchTalukasData = async () => {
-        if (districtCode) {
-          try {
-            const talukaData = await fetchTalukas(districtCode);
-            setTalukas(talukaData);
-          } catch (err) {
-            console.error('Error fetching talukas:', err);
-          }
-        } else {
-          setTalukas([]);
-        }
-      };
-      fetchTalukasData();
-    }, [districtCode]);
-  
-    useEffect(() => {
-      const fetchVillagesData = async () => {
-        if (talukaCode) {
-          try {
-            const villageData = await fetchVillages(talukaCode);
-            setVillages(villageData);
-          } catch (err) {
-            console.error('Error fetching villages:', err);
-          }
-        } else {
-          setVillages([]);
-        }
-      };
-      fetchVillagesData();
-    }, [talukaCode]);
-  
-    const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setDistrictCode(value);
-      setTalukaCode(0);
-      setVillageCode(0);
-      setTalukaName(""); 
-      setVillageName(""); 
-      setPincode("");
-      setFormData((prev) => ({
-        ...prev,
-        districtCode: value,
-        talukaCode: 0,
-        villageCode: 0,
-        pincode: "",
-      }));
-    };
-  
-    const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setTalukaCode(value);
-  
-      setVillageCode(0);
-      setVillageName("");
-      setPincode("");
-      setFormData((prev) => ({
-        ...prev,
-        talukaCode: value,
-        villageCode: 0,
-        pincode: "",
-      }));
-    };
-  
-    const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = parseInt(e.target.value, 10);
-      const selectedVillage = villages.find((village) => village.code === value);
-  
-      if (selectedVillage) {
-        setVillageCode(value);
-        setPincode(selectedVillage.pincode || "");
-        setFormData((prev) => ({
-          ...prev,
-          villageCode: value,
-          pincode: selectedVillage.pincode,
-        }));
-      }
-    };
-  
-    const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = parseInt(e.target.value, 10);
-        setPincode(value);
-        setFormData((prev) => ({ ...prev, pincode: value }));
-        console.log("Current state pincode:", pincode);
-      };
-  
+  const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPinCode(value);
+    setFormData((prev) => ({ ...prev, pinCode: value }));
+    console.log("Current state PINcode:", value);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const claims = await fetchClaims();
-      const userId = claims?.id || claims?.user_id || claims?.userId;
-      
+      const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
+
       const agencyData = {
         ...formData,
         parentId: parseInt(orgId!),
-        createdBy: userId
+        createdBy: userId,
+        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
       };
-      
-      if (isEdit && agencyId) {
-        await updateOrganization(parseInt(agencyId), agencyData);
-        toast.success('Agency updated successfully');
-      } else {
-        await createOrganization(agencyData);
-        toast.success('Agency created successfully');
-      }
-      navigate(`/agencies/${orgId}`);
+
+      await createOrganization(agencyData);
+      toast.success('Agency created successfully');
+
+      navigate("/agencies", {
+        state: { orgId: orgId },
+      });
+
     } catch (error) {
-      toast.error(`Failed to ${isEdit ? 'update' : 'create'} agency`);
+      toast.error('Failed to create agency');
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -217,13 +205,18 @@ const EditAgency: React.FC = () => {
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => navigate(`/agencies/${orgId}`)}
+          onClick={() =>
+            navigate("/agencies", {
+              state: { orgId: orgId },
+            })
+          }
+
           className="rounded-full hover:bg-gray-200 transition"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
-          {isEdit ? 'Edit Agency' : 'Create Agency'}
+          Add Agency
         </h1>
       </div>
 
@@ -298,7 +291,7 @@ const EditAgency: React.FC = () => {
               name="addressLine1"
               value={formData.addressLine1 || ''}
               onChange={handleChange}
-              
+
               placeholder="e.g. Flat No, House No, Street Name"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -376,13 +369,13 @@ const EditAgency: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
             <input
               type="text"
-              id="pincode"
-              name="pincode"
-              value={formData.pincode || ''}  
-              onChange={handlepincodeChange}
+              id="pinCode"
+              name="pinCode"
+              value={formData.pinCode}
+              onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -413,4 +406,4 @@ const EditAgency: React.FC = () => {
   );
 };
 
-export default EditAgency;
+export default AgencyForm;

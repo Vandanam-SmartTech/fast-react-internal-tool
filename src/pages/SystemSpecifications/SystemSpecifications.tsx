@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import {
   generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails,
-  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, fetchBatteryBrands, fetchBatteryWattages
+  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, fetchBatteryBrands, fetchBatteryWattages,
+  getMaterialOrigins, getGridTypes, fetchInverterBrands, fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities
 } from '../../services/quotationService';
+
 import { uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -49,16 +51,33 @@ export const SystemSpecifications = () => {
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
   const [isSpaceListOpen, setIsSpaceListOpen] = useState(false);
-
   const [inverterBrands, setInverterBrands] = useState<string[]>([]);
-
   const [panelBrands, setPanelBrands] = useState<any[]>([]);
-
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
-
   const [batteryBrands, setBatteryBrands] = useState<string[]>([]);
-
   const [batteryCapacities, setBatteryCapacities] = useState<string[]>([]);
+
+  const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
+  const [monthlyAvgConsumptionUnits, setMonthlyAvgConsumptionUnits] = useState<number | null>(null);
+
+  const [materialOriginId, setMaterialOriginId] = useState<string | number>("");
+  const [origins, setOrigins] = useState<any[]>([]);
+
+  const [gridTypeId, setGridTypeId] = useState<number | null>(null);
+  const [grids, setGrids] = useState<any[]>([]);
+
+  const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
+  const [inverters, setInverters] = useState<any[]>([]);
+
+  const [inverterSpecId, setInverterSpecId] = useState<string | number>("");
+  const [inverterCapacities, setInverterCapacities] = useState<any[]>([]);
+
+  const [panelBrandId, setPanelBrandId] = useState<number | null>(null);
+  const [panels, setPanels] = useState<any[]>([]);
+
+  const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
+  const [ panelCapacities, setPanelCapacities] = useState([]);
+
 
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
@@ -117,6 +136,12 @@ export const SystemSpecifications = () => {
     inverterKw: "",
     batteryBrand: "",
     batteryCapacity: "",
+    inverterBrandId:null,
+    materialOriginId: null,
+    gridTypeId: null,
+    inverterSpecId: null,
+    panelBrandId: null,
+    panelSpecId: null,
   });
 
 
@@ -159,15 +184,31 @@ export const SystemSpecifications = () => {
 
       const enrichedSpaces = installationSpaces.map((space: any) => ({
         ...space,
-        installationSpaceType: installationTypeMap[space.installationSpaceTypeId] || "Unknown",
+        installationSpaceType:
+          installationTypeMap[space.installationSpaceTypeId] || "Unknown",
       }));
 
-
       setAvailableSpaceTypes(enrichedSpaces);
+
+
+      if (enrichedSpaces.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          installationSpaceType: enrichedSpaces[0].installationSpaceType,
+        }));
+        setSelectedSpace(enrichedSpaces[0]);
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          installationSpaceType: null,
+        }));
+        setSelectedSpace(null);
+      }
     };
 
     loadInstallationSpaceDetails();
   }, [connectionId, installationTypeMap]);
+
 
 
 
@@ -179,208 +220,322 @@ export const SystemSpecifications = () => {
         return;
       }
 
-      const data = await getConnectionByConnectionId(Number(connectionId));
-      setConnectionDetails(data);
+      try {
+        const data = await getConnectionByConnectionId(Number(connectionId));
+        setConnectionDetails(data);
+
+        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.monthlyAvgConsumptionUnits !== null) {
+          setPhaseTypeId(data.phaseTypeId);
+          setMonthlyAvgConsumptionUnits(data.monthlyAvgConsumptionUnits);
+          console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.monthlyAvgConsumptionUnits);
+        } else {
+          setPhaseTypeId(null);
+          setMonthlyAvgConsumptionUnits(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch connection details", error);
+      }
     };
 
     fetchConnection();
   }, [connectionId]);
 
   useEffect(() => {
-    const fetchCustomer = async () => {
-      if (customerId) {
-        const data = await getCustomerById(Number(customerId));
-        setGovIdName(data?.govIdName || "");
+    const fetchOrigins = async () => {
+      const data = await getMaterialOrigins();
+      if (data) setOrigins(data);
+    };
+
+    fetchOrigins();
+  }, []);
+
+  useEffect(() => {
+    const fetchGrids = async () => {
+      const data = await getGridTypes();
+      if (data) setGrids(data);
+    };
+
+    fetchGrids();
+  }, []);
+
+  useEffect(() => {
+    const loadInverterBrands = async () => {
+      if (phaseTypeId !== null && gridTypeId !== null) {
+        try {
+          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+          setInverters(data);
+        } catch (error) {
+          console.error("Failed to fetch inverter brands:", error);
+          setInverters([]);
+        }
+      } else {
+        setInverters([]);
       }
     };
-    fetchCustomer();
 
-  }, [customerId]);
+    loadInverterBrands();
+  }, [phaseTypeId, gridTypeId]);
+
+
+  useEffect(() => {
+    const loadInverterBrandCapacities = async () => {
+      if (inverterBrandId !== null) {
+        try {
+          const data = await fetchInverterBrandCapacities(inverterBrandId);
+          setInverterCapacities(data);
+        } catch (error) {
+          console.error("Failed to fetch inverter brand capacities:", error);
+          setInverterCapacities([]);
+        }
+      } else {
+
+        setInverterCapacities([]);
+        // handleChange({
+        //   target: { name: "inverterSpecId", value: "" },
+        // });
+      }
+    };
+
+    loadInverterBrandCapacities();
+  }, [inverterBrandId]);
+
+  useEffect(() => {
+    const loadPanelBrands = async () => {
+      if (materialOriginId) {
+        try {
+          const data = await fetchPanelBrands(Number(materialOriginId));
+          setPanels(data);
+        } catch (error) {
+          console.error("Failed to fetch panel brands:", error);
+          setPanels([]);
+        }
+      } else {
+        setPanels([]);
+      }
+    };
+
+    loadPanelBrands();
+  }, [materialOriginId]);
+
+    useEffect(() => {
+    const loadPanelBrandCapacities = async () => {
+      if (phaseTypeId !== null && panelBrandId !== null && monthlyAvgConsumptionUnits!== null) {
+        try {
+          const data = await fetchPanelBrandCapacities(phaseTypeId, panelBrandId, monthlyAvgConsumptionUnits);
+          setPanelCapacities(data);
+        } catch (error) {
+          console.error("Failed to fetch panel brand capacities:", error);
+          setPanelCapacities([]);
+        }
+      } else {
+
+        setPanelCapacities([]);
+        // handleChange({
+        //   target: { name: "inverterSpecId", value: "" },
+        // });
+      }
+    };
+
+    loadPanelBrandCapacities();
+  }, [phaseTypeId, panelBrandId,monthlyAvgConsumptionUnits]);
+
+
+
+  // useEffect(() => {
+  //   const fetchCustomer = async () => {
+  //     if (customerId) {
+  //       const data = await getCustomerById(Number(customerId));
+  //       setGovIdName(data?.govIdName || "");
+  //     }
+  //   };
+  //   fetchCustomer();
+
+  // }, [customerId]);
 
 
   let hasShownError = false;
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    if (!connectionId || !connectionDetails) return;
+  //   if (!connectionId || !connectionDetails) return;
 
-    const fetchData = async () => {
+  //   const fetchData = async () => {
 
-      setIsFetchingRecommendations(true);
+  //     setIsFetchingRecommendations(true);
 
-      try {
-        // Step 1: Try to fetch customer-agreed data
-        const customerData = await fetchCustomerAgreedDetails(connectionId);
+  //     try {
 
-        const phaseType = connectionDetails?.phaseTypeName || "";
+  //       const customerData = await fetchCustomerAgreedDetails(connectionId);
 
-
-        if (customerData.success === false || customerData.message?.includes("Data not found")) {
-          // Fallback to recommendation API if not found
-          const recommendation = await fetchRecommendedDetails(connectionId);
-          console.log("Recommended Data:", recommendation);
-
-          const recommendedKW = recommendation.recommendedKW || "";
-
-          const inverterWattages = await fetchInverterWattages(
-            phaseType,
-            recommendation.inverterBrand
-          );
-          const selectedInverterKw = inverterWattages[0] || "";
+  //       const phaseType = connectionDetails?.phaseTypeName || "";
 
 
-          setFormData((prev) => ({
-            ...prev,
-            installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
-            installationStructureType: recommendation.recommendedInstallationStructureType || "",
-            Kw: recommendedKW,
-            numberOfGpPipes: recommendation.numberOfGpPipes || 0,
-            dcrNonDcrType:
-              recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
-            panelBrand: recommendation.panelBrand || "",
-            inverterBrand: recommendation.inverterBrand || "",
-            inverterKw: selectedInverterKw,
-            inversionType: recommendation.inversionType,
-          }));
+  //       if (customerData.success === false || customerData.message?.includes("Data not found")) {
 
-          setConnectionType(recommendation.connectionType || "");
-          setPhaseType(phaseType);
+  //         const recommendation = await fetchRecommendedDetails(connectionId);
+  //         console.log("Recommended Data:", recommendation);
 
-          if (phaseType && recommendation.inversionType) {
-            const inverters = await fetchInverters(phaseType, recommendation.inversionType);
-            setInverterBrands(inverters || []);
-          }
+  //         const recommendedKW = recommendation.recommendedKW || "";
 
-          if (phaseType && recommendation.dcrNonDcrType) {
-            const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
-            setPanelBrands(panels || []);
-          }
+  //         const inverterWattages = await fetchInverterWattages(
+  //           phaseType,
+  //           recommendation.inverterBrand
+  //         );
+  //         const selectedInverterKw = inverterWattages[0] || "";
 
 
-          if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
-            const wattages = await fetchPanelWattages(
-              phaseType,
-              recommendation.dcrNonDcrType,
-              recommendation.panelBrand
-            );
-            const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
-            setPanelWattages([recommendedKW, ...uniqueWattages]);
-          }
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
+  //           installationStructureType: recommendation.recommendedInstallationStructureType || "",
+  //           Kw: recommendedKW,
+  //           numberOfGpPipes: recommendation.numberOfGpPipes || 0,
+  //           dcrNonDcrType:
+  //             recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
+  //           panelBrand: recommendation.panelBrand || "",
+  //           inverterBrand: recommendation.inverterBrand || "",
+  //           inverterKw: selectedInverterKw,
+  //           inversionType: recommendation.inversionType,
+  //         }));
 
-          if (recommendation.inverterBrand && phaseType) {
-            const inverterWattages = await fetchInverterWattages(
-              phaseType,
-              recommendation.inverterBrand
-            );
-            setInverterWattages(inverterWattages);
-          }
-        } else {
-          // Use customer-agreed data
-          console.log("Customer Agreed Data:", customerData);
+  //         setConnectionType(recommendation.connectionType || "");
+  //         setPhaseType(phaseType);
 
-          setIsCustomSpecs(true);
-          setIsSpecsSaved(true);
-          setPriceAlreadySetFromCustomerData(true);
+  //         if (phaseType && recommendation.inversionType) {
+  //           const inverters = await fetchInverters(phaseType, recommendation.inversionType);
+  //           setInverterBrands(inverters || []);
+  //         }
 
-          const customerSelectedKW = customerData.customerSelectedKW || "";
-          const inverterCapacity = customerData.inverterCapacity || "";
-
-          setFormData((prev) => ({
-            ...prev,
-            installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
-            installationStructureType: customerData.customerSelectedInstallationStructureType || "",
-            Kw: customerSelectedKW,
-            panelBrand: customerData.customerSelectedBrand || "",
-            dcrNonDcrType: customerData.dcrNonDcrType || "",
-            inverterBrand: customerData.inverterBrand || "",
-            inverterKw: inverterCapacity,
-            solarSystemCost: customerData.solarSystemCost || 0,
-            fabricationCost: customerData.fabricationCost || 0,
-            totalCost: customerData.totalCost || 0,
-            hasWaterSprinklerSystem: customerData.hasWaterSprinklerSystem || false,
-            hasHeavyDutyRamp: customerData.hasHeavyDutyRamp || false,
-            hasHeavyDutyStairs: customerData.hasHeavyDutyStairs || false,
-            inversionType: customerData.inversionType || "On Grid",
-            batteryBrand: customerData.batteryBrand || "",
-            batteryCapacity: customerData.batteryCapacity || 5,
-          }));
-
-          setPhaseType(phaseType);
-
-          if (phaseType && customerData.inversionType) {
-            const inverters = await fetchInverters(phaseType, customerData.inversionType);
-            setInverterBrands(inverters || []);
-          }
-
-          if (phaseType && customerData.dcrNonDcrType) {
-            const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
-            setPanelBrands(panels || []);
-          }
+  //         if (phaseType && recommendation.dcrNonDcrType) {
+  //           const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
+  //           setPanelBrands(panels || []);
+  //         }
 
 
-          if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
-            const wattages = await fetchPanelWattages(
-              phaseType,
-              customerData.dcrNonDcrType,
-              customerData.customerSelectedBrand
-            );
-            const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
-            setPanelWattages([customerSelectedKW, ...uniqueWattages]);
-          }
+  //         if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
+  //           const wattages = await fetchPanelWattages(
+  //             phaseType,
+  //             recommendation.dcrNonDcrType,
+  //             recommendation.panelBrand
+  //           );
+  //           const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
+  //           setPanelWattages([recommendedKW, ...uniqueWattages]);
+  //         }
 
-          if (customerData.inverterBrand && phaseType) {
-            const inverterWattages = await fetchInverterWattages(
-              phaseType,
-              customerData.inverterBrand
-            );
-            const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
-            setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
-          }
-        }
-      } catch (error) {
-        console.error("Error during fetch:", error);
-        if (!hasShownError) {
-          hasShownError = true;
-          toast.error("Failed to fetch details. Please try again later.", {
-            autoClose: 1000,
-            hideProgressBar: true,
-          });
-        }
-      } finally {
-        setIsFetchingRecommendations(false);
-      }
-    };
+  //         if (recommendation.inverterBrand && phaseType) {
+  //           const inverterWattages = await fetchInverterWattages(
+  //             phaseType,
+  //             recommendation.inverterBrand
+  //           );
+  //           setInverterWattages(inverterWattages);
+  //         }
+  //       } else {
 
-    fetchData();
-  }, [connectionId, connectionDetails]);
+  //         console.log("Customer Agreed Data:", customerData);
 
-  useEffect(() => {
-    if (formData.inversionType === "Hybrid") {
-      const loadBatteryBrands = async () => {
-        const brands = await fetchBatteryBrands();
-        setBatteryBrands(brands || []);
-        if (brands.length > 0 && !formData.batteryBrand) {
-          setFormData((prev) => ({ ...prev, batteryBrand: brands[0] }));
-        }
-      };
-      loadBatteryBrands();
-    }
-  }, [formData.inversionType]);
+  //         setIsCustomSpecs(true);
+  //         setIsSpecsSaved(true);
+  //         setPriceAlreadySetFromCustomerData(true);
 
-  useEffect(() => {
-    if (formData.batteryBrand) {
-      const loadCapacities = async () => {
-        const capacities = await fetchBatteryWattages(formData.batteryBrand);
-        setBatteryCapacities(capacities);
+  //         const customerSelectedKW = customerData.customerSelectedKW || "";
+  //         const inverterCapacity = customerData.inverterCapacity || "";
 
-        // Auto-select first if none selected
-        if (capacities.length > 0 && !formData.batteryCapacity) {
-          setFormData((prev) => ({ ...prev, batteryCapacity: capacities[0] }));
-        }
-      };
-      loadCapacities();
-    }
-  }, [formData.batteryBrand]);
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
+  //           installationStructureType: customerData.customerSelectedInstallationStructureType || "",
+  //           Kw: customerSelectedKW,
+  //           panelBrand: customerData.customerSelectedBrand || "",
+  //           dcrNonDcrType: customerData.dcrNonDcrType || "",
+  //           inverterBrand: customerData.inverterBrand || "",
+  //           inverterKw: inverterCapacity,
+  //           solarSystemCost: customerData.solarSystemCost || 0,
+  //           fabricationCost: customerData.fabricationCost || 0,
+  //           totalCost: customerData.totalCost || 0,
+  //           hasWaterSprinklerSystem: customerData.hasWaterSprinklerSystem || false,
+  //           hasHeavyDutyRamp: customerData.hasHeavyDutyRamp || false,
+  //           hasHeavyDutyStairs: customerData.hasHeavyDutyStairs || false,
+  //           inversionType: customerData.inversionType || "On Grid",
+  //           batteryBrand: customerData.batteryBrand || "",
+  //           batteryCapacity: customerData.batteryCapacity || 5,
+  //         }));
+
+  //         setPhaseType(phaseType);
+
+  //         if (phaseType && customerData.inversionType) {
+  //           const inverters = await fetchInverters(phaseType, customerData.inversionType);
+  //           setInverterBrands(inverters || []);
+  //         }
+
+  //         if (phaseType && customerData.dcrNonDcrType) {
+  //           const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
+  //           setPanelBrands(panels || []);
+  //         }
+
+
+  //         if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
+  //           const wattages = await fetchPanelWattages(
+  //             phaseType,
+  //             customerData.dcrNonDcrType,
+  //             customerData.customerSelectedBrand
+  //           );
+  //           const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
+  //           setPanelWattages([customerSelectedKW, ...uniqueWattages]);
+  //         }
+
+  //         if (customerData.inverterBrand && phaseType) {
+  //           const inverterWattages = await fetchInverterWattages(
+  //             phaseType,
+  //             customerData.inverterBrand
+  //           );
+  //           const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
+  //           setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error during fetch:", error);
+  //       if (!hasShownError) {
+  //         hasShownError = true;
+  //         toast.error("Failed to fetch details. Please try again later.", {
+  //           autoClose: 1000,
+  //           hideProgressBar: true,
+  //         });
+  //       }
+  //     } finally {
+  //       setIsFetchingRecommendations(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [connectionId, connectionDetails]);
+
+  // useEffect(() => {
+  //   if (formData.inversionType === "Hybrid") {
+  //     const loadBatteryBrands = async () => {
+  //       const brands = await fetchBatteryBrands();
+  //       setBatteryBrands(brands || []);
+  //       if (brands.length > 0 && !formData.batteryBrand) {
+  //         setFormData((prev) => ({ ...prev, batteryBrand: brands[0] }));
+  //       }
+  //     };
+  //     loadBatteryBrands();
+  //   }
+  // }, [formData.inversionType]);
+
+  // useEffect(() => {
+  //   if (formData.batteryBrand) {
+  //     const loadCapacities = async () => {
+  //       const capacities = await fetchBatteryWattages(formData.batteryBrand);
+  //       setBatteryCapacities(capacities);
+
+  //       // Auto-select first if none selected
+  //       if (capacities.length > 0 && !formData.batteryCapacity) {
+  //         setFormData((prev) => ({ ...prev, batteryCapacity: capacities[0] }));
+  //       }
+  //     };
+  //     loadCapacities();
+  //   }
+  // }, [formData.batteryBrand]);
 
 
 
@@ -408,31 +563,31 @@ export const SystemSpecifications = () => {
         [name]: type === "checkbox" ? checked : value,
       };
 
-      const matchedSpace = availableSpaceTypes.find(
-        (space) => space.installationSpaceType === value
-      );
-      if (matchedSpace) {
-        setSelectedSpace(matchedSpace);
-      }
+      // const matchedSpace = availableSpaceTypes.find(
+      //   (space) => space.installationSpaceType === value
+      // );
+      // if (matchedSpace) {
+      //   setSelectedSpace(matchedSpace);
+      // }
 
-      // Auto-update totalCost
+
       updatedData.totalCost =
         (Number(updatedData.solarSystemCost) || 0) +
         (Number(updatedData.fabricationCost) || 0);
 
-      // Update numberOfGpPipes based on installation space
-      if (name === "installationSpaceType") {
-        const selectedSpace = availableSpaceTypes.find(
-          (space: any) => space.installationSpaceType === value
-        );
-        if (selectedSpace) {
-          updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
-        }
-      }
 
-      if (name === "inversionType") {
-        updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
-      }
+      // if (name === "installationSpaceType") {
+      //   const selectedSpace = availableSpaceTypes.find(
+      //     (space: any) => space.installationSpaceType === value
+      //   );
+      //   if (selectedSpace) {
+      //     updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
+      //   }
+      // }
+
+      // if (name === "inversionType") {
+      //   updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
+      // }
 
       updatedFormData = updatedData;
       return updatedData;
@@ -442,174 +597,174 @@ export const SystemSpecifications = () => {
     setIsSpecsSaved(false);
     setPriceAlreadySetFromCustomerData(false);
 
-    if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
-      let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-      let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-      const inverterBrandValue =
-        name === "inverterBrand"
-          ? value
-          : name === "inversionType"
-            ? value === "Hybrid"
-              ? "VSole"
-              : "KSolare"
-            : formData.inverterBrand;
-      const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
+    // if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
+    //   let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
+    //   let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
+    //   const inverterBrandValue =
+    //     name === "inverterBrand"
+    //       ? value
+    //       : name === "inversionType"
+    //         ? value === "Hybrid"
+    //           ? "VSole"
+    //           : "KSolare"
+    //         : formData.inverterBrand;
+    //   const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
 
-      try {
-        if (name === "dcrNonDcrType") {
-          const panels = await fetchPanels(phaseType, value);
-          console.log("Fetched Panels:", panels);
-          setPanelBrands(panels || []);
+    //   try {
+    //     if (name === "dcrNonDcrType") {
+    //       const panels = await fetchPanels(phaseType, value);
+    //       console.log("Fetched Panels:", panels);
+    //       setPanelBrands(panels || []);
 
-          if (panels.length > 0) {
-            panelBrandValue = panels[0].brand;
-            setFormData((prev) => ({
-              ...prev,
-              panelBrand: panels[0].brand,
-            }));
-          }
+    //       if (panels.length > 0) {
+    //         panelBrandValue = panels[0].brand;
+    //         setFormData((prev) => ({
+    //           ...prev,
+    //           panelBrand: panels[0].brand,
+    //         }));
+    //       }
 
-          dcrNonDcrValue = value;
-        }
+    //       dcrNonDcrValue = value;
+    //     }
 
-        console.log("Fetching panel wattages with:");
-        console.log("Connection ID:", connectionId);
-        console.log("Phase Type:", phaseType);
-        console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-        console.log("Panel Brand:", panelBrandValue);
+    //     console.log("Fetching panel wattages with:");
+    //     console.log("Connection ID:", connectionId);
+    //     console.log("Phase Type:", phaseType);
+    //     console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
+    //     console.log("Panel Brand:", panelBrandValue);
 
-        const wattages = await fetchPanelWattages(
-          phaseType,
-          dcrNonDcrValue,
-          panelBrandValue
-        );
+    //     const wattages = await fetchPanelWattages(
+    //       phaseType,
+    //       dcrNonDcrValue,
+    //       panelBrandValue
+    //     );
 
-        setPanelWattages(wattages);
+    //     setPanelWattages(wattages);
 
-        const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
-        setInverterWattages(inverterWattages);
+    //     const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
+    //     setInverterWattages(inverterWattages);
 
-        if (phaseType && inversionTypeValue) {
-          const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
-          setInverterBrands(inverterBrands || []);
-        }
+    //     if (phaseType && inversionTypeValue) {
+    //       const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
+    //       setInverterBrands(inverterBrands || []);
+    //     }
 
-        setFormData((prev) => ({
-          ...prev,
-          Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
-          inverterKw: inverterWattages.includes(prev.inverterKw)
-            ? prev.inverterKw
-            : inverterWattages[0] || "",
-        }));
-      } catch (error) {
-        console.error("Error fetching panel wattages:", error);
-      }
-    }
+    //     setFormData((prev) => ({
+    //       ...prev,
+    //       Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
+    //       inverterKw: inverterWattages.includes(prev.inverterKw)
+    //         ? prev.inverterKw
+    //         : inverterWattages[0] || "",
+    //     }));
+    //   } catch (error) {
+    //     console.error("Error fetching panel wattages:", error);
+    //   }
+    // }
 
   };
 
 
 
-  useEffect(() => {
-    const handleGetPrice = async () => {
-      try {
-        const phaseType = connectionDetails?.phaseTypeName || "";
+  // useEffect(() => {
+  //   const handleGetPrice = async () => {
+  //     try {
+  //       const phaseType = connectionDetails?.phaseTypeName || "";
 
-        const requestData = {
-          customerSelectedInstallationSpaceType: formData.installationSpaceType || null,
-          customerSelectedInstallationStructureType: formData.installationStructureType,
-          customerSelectedKW: formData.Kw,
-          customerSelectedBrand: formData.panelBrand,
-          phaseType,
-          dcrNonDcrType: formData.dcrNonDcrType,
-          connectionType,
-          numberOfGpPipes: formData.numberOfGpPipes || 0,
-          hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
-          hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
-          hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
-        };
+  //       const requestData = {
+  //         customerSelectedInstallationSpaceType: formData.installationSpaceType || null,
+  //         customerSelectedInstallationStructureType: formData.installationStructureType,
+  //         customerSelectedKW: formData.Kw,
+  //         customerSelectedBrand: formData.panelBrand,
+  //         phaseType,
+  //         dcrNonDcrType: formData.dcrNonDcrType,
+  //         connectionType,
+  //         numberOfGpPipes: formData.numberOfGpPipes || 0,
+  //         hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
+  //         hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
+  //         hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
+  //       };
 
-        console.log("Request Data:", requestData);
+  //       console.log("Request Data:", requestData);
 
-        const priceDetails = await getPriceDetails(requestData);
+  //       const priceDetails = await getPriceDetails(requestData);
 
-        if (priceDetails) {
-          setFormData((prev) => ({
-            ...prev,
-            solarSystemCost: priceDetails.solarSystemCost || 0,
-            fabricationCost: priceDetails.fabricationCost || 0,
-            totalCost:
-              (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
-          }));
+  //       if (priceDetails) {
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           solarSystemCost: priceDetails.solarSystemCost || 0,
+  //           fabricationCost: priceDetails.fabricationCost || 0,
+  //           totalCost:
+  //             (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
+  //         }));
 
-          setShowCostDetails(true);
-        }
-      } catch (error) {
-        console.error("Error fetching price details:", error);
-      }
-    };
+  //         setShowCostDetails(true);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching price details:", error);
+  //     }
+  //   };
 
-    if (
-      !priceAlreadySetFromCustomerData &&
-      formData.installationStructureType &&
-      formData.Kw &&
-      formData.panelBrand &&
-      formData.dcrNonDcrType &&
-      phaseType
-    ) {
-      handleGetPrice();
-    }
-  }, [
-    formData.installationSpaceType,
-    formData.installationStructureType,
-    formData.Kw,
-    formData.panelBrand,
-    formData.dcrNonDcrType,
-    phaseType,
-    formData.hasWaterSprinklerSystem,
-    formData.hasHeavyDutyRamp,
-    formData.hasHeavyDutyStairs
-  ]);
+  //   if (
+  //     !priceAlreadySetFromCustomerData &&
+  //     formData.installationStructureType &&
+  //     formData.Kw &&
+  //     formData.panelBrand &&
+  //     formData.dcrNonDcrType &&
+  //     phaseType
+  //   ) {
+  //     handleGetPrice();
+  //   }
+  // }, [
+  //   formData.installationSpaceType,
+  //   formData.installationStructureType,
+  //   formData.Kw,
+  //   formData.panelBrand,
+  //   formData.dcrNonDcrType,
+  //   phaseType,
+  //   formData.hasWaterSprinklerSystem,
+  //   formData.hasHeavyDutyRamp,
+  //   formData.hasHeavyDutyStairs
+  // ]);
 
   const handleSaveSpecs = async () => {
-    const phaseType = connectionDetails?.phaseTypeName || "";
-    const requestData = {
-      customerSelectedInstallationStructureType: formData.installationStructureType,
-      customerSelectedKW: formData.Kw,
-      customerSelectedBrand: formData.panelBrand,
-      customerSelectedInstallationSpaceType: formData.installationSpaceType,
-      dcrNonDcrType: formData.dcrNonDcrType,
-      phaseType: phaseType,
-      connectionType: connectionType,
-      inversionType: formData.inversionType,
-      solarSystemCost: formData.solarSystemCost,
-      fabricationCost: formData.fabricationCost,
-      totalCost: formData.totalCost,
-      hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
-      hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
-      hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
-      inverterCapacity: formData.inverterKw,
-      inverterBrand: formData.inverterBrand,
-      batteryCapacity: formData.batteryCapacity,
-      batteryBrand: formData.batteryBrand,
-    };
+    // const phaseType = connectionDetails?.phaseTypeName || "";
+    // const requestData = {
+    //   customerSelectedInstallationStructureType: formData.installationStructureType,
+    //   customerSelectedKW: formData.Kw,
+    //   customerSelectedBrand: formData.panelBrand,
+    //   customerSelectedInstallationSpaceType: formData.installationSpaceType,
+    //   dcrNonDcrType: formData.dcrNonDcrType,
+    //   phaseType: phaseType,
+    //   connectionType: connectionType,
+    //   inversionType: formData.inversionType,
+    //   solarSystemCost: formData.solarSystemCost,
+    //   fabricationCost: formData.fabricationCost,
+    //   totalCost: formData.totalCost,
+    //   hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
+    //   hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
+    //   hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
+    //   inverterCapacity: formData.inverterKw,
+    //   inverterBrand: formData.inverterBrand,
+    //   batteryCapacity: formData.batteryCapacity,
+    //   batteryBrand: formData.batteryBrand,
+    // };
 
-    try {
-      await saveCustomerSpecs(connectionId, requestData);
-      toast.success("System specifications saved successfully.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      //////
-      setIsSpecsSaved(true);
-      ///////
-    } catch (error) {
+    // try {
+    //   await saveCustomerSpecs(connectionId, requestData);
+    //   toast.success("System specifications saved successfully.", {
+    //     autoClose: 1000,
+    //     hideProgressBar: true,
+    //   });
+    //   //////
+    //   setIsSpecsSaved(true);
+    //   ///////
+    // } catch (error) {
 
-      toast.error("Erroe while saving specifications.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    }
+    //   toast.error("Erroe while saving specifications.", {
+    //     autoClose: 1000,
+    //     hideProgressBar: true,
+    //   });
+    // }
   };
 
 
@@ -629,18 +784,18 @@ export const SystemSpecifications = () => {
       const pdfBlob = await generateQuotationPDF(connectionId);
       console.log('PDF Blob size:', pdfBlob.size);
 
-      const fileName = `Quotation_${govIdName}`;
-      const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
+      // const fileName = `Quotation_${govIdName}`;
+      // const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
 
 
-      try {
-        await uploadDocuments(connectionId, fileName, [pdfFile]);
-        console.log("PDF uploaded to OneDrive successfully");
-      } catch (uploadError) {
-        console.error("Error uploading to OneDrive:", uploadError);
-      }
+      // try {
+      //   await uploadDocuments(connectionId, fileName, [pdfFile]);
+      //   console.log("PDF uploaded to OneDrive successfully");
+      // } catch (uploadError) {
+      //   console.error("Error uploading to OneDrive:", uploadError);
+      // }
 
-      // Always download the file regardless of upload success
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
@@ -693,11 +848,11 @@ export const SystemSpecifications = () => {
 
 
       <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2">
-        {/* Backward Arrow Button (Before Title on Mobile) */}
+
         <div className="flex items-center w-full md:w-auto">
           <button
             onClick={() =>
-              navigate(`/view-connection/${connectionId}`, {
+              navigate(`/view-connection`, {
                 state: { consumerId, customerId, connectionId },
               })
             }
@@ -706,7 +861,7 @@ export const SystemSpecifications = () => {
             <ArrowLeft className="w-6 h-6 text-gray-700" />
           </button>
 
-          {/* Heading - Adjusts Position on Small Screens */}
+
           <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
             {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
           </h2>
@@ -716,7 +871,7 @@ export const SystemSpecifications = () => {
       <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
-          {/* Connector Line: between the first and last icon only */}
+
           <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
           <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
@@ -741,13 +896,13 @@ export const SystemSpecifications = () => {
                   onClick={() => {
                     setActiveTab(tab);
                     if (tab === "Customer Details") {
-                      navigate(`/view-customer/${customerId}`, {
+                      navigate(`/view-customer`, {
                         state: {
                           customerId,
                         },
                       });
                     } else if (tab === "Connection Details") {
-                      navigate(`/view-connection/${connectionId}`, {
+                      navigate(`/view-connection`, {
                         state: { consumerId, customerId, connectionId },
                       });
                     }
@@ -822,7 +977,6 @@ export const SystemSpecifications = () => {
 
             <label className="block text-sm font-medium text-gray-700">Installation Space</label>
 
-            {/* Custom dropdown with per-item View button */}
             <div className="mt-1 relative">
               <button
                 type="button"
@@ -833,7 +987,7 @@ export const SystemSpecifications = () => {
                   <span>{getSpaceEmoji(formData.installationSpaceType)}</span>
                   <span>
                     {formData.installationSpaceType
-                      ? `On ${formData.installationSpaceType}`
+                      ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
                       : "Installations Not Available"}
                   </span>
                 </span>
@@ -875,7 +1029,6 @@ export const SystemSpecifications = () => {
               )}
             </div>
 
-            {/* Selected installation details modal (opens via View) */}
             {showModal && selectedSpace && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
                 <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
@@ -891,7 +1044,7 @@ export const SystemSpecifications = () => {
                   </h2>
 
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-                    {/* Square Diagram */}
+
                     {(() => {
                       const ew = selectedSpace.availableEastWestLengthFt;
                       const sn = selectedSpace.availableSouthNorthLengthFt;
@@ -904,19 +1057,16 @@ export const SystemSpecifications = () => {
                         <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
 
 
-                          {/* Top - North Indicator with side arrow */}
                           <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
                             <span className="mr-1">N</span>
                             <span className="text-base">↑</span>
                           </div>
 
-                          {/* Right - East Indicator with arrow below */}
                           <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
                             <span className="mb-[2px]">E</span>
                             <span className="text-base">→</span>
                           </div>
 
-                          {/* Shape Box */}
                           <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
                             <span className="text-[10px] text-gray-800 font-semibold">
                               {ew * sn} ft²
@@ -924,14 +1074,12 @@ export const SystemSpecifications = () => {
                           </div>
 
 
-                          {/* Bottom - East-West Available Length */}
                           <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
                             <span className="mr-1">←</span>
                             <span>{ew} Ft</span>
                             <span className="ml-1">→</span>
                           </div>
 
-                          {/* Left - South-North Available Length */}
                           <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
                             <span>↑</span>
                             <span>{sn} Ft</span>
@@ -942,10 +1090,6 @@ export const SystemSpecifications = () => {
                     })()}
 
 
-
-
-
-                    {/* Installation Details */}
                     <div className="text-s text-gray-600 space-y-2">
                       <div><span className="text-lg">🔌</span> <strong>Panel to Inverter Distance:</strong> {selectedSpace.dcWireLengthFt || "..."} ft</div>
                       <div><span className="text-lg">📏</span> <strong>Inverter to NetMeter Distance:</strong> {selectedSpace.acWireLengthFt || "..."} ft</div>
@@ -960,51 +1104,79 @@ export const SystemSpecifications = () => {
           <div className="hidden md:block md:col-span-1"></div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Inversion Type</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Grid Type
+            </label>
+
             <select
-              id="inversionType"
-              name="inversionType"
-              value={formData.inversionType}
+              id="gridTypeId"
+              name="gridTypeId"
+              value={formData.gridTypeId}
               onChange={(e) => {
-                setInversionType(e.target.value);
-                handleChange(e);
+                const selectedId = Number(e.target.value);
+                setGridTypeId(selectedId);
+                handleChange({
+                  target: { name: "gridTypeId", value: selectedId },
+                });
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="On-Grid">On-Grid</option>
-              <option value="Hybrid">Hybrid</option>
+              <option value="">Select Grid Type</option>
+              {grids.map((grid) => (
+                <option key={grid.id} value={grid.id}>
+                  {grid.gridType}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* DCR/Non-DCR moved up to row with Inversion Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">DCR/Non-DCR</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Material Origin Type
+            </label>
+
             <select
-              id="dcrNonDcrType"
-              name="dcrNonDcrType"
-              value={formData.dcrNonDcrType}
-              onChange={(e) => { setDcrNonDcrType(e.target.value); handleChange(e); }}
+              id="materialOriginId"
+              name="materialOriginId"
+              value={formData.materialOriginId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setMaterialOriginId(selectedId);
+                handleChange({
+                  target: { name: "materialOriginId", value: selectedId },
+                });
+              }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="DCR">DCR</option>
-              <option value="Non-DCR">Non-DCR</option>
+              <option value="">Select Material Origin Type</option>
+              {origins.map((origin) => (
+                <option key={origin.id} value={origin.id}>
+                  {origin.originCode}
+                </option>
+              ))}
             </select>
           </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
             <select
-              id="inverterBrand"
-              name="inverterBrand"
-              value={formData.inverterBrand}
+              id="inverterBrandId"
+              name="inverterBrandId"
+              value={formData.inverterBrandId}
               onChange={(e) => {
-                handleChange(e);
+                const selectedId = Number(e.target.value);
+                setInverterBrandId(selectedId);
+                handleChange({
+                  target: { name: "inverterBrandId", value: selectedId },
+                });
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              {inverterBrands.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
+              <option value="">Select Inverter Brand</option>
+              {inverters.map((inverter) => (
+                <option key={inverter.id} value={inverter.id}>
+                  {inverter.inverterBrandName}
                 </option>
               ))}
             </select>
@@ -1014,51 +1186,48 @@ export const SystemSpecifications = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
             <select
-              id="inverterKw"
-              name="inverterKw"
-              value={formData.inverterKw}
+              id="inverterSpecId"
+              name="inverterSpecId"
+              value={formData.inverterSpecId}
               onChange={(e) => {
-                setInverterKw(e.target.value);
-                handleChange(e);
+                const selectedId = Number(e.target.value);
+                setInverterSpecId(selectedId);
+                handleChange({
+                  target: { name: "inverterSpecId", value: selectedId },
+                });
               }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-              {inverterWattages.map((inverterWattages) => (
-                <option key={inverterWattages} value={inverterWattages}>
-                  {inverterWattages}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select Inverter Capacity</option>
+              {inverterCapacities.map((inverterCapacity) => (
+                <option key={inverterCapacity.id} value={inverterCapacity.id}>
+                  {inverterCapacity.inverterCapacityWattage} ({inverterCapacity.productWarrantyMonths} months)
                 </option>
               ))}
             </select>
+
           </div>
 
-
-          {/* <div>
-          <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
-          <select
-            id="panelBrand"
-            name="panelBrand"
-            value={formData.panelBrand}
-            onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
-            className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="Sova">Sova</option>
-            <option value="En-Icon">En-Icon</option>
-            <option value="Adani">Adani</option>
-            <option value="ReNew">ReNew</option>
-          </select>
-        </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
             <select
-              id="panelBrand"
-              name="panelBrand"
-              value={formData.panelBrand}
-              onChange={(e) => { setPanelBrand(e.target.value); handleChange(e); }}
+              id="panelBrandId"
+              name="panelBrandId"
+              value={formData.panelBrandId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setPanelBrandId(selectedId);
+                handleChange({
+                  target: { name: "panelBrandId", value: selectedId },
+                });
+              }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              {panelBrands.map((panel) => (
-                <option key={panel.id} value={panel.brand}>
-                  {panel.brand}
+              <option value="">Select PV System Brand</option>
+              {panels.map((panel) => (
+                <option key={panel.id} value={panel.id}>
+                  {panel.brandShortname}
                 </option>
               ))}
             </select>
@@ -1068,17 +1237,19 @@ export const SystemSpecifications = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
             <select
-              id="Kw"
-              name="Kw"
-              value={formData.Kw}
+              id="panelSpecId"
+              name="panelSpecId"
+              value={formData.panelSpecId}
               onChange={(e) => {
-                setKw(e.target.value);
+                setPanelSpecId(e.target.value);
                 handleChange(e);
               }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-              {panelWattages.map((wattages) => (
-                <option key={wattages} value={wattages}>
-                  {wattages}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">Select PV System Capacity</option>
+              {panelCapacities.map((panelCapacity) => (
+                <option key={panelCapacity} value={panelCapacity}>
+                  {panelCapacity}
                 </option>
               ))}
             </select>
@@ -1246,9 +1417,9 @@ export const SystemSpecifications = () => {
                 {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
               </button>
 
-      {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-        userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-        userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+              {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
                   <button
                     type="submit"
                     onClick={handleGenerateQuotation}

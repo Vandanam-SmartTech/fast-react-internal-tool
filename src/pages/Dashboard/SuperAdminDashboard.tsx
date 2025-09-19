@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building, Shield, Users, Building2, UserCog, Settings, Clock, Calendar} from 'lucide-react';
+import { Building, Shield, Users, Building2, UserCog, Settings, Clock, Calendar } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import OrganizationSelector from '../../components/OrganizationSelector';
 import { useUser } from '../../contexts/UserContext';
@@ -11,31 +11,31 @@ const SuperAdminDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const { userClaims } = useUser();
-    
-  
-    useEffect(() => {
-      const setTimeBasedGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) {
-          setGreeting('Good Morning');
-        } else if (hour < 16) {
-          setGreeting('Good Afternoon');
-        } else {
-          setGreeting('Good Evening');
-        }
-      };
-  
-      setTimeBasedGreeting();
-  
-  
-      const timeInterval = setInterval(() => {
-        setCurrentTime(new Date());
-      }, 1000);
-  
-      return () => clearInterval(timeInterval);
-    }, []);
 
-      const handleItemClick = (item: any) => {
+
+  useEffect(() => {
+    const setTimeBasedGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) {
+        setGreeting('Good Morning');
+      } else if (hour < 16) {
+        setGreeting('Good Afternoon');
+      } else {
+        setGreeting('Good Evening');
+      }
+    };
+
+    setTimeBasedGreeting();
+
+
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  const handleItemClick = (item: any) => {
     if (item.requiresOrg) {
       setShowOrgSelector(true);
     } else {
@@ -116,21 +116,21 @@ const SuperAdminDashboard: React.FC = () => {
             Complete System Administration and Management
           </p>
         </div>
-          
-                          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>{currentTime.toLocaleTimeString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>{currentTime.toLocaleDateString()}</span>
-            </div>
+
+        <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>{currentTime.toLocaleTimeString()}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{currentTime.toLocaleDateString()}</span>
           </div>
         </div>
+      </div>
 
- {/* Quick Stats */}
- {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Quick Stats */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {quickStats.map((stat, index) => (
           <Card key={index} className="stat-card">
             <CardBody className="p-6">
@@ -150,7 +150,7 @@ const SuperAdminDashboard: React.FC = () => {
         ))}
       </div> */}
 
-              {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
                 <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
   <CardBody className="p-4">
@@ -163,15 +163,15 @@ const SuperAdminDashboard: React.FC = () => {
         <UserCog className="h-6 w-6 text-purple-700" />
       </div>
     </div> */}
-    {/* <div className="mt-2 flex items-center gap-1">
+      {/* <div className="mt-2 flex items-center gap-1">
       <TrendingUp className="h-4 w-4 text-success-600" />
       <span className="text-sm text-success-600">+8% from last month</span>
     </div> */}
-  {/* </CardBody>
+      {/* </CardBody>
 </Card> */}
 
 
-          {/* <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
+      {/* <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -182,15 +182,15 @@ const SuperAdminDashboard: React.FC = () => {
                   <UserCog className="h-6 w-6 text-success-700" />
                 </div>
               </div> */}
-              {/* <div className="mt-2 flex items-center gap-1">
+      {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+8% from last month</span>
               </div> */}
-            {/* </CardBody>
+      {/* </CardBody>
           </Card> */}
 
-          
-          {/* <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+
+      {/* <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -201,16 +201,16 @@ const SuperAdminDashboard: React.FC = () => {
                   <Users className="h-6 w-6 text-primary-700" />
                 </div>
               </div> */}
-              {/* <div className="mt-2 flex items-center gap-1">
+      {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+12% from last month</span>
               </div> */}
-            {/* </CardBody>
+      {/* </CardBody>
           </Card> */}
 
-          
 
-          {/* <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
+
+      {/* <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -221,14 +221,14 @@ const SuperAdminDashboard: React.FC = () => {
                   <Building2 className="h-6 w-6 text-warning-700" />
                 </div>
               </div> */}
-              {/* <div className="mt-2 flex items-center gap-1">
+      {/* <div className="mt-2 flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-success-600" />
                 <span className="text-sm text-success-600">+3 new this month</span>
               </div> */}
-            {/* </CardBody>
+      {/* </CardBody>
           </Card> */}
 
-          {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
+      {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -245,15 +245,15 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
             </CardBody>
           </Card> */}
-        {/* </div> */}
-    
+      {/* </div> */}
+
 
       {/* Quick Actions */}
       <div>
         <h2 className="text-xl font-semibold text-secondary-900 dark:text-secondary-100 mb-4">Management Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dashboardItems.map((item, index) => (
-            <Card 
+            <Card
               key={index}
               className={`${item.color} hover:shadow-medium transition-all duration-200 cursor-pointer`}
               hover={true}
@@ -275,7 +275,7 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
       </div>
 
-       
+
 
       {/* Recent Activity */}
       {/* <div>
@@ -316,12 +316,12 @@ const SuperAdminDashboard: React.FC = () => {
       </div> */}
 
       {/* Organization Selector Modal */}
-    {showOrgSelector && (
+      {showOrgSelector && (
         <OrganizationSelector
-            onSelect={handleSelectOrg} // Navigate directly on selection
-            onCancel={handleCancel}    // Close modal on cancel
+          onSelect={handleSelectOrg} 
+          onCancel={handleCancel}    
         />
-    )}
+      )}
     </div>
   );
 };

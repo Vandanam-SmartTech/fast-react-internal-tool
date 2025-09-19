@@ -58,7 +58,7 @@ const ListOfConsumers: React.FC = () => {
       return;
     }
 
-    navigate(`/view-customer/${customerId}`, {
+    navigate(`/view-customer`, {
       state: { consumer, customerId }
     });
   };
@@ -126,7 +126,6 @@ const ListOfConsumers: React.FC = () => {
       try {
         let orgIdToFetch: number | null = null;
 
-        // Priority: if dropdown selections exist, use them
         if (selectedAgencyId) {
           orgIdToFetch = selectedAgencyId;
         } else if (selectedOrgId) {
@@ -194,7 +193,6 @@ const ListOfConsumers: React.FC = () => {
         orgId = null;
       }
 
-      // derive names only if needed in future
 
       const params = {
         orgId,
@@ -304,36 +302,6 @@ const ListOfConsumers: React.FC = () => {
     const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
-
-
-  // const filteredAndSortedData = useMemo(() => {
-  //   const data = searchQuery.trim() !== "" ? searchResults : consumers;
-
-  //   let filtered = data.filter(consumer => {
-  //     if (filters.hasConnections !== null) {
-  //       const hasConnections = consumer.connections && consumer.connections.length > 0;
-  //       if (filters.hasConnections !== hasConnections) return false;
-  //     }
-
-  //     if (filters.hasEmail !== null) {
-  //       const hasEmail = consumer.emailAddress && consumer.emailAddress !== "NA";
-  //       if (filters.hasEmail !== hasEmail) return false;
-  //     }
-
-  //     return true;
-  //   });
-
-  //   return filtered;
-  // }, [consumers, searchResults, searchQuery, filters]);
-
-
-
-  // const getActiveFiltersCount = () => {
-  //   let count = 0;
-  //   if (filters.hasConnections !== null) count++;
-  //   if (filters.hasEmail !== null) count++;
-  //   return count;
-  // };
 
   useEffect(() => {
     loadConsumers(currentPage);
@@ -491,7 +459,7 @@ const ListOfConsumers: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  navigate(`/ConnectionForm`, {
+                  navigate(`/connection-form`, {
                     state: {
                       customerId: consumer.customerId || consumer.id,
                       govIdName: consumer.govIdName,
@@ -522,7 +490,7 @@ const ListOfConsumers: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate(`/view-connection/${connection.id}`, {
+                      navigate(`/view-connection`, {
                         state: {
                           customerId: consumer.customerId || consumer.id,
                           connectionId: connection.id,
@@ -539,7 +507,7 @@ const ListOfConsumers: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate(`/SystemSpecifications`, {
+                      navigate(`/system-specifications`, {
                         state: {
                           connectionId: connection.id,
                           consumerId: connection.consumerId,
@@ -556,7 +524,7 @@ const ListOfConsumers: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate(`/generatedocuments`, {
+                      navigate(`/generate-documents`, {
                         state: {
                           consumer: {
                             id: connection.id,
@@ -587,7 +555,7 @@ const ListOfConsumers: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() =>
-                navigate(`/ConnectionForm`, {
+                navigate(`/connection-form`, {
                   state: {
                     customerId: consumer.customerId || consumer.id,
                     govIdName: consumer.govIdName,

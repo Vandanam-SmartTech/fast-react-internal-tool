@@ -10,7 +10,7 @@ const ManageCustomers: React.FC = () => {
       title: 'Add New Customer',
       description: 'Create a new customer record',
       icon: <UserPlus className="h-12 w-12 text-blue-600" />,
-      path: '/CustomerForm',
+      path: '/customer-form',
       color: 'bg-blue-50 hover:bg-blue-100'
     },
     {
@@ -24,7 +24,7 @@ const ManageCustomers: React.FC = () => {
       title: 'Onboarded Consumers',
       description: 'View onboarded consumers',
       icon: <UserRoundCheck className="h-12 w-12 text-purple-600" />,
-      path: '/OnboardedConsumers',
+      path: '/onboarded-consumers',
       color: 'bg-purple-50 hover:bg-purple-100'
     }
   ];

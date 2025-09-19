@@ -33,7 +33,7 @@ const Header: React.FC = () => {
   const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
 
 
-  const authPages = ['/login', '/PasswordReset', '/Verification', '/ChangePassword', '/PageNotFound'];
+  const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const isAuthPage = authPages.includes(location.pathname);
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<{
@@ -104,15 +104,15 @@ const Header: React.FC = () => {
 
 
     if (role === 'ROLE_AGENCY_REPRESENTATIVE' || role === 'ROLE_ORG_REPRESENTATIVE') {
-      navigate('/RepresentativeDashboard');
+      navigate('/representative-dashboard');
     } else if (role === 'ROLE_ORG_ADMIN') {
-      navigate('/AdminDashboard');
+      navigate('/org-admin-dashboard');
     } else if (role === 'ROLE_AGENCY_ADMIN') {
-      navigate('/AgencyAdminDashboard');
+      navigate('/agency-admin-dashboard');
     } else if (role === 'ROLE_ORG_STAFF' || role === 'ROLE_AGENCY_STAFF') {
-      navigate('/StaffDashboard');
+      navigate('/staff-dashboard');
     } else if (role === 'ROLE_SUPER_ADMIN') {
-      navigate('/SuperAdminDashboard');
+      navigate('/super-admin-dashboard');
     }
 
     window.location.reload();

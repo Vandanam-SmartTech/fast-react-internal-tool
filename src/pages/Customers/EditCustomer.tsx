@@ -196,7 +196,7 @@ export const EditCustomer = () => {
           });
 
 
-          navigate(`/view-customer/${customerId}`, {
+          navigate(`/view-customer`, {
             state: {
               customerId,
             },

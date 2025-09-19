@@ -21,14 +21,14 @@ const HomeRedirect: React.FC = () => {
       }
 
       
-      if (!claims.is_password_changed) {
-        setRedirectPath('/PasswordReset');
+      if (!claims.has_password_changed) {
+        setRedirectPath('/password-reset');
         return;
       }
 
       
       if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
-        setRedirectPath('/SuperAdminDashboard');
+        setRedirectPath('/super-admin-dashboard');
         return;
       }
 
@@ -77,22 +77,22 @@ const HomeRedirect: React.FC = () => {
     const routeByOrgRole = (role: string) => {
       switch (role) {
         case 'ROLE_ORG_ADMIN':
-          setRedirectPath('/AdminDashboard');
+          setRedirectPath('/org_admin-dashboard');
           break;
         case 'ROLE_AGENCY_ADMIN':
-          setRedirectPath('/AgencyAdminDashboard');
+          setRedirectPath('/agency-admin-dashboard');
           break;
         case 'ROLE_ORG_STAFF':
-          setRedirectPath('/StaffDashboard');
+          setRedirectPath('/staff-dashboard');
           break;
         case 'ROLE_AGENCY_STAFF':
-          setRedirectPath('/StaffDashboard');
+          setRedirectPath('/staff-dashboard');
           break;
         case 'ROLE_ORG_REPRESENTATIVE':
-          setRedirectPath('/RepresentativeDashboard');
+          setRedirectPath('/representative-dashboard');
           break;
         case 'ROLE_AGENCY_REPRESENTATIVE':
-          setRedirectPath('/RepresentativeDashboard');
+          setRedirectPath('/representative-dashboard');
           break;
         case 'ROLE_CUSTOMER':
           setRedirectPath('/manage-customers');
