@@ -387,7 +387,7 @@ export const fetchPanelBrands = async (
 export const fetchPanelBrandCapacities = async (
   phaseTypeId: number,
   panelBrandId: number,
-  monthlyAvgConsumptionUnits: number
+  avgMonthlyConsumption: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -397,7 +397,7 @@ export const fetchPanelBrandCapacities = async (
       params: {
         phaseTypeId,
         panelBrandId,
-        monthlyAvgUnit: monthlyAvgConsumptionUnits
+        monthlyAvgUnit: avgMonthlyConsumption
       },
     });
 

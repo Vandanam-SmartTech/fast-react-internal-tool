@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateOrganization, getOrganizationById } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
@@ -24,8 +24,10 @@ interface Village {
 }
 
 const EditAgency: React.FC = () => {
-  const { orgId, agencyId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const orgId = location.state?.orgId;
+  const agencyId = location.state?.agencyId
 
 
   const [formData, setFormData] = useState({

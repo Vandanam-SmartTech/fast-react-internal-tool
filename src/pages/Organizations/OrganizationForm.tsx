@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { createOrganization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { fetchClaims } from '../../services/jwtService';
 import { toast } from 'react-toastify';
+import { useUser } from '../../contexts/UserContext';
 
 interface District {
   code: number;
@@ -54,6 +55,7 @@ const OrganizationForm: React.FC = () => {
   const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const { userClaims } = useUser();
 
 
   useEffect(() => {
@@ -170,16 +172,13 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
 
     try {
-      const claims = await fetchClaims();
-      const userId = claims?.id || claims?.user_id || claims?.userId;
-
+      const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
       const orgData = {
         ...formData,
         createdBy: userId,
         pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
       };
 
-      console.log('JWT Claims:', claims);
       console.log('User ID:', userId);
       console.log('Creating organization with data:', orgData);
 

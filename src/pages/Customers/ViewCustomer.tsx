@@ -66,9 +66,6 @@ export const ViewCustomer = () => {
     loadSpaceTypes();
   }, []);
 
-  const getSpaceTypeName = (id: number) => {
-    return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
-  };
 
   useEffect(() => {
     console.log("Fetch Consumer Number API is used");
@@ -374,7 +371,7 @@ export const ViewCustomer = () => {
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+                          <p className="mt-1 text-base text-gray-800">{connection.avgMonthlyConsumption || "....."}</p>
                         </div>
 
 
@@ -415,7 +412,7 @@ export const ViewCustomer = () => {
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.postalCode || "....."}</p>
+                          <p className="mt-1 text-base text-gray-800">{connection.pinCode || "....."}</p>
                         </div>
 
                         <div>
@@ -426,7 +423,7 @@ export const ViewCustomer = () => {
                         {connection.isNameCorrectionRequired && (
                           <div>
                             <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-                            <p className="mt-1 text-base text-gray-800">{connection.correctionName || "....."}</p>
+                            <p className="mt-1 text-base text-gray-800">{connection.correctionTypeName || "....."}</p>
                           </div>
                         )}
                       </div>
@@ -538,7 +535,7 @@ export const ViewCustomer = () => {
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
                                   <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.elevationInFeet || "....."}
+                                    {installation.minimumElevationFt || "....."}
                                   </p>
                                 </div>
                                 <div className="md:col-span-2">

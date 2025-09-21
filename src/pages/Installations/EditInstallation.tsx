@@ -46,7 +46,7 @@ export const EditInstallation = () => {
     installationSpaceTypeId: 1,
     installationSpaceTitle: '',
     customInstallationSpaceTitle: '',
-    elevationInFeet: '',
+    minimumElevationFt: '',
   });
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export const EditInstallation = () => {
               availableSouthNorthLengthFt: selectedInstallation.availableSouthNorthLengthFt || '',
               availableEastWestLengthFt: selectedInstallation.availableEastWestLengthFt || '',
               installationSpaceTypeId: selectedInstallation.installationSpaceTypeId,
-              elevationInFeet: selectedInstallation.elevationInFeet || '',
+              minimumElevationFt: selectedInstallation.minimumElevationFt || '',
               installationSpaceTitle: isCustomTitle ? 'Other' : selectedInstallation.installationSpaceTitle,
               customInstallationSpaceTitle: isCustomTitle ? selectedInstallation.installationSpaceTitle : '',
             });
@@ -131,7 +131,7 @@ export const EditInstallation = () => {
       descriptionOfInstallation: formData.descriptionOfInstallation || '',
       availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || '',
       availableEastWestLengthFt: formData.availableEastWestLengthFt || '',
-      elevationInFeet: formData.elevationInFeet || '',
+      minimumElevationFt: formData.minimumElevationFt || '',
       installationSpaceTitle:
         formData.installationSpaceTitle === 'Other'
           ? formData.customInstallationSpaceTitle
@@ -410,11 +410,11 @@ export const EditInstallation = () => {
               <input
                 type="text"
                 inputMode="numeric"
-                id="elevationInFeet"
-                name="elevationInFeet"
+                id="minimumElevationFt"
+                name="minimumElevationFt"
                 //min="0"
                 //onWheel={(e) => e.currentTarget.blur()}
-                value={formData.elevationInFeet}
+                value={formData.minimumElevationFt}
                 placeholder="e.g. 10"
                 onChange={(e) => {
                   const value = e.target.value;

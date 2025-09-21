@@ -22,12 +22,8 @@ export const ViewConnection = () => {
   const [connection, setConnection] = useState<any>(null);
   const customerId = location.state?.customerId;
   const connectionId = location.state?.connectionId;
-  const [districtName, setDistrictName] = useState<string>("");
-  const [talukaName, setTalukaName] = useState<string>("");
-  const [villageName, setVillageName] = useState<string>("");
   const navigate = useNavigate();
   const [govIdName, setGovIdName] = useState("");
-  const [claims, setClaims] = useState<any>(null);
 
 
 
@@ -94,10 +90,6 @@ export const ViewConnection = () => {
         const selectedConnection = data.find(conn => conn.id === Number(connectionId));
         if (selectedConnection) {
           setConnection(selectedConnection);
-
-          setDistrictName(selectedConnection.districtName || "");
-          setTalukaName(selectedConnection.talukaName || "");
-          setVillageName(selectedConnection.villageName || "");
         } else {
           console.warn("No matching connection found for given connectionId.");
           setConnection(null);
@@ -465,7 +457,7 @@ export const ViewConnection = () => {
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.monthlyAvgConsumptionUnits || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "....."}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
@@ -519,7 +511,7 @@ export const ViewConnection = () => {
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Postal Code</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.postalCode || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.pinCode || "....."}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
@@ -546,7 +538,7 @@ export const ViewConnection = () => {
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Correction Name</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.correctionName || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.correctionTypeName || "....."}</p>
               </div>
             </div>
           )}
@@ -629,7 +621,7 @@ export const ViewConnection = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
-                  <p className="mt-1">{installation.elevationInFeet || "....."}</p>
+                  <p className="mt-1">{installation.minimumElevationFt || "....."}</p>
                 </div>
                 <div className="md:col-span-2">
                   <h3 className="text-sm font-medium text-gray-500">Description</h3>

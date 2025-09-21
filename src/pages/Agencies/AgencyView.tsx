@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
 import { getOrganizationById, Organization, fetchOrganizationUsers } from '../../services/organizationService';
 import { toast } from 'react-toastify';
@@ -11,56 +11,60 @@ interface OrganizationUser {
   emailAddress: string;
   contactNumber: string;
   organizationRoles: Array<{
-   organizationId: number;
-   organizationName: string;
-   roleId: number;
-   roleName: string;
+    organizationId: number;
+    organizationName: string;
+    roleId: number;
+    roleName: string;
   }>;
 }
 
 const AgencyView: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<any>(null);
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
 
+  const location = useLocation();
+  const orgId = location.state?.orgId;
+  const agencyId = location.state?.agencyId
+
   useEffect(() => {
-    if (id) {
-      loadOrganization(parseInt(id));
-      loadOrganizationUsers(parseInt(id));
+    if (agencyId) {
+      loadOrganization(parseInt(agencyId));
+      loadOrganizationUsers(parseInt(agencyId));
     }
   }, [id]);
 
-  const loadOrganization = async (orgId: number) => {
+  const loadOrganization = async (agencyId: number) => {
     try {
-      const org = await getOrganizationById(orgId);
-      setOrganization(org);
+      const agency = await getOrganizationById(agencyId);
+      setOrganization(agency);
     } catch (error) {
-      toast.error('Failed to load organization');
-      navigate('/organizations');
+      toast.error('Failed to load agency');
+      navigate('/agencies');
     } finally {
       setLoading(false);
     }
   };
 
-const loadOrganizationUsers = async (orgId: number) => {
-  setUsersLoading(true);
-  try {
-    const usersWithOrgRoles: OrganizationUser[] = await fetchOrganizationUsers(orgId);
-    setOrgUsers(usersWithOrgRoles);
-  } catch (error) {
-    console.error('Failed to load organization users:', error);
-  } finally {
-    setUsersLoading(false);
-  }
-};
+  const loadOrganizationUsers = async (agencyId: number) => {
+    setUsersLoading(true);
+    try {
+      const usersWithOrgRoles: OrganizationUser[] = await fetchOrganizationUsers(agencyId);
+      setOrgUsers(usersWithOrgRoles);
+    } catch (error) {
+      console.error('Failed to load organization users:', error);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const getUsersByRole = (roleName: string) => {
-    return orgUsers.filter(user => 
-      user.organizationRoles?.some(role => 
-        role.organizationId === parseInt(id!) && role.roleName === roleName
+    return orgUsers.filter(user =>
+      user.organizationRoles?.some(role =>
+        role.organizationId === parseInt(agencyId!) && role.roleName === roleName
       )
     );
   };
@@ -74,7 +78,13 @@ const loadOrganizationUsers = async (orgId: number) => {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => navigate(isAgency ? `/agencies/${organization.parentId}` : '/organizations')}
+          onClick={() =>
+            navigate("/agencies", {
+              state: {
+                orgId: orgId,
+              },
+            })
+          }
           className="text-gray-600 hover:text-gray-800"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -84,7 +94,12 @@ const loadOrganizationUsers = async (orgId: number) => {
           Agency Details
         </h1>
         <button
-          onClick={() => navigate(isAgency ? `/agency-form/${organization.parentId}/${id}` : `/organization-form/${id}`)}
+          onClick={() => navigate("/edit-agency",{
+            state:{
+              orgId: orgId,
+              agencyId: agencyId,
+            }
+          })}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
         >
           <Edit className="h-4 w-4" />
@@ -121,7 +136,7 @@ const loadOrganizationUsers = async (orgId: number) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-            <p className="text-gray-900">{organization.postalCode || '-'}</p>
+            <p className="text-gray-900">{organization.pinCode || '-'}</p>
           </div>
 
           <div>
@@ -166,7 +181,7 @@ const loadOrganizationUsers = async (orgId: number) => {
           <Users className="h-5 w-5" />
           Agency Members
         </h2>
-        
+
         {usersLoading ? (
           <div className="text-center py-4">Loading users...</div>
         ) : (

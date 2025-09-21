@@ -58,7 +58,7 @@ export const SystemSpecifications = () => {
   const [batteryCapacities, setBatteryCapacities] = useState<string[]>([]);
 
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
-  const [monthlyAvgConsumptionUnits, setMonthlyAvgConsumptionUnits] = useState<number | null>(null);
+  const [avgMonthlyConsumption, setAvgMonthlyConsumption] = useState<number | null>(null);
 
   const [materialOriginId, setMaterialOriginId] = useState<string | number>("");
   const [origins, setOrigins] = useState<any[]>([]);
@@ -224,13 +224,13 @@ export const SystemSpecifications = () => {
         const data = await getConnectionByConnectionId(Number(connectionId));
         setConnectionDetails(data);
 
-        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.monthlyAvgConsumptionUnits !== null) {
+        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null) {
           setPhaseTypeId(data.phaseTypeId);
-          setMonthlyAvgConsumptionUnits(data.monthlyAvgConsumptionUnits);
-          console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.monthlyAvgConsumptionUnits);
+          setAvgMonthlyConsumption(data.avgMonthlyConsumption);
+          console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
         } else {
           setPhaseTypeId(null);
-          setMonthlyAvgConsumptionUnits(null);
+          setAvgMonthlyConsumption(null);
         }
       } catch (error) {
         console.error("Failed to fetch connection details", error);
@@ -319,9 +319,9 @@ export const SystemSpecifications = () => {
 
     useEffect(() => {
     const loadPanelBrandCapacities = async () => {
-      if (phaseTypeId !== null && panelBrandId !== null && monthlyAvgConsumptionUnits!== null) {
+      if (phaseTypeId !== null && panelBrandId !== null && avgMonthlyConsumption!== null) {
         try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelBrandId, monthlyAvgConsumptionUnits);
+          const data = await fetchPanelBrandCapacities(phaseTypeId, panelBrandId, avgMonthlyConsumption);
           setPanelCapacities(data);
         } catch (error) {
           console.error("Failed to fetch panel brand capacities:", error);
@@ -337,7 +337,7 @@ export const SystemSpecifications = () => {
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelBrandId,monthlyAvgConsumptionUnits]);
+  }, [phaseTypeId, panelBrandId,avgMonthlyConsumption]);
 
 
 
@@ -1093,7 +1093,7 @@ export const SystemSpecifications = () => {
                     <div className="text-s text-gray-600 space-y-2">
                       <div><span className="text-lg">🔌</span> <strong>Panel to Inverter Distance:</strong> {selectedSpace.dcWireLengthFt || "..."} ft</div>
                       <div><span className="text-lg">📏</span> <strong>Inverter to NetMeter Distance:</strong> {selectedSpace.acWireLengthFt || "..."} ft</div>
-                      <div><span className="text-lg">🏗️</span> <strong>height of Structure:</strong> {selectedSpace.elevationInFeet || "..."} ft</div>
+                      <div><span className="text-lg">🏗️</span> <strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
                       <div><span className="text-lg">📝</span> <strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
                     </div>
                   </div>

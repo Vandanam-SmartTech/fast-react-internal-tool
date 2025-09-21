@@ -19,12 +19,12 @@ interface OrganizationUser {
 }
 
 const OrganizationView: React.FC = () => {
-  //const { id } = useParams();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const orgId = location.state?.orgId;
 
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<any>(null);
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -93,12 +93,12 @@ const OrganizationView: React.FC = () => {
         </h1>
         <button
           onClick={() =>
-  navigate("/edit-organization", {
-    state: {
-      organizationId: orgId
-    }
-  })
-}
+            navigate("/edit-organization", {
+              state: {
+                organizationId: orgId
+              }
+            })
+          }
 
 
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
@@ -111,7 +111,7 @@ const OrganizationView: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name (Short Name)</label>
             <p className="text-gray-900">{organization.name}</p>
           </div>
 
@@ -120,29 +120,21 @@ const OrganizationView: React.FC = () => {
             <p className="text-gray-900">{organization.displayName || '-'}</p>
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Legal Name</label>
             <p className="text-gray-900">{organization.legalName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
-            <p className="text-gray-900">{organization.addressLine1 || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
-            <p className="text-gray-900">{organization.addressLine2 || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-            <p className="text-gray-900">{organization.postalCode || '-'}</p>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
             <p className="text-gray-900">{organization.contactNumber || '-'}</p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <p className="text-gray-900">
+              {`${organization.addressLine1}, ${organization.villageName}, ${organization.talukaName}, ${organization.districtName}, ${organization.pinCode}`}
+            </p>
           </div>
 
           <div>

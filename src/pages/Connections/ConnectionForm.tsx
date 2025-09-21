@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { fetchClaims } from "../../services/jwtService";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
 
@@ -27,7 +26,7 @@ interface Taluka {
 interface Village {
   code: number;
   nameEnglish: string;
-  pincode: string;
+  pinCode: string;
 }
 
 // Validation utilities
@@ -36,7 +35,7 @@ const validationRules = {
     pattern: /^[0-9]{12}$/,
     message: "Consumer number must be exactly 12 digits (0-9)"
   },
-  gstin: {
+  gstIn: {
     pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
     message: "GSTIN must be in format: 22AAAAA0000A1Z6"
   },
@@ -48,7 +47,7 @@ const validationRules = {
     pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
     message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
   },
-  monthlyAvgConsumptionUnits: {
+  avgMonthlyConsumption: {
     pattern: /^[1-9]\d*$/,
     message: "Monthly consumption must be a positive integer greater than 0"
   },
@@ -66,7 +65,7 @@ const validationRules = {
     pattern: /^[1-9]\d*$/,
     message: "DISCOM ID must be a positive integer greater than 0"
   },
-  pincode: {
+  pinCode: {
     pattern: /^[0-9]{6}$/,
     message: "Pincode must be exactly 6 digits (0-9)"
   }
@@ -81,7 +80,7 @@ const validateField = (fieldName: string, value: string | number): { isValid: bo
     return { isValid, message: isValid ? "" : rule.message };
   }
 
-  if (fieldName === 'gstin') {
+  if (fieldName === 'gstIn') {
     if (!value) return { isValid: true, message: "" }; // Optional field
     const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
     return { isValid, message: isValid ? "" : rule.message };
@@ -99,7 +98,7 @@ const validateField = (fieldName: string, value: string | number): { isValid: bo
     return { isValid, message: isValid ? "" : rule.message };
   }
 
-  if (fieldName === 'monthlyAvgConsumptionUnits') {
+  if (fieldName === 'avgMonthlyConsumption') {
     if (!value || isNaN(Number(value))) return { isValid: false, message: rule.message };
     const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
     return { isValid, message: isValid ? "" : rule.message };
@@ -127,8 +126,8 @@ const validateField = (fieldName: string, value: string | number): { isValid: bo
     return { isValid, message: isValid ? "" : rule.message };
   }
 
-  if (fieldName === 'pincode') {
-    if (!value) return { isValid: false, message: "Pincode is required" }; // Required field
+  if (fieldName === 'pinCode') {
+    if (!value) return { isValid: false, message: "pinCode is required" }; // Required field
     const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
     return { isValid, message: isValid ? "" : rule.message };
   }
@@ -147,20 +146,18 @@ export const ConnectionForm = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pincode, setPincode] = useState<string>("");
+  const [pinCode, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
-  const [isNameCorrecction, setIsNameCorrection] = useState("No");
   const govIdName = location.state?.govIdName || null;
   const [activeTab, setActiveTab] = useState("Connection Details");
 
   const [connectionTypes, setConnectionTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [phaseTypes, setPhaseTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
-
-  const [correctionTypeMap, setCorrectionTypeMap] = useState<Record<string, number>>({});
+  const [correctionTypes, setCorrectionTypes] = useState<{ id: number; nameEn: string; nameMr?: string }[]>([]);
 
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
@@ -184,7 +181,7 @@ export const ConnectionForm = () => {
 
   const [formData, setFormData] = useState({
     consumerId: "",
-    isMsebConnection: "Yes",
+    isDiscomConsumer: "Yes",
     phaseTypeId: 1,
     connectionTypeId: 1,
     addressTypeId: 1,
@@ -194,15 +191,14 @@ export const ConnectionForm = () => {
     billedTo: "",
     addressLine1: "",
     addressLine2: "",
-    districtCode: 0,
-    talukaCode: 0,
     villageCode: 0,
-    pincode: "",
+    pinCode: "",
     isNameCorrection: "No",
-    correctionType: "",
-    monthlyAvgConsumptionUnits: "",
+    correctionTypeId: null,
+    avgMonthlyConsumption: "",
     discomId: "",
     isActive: true,
+    isOnboardedCustomers: false,
   });
 
 
@@ -214,7 +210,7 @@ export const ConnectionForm = () => {
       errors.push("Customer ID is missing!");
     }
 
-    if (formData.isMsebConnection === "Yes") {
+    if (formData.isDiscomConsumer === "Yes") {
       if (!formData.consumerId) {
         errors.push("Consumer number is required when MSEB connection is Yes");
       } else {
@@ -229,9 +225,9 @@ export const ConnectionForm = () => {
       }
     }
 
-    if (formData.isNameCorrection === "Yes" && !formData.correctionType) {
-      errors.push("Please select a correction type.");
-    }
+    if (formData.isNameCorrection === "Yes" && !formData.correctionTypeId) {
+    errors.push("Please select a correction type.");
+  }
 
     if (!formData.billedTo) {
       errors.push("Billed To is required");
@@ -258,10 +254,10 @@ export const ConnectionForm = () => {
       }
     }
 
-    if (!formData.monthlyAvgConsumptionUnits) {
+    if (!formData.avgMonthlyConsumption) {
       errors.push("Monthly Average Consumption Units is required");
     } else {
-      const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.monthlyAvgConsumptionUnits);
+      const consumptionValidation = validateField('avgMonthlyConsumption', formData.avgMonthlyConsumption);
       if (!consumptionValidation.isValid) {
         errors.push(consumptionValidation.message);
       }
@@ -282,7 +278,7 @@ export const ConnectionForm = () => {
     }
 
     if (formData.gstIn) {
-      const gstinValidation = validateField('gstin', formData.gstIn);
+      const gstinValidation = validateField('gstIn', formData.gstIn);
       if (!gstinValidation.isValid) {
         errors.push(gstinValidation.message);
       }
@@ -297,19 +293,18 @@ export const ConnectionForm = () => {
       }
     }
 
-    if (!formData.pincode) {
-      errors.push("Pincode is required");
+    if (!formData.pinCode) {
+      errors.push("PIN Code is required");
     } else {
-      const pincodeValidation = validateField('pincode', formData.pincode);
-      if (!pincodeValidation.isValid) {
-        errors.push(pincodeValidation.message);
+      const pinCodeValidation = validateField('pinCode', formData.pinCode);
+      if (!pinCodeValidation.isValid) {
+        errors.push(pinCodeValidation.message);
       }
     }
 
     return { isValid: errors.length === 0, errors };
   };
 
-  // Real-time field validation
   const validateFieldOnChange = (fieldName: string, value: string | number) => {
     const validation = validateField(fieldName, value);
     setFieldErrors(prev => ({
@@ -447,13 +442,9 @@ export const ConnectionForm = () => {
     const loadCorrectionTypes = async () => {
       try {
         const types = await fetchCorrectionType();
-        const map: Record<string, number> = {};
-        types.forEach((type) => {
-          map[type.correctionName] = type.id;
-        });
-        setCorrectionTypeMap(map);
+        setCorrectionTypes(types);
       } catch (err) {
-        console.error('Failed to load correction types', err);
+        console.error("Failed to load correction types", err);
       }
     };
 
@@ -463,10 +454,11 @@ export const ConnectionForm = () => {
 
 
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    if (name === "isMsebConnection" && value === "No") {
+    if (name === "isDiscomConsumer" && value === "No") {
       setConfirmConsumerNumber("");
     }
 
@@ -492,29 +484,29 @@ export const ConnectionForm = () => {
     if (name === 'consumerId') {
       validateFieldOnChange('consumerNumber', value);
     } else if (name === 'gstIn') {
-      validateFieldOnChange('gstin', value);
+      validateFieldOnChange('gstIn', value);
     } else if (name === 'billedTo') {
       validateFieldOnChange('billedTo', value);
     } else if (name === 'addressLine1') {
       validateFieldOnChange('addressLine1', value);
     } else if (name === 'addressLine2') {
       validateFieldOnChange('addressLine2', value);
-    } else if (name === 'monthlyAvgConsumptionUnits') {
-      validateFieldOnChange('monthlyAvgConsumptionUnits', value);
+    } else if (name === 'avgMonthlyConsumption') {
+      validateFieldOnChange('avgMonthlyConsumption', value);
     } else if (name === 'latitude') {
       validateFieldOnChange('latitude', value);
     } else if (name === 'longitude') {
       validateFieldOnChange('longitude', value);
     } else if (name === 'discomId') {
       validateFieldOnChange('discomId', value);
-    } else if (name === 'pincode') {
-      validateFieldOnChange('pincode', value);
+    } else if (name === 'pinCode') {
+      validateFieldOnChange('pinCode', value);
     }
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+      ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
     }));
 
     // Save to localStorage
@@ -522,7 +514,7 @@ export const ConnectionForm = () => {
       localStorage.setItem("connectionFormData", JSON.stringify({
         ...formData,
         [name]: value,
-        ...(name === "isMsebConnection" && value === "No" ? { consumerId: "" } : {}),
+        ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
       }));
     }, 0);
   };
@@ -534,13 +526,13 @@ export const ConnectionForm = () => {
     setVillageCode(0);
     setTalukaName("");
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       districtCode: value,
       talukaCode: 0,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -550,12 +542,12 @@ export const ConnectionForm = () => {
 
     setVillageCode(0);
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       talukaCode: value,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -565,20 +557,20 @@ export const ConnectionForm = () => {
 
     if (selectedVillage) {
       setVillageCode(value);
-      setPincode(selectedVillage.pincode || "");
+      setPinCode(selectedVillage.pinCode || "");
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pincode: selectedVillage.pincode,
+        pinCode: selectedVillage.pinCode,
       }));
     }
   };
 
-  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    setPincode(value);
-    setFormData((prev) => ({ ...prev, pincode: value }));
-    console.log("Current state pincode:", pincode);
+  const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPinCode(value);
+    setFormData((prev) => ({ ...prev, pinCode: value }));
+    console.log("Current state PINcode:", value);
   };
 
 
@@ -591,10 +583,6 @@ export const ConnectionForm = () => {
     }));
   };
 
-  // Handle Correction Type Change
-  const handleCorrectionTypeChange = (e) => {
-    setFormData((prev) => ({ ...prev, correctionType: e.target.value }));
-  };
 
   const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -610,7 +598,6 @@ export const ConnectionForm = () => {
 
     console.log("Received CustomerId:", customerId);
 
-    // Validate form
     const validation = validateForm();
     if (!validation.isValid) {
       validation.errors.forEach(error => {
@@ -624,31 +611,21 @@ export const ConnectionForm = () => {
 
 
 
-    const isMsebConnection = formData.isMsebConnection === "Yes";
-    const isNameCorrectionRequired =
-      formData.isNameCorrection === "Yes" && correctionTypeMap[formData.correctionType]
-        ? correctionTypeMap[formData.correctionType]
-        : false;
+    const isDiscomConsumer = formData.isDiscomConsumer === "Yes";
 
     const connectionData = {
       customerId,
       consumerId: formData.consumerId,
-      isMsebConnection,
-      isNameCorrectionRequired,
+      isDiscomConsumer,
+      isNameCorrectionRequired: formData.isNameCorrection === "Yes", 
+      correctionTypeId:formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
-      correctionTypeId:
-        formData.isNameCorrection === "Yes"
-          ? correctionTypeMap[formData.correctionType] || null
-          : null,
-
-      monthlyAvgConsumptionUnits: formData.monthlyAvgConsumptionUnits,
-      districtCode: formData.districtCode,
-      talukaCode: formData.talukaCode,
+      avgMonthlyConsumption: formData.avgMonthlyConsumption,
       villageCode: formData.villageCode,
-      postalCode: formData.pincode,
-      gstIn: formData.gstIn,
+      pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
+      gstIn: formData.gstIn.trim() === "" ? null : formData.gstIn.trim(),
       latitude: formData.latitude,
       longitude: formData.longitude,
 
@@ -657,6 +634,7 @@ export const ConnectionForm = () => {
       addressLine2: formData.addressLine2,
       discomId: formData.discomId,
       isActive: formData.isActive,
+      isOnboardedCustomers: formData.isOnboardedCustomers,
     };
 
     try {
@@ -797,22 +775,22 @@ export const ConnectionForm = () => {
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
-                      name="isMsebConnection"
+                      name="isDiscomConsumer"
                       value="Yes"
                       onChange={handleChange}
                       className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      checked={formData.isMsebConnection === "Yes"}
+                      checked={formData.isDiscomConsumer === "Yes"}
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
-                      name="isMsebConnection"
+                      name="isDiscomConsumer"
                       value="No"
                       onChange={handleChange}
                       className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      checked={formData.isMsebConnection === "No"}
+                      checked={formData.isDiscomConsumer === "No"}
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
@@ -831,7 +809,7 @@ export const ConnectionForm = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   12-Digit Consumer Number{" "}
-                  {formData.isMsebConnection === "Yes" && (
+                  {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
                   )}
                 </label>
@@ -847,11 +825,11 @@ export const ConnectionForm = () => {
                   maxLength={12}
                   pattern="^[0-9]{12}$"
                   title="Enter exactly 12 digits (0–9)"
-                  required={formData.isMsebConnection === "Yes"}
-                  disabled={formData.isMsebConnection === "No"}
+                  required={formData.isDiscomConsumer === "Yes"}
+                  disabled={formData.isDiscomConsumer === "No"}
                   placeholder="e.g. 987654321000"
                   className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    } ${formData.isMsebConnection === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
+                    } ${formData.isDiscomConsumer === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
@@ -867,7 +845,7 @@ export const ConnectionForm = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Consumer Number{" "}
-                  {formData.isMsebConnection === "Yes" && (
+                  {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
                   )}
                 </label>
@@ -883,11 +861,11 @@ export const ConnectionForm = () => {
                   placeholder="Confirm consumer number"
                   maxLength={12}
                   pattern="^[0-9]{12}$"
-                  required={formData.isMsebConnection === "Yes"}
+                  required={formData.isDiscomConsumer === "Yes"}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                   title="Re-enter the same 12-digit consumer number"
                   disabled={
-                    formData.isMsebConnection === "No" ||
+                    formData.isDiscomConsumer === "No" ||
                     !(/^[0-9]{12}$/.test(formData.consumerId) && !consumerNumberExists)
                   }
                   onCopy={(e) => e.preventDefault()}
@@ -903,7 +881,7 @@ export const ConnectionForm = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Connection Type{" "}
-                  {formData.isMsebConnection === "Yes" && (
+                  {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
                   )}
                 </label>
@@ -911,8 +889,8 @@ export const ConnectionForm = () => {
                   name="connectionTypeId"
                   value={formData.connectionTypeId}
                   onChange={handleChange}
-                  required={formData.isMsebConnection === "Yes"}
-                  disabled={formData.isMsebConnection === "No"}
+                  required={formData.isDiscomConsumer === "Yes"}
+                  disabled={formData.isDiscomConsumer === "No"}
                   className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300 disabled:bg-gray-200 disabled:cursor-not-allowed"
                 >
                   {connectionTypes.map((type) => (
@@ -947,10 +925,10 @@ export const ConnectionForm = () => {
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric"   
-                  pattern="[1-9][0-9]*" 
-                  name="monthlyAvgConsumptionUnits"
-                  value={formData.monthlyAvgConsumptionUnits}
+                  inputMode="numeric"
+                  pattern="[1-9][0-9]*"
+                  name="avgMonthlyConsumption"
+                  value={formData.avgMonthlyConsumption}
                   onChange={(e) => {
                     // allow only digits, no leading zeros
                     const val = e.target.value;
@@ -960,7 +938,7 @@ export const ConnectionForm = () => {
                   }}
                   onBlur={(e) => {
                     if (e.target.value) {
-                      validateFieldOnChange("monthlyAvgConsumptionUnits", e.target.value);
+                      validateFieldOnChange("avgMonthlyConsumption", e.target.value);
                     }
                   }}
                   required
@@ -973,13 +951,13 @@ export const ConnectionForm = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   DISCOM ID{" "}
-                  {formData.isMsebConnection === "Yes" && (
+                  {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
                   )}
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric" // mobile numeric keypad
+                  inputMode="numeric"
                   name="discomId"
                   value={formData.discomId}
                   onChange={(e) => {
@@ -989,14 +967,14 @@ export const ConnectionForm = () => {
                     }
                   }}
                   placeholder="e.g. 7137"
-                  required={formData.isMsebConnection === "Yes"}
-                  disabled={formData.isMsebConnection === "No"}
+                  required={formData.isDiscomConsumer === "Yes"}
+                  disabled={formData.isDiscomConsumer === "No"}
                   title="DISCOM ID must be a positive integer greater than 0"
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
                 />
                 {/* {fieldErrors.discomId && (
-    <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
-  )} */}
+                    <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
+            )} */}
               </div>
 
             </div>
@@ -1029,8 +1007,8 @@ export const ConnectionForm = () => {
                   maxLength={15}
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
-                {fieldErrors.gstin && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstin}</p>
+                {fieldErrors.gstIn && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
                 )}
               </div>
 
@@ -1140,23 +1118,23 @@ export const ConnectionForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pincode <span className="text-red-500">*</span>
+                  PIN Code <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="pincode"
-                  value={formData.pincode || ''}
-                  onChange={handlepincodeChange}
+                  name="pinCode"
+                  value={formData.pinCode || ''}
+                  onChange={handlepinCodeChange}
                   placeholder="e.g. 416000"
                   pattern="^[0-9]{6}$"
-                  title="Pincode must be exactly 6 digits (0-9)"
+                  title="PIN Code must be exactly 6 digits (0-9)"
                   maxLength={6}
                   inputMode="numeric"
                   required
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
-                {fieldErrors.pincode && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.pincode}</p>
+                {fieldErrors.pinCode && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
                 )}
               </div>
 
@@ -1338,17 +1316,21 @@ export const ConnectionForm = () => {
                     Select Correction Type
                   </label>
                   <select
-                    name="correctionType"
-                    value={formData.correctionType || ""}
-                    onChange={handleCorrectionTypeChange}
+                    name="correctionTypeId"
+                    value={formData.correctionTypeId || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="" disabled>Select an option</option>
-                    <option value="Spell Correction">Spell Correction</option>
-                    <option value="Transfer Ownership">Transfer Ownership</option>
+                    {correctionTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.nameEn}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
+
             </div>
           </div>
 

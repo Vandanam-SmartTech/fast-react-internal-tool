@@ -40,7 +40,7 @@ export const InstallationForm = () => {
     installationSpaceTypeId: 1,
     installationSpaceTitle: '',
     customInstallationSpaceTitle: '',
-    elevationInFeet: '',
+    minimumElevationFt: '',
   });
 
   ///////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ export const InstallationForm = () => {
       earthingWireLengthFt: formData.earthingWireLengthFt,
       descriptionOfInstallation: formData.descriptionOfInstallation,
       numberOfGpPipes: formData.numberOfGpPipes,
-      elevationInFeet: formData.elevationInFeet,
+      minimumElevationFt: formData.minimumElevationFt,
       installationSpaceTitle:
         formData.installationSpaceTitle === 'Other'
           ? formData.customInstallationSpaceTitle
@@ -421,10 +421,10 @@ export const InstallationForm = () => {
           <input
             type="text"
             inputMode="numeric"
-            id="elevationInFeet"
-            name="elevationInFeet"
+            id="minimumElevationFt"
+            name="minimumElevationFt"
             //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.elevationInFeet}
+            value={formData.minimumElevationFt}
             placeholder="e.g. 10"
             onChange={(e) => {
               const value = e.target.value;

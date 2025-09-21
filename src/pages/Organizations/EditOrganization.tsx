@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation} from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateOrganization, getOrganizationById } from '../../services/organizationService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
+import { useUser } from '../../contexts/UserContext';
 
 interface District {
   code: number;
@@ -19,7 +19,7 @@ interface Taluka {
 interface Village {
   code: number;
   nameEnglish: string;
-  pincode: string;
+  pinCode: string;
 }
 
 const EditOrganization: React.FC = () => {
@@ -34,10 +34,8 @@ const location = useLocation();
     legalName: '',
     addressLine1: '',
     addressLine2: '',
-    districtCode:0,
-    talukaCode:0,
     villageCode:0,
-    pincode:'',
+    pinCode:'',
     contactNumber: '',
     gstNumber: '',
     govtRegNumber: '',
@@ -50,7 +48,7 @@ const location = useLocation();
   
     const [districtCode, setDistrictCode] = useState<number>(0);
     const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [pincode, setPincode] = useState<string>("");
+    const [pinCode, setPinCode] = useState<string>("");
     const [villageCode, setVillageCode] = useState<number>(0);
     const [districtName, setDistrictName] = useState<string>("");
     const [talukaName, setTalukaName] = useState<string>("");
@@ -59,6 +57,8 @@ const location = useLocation();
     const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  const { userClaims } = useUser(); 
 
   useEffect(() => {
     if (organizationId) {
@@ -125,13 +125,13 @@ const location = useLocation();
     setVillageCode(0);
     setTalukaName(""); 
     setVillageName(""); 
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       districtCode: value,
       talukaCode: 0,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -141,12 +141,12 @@ const location = useLocation();
 
     setVillageCode(0);
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       talukaCode: value,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -156,21 +156,21 @@ const location = useLocation();
 
     if (selectedVillage) {
       setVillageCode(value);
-      setPincode(selectedVillage.pincode || "");
+      setPinCode(selectedVillage.pinCode || "");
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pincode: selectedVillage.pincode,
+        pinCode: selectedVillage.pinCode,
       }));
     }
   };
 
-  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      setPincode(value);
-      setFormData((prev) => ({ ...prev, pincode: value }));
-      console.log("Current state pincode:", pincode);
-    };
+const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  setPinCode(value);
+  setFormData((prev) => ({ ...prev, pinCode: value }));
+  console.log("Current state PINcode:", value);
+};
 
 
 const loadOrganization = async (organizationId: number) => {
@@ -179,13 +179,13 @@ const loadOrganization = async (organizationId: number) => {
 
     setFormData({
       ...org,
-      pincode: org.postalCode || "", 
+      pinCode: org.pinCode || "", 
     });
 
     setDistrictCode(org.districtCode);
     setTalukaCode(org.talukaCode);
     setVillageCode(org.villageCode);
-    setPincode(org.postalCode || "");
+    setPinCode(org.pinCode || "");
 
   } catch (error) {
     toast.error('Failed to load organization');
@@ -199,16 +199,16 @@ const loadOrganization = async (organizationId: number) => {
   setLoading(true);
 
   try {
-    const claims = await fetchClaims();
-    const userId = claims?.id || claims?.user_id || claims?.userId;
+
+    const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
 
     const orgData = {
       ...formData,
       createdBy: userId,
-      postalCode: formData.pincode
+      pinCode: formData.pinCode
     };
 
-    console.log('JWT Claims:', claims);
+ 
     console.log('User ID:', userId);
     console.log('Updating organization with data:', orgData);
 
@@ -428,14 +428,14 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode <span className="text-red-500">*</span></label>
+<div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
             <input
               type="text"
-              id="pincode"
-              name="pincode"
-              value={formData.pincode || ''}  
-              onChange={handlepincodeChange}
+              id="pinCode"
+              name="pinCode"
+              value={formData.pinCode}
+              onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

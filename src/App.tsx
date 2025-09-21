@@ -344,15 +344,6 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/organization-form/:id"
-              element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                  <OrganizationForm />
-                </RoleProtectedRoute>
-              }
-            />
-
-            <Route
             path="/edit-organization"
             element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}>
@@ -389,7 +380,7 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/agency-form/:orgId"
+              path="/agency-form"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
                   <AgencyForm />
@@ -397,20 +388,30 @@ const AppContent: React.FC = () => {
               }
             />
 
-            <Route
-              path="/agency-form/:orgId/:agencyId"
-              element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                  <AgencyForm />
-                </RoleProtectedRoute>
-              }
-            />
 
             <Route
               path="/organization-view"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <OrganizationView />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/agency-view"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <AgencyView />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/edit-agency"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <EditAgency />
                 </RoleProtectedRoute>
               }
             />

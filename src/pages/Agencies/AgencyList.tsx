@@ -163,7 +163,11 @@ const AgencyList: React.FC = () => {
                       <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
                         <button
                           onClick={() => {
-                            navigate(`/organization-view/${agency.id}`);
+                            navigate(`/agency-view`, {
+                              state: {
+                                agencyId: agency.id,
+                              },
+                            });
                             setOpenDropdown(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -221,7 +225,14 @@ const AgencyList: React.FC = () => {
               <div className="border-t border-gray-100 p-3 bg-gray-50">
                 <div className="flex justify-between items-center gap-2">
                   <button
-                    onClick={() => navigate(`/organization-view/${agency.id}`)}
+                    onClick={() =>
+                      navigate(`/agency-view`, {
+                        state: {
+                          agencyId: agency.id,
+                          orgId: orgId,
+                        },
+                      })
+                    }
                     className="flex-1 bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
                   >
                     <Eye className="h-3 w-3" />
@@ -229,7 +240,12 @@ const AgencyList: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => navigate(`/agency-form/${orgId}/${agency.id}`)}
+                    onClick={() => navigate(`/edit-agency`,{
+                      state:{
+                        orgId: orgId,
+                        agencyId: agency.id,
+                      }
+                    })}
                     className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
                   >
                     <Edit className="h-3 w-3" />
