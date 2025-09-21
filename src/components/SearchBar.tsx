@@ -43,7 +43,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         className="w-full pl-10 pr-12 py-3 border border-secondary-200 dark:border-secondary-700 rounded-xl bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 placeholder-secondary-500 dark:placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md focus:shadow-lg"
       />
       
-      {/* Clear Button */}
       {showClearButton && query && (
         <button
           onClick={handleClear}
@@ -54,7 +53,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </button>
       )}
       
-      {/* Focus Ring Effect */}
+
       <div className="absolute inset-0 rounded-xl ring-2 ring-transparent group-focus-within:ring-primary-500/20 transition-all duration-200 pointer-events-none" />
     </div>
   );

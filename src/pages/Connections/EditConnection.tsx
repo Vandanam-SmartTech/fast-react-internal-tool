@@ -696,7 +696,6 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       <div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
-          {/* Connector Line: between the first and last icon only */}
           <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
           <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
