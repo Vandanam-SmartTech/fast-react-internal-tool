@@ -51,7 +51,7 @@ export const ViewConnection = () => {
 
   const { userClaims } = useUser();
 
-  const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
   const sessionMap = {

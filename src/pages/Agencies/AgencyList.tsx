@@ -73,7 +73,7 @@ const AgencyList: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/organizations')}
+            onClick={() => navigate(-1)}
             className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

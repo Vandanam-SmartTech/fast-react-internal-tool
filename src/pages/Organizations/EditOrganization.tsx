@@ -23,9 +23,8 @@ interface Village {
 }
 
 const EditOrganization: React.FC = () => {
-const location = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
-  //const isEdit = Boolean(id);
   const organizationId = location.state?.organizationId;
 
   const [formData, setFormData] = useState({
@@ -213,7 +212,10 @@ const loadOrganization = async (organizationId: number) => {
     console.log('Updating organization with data:', orgData);
 
     await updateOrganization(parseInt(organizationId), orgData);
-    toast.success('Organization updated successfully');
+    toast.success('Organization updated successfully',{
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
     navigate('/organizations');
   } catch (error) {
     toast.error('Failed to update organization');

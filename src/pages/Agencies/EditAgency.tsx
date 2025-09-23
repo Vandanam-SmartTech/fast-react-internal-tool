@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateOrganization, getOrganizationById } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
@@ -60,16 +60,53 @@ const EditAgency: React.FC = () => {
   const { userClaims } = useUser();
 
 
+  useEffect(() => {
+    if (agencyId) {
+      loadAgency(parseInt(agencyId));
+    }
+  }, [agencyId]);
 
-  const loadAgency = async (id: number) => {
+  const loadAgency = async (agencyId: number) => {
     try {
-      const agency = await getOrganizationById(id);
-      setFormData(agency);
+      const agency = await getOrganizationById(agencyId);
+      setFormData({
+        ...agency,
+      pinCode: agency.pinCode || "",
+    });
+
+    setDistrictCode(agency.districtCode);
+    setTalukaCode(agency.talukaCode);
+    setVillageCode(agency.villageCode);
+    setPinCode(agency.pinCode || "");
     } catch (error) {
       toast.error('Failed to load agency');
-      navigate(`/agencies/${orgId}`);
+      navigate("/agencies", {
+              state: {
+                orgId: orgId,
+              },
+            });
     }
   };
+
+  // const loadOrganization = async (organizationId: number) => {
+  //   try {
+  //     const org = await getOrganizationById(organizationId);
+  
+  //     setFormData({
+  //       ...org,
+  //       pinCode: org.pinCode || "", 
+  //     });
+  
+  //     setDistrictCode(org.districtCode);
+  //     setTalukaCode(org.talukaCode);
+  //     setVillageCode(org.villageCode);
+  //     setPinCode(org.pinCode || "");
+  
+  //   } catch (error) {
+  //     toast.error('Failed to load organization');
+  //     navigate('/organizations');
+  //   }
+  // };
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -199,7 +236,10 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     };
 
     await updateOrganization(parseInt(agencyId), agencyData);
-    toast.success("Agency updated successfully");
+    toast.success("Agency updated successfully",{
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
 
     navigate("/agencies", {
       state: { orgId: orgId }, 

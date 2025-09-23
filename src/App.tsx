@@ -61,7 +61,11 @@ const AppContent: React.FC = () => {
   const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const showSidebar = !authPages.includes(location.pathname);
 
-  
+  const toggleSidebar = () => {
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', newState.toString());
+  };
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');
@@ -84,7 +88,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex flex-col transition-colors duration-200">
       {/* Sidebar - Always render but control visibility */}
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       
       {/* Header - Always render but control visibility */}
       {showSidebar && <Header />}

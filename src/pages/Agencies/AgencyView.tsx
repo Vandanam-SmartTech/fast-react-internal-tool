@@ -110,7 +110,7 @@ const AgencyView: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name (Short Name)</label>
             <p className="text-gray-900">{organization.name}</p>
           </div>
 
@@ -119,24 +119,16 @@ const AgencyView: React.FC = () => {
             <p className="text-gray-900">{organization.displayName || '-'}</p>
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Legal Name</label>
             <p className="text-gray-900">{organization.legalName || '-'}</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
-            <p className="text-gray-900">{organization.addressLine1 || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
-            <p className="text-gray-900">{organization.addressLine2 || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-            <p className="text-gray-900">{organization.pinCode || '-'}</p>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <p className="text-gray-900">
+              {`${organization.addressLine1}, ${organization.villageName}, ${organization.talukaName}, ${organization.districtName}, ${organization.pinCode}`}
+            </p>
           </div>
 
           <div>

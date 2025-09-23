@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
-import { getOrganizationById, Organization, fetchOrganizationUsers } from '../../services/organizationService';
+import { getOrganizationById, fetchOrganizationUsers } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 interface OrganizationUser {

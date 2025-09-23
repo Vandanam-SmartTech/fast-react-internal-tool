@@ -6,6 +6,7 @@ import Button from './ui/Button';
 import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
+import { Loader2 } from 'lucide-react';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto } from '../services/oneDriveService';
 
 const Header: React.FC = () => {
@@ -31,6 +32,7 @@ const Header: React.FC = () => {
   const [rotation, setRotation] = useState(0);
 
   const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
   const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
@@ -146,7 +148,7 @@ const Header: React.FC = () => {
 
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
-        setShowCropModal(true); 
+        setShowCropModal(true);
       };
 
       reader.readAsDataURL(file);
@@ -157,23 +159,26 @@ const Header: React.FC = () => {
   const handleCropSave = async () => {
     if (!previewUrl || !croppedAreaPixels) return;
 
-    const croppedImage = await croppedImg(
-      previewUrl,
-      croppedAreaPixels,
-      rotation,
-      true
-    );
-
-    const byteString = atob(croppedImage.split(",")[1]);
-    const mimeString = croppedImage.split(",")[0].split(":")[1].split(";")[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    const file = new File([ab], "profile-photo.png", { type: mimeString });
+    setLoading(true);
 
     try {
+      const croppedImage = await croppedImg(
+        previewUrl,
+        croppedAreaPixels,
+        rotation,
+        true
+      );
+
+      const byteString = atob(croppedImage.split(",")[1]);
+      const mimeString = croppedImage.split(",")[0].split(":")[1].split(";")[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const file = new File([ab], "profile-photo.png", { type: mimeString });
+
+
       if (hasUploadedPhoto) {
         await editUserProfilePhoto(file);
       } else {
@@ -181,10 +186,12 @@ const Header: React.FC = () => {
         setHasUploadedPhoto(true);
       }
 
-      setProfilePhoto(croppedImage); 
+      setProfilePhoto(croppedImage);
       setShowCropModal(false);
     } catch (err) {
       console.error("Upload failed:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -331,8 +338,16 @@ const Header: React.FC = () => {
               size="sm"
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               leftIcon={
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                  <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  )}
                 </div>
               }
               rightIcon={<ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-secondary-600 dark:text-secondary-300" />}
@@ -342,6 +357,7 @@ const Header: React.FC = () => {
                 {userClaims?.name_as_per_gov_id || userClaims?.preferred_name || 'User'}
               </span>
             </Button>
+
 
             {showUserDropdown && (
               <div className="absolute right-0 mt-2 w-48 sm:w-64 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
@@ -363,7 +379,7 @@ const Header: React.FC = () => {
                         )}
                       </div>
 
-                      <label
+                      {/*<label
                         className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
                       >
                         <Camera className="w-5 h-5 text-white" />
@@ -373,7 +389,37 @@ const Header: React.FC = () => {
                           className="hidden"
                           onChange={handleFileChange}
                         />
-                      </label>
+                      </label>*/}
+
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                        onClick={() => {
+                          if (profilePhoto) {
+                            
+                            setCrop({ x: 0, y: 0 });
+                            setZoom(1);
+                            setRotation(0);
+                            setCroppedAreaPixels(null);
+
+                            
+                            setPreviewUrl(profilePhoto);
+                            setShowCropModal(true);
+                          } else {
+                            
+                            document.getElementById("profile-file-input")?.click();
+                          }
+                        }}
+                      >
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
+
+                      <input
+                        id="profile-file-input"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
 
                     </div>
 
@@ -385,16 +431,15 @@ const Header: React.FC = () => {
                             {/* Left side - Title */}
                             <h3 className="text-base font-semibold text-gray-900">Profile Photo</h3>
 
-                            {/* Right side - Remove + Close */}
                             <div className="flex items-center gap-2">
-                              {hasUploadedPhoto && (
+                              {/* {hasUploadedPhoto && (
                                 <button
                                   onClick={handleRemovePhoto}
                                   className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                   Remove Current Photo
                                 </button>
-                              )}
+                              )} */}
                               <button
                                 onClick={() => setShowCropModal(false)}
                                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -502,18 +547,17 @@ const Header: React.FC = () => {
                             <Button
                               onClick={handleCropSave}
                               size="sm"
-                              disabled={!croppedAreaPixels}
+                              className="justify-center"
+                              loading={loading}
+                              leftIcon={!loading && <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />}
                             >
-                              {hasUploadedPhoto ? "Edit Photo" : "Save Photo"}
+                              {!loading && (hasUploadedPhoto ? "Edit Photo" : "Upload Photo")}
                             </Button>
+
                           </div>
                         </div>
                       </div>
                     )}
-
-
-
-
 
 
                     {/* User Info */}

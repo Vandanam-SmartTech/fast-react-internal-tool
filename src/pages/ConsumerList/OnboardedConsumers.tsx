@@ -46,7 +46,7 @@ const OnboardedConsumers: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
 
-  const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
 
   const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);

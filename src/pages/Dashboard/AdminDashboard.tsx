@@ -9,6 +9,7 @@ const AdminDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
   const { userClaims } = useUser();
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -38,7 +39,8 @@ const AdminDashboard: React.FC = () => {
       title: 'Manage Agencies',
       description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-8 w-8 text-warning-600" />,
-      path: '/organizations',
+      path: '/agencies',                     // ✅ stays static
+      state: { orgId: userInfo?.orgId },
       color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
     },
 
@@ -230,7 +232,7 @@ const AdminDashboard: React.FC = () => {
             <Card
               key={index}
               hover
-              onClick={() => navigate(item.path)}
+              onClick={() => navigate(item.path, { state: item.state })}
               className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
             >
               <CardBody className="p-6">
@@ -255,8 +257,8 @@ const AdminDashboard: React.FC = () => {
                         </span>
                         <span
                           className={`text-sm font-medium ${item.changeType === 'positive' ? 'text-success-600 dark:text-success-400' :
-                              item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' :
-                                'text-secondary-700 dark:text-secondary-300'
+                            item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' :
+                              'text-secondary-700 dark:text-secondary-300'
                             }`}
                         >
                           {item.change}

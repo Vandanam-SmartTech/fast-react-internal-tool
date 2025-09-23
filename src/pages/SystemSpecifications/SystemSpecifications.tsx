@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import {
   generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails,
-  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, fetchBatteryBrands, fetchBatteryWattages,
-  getMaterialOrigins, getGridTypes, fetchInverterBrands, fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities
+  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, 
+  getMaterialOrigins, getGridTypes, fetchInverterBrands, fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities
 } from '../../services/quotationService';
 
 import { uploadDocuments } from "../../services/oneDriveService";
@@ -54,13 +54,11 @@ export const SystemSpecifications = () => {
   const [inverterBrands, setInverterBrands] = useState<string[]>([]);
   const [panelBrands, setPanelBrands] = useState<any[]>([]);
   const [connectionDetails, setConnectionDetails] = useState<any>(null);
-  const [batteryBrands, setBatteryBrands] = useState<string[]>([]);
-  const [batteryCapacities, setBatteryCapacities] = useState<string[]>([]);
 
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
   const [avgMonthlyConsumption, setAvgMonthlyConsumption] = useState<number | null>(null);
 
-  const [materialOriginId, setMaterialOriginId] = useState<string | number>("");
+  const [materialOriginId, setMaterialOriginId] = useState<number | null>(null);
   const [origins, setOrigins] = useState<any[]>([]);
 
   const [gridTypeId, setGridTypeId] = useState<number | null>(null);
@@ -69,18 +67,24 @@ export const SystemSpecifications = () => {
   const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
-  const [inverterSpecId, setInverterSpecId] = useState<string | number>("");
+  const [inverterSpecId, setInverterSpecId] = useState<number | null>(null);
   const [inverterCapacities, setInverterCapacities] = useState<any[]>([]);
 
   const [panelBrandId, setPanelBrandId] = useState<number | null>(null);
   const [panels, setPanels] = useState<any[]>([]);
 
   const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
-  const [ panelCapacities, setPanelCapacities] = useState([]);
+  const [panelCapacities, setPanelCapacities] = useState([]);
+
+  const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
+  const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
+
+  const [batterySpecId, setBatterySpecId] = useState<number | null>(null);
+  const [batteryCapacities, setBatteryCapacities] = useState([]);
 
 
   const { userClaims } = useUser();
-  const userInfo = JSON.parse(localStorage.getItem("selectedOrg"));
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
 
@@ -136,12 +140,14 @@ export const SystemSpecifications = () => {
     inverterKw: "",
     batteryBrand: "",
     batteryCapacity: "",
-    inverterBrandId:null,
+    inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
     inverterSpecId: null,
     panelBrandId: null,
     panelSpecId: null,
+    batteryBrandId: null,
+    batterySpecId: null,
   });
 
 
@@ -200,7 +206,7 @@ export const SystemSpecifications = () => {
       } else {
         setFormData((prev) => ({
           ...prev,
-          installationSpaceType: null,
+          installationSpaceType: "",
         }));
         setSelectedSpace(null);
       }
@@ -271,6 +277,14 @@ export const SystemSpecifications = () => {
       } else {
         setInverters([]);
       }
+      setInverterBrandId(null);
+      setInverterCapacities([]);
+      setInverterSpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        inverterBrandId: null,
+        inverterSpecId: null
+      }));
     };
 
     loadInverterBrands();
@@ -288,12 +302,13 @@ export const SystemSpecifications = () => {
           setInverterCapacities([]);
         }
       } else {
-
         setInverterCapacities([]);
-        // handleChange({
-        //   target: { name: "inverterSpecId", value: "" },
-        // });
       }
+      setInverterSpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        inverterSpecId: null
+      }));
     };
 
     loadInverterBrandCapacities();
@@ -312,14 +327,22 @@ export const SystemSpecifications = () => {
       } else {
         setPanels([]);
       }
+      setPanelBrandId(null);
+      setPanelCapacities([]);
+      setPanelSpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        panelBrandId: null,
+        panelSpecId: null
+      }));
     };
 
     loadPanelBrands();
   }, [materialOriginId]);
 
-    useEffect(() => {
+  useEffect(() => {
     const loadPanelBrandCapacities = async () => {
-      if (phaseTypeId !== null && panelBrandId !== null && avgMonthlyConsumption!== null) {
+      if (phaseTypeId !== null && panelBrandId !== null && avgMonthlyConsumption !== null) {
         try {
           const data = await fetchPanelBrandCapacities(phaseTypeId, panelBrandId, avgMonthlyConsumption);
           setPanelCapacities(data);
@@ -330,27 +353,37 @@ export const SystemSpecifications = () => {
       } else {
 
         setPanelCapacities([]);
-        // handleChange({
-        //   target: { name: "inverterSpecId", value: "" },
-        // });
       }
+      setPanelSpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        panelSpecId: null
+      }));
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelBrandId,avgMonthlyConsumption]);
+  }, [phaseTypeId, panelBrandId, avgMonthlyConsumption]);
 
+  useEffect(() => {
+  const loadBatteryBrands = async () => {
+    const data = await fetchBatteryBrands(); 
+    if (data) setBatteryBrands(data);
+  };
 
+  loadBatteryBrands();
+}, []);
 
-  // useEffect(() => {
-  //   const fetchCustomer = async () => {
-  //     if (customerId) {
-  //       const data = await getCustomerById(Number(customerId));
-  //       setGovIdName(data?.govIdName || "");
-  //     }
-  //   };
-  //   fetchCustomer();
+// useEffect(() => {
+//   if (!batteryBrandId) return;
 
-  // }, [customerId]);
+//   const loadBatteryCapacities = async () => {
+//     const data = await fetchBatteryBrandCapacities(batteryBrandId);
+//     if (data) setBatteryCapacities(data);
+//   };
+
+//   loadBatteryCapacities();
+// }, [batteryBrandId]);
+
 
 
   let hasShownError = false;
@@ -1157,60 +1190,8 @@ export const SystemSpecifications = () => {
             </select>
           </div>
 
-
           <div>
-            <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-            <select
-              id="inverterBrandId"
-              name="inverterBrandId"
-              value={formData.inverterBrandId}
-              onChange={(e) => {
-                const selectedId = Number(e.target.value);
-                setInverterBrandId(selectedId);
-                handleChange({
-                  target: { name: "inverterBrandId", value: selectedId },
-                });
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select Inverter Brand</option>
-              {inverters.map((inverter) => (
-                <option key={inverter.id} value={inverter.id}>
-                  {inverter.inverterBrandName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Inverter Capacity (kW)</label>
-            <select
-              id="inverterSpecId"
-              name="inverterSpecId"
-              value={formData.inverterSpecId}
-              onChange={(e) => {
-                const selectedId = Number(e.target.value);
-                setInverterSpecId(selectedId);
-                handleChange({
-                  target: { name: "inverterSpecId", value: selectedId },
-                });
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select Inverter Capacity</option>
-              {inverterCapacities.map((inverterCapacity) => (
-                <option key={inverterCapacity.id} value={inverterCapacity.id}>
-                  {inverterCapacity.inverterCapacityWattage} ({inverterCapacity.productWarrantyMonths} months)
-                </option>
-              ))}
-            </select>
-
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">PV System Brand</label>
+            <label className="block text-sm font-medium text-gray-700">PV Panel Brand & Wattage</label>
             <select
               id="panelBrandId"
               name="panelBrandId"
@@ -1222,12 +1203,13 @@ export const SystemSpecifications = () => {
                   target: { name: "panelBrandId", value: selectedId },
                 });
               }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              disabled={!materialOriginId}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
             >
               <option value="">Select PV System Brand</option>
               {panels.map((panel) => (
                 <option key={panel.id} value={panel.id}>
-                  {panel.brandShortname}
+                  {panel.brandShortname} ({panel.ratedWattageW}W)
                 </option>
               ))}
             </select>
@@ -1244,9 +1226,10 @@ export const SystemSpecifications = () => {
                 setPanelSpecId(e.target.value);
                 handleChange(e);
               }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Select PV System Capacity</option>
+              disabled={!materialOriginId || !panelBrandId}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+            >
+              <option value="">Select PV System Capacity</option>
               {panelCapacities.map((panelCapacity) => (
                 <option key={panelCapacity} value={panelCapacity}>
                   {panelCapacity}
@@ -1255,45 +1238,110 @@ export const SystemSpecifications = () => {
             </select>
           </div>
 
-          {formData.inversionType === "Hybrid" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Battery Brand</label>
-                <select
-                  id="batteryBrand"
-                  name="batteryBrand"
-                  value={formData.batteryBrand}
-                  onChange={handleChange}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  {batteryBrands.map((brand) => (
-                    <option key={brand} value={brand}>
-                      {brand}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
-                <select
-                  id="batteryCapacity"
-                  name="batteryCapacity"
-                  value={formData.batteryCapacity}
-                  onChange={handleChange}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  {batteryCapacities.map((capacity) => (
-                    <option key={capacity} value={capacity}>
-                      {capacity}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+            <select
+              id="inverterBrandId"
+              name="inverterBrandId"
+              value={formData.inverterBrandId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setInverterBrandId(selectedId);
+                handleChange({
+                  target: { name: "inverterBrandId", value: selectedId },
+                });
+              }}
+              disabled={!gridTypeId}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+            >
+              <option value="">Select Inverter Brand</option>
+              {inverters.map((inverter) => (
+                <option key={inverter.id} value={inverter.id}>
+                  {inverter.inverterBrandName}
+                </option>
+              ))}
+            </select>
+          </div>
 
 
-            </>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Inverter Capacity & Warranty</label>
+            <select
+              id="inverterSpecId"
+              name="inverterSpecId"
+              value={formData.inverterSpecId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setInverterSpecId(selectedId);
+                handleChange({
+                  target: { name: "inverterSpecId", value: selectedId },
+                });
+              }}
+              disabled={!gridTypeId || !inverterBrandId}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+            >
+              <option value="">Select Inverter Capacity</option>
+              {inverterCapacities.map((inverterCapacity) => (
+                <option key={inverterCapacity.id} value={inverterCapacity.id}>
+                  {inverterCapacity.inverterCapacityWattage} kW ({inverterCapacity.productWarrantyMonths} months)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Battery Brand
+            </label>
+            <select
+              id="batteryBrandId"
+              name="batteryBrandId"
+              value={formData.batteryBrandId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setBatteryBrandId(selectedId);
+                handleChange({
+                  target: { name: "batteryBrandId", value: selectedId },
+                });
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select Battery Brand</option>
+              {batteryBrands.map((batteryBrand) => (
+                <option key={batteryBrand.id} value={batteryBrand.id}>
+                  {batteryBrand.brandName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+           {/* <div>
+            <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
+            <select
+              id="batterySpecId"
+              name="batterySpecId"
+              value={formData.batterySpecId}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                setBatterySpecId(selectedId);
+                handleChange({
+                  target: { name: "batterySpecId", value: selectedId },
+                });
+              }}
+              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+            >
+              <option value="">Select Battery Capacity</option>
+              {batteryCapacities.map((batteryCapacity) => (
+                <option key={batteryCapacity.id} value={batteryCapacity.id}>
+                  {batteryCapacity.wattage} kW ({batteryCapacity.productWarrantyMonths} months)
+                </option>
+              ))}
+            </select>
+
+          </div> */}
+
+
 
           <div className="col-span-full space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">

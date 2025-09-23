@@ -7,33 +7,25 @@ import Button from "./ui/Button";
 import { fetchClaims } from "../services/jwtService";
 import { useUser } from "../contexts/UserContext";
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isOpen, setIsOpen] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [customersExpanded, setCustomersExpanded] = useState(true);
-  const { selectedOrg, userClaims } = useUser();
+  const { userClaims } = useUser();
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const isAuthPage = authPages.includes(location.pathname);
 
-  const toggleSidebar = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    localStorage.setItem("sidebarOpen", newState.toString());
-  };
-
-
   useEffect(() => {
-    const storedState = localStorage.getItem("sidebarOpen");
-    setIsOpen(storedState === "true");
-
-
     const customersState = localStorage.getItem("customersExpanded");
     setCustomersExpanded(customersState === "true");
   }, []);
@@ -52,8 +44,7 @@ const Sidebar: React.FC = () => {
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
-        localStorage.setItem("sidebarOpen", "false");
+        onToggle();
       }
     };
 
@@ -61,7 +52,7 @@ const Sidebar: React.FC = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, onToggle]);
 
   const goToListOfConsumers = () => navigate("/list-of-consumers");
   const goToOnboardedConsumers = () => navigate("/onboarded-consumers");
@@ -100,7 +91,10 @@ const Sidebar: React.FC = () => {
         return;
       }
 
-      
+      if (!selectedOrgId) {
+        navigate("/login");
+        return;
+      }
 
       const orgData = userClaims.org_roles?.[selectedOrgId];
       if (!orgData) {
@@ -164,7 +158,6 @@ const Sidebar: React.FC = () => {
         }
 
         setRoles(allRoles);
-        setIsSuperAdmin(allRoles.includes("ROLE_SUPER_ADMIN"));
 
         if (checkPageAccess) {
           const currentPath = location.pathname;
@@ -255,7 +248,7 @@ const Sidebar: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={toggleSidebar}
+          onClick={onToggle}
           className="fixed top-3 left-2 z-50 p-2 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900"
           aria-label="Open sidebar"
         >
@@ -277,7 +270,7 @@ const Sidebar: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={toggleSidebar}
+              onClick={onToggle}
               className="absolute top-4 right-4 p-1 h-8 w-8 text-secondary-700 dark:text-secondary-300 hover:text-error-600 dark:hover:text-error-400"
               aria-label="Close sidebar"
             >
