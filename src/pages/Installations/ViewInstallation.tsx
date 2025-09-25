@@ -180,19 +180,29 @@ export const ViewInstallation = () => {
                 {installation.availableSouthNorthLengthFt || "....."}
               </p>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Panel To Inverter Distance (Feet)</h3>
+              <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
               <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                {installation.dcWireLengthFt || "....."}
+                {installation.structureInverterDistanceFt || "....."}
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Inverter to NetMeter Distance (Feet)</h3>
+              <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
               <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                {installation.acWireLengthFt || "....."}
+                {installation.inverterMeterDistanceFt || "....."}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
+              <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+                {installation.inverterEarthDistanceFt || "....."}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
+              <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
+                {installation.arresterEarthDistanceFt || "....."}
               </p>
             </div>
             <div>

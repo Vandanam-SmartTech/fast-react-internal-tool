@@ -76,6 +76,8 @@ export const SystemSpecifications = () => {
   const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
   const [panelCapacities, setPanelCapacities] = useState([]);
 
+  const [systemCapacityKw, setSystemCapacityKw] = useState<number | null>(null);
+
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
 
@@ -148,6 +150,7 @@ export const SystemSpecifications = () => {
     panelSpecId: null,
     batteryBrandId: null,
     batterySpecId: null,
+    systemCapacityKw: null,
   });
 
 
@@ -327,13 +330,13 @@ export const SystemSpecifications = () => {
       } else {
         setPanels([]);
       }
-      setPanelBrandId(null);
-      setPanelCapacities([]);
       setPanelSpecId(null);
+      setPanelCapacities([]);
+      setSystemCapacityKw(null);
       setFormData((prev) => ({
         ...prev,
-        panelBrandId: null,
-        panelSpecId: null
+        panelSpecId: null,
+        systemCapacityKw: null
       }));
     };
 
@@ -342,9 +345,9 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     const loadPanelBrandCapacities = async () => {
-      if (phaseTypeId !== null && panelBrandId !== null && avgMonthlyConsumption !== null) {
+      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
         try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelBrandId, avgMonthlyConsumption);
+          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
           setPanelCapacities(data);
         } catch (error) {
           console.error("Failed to fetch panel brand capacities:", error);
@@ -354,15 +357,15 @@ export const SystemSpecifications = () => {
 
         setPanelCapacities([]);
       }
-      setPanelSpecId(null);
+      setSystemCapacityKw(null);
       setFormData((prev) => ({
         ...prev,
-        panelSpecId: null
+        systemCapacityKw: null
       }));
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelBrandId, avgMonthlyConsumption]);
+  }, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
 
   useEffect(() => {
   const loadBatteryBrands = async () => {
@@ -373,16 +376,28 @@ export const SystemSpecifications = () => {
   loadBatteryBrands();
 }, []);
 
-// useEffect(() => {
-//   if (!batteryBrandId) return;
+  useEffect(() => {
+    const loadBatteryBrandCapacities = async () => {
+      if (batteryBrandId !== null) {
+        try {
+          const data = await fetchBatteryBrandCapacities(batteryBrandId);
+          setBatteryCapacities(data);
+        } catch (error) {
+          console.error("Failed to fetch battery brand capacities:", error);
+          setBatteryCapacities([]);
+        }
+      } else {
+        setBatteryCapacities([]);
+      }
+      setBatterySpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        batterySpecId: null
+      }));
+    };
 
-//   const loadBatteryCapacities = async () => {
-//     const data = await fetchBatteryBrandCapacities(batteryBrandId);
-//     if (data) setBatteryCapacities(data);
-//   };
-
-//   loadBatteryCapacities();
-// }, [batteryBrandId]);
+    loadBatteryBrandCapacities();
+  }, [batteryBrandId]);
 
 
 
@@ -1017,7 +1032,7 @@ export const SystemSpecifications = () => {
                 className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
               >
                 <span className="flex items-center gap-2">
-                  <span>{getSpaceEmoji(formData.installationSpaceType)}</span>
+                  
                   <span>
                     {formData.installationSpaceType
                       ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
@@ -1045,7 +1060,7 @@ export const SystemSpecifications = () => {
                             setIsSpaceListOpen(false);
                           }}
                         >
-                          <span>{getSpaceEmoji(space.installationSpaceType)}</span>
+                          
                           <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
                         </button>
                         <button
@@ -1073,7 +1088,7 @@ export const SystemSpecifications = () => {
                   </button>
 
                   <h2 className="text-lg font-semibold mb-4">
-                    {getSpaceEmoji(selectedSpace.installationSpaceType)} Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
+                    Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
                   </h2>
 
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
@@ -1124,10 +1139,12 @@ export const SystemSpecifications = () => {
 
 
                     <div className="text-s text-gray-600 space-y-2">
-                      <div><span className="text-lg">🔌</span> <strong>Panel to Inverter Distance:</strong> {selectedSpace.dcWireLengthFt || "..."} ft</div>
-                      <div><span className="text-lg">📏</span> <strong>Inverter to NetMeter Distance:</strong> {selectedSpace.acWireLengthFt || "..."} ft</div>
-                      <div><span className="text-lg">🏗️</span> <strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
-                      <div><span className="text-lg">📝</span> <strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
+                      <div><strong>Structure to Inverter Distance:</strong> {selectedSpace.structureInverterDistanceFt || "..."} ft</div>
+                      <div><strong>Inverter to GenMeter Distance:</strong> {selectedSpace.inverterMeterDistanceFt || "..."} ft</div>
+                      <div><strong>Earthing Pit to Inverter Distance:</strong> {selectedSpace.inverterEarthDistanceFt || "..."} ft</div>
+                      <div><strong>Lightning Arrester to Ground Distance:</strong> {selectedSpace.arresterEarthDistanceFt || "..."} ft</div>
+                      <div><strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
+                      <div><strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
                     </div>
                   </div>
                 </div>
@@ -1193,14 +1210,14 @@ export const SystemSpecifications = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">PV Panel Brand & Wattage</label>
             <select
-              id="panelBrandId"
-              name="panelBrandId"
-              value={formData.panelBrandId}
+              id="panelSpecId"
+              name="panelSpecId"
+              value={formData.panelSpecId}
               onChange={(e) => {
                 const selectedId = Number(e.target.value);
-                setPanelBrandId(selectedId);
+                setPanelSpecId(selectedId);
                 handleChange({
-                  target: { name: "panelBrandId", value: selectedId },
+                  target: { name: "panelSpecId", value: selectedId },
                 });
               }}
               disabled={!materialOriginId}
@@ -1208,8 +1225,8 @@ export const SystemSpecifications = () => {
             >
               <option value="">Select PV System Brand</option>
               {panels.map((panel) => (
-                <option key={panel.id} value={panel.id}>
-                  {panel.brandShortname} ({panel.ratedWattageW}W)
+                <option key={panel.panelSpecId} value={panel.panelSpecId}>
+                  {panel.brandShortname} - ({panel.ratedWattageW} W) - ({panel.modelNumber})
                 </option>
               ))}
             </select>
@@ -1219,14 +1236,14 @@ export const SystemSpecifications = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
             <select
-              id="panelSpecId"
-              name="panelSpecId"
-              value={formData.panelSpecId}
+              id="systemCapacityKw"
+              name="systemCapacityKw"
+              value={formData.systemCapacityKw}
               onChange={(e) => {
-                setPanelSpecId(e.target.value);
+                setSystemCapacityKw(e.target.value);
                 handleChange(e);
               }}
-              disabled={!materialOriginId || !panelBrandId}
+              disabled={!materialOriginId || !panelSpecId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
             >
               <option value="">Select PV System Capacity</option>
@@ -1316,7 +1333,7 @@ export const SystemSpecifications = () => {
             </select>
           </div>
 
-           {/* <div>
+           <div>
             <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
             <select
               id="batterySpecId"
@@ -1334,12 +1351,11 @@ export const SystemSpecifications = () => {
               <option value="">Select Battery Capacity</option>
               {batteryCapacities.map((batteryCapacity) => (
                 <option key={batteryCapacity.id} value={batteryCapacity.id}>
-                  {batteryCapacity.wattage} kW ({batteryCapacity.productWarrantyMonths} months)
+                  {batteryCapacity.batteryCapacity} kW - {batteryCapacity.voltage} V - {batteryCapacity.modelNumber} ({batteryCapacity.warrantyMonths} months)
                 </option>
               ))}
             </select>
-
-          </div> */}
+          </div>
 
 
 

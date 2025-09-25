@@ -386,7 +386,7 @@ export const fetchPanelBrands = async (
 
 export const fetchPanelBrandCapacities = async (
   phaseTypeId: number,
-  panelBrandId: number,
+  panelSpecId: number,
   avgMonthlyConsumption: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
@@ -396,7 +396,7 @@ export const fetchPanelBrandCapacities = async (
     const response = await quotationAPI.get("/api/panel-specs/pv-capacity", {
       params: {
         phaseTypeId,
-        panelBrandId,
+        panelSpecId,
         monthlyAvgUnit: avgMonthlyConsumption
       },
     });
@@ -422,19 +422,39 @@ export const fetchBatteryBrands = async (): Promise<any[] | null> => {
   }
 };
 
-export const fetchBatteryBrandCapacities = async (brandId: number): Promise<any[] | null> => {
+export const fetchBatteryBrandCapacities = async (
+  batteryBrandId: number
+): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get(`/api/battery-specs/brand/${brandId}`);
-    console.log(`Battery capacities for brand ${brandId}:`, response.data);
+    console.log("Fetching battery brand capacities...");
+
+    const response = await quotationAPI.get("/api/battery-specs/brands", {
+      params: {
+        batteryBrandId
+      },
+    });
+
     return response.data;
-  } catch (error: any) {
-    const message = error.response?.data?.message || `Failed to fetch battery capacities for brand ${brandId}.`;
-    alert(message);
-    console.error('Error fetching battery capacities:', error);
-    return null;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch battery brand capacities from server");
   }
 };
+
+// export const fetchBatteryBrandCapacities = async (brandId: number): Promise<any[] | null> => {
+//   const quotationAPI = getQuotationAPI();
+//   try {
+//     const response = await quotationAPI.get(`/api/battery-specs/brand/${brandId}`);
+//     console.log(`Battery capacities for brand ${brandId}:`, response.data);
+//     return response.data;
+//   } catch (error: any) {
+//     const message = error.response?.data?.message || `Failed to fetch battery capacities for brand ${brandId}.`;
+//     alert(message);
+//     console.error('Error fetching battery capacities:', error);
+//     return null;
+//   }
+// };
 
 
 

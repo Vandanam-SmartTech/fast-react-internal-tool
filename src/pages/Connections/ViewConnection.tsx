@@ -612,12 +612,20 @@ export const ViewConnection = () => {
                   <p className="mt-1">{installation.availableSouthNorthLengthFt || "....."}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Panel To Inverter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.dcWireLengthFt || "....."}</p>
+                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
+                  <p className="mt-1">{installation.structureInverterDistanceFt || "....."}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Inverter to NetMeter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.acWireLengthFt || "....."}</p>
+                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
+                  <p className="mt-1">{installation.inverterMeterDistanceFt || "....."}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
+                  <p className="mt-1">{installation.inverterEarthDistanceFt || "....."}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
+                  <p className="mt-1">{installation.arresterEarthDistanceFt || "....."}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>

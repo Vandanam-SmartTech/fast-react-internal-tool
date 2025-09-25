@@ -30,10 +30,10 @@ export const InstallationForm = () => {
 
 
   const [formData, setFormData] = useState({
-    acWireLengthFt: '',
-    dcWireLengthFt: '',
-    earthingWireLengthFt: NaN,
-    numberOfGpPipes: NaN,
+    arresterEarthDistanceFt: '',
+    inverterEarthDistanceFt: '',
+    inverterMeterDistanceFt: '',
+    structureInverterDistanceFt: '',
     descriptionOfInstallation: '',
     availableSouthNorthLengthFt: '',
     availableEastWestLengthFt: '',
@@ -105,11 +105,11 @@ export const InstallationForm = () => {
       installationSpaceTypeId: formData.installationSpaceTypeId,
       availableEastWestLengthFt: formData.availableEastWestLengthFt,
       availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
-      acWireLengthFt: formData.acWireLengthFt,
-      dcWireLengthFt: formData.dcWireLengthFt,
-      earthingWireLengthFt: formData.earthingWireLengthFt,
+      arresterEarthDistanceFt: formData.arresterEarthDistanceFt,
+      inverterEarthDistanceFt: formData.inverterEarthDistanceFt,
+      inverterMeterDistanceFt: formData.inverterMeterDistanceFt,
       descriptionOfInstallation: formData.descriptionOfInstallation,
-      numberOfGpPipes: formData.numberOfGpPipes,
+      structureInverterDistanceFt: formData.structureInverterDistanceFt,
       minimumElevationFt: formData.minimumElevationFt,
       installationSpaceTitle:
         formData.installationSpaceTitle === 'Other'
@@ -377,14 +377,14 @@ export const InstallationForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Panel To Inverter Distance (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
           <input
             type="text"
             inputMode="numeric"
-            id="dcWireLengthFt"
-            name="dcWireLengthFt"
+            id="structureInverterDistanceFt"
+            name="structureInverterDistanceFt"
             //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.dcWireLengthFt}
+            value={formData.structureInverterDistanceFt}
             placeholder="e.g. 10"
             onChange={(e) => {
               const value = e.target.value;
@@ -397,14 +397,54 @@ export const InstallationForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to NetMeter Distance (Feet)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
           <input
             type="text"
             inputMode="numeric"
-            id="acWireLengthFt"
-            name="acWireLengthFt"
+            id="inverterMeterDistanceFt"
+            name="inverterMeterDistanceFt"
             //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.acWireLengthFt}
+            value={formData.inverterMeterDistanceFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="inverterEarthDistanceFt"
+            name="inverterEarthDistanceFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.inverterEarthDistanceFt}
+            placeholder="e.g. 10"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*$/.test(value)) {
+                handleChange(e);
+              }
+            }}
+            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="arresterEarthDistanceFt"
+            name="arresterEarthDistanceFt"
+            //onWheel={(e) => e.currentTarget.blur()}
+            value={formData.arresterEarthDistanceFt}
             placeholder="e.g. 10"
             onChange={(e) => {
               const value = e.target.value;
