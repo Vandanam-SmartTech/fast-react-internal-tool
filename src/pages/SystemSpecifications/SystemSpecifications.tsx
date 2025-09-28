@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCustomerById, fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
+import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import {
-  generateQuotationPDF, previewQuotationPDF, fetchPanelWattages, fetchInverterWattages, fetchRecommendedDetails, getPriceDetails,
-  saveCustomerSpecs, fetchCustomerAgreedDetails, fetchInverters, fetchPanels, 
-  getMaterialOrigins, getGridTypes, fetchInverterBrands, fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities
+  generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs,getMaterialOrigins, getGridTypes, fetchInverterBrands, 
+  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities
 } from '../../services/quotationService';
 
-import { uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
@@ -88,8 +86,6 @@ export const SystemSpecifications = () => {
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
-
-
   const [activeTab, setActiveTab] = useState("System Specifications");
 
   const tabs = [
@@ -99,53 +95,24 @@ export const SystemSpecifications = () => {
     "System Specifications",
   ];
 
-
-
   const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
 
-  const getSpaceEmoji = (spaceType?: string) => {
-    if (!spaceType) return "🏠";
-    const type = spaceType.toLowerCase();
-
-    if (
-      type.includes("slab") || type.includes("roof") || type.includes("bathroom slab")
-    )
-      return "🏠";
-
-    if (
-      type.includes("metal sheet") || type.includes("plastic sheet") || type.includes("cement sheet") || type.includes("clay tile")
-    )
-      return "🏚️";
-
-    if (type.includes("ground") || type.includes("open")) return "🌳";
-
-    return "📍";
-  };
-
 
   const [formData, setFormData] = useState({
-    solarSystemCost: 0,
+    systemCost: 0,
     fabricationCost: 0,
     totalCost: 0,
     installationSpaceType: "",
     installationStructureType: "Static",
-    dcrNonDcrType: "",
-    panelBrand: "",
-    Kw: "",
-    numberOfGpPipes: 0,
-    hasWaterSprinklerSystem: false,
-    hasHeavyDutyRamp: false,
-    hasHeavyDutyStairs: false,
-    inversionType: "On-Grid",
-    inverterBrand: "",
-    inverterKw: "",
-    batteryBrand: "",
-    batteryCapacity: "",
+    hasWaterSprinkler: false,
+    hasHeavydutyRamp: false,
+    hasHeavydutyStairs: false,
     inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
     inverterSpecId: null,
+    inverterCount: 1,
     panelBrandId: null,
     panelSpecId: null,
     batteryBrandId: null,
@@ -267,137 +234,187 @@ export const SystemSpecifications = () => {
     fetchGrids();
   }, []);
 
-  useEffect(() => {
-    const loadInverterBrands = async () => {
-      if (phaseTypeId !== null && gridTypeId !== null) {
-        try {
-          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-          setInverters(data);
-        } catch (error) {
-          console.error("Failed to fetch inverter brands:", error);
-          setInverters([]);
-        }
-      } else {
+ useEffect(() => {
+  const loadInverterBrands = async () => {
+    setInverters([]);
+    setInverterBrandId(null);
+    setInverterCapacities([]);
+    setInverterSpecId(null);
+    setFormData((prev) => ({
+      ...prev,
+      inverterBrandId: null,
+      inverterSpecId: null
+    }));
+
+    
+    if (phaseTypeId !== null && gridTypeId !== null) {
+      try {
+        const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+        
+        setInverters([...data]);
+      } catch (error) {
+        console.error("Failed to fetch inverter brands:", error);
         setInverters([]);
       }
-      setInverterBrandId(null);
-      setInverterCapacities([]);
-      setInverterSpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        inverterBrandId: null,
-        inverterSpecId: null
-      }));
-    };
-
-    loadInverterBrands();
-  }, [phaseTypeId, gridTypeId]);
-
-
-  useEffect(() => {
-    const loadInverterBrandCapacities = async () => {
-      if (inverterBrandId !== null) {
-        try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId);
-          setInverterCapacities(data);
-        } catch (error) {
-          console.error("Failed to fetch inverter brand capacities:", error);
-          setInverterCapacities([]);
-        }
-      } else {
-        setInverterCapacities([]);
-      }
-      setInverterSpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        inverterSpecId: null
-      }));
-    };
-
-    loadInverterBrandCapacities();
-  }, [inverterBrandId]);
-
-  useEffect(() => {
-    const loadPanelBrands = async () => {
-      if (materialOriginId) {
-        try {
-          const data = await fetchPanelBrands(Number(materialOriginId));
-          setPanels(data);
-        } catch (error) {
-          console.error("Failed to fetch panel brands:", error);
-          setPanels([]);
-        }
-      } else {
-        setPanels([]);
-      }
-      setPanelSpecId(null);
-      setPanelCapacities([]);
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        panelSpecId: null,
-        systemCapacityKw: null
-      }));
-    };
-
-    loadPanelBrands();
-  }, [materialOriginId]);
-
-  useEffect(() => {
-    const loadPanelBrandCapacities = async () => {
-      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
-        try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
-          setPanelCapacities(data);
-        } catch (error) {
-          console.error("Failed to fetch panel brand capacities:", error);
-          setPanelCapacities([]);
-        }
-      } else {
-
-        setPanelCapacities([]);
-      }
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        systemCapacityKw: null
-      }));
-    };
-
-    loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
-
-  useEffect(() => {
-  const loadBatteryBrands = async () => {
-    const data = await fetchBatteryBrands(); 
-    if (data) setBatteryBrands(data);
+    }
   };
 
-  loadBatteryBrands();
-}, []);
+  loadInverterBrands();
+}, [phaseTypeId, gridTypeId]);
+
+useEffect(() => {
+  const loadInverterBrandCapacities = async () => {
+
+    setInverterCapacities([]);
+    setInverterSpecId(null);
+    setFormData((prev) => ({
+      ...prev,
+      inverterSpecId: null
+    }));
+
+
+    if (inverterBrandId !== null && systemCapacityKw !== null) {
+      try {
+        const data = await fetchInverterBrandCapacities(inverterBrandId, systemCapacityKw);
+        
+        setInverterCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch inverter brand capacities:", error);
+        setInverterCapacities([]);
+      }
+    }
+  };
+
+  loadInverterBrandCapacities();
+}, [inverterBrandId, systemCapacityKw]);
+
 
   useEffect(() => {
-    const loadBatteryBrandCapacities = async () => {
-      if (batteryBrandId !== null) {
-        try {
-          const data = await fetchBatteryBrandCapacities(batteryBrandId);
-          setBatteryCapacities(data);
-        } catch (error) {
-          console.error("Failed to fetch battery brand capacities:", error);
-          setBatteryCapacities([]);
-        }
-      } else {
-        setBatteryCapacities([]);
+  const loadPanelBrands = async () => {
+    setPanels([]);
+    setPanelSpecId(null);
+    setPanelCapacities([]);
+    setSystemCapacityKw(null);
+    setFormData((prev) => ({
+      ...prev,
+      panelSpecId: null,
+      systemCapacityKw: null
+    }));
+
+    if (materialOriginId) {
+      try {
+        const data = await fetchPanelBrands(Number(materialOriginId));
+        setPanels([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brands:", error);
+        setPanels([]);
       }
-      setBatterySpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        batterySpecId: null
-      }));
+    }
+  };
+
+  loadPanelBrands();
+}, [materialOriginId]);
+
+
+useEffect(() => {
+  const loadPanelBrandCapacities = async () => {
+
+    setPanelCapacities([]);
+    setSystemCapacityKw(null);
+    setFormData((prev) => ({
+      ...prev,
+      systemCapacityKw: null
+    }));
+
+    if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
+      try {
+        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
+        setPanelCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brand capacities:", error);
+        setPanelCapacities([]);
+      }
+    }
+  };
+
+  loadPanelBrandCapacities();
+}, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
+
+
+  useEffect(() => {
+    const loadBatteryBrands = async () => {
+      const data = await fetchBatteryBrands();
+      if (data) setBatteryBrands(data);
     };
 
-    loadBatteryBrandCapacities();
-  }, [batteryBrandId]);
+    loadBatteryBrands();
+  }, []);
+
+useEffect(() => {
+  const loadBatteryBrandCapacities = async () => {
+    
+    setBatteryCapacities([]);
+    setBatterySpecId(null);
+    setFormData((prev) => ({
+      ...prev,
+      batterySpecId: null
+    }));
+
+    
+    if (batteryBrandId !== null) {
+      try {
+        const data = await fetchBatteryBrandCapacities(batteryBrandId);
+        
+        setBatteryCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch battery brand capacities:", error);
+        setBatteryCapacities([]);
+      }
+    }
+  };
+
+  loadBatteryBrandCapacities();
+}, [batteryBrandId]);
+
+
+  const handleSaveSpecs = async () => {
+    try {
+      const systemResponse = await saveSystemSpecs({
+        ...formData,
+        connectionId,
+        specSourceId: 2,
+        panelSpecsId: formData.panelSpecId,
+        batterySpecsId: formData.batterySpecId
+
+      });
+
+      console.log("System specs saved:", systemResponse);
+
+      const systemSpecsId = systemResponse.id;
+
+
+      const inverterResponse = await saveInverterSpecs({
+        systemSpecsId,
+        inverterSpecId,
+        inverterCount: 1,
+      });
+
+      console.log("Inverter specs saved:", inverterResponse);
+
+      toast.success("System Specification details saved successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (error) {
+      console.error("❌ Error saving specs:", error);
+      toast.error("Failed to save system specs or inverter specs.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    }
+  };
+
+
 
 
 
@@ -592,9 +609,9 @@ export const SystemSpecifications = () => {
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      totalCost: (Number(prev.solarSystemCost) || 0) + (Number(prev.fabricationCost) || 0),
+      totalCost: (Number(prev.systemCost) || 0) + (Number(prev.fabricationCost) || 0),
     }));
-  }, [formData.solarSystemCost, formData.fabricationCost]);
+  }, [formData.systemCost, formData.fabricationCost]);
 
 
 
@@ -620,7 +637,7 @@ export const SystemSpecifications = () => {
 
 
       updatedData.totalCost =
-        (Number(updatedData.solarSystemCost) || 0) +
+        (Number(updatedData.systemCost) || 0) +
         (Number(updatedData.fabricationCost) || 0);
 
 
@@ -774,46 +791,46 @@ export const SystemSpecifications = () => {
   //   formData.hasHeavyDutyStairs
   // ]);
 
-  const handleSaveSpecs = async () => {
-    // const phaseType = connectionDetails?.phaseTypeName || "";
-    // const requestData = {
-    //   customerSelectedInstallationStructureType: formData.installationStructureType,
-    //   customerSelectedKW: formData.Kw,
-    //   customerSelectedBrand: formData.panelBrand,
-    //   customerSelectedInstallationSpaceType: formData.installationSpaceType,
-    //   dcrNonDcrType: formData.dcrNonDcrType,
-    //   phaseType: phaseType,
-    //   connectionType: connectionType,
-    //   inversionType: formData.inversionType,
-    //   solarSystemCost: formData.solarSystemCost,
-    //   fabricationCost: formData.fabricationCost,
-    //   totalCost: formData.totalCost,
-    //   hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
-    //   hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
-    //   hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
-    //   inverterCapacity: formData.inverterKw,
-    //   inverterBrand: formData.inverterBrand,
-    //   batteryCapacity: formData.batteryCapacity,
-    //   batteryBrand: formData.batteryBrand,
-    // };
+  //const handleSaveSpecs = async () => {
+  // const phaseType = connectionDetails?.phaseTypeName || "";
+  // const requestData = {
+  //   customerSelectedInstallationStructureType: formData.installationStructureType,
+  //   customerSelectedKW: formData.Kw,
+  //   customerSelectedBrand: formData.panelBrand,
+  //   customerSelectedInstallationSpaceType: formData.installationSpaceType,
+  //   dcrNonDcrType: formData.dcrNonDcrType,
+  //   phaseType: phaseType,
+  //   connectionType: connectionType,
+  //   inversionType: formData.inversionType,
+  //   solarSystemCost: formData.solarSystemCost,
+  //   fabricationCost: formData.fabricationCost,
+  //   totalCost: formData.totalCost,
+  //   hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
+  //   hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
+  //   hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
+  //   inverterCapacity: formData.inverterKw,
+  //   inverterBrand: formData.inverterBrand,
+  //   batteryCapacity: formData.batteryCapacity,
+  //   batteryBrand: formData.batteryBrand,
+  // };
 
-    // try {
-    //   await saveCustomerSpecs(connectionId, requestData);
-    //   toast.success("System specifications saved successfully.", {
-    //     autoClose: 1000,
-    //     hideProgressBar: true,
-    //   });
-    //   //////
-    //   setIsSpecsSaved(true);
-    //   ///////
-    // } catch (error) {
+  // try {
+  //   await saveCustomerSpecs(connectionId, requestData);
+  //   toast.success("System specifications saved successfully.", {
+  //     autoClose: 1000,
+  //     hideProgressBar: true,
+  //   });
+  //   //////
+  //   setIsSpecsSaved(true);
+  //   ///////
+  // } catch (error) {
 
-    //   toast.error("Erroe while saving specifications.", {
-    //     autoClose: 1000,
-    //     hideProgressBar: true,
-    //   });
-    // }
-  };
+  //   toast.error("Erroe while saving specifications.", {
+  //     autoClose: 1000,
+  //     hideProgressBar: true,
+  //   });
+  // }
+  //};
 
 
 
@@ -911,7 +928,8 @@ export const SystemSpecifications = () => {
 
 
           <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-            {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"}
+            {/* {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"} */}
+            System Specification Details
           </h2>
         </div>
       </div>
@@ -1032,7 +1050,7 @@ export const SystemSpecifications = () => {
                 className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
               >
                 <span className="flex items-center gap-2">
-                  
+
                   <span>
                     {formData.installationSpaceType
                       ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
@@ -1060,7 +1078,7 @@ export const SystemSpecifications = () => {
                             setIsSpaceListOpen(false);
                           }}
                         >
-                          
+
                           <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
                         </button>
                         <button
@@ -1153,6 +1171,7 @@ export const SystemSpecifications = () => {
           </div>
           <div className="hidden md:block md:col-span-1"></div>
 
+
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Grid Type
@@ -1170,6 +1189,7 @@ export const SystemSpecifications = () => {
                 });
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
             >
               <option value="">Select Grid Type</option>
               {grids.map((grid) => (
@@ -1197,6 +1217,7 @@ export const SystemSpecifications = () => {
                 });
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
             >
               <option value="">Select Material Origin Type</option>
               {origins.map((origin) => (
@@ -1208,7 +1229,7 @@ export const SystemSpecifications = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">PV Panel Brand & Wattage</label>
+            <label className="block text-sm font-medium text-gray-700">PV Panel Brand - Wattage - Model Number</label>
             <select
               id="panelSpecId"
               name="panelSpecId"
@@ -1222,6 +1243,7 @@ export const SystemSpecifications = () => {
               }}
               disabled={!materialOriginId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+              required
             >
               <option value="">Select PV System Brand</option>
               {panels.map((panel) => (
@@ -1245,6 +1267,7 @@ export const SystemSpecifications = () => {
               }}
               disabled={!materialOriginId || !panelSpecId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+              required
             >
               <option value="">Select PV System Capacity</option>
               {panelCapacities.map((panelCapacity) => (
@@ -1271,6 +1294,7 @@ export const SystemSpecifications = () => {
               }}
               disabled={!gridTypeId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+              required
             >
               <option value="">Select Inverter Brand</option>
               {inverters.map((inverter) => (
@@ -1295,67 +1319,72 @@ export const SystemSpecifications = () => {
                   target: { name: "inverterSpecId", value: selectedId },
                 });
               }}
-              disabled={!gridTypeId || !inverterBrandId}
+              disabled={!gridTypeId || !inverterBrandId || !systemCapacityKw}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+              required
             >
               <option value="">Select Inverter Capacity</option>
               {inverterCapacities.map((inverterCapacity) => (
                 <option key={inverterCapacity.id} value={inverterCapacity.id}>
-                  {inverterCapacity.inverterCapacityWattage} kW ({inverterCapacity.productWarrantyMonths} months)
+                  {inverterCapacity.inverterCapacity} kW - ({inverterCapacity.productWarrantyMonths} months) - ({inverterCapacity.almmModelNumber})
                 </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Battery Brand
-            </label>
-            <select
-              id="batteryBrandId"
-              name="batteryBrandId"
-              value={formData.batteryBrandId}
-              onChange={(e) => {
-                const selectedId = Number(e.target.value);
-                setBatteryBrandId(selectedId);
-                handleChange({
-                  target: { name: "batteryBrandId", value: selectedId },
-                });
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select Battery Brand</option>
-              {batteryBrands.map((batteryBrand) => (
-                <option key={batteryBrand.id} value={batteryBrand.id}>
-                  {batteryBrand.brandName}
-                </option>
-              ))}
-            </select>
-          </div>
+          {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Battery Brand
+                </label>
+                <select
+                  id="batteryBrandId"
+                  name="batteryBrandId"
+                  value={formData.batteryBrandId}
+                  onChange={(e) => {
+                    const selectedId = Number(e.target.value);
+                    setBatteryBrandId(selectedId);
+                    handleChange({
+                      target: { name: "batteryBrandId", value: selectedId },
+                    });
+                  }}
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Select Battery Brand</option>
+                  {batteryBrands.map((batteryBrand) => (
+                    <option key={batteryBrand.id} value={batteryBrand.id}>
+                      {batteryBrand.brandName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-           <div>
-            <label className="block text-sm font-medium text-gray-700">Battery Capacity</label>
-            <select
-              id="batterySpecId"
-              name="batterySpecId"
-              value={formData.batterySpecId}
-              onChange={(e) => {
-                const selectedId = Number(e.target.value);
-                setBatterySpecId(selectedId);
-                handleChange({
-                  target: { name: "batterySpecId", value: selectedId },
-                });
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-            >
-              <option value="">Select Battery Capacity</option>
-              {batteryCapacities.map((batteryCapacity) => (
-                <option key={batteryCapacity.id} value={batteryCapacity.id}>
-                  {batteryCapacity.batteryCapacity} kW - {batteryCapacity.voltage} V - {batteryCapacity.modelNumber} ({batteryCapacity.warrantyMonths} months)
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
+                <select
+                  id="batterySpecId"
+                  name="batterySpecId"
+                  value={formData.batterySpecId}
+                  onChange={(e) => {
+                    const selectedId = Number(e.target.value);
+                    setBatterySpecId(selectedId);
+                    handleChange({
+                      target: { name: "batterySpecId", value: selectedId },
+                    });
+                  }}
+                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select Battery Capacity</option>
+                  {batteryCapacities.map((batteryCapacity) => (
+                    <option key={batteryCapacity.id} value={batteryCapacity.id}>
+                      {batteryCapacity.batteryCapacity} kW - {batteryCapacity.voltage} V - {batteryCapacity.modelNumber} ({batteryCapacity.warrantyMonths} months)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
 
 
@@ -1364,8 +1393,8 @@ export const SystemSpecifications = () => {
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  name="hasWaterSprinklerSystem"
-                  checked={formData.hasWaterSprinklerSystem || false}
+                  name="hasWaterSprinkler"
+                  checked={formData.hasWaterSprinkler || false}
                   onChange={handleChange}
                   className="h-5 w-5 text-blue-600"
                 />
@@ -1375,8 +1404,8 @@ export const SystemSpecifications = () => {
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  name="hasHeavyDutyRamp"
-                  checked={formData.hasHeavyDutyRamp || false}
+                  name="hasHeavydutyRamp"
+                  checked={formData.hasHeavydutyRamp || false}
                   onChange={handleChange}
                   className="h-5 w-5 text-blue-600"
                 />
@@ -1386,8 +1415,8 @@ export const SystemSpecifications = () => {
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  name="hasHeavyDutyStairs"
-                  checked={formData.hasHeavyDutyStairs || false}
+                  name="hasHeavydutyStairs"
+                  checked={formData.hasHeavydutyStairs || false}
                   onChange={handleChange}
                   className="h-5 w-5 text-blue-600"
                 />
@@ -1417,12 +1446,12 @@ export const SystemSpecifications = () => {
                 </label>
                 <input
                   type="text"
-                  name="solarSystemCost"
-                  value={formatIndianNumber(formData.solarSystemCost)}
+                  name="systemCost"
+                  value={formatIndianNumber(formData.systemCost)}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      solarSystemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
+                      systemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
                     })
                   }
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"

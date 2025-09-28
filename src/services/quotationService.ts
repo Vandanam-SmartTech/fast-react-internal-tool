@@ -219,20 +219,55 @@ export const fetchBrandCapacityDetails = async (connectionId: number): Promise<R
   }
 };
 
-export const saveCustomerSpecs = async (connectionId: string, requestData: any): Promise<any> => {
+// export const saveCustomerSpecs = async (connectionId: string, requestData: any): Promise<any> => {
+//   const quotationAPI = getQuotationAPI();
+//   if (!connectionId) {
+//     throw new Error("Connection ID is missing!");
+//   }
+
+//   try {
+//     const response = await quotationAPI.post(`/api/customer-agreed/${connectionId}`, requestData);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error saving system specs:", error);
+//     throw new Error("Failed to save specifications.");
+//   }
+// };
+
+export const saveSystemSpecs = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
-  if (!connectionId) {
-    throw new Error("Connection ID is missing!");
+
+  if (!requestData?.connectionId) {
+    throw new Error("connectionId is missing in requestData!");
   }
 
   try {
-    const response = await quotationAPI.post(`/api/customer-agreed/${connectionId}`, requestData);
+    const response = await quotationAPI.post(`/api/system-specs`, requestData);
     return response.data;
   } catch (error) {
     console.error("Error saving system specs:", error);
-    throw new Error("Failed to save specifications.");
+    throw new Error("Failed to save system specs.");
   }
 };
+
+export const saveInverterSpecs = async (requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(
+      `/api/system-spec-inverters?inverterSpecId=${requestData.inverterSpecId}`, // ✅ query param
+      {
+        systemSpecsId: requestData.systemSpecsId,
+        inverterCount: requestData.inverterCount,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saving inverter specs:", error);
+    throw new Error("Failed to save inverter specs.");
+  }
+};
+
 
 export const checkSystemSpecificationsExists = async (
   connectionId: string
@@ -249,17 +284,6 @@ export const checkSystemSpecificationsExists = async (
     return false;
   }
 };
-
-// export const fetchBatteryBrands = async (): Promise<string[]> => {
-//   const quotationAPI = getQuotationAPI();
-//   try {
-//     const response = await quotationAPI.get('/api/battery-details/battery-brand');
-//     return response.data; 
-//   } catch (error) {
-//     console.error('Error fetching battery brands:', error);
-//     return []; 
-//   }
-// };
 
 export const fetchBatteryWattages = async (
   batteryBrand: string
@@ -343,18 +367,21 @@ export const fetchInverterBrands = async (
 
 
 export const fetchInverterBrandCapacities = async (
-  inverterBrandId: number
+  inverterBrandId: number,
+  systemCapacityKw: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching inverter capacities...");
     console.log("Request params:", {
       inverterBrandId,
+      systemCapacityKw
     });
 
-    const response = await quotationAPI.get(`/api/inverter-specs/by-brand`, {
+    const response = await quotationAPI.get(`/api/inverter-specs/capacities`, {
       params: {
-        inverterBrandId
+        inverterBrandId,
+        systemCapacityKw
       },
     });
 
@@ -441,20 +468,6 @@ export const fetchBatteryBrandCapacities = async (
     throw new Error("Failed to fetch battery brand capacities from server");
   }
 };
-
-// export const fetchBatteryBrandCapacities = async (brandId: number): Promise<any[] | null> => {
-//   const quotationAPI = getQuotationAPI();
-//   try {
-//     const response = await quotationAPI.get(`/api/battery-specs/brand/${brandId}`);
-//     console.log(`Battery capacities for brand ${brandId}:`, response.data);
-//     return response.data;
-//   } catch (error: any) {
-//     const message = error.response?.data?.message || `Failed to fetch battery capacities for brand ${brandId}.`;
-//     alert(message);
-//     console.error('Error fetching battery capacities:', error);
-//     return null;
-//   }
-// };
 
 
 
