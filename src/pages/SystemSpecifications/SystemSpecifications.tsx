@@ -2,20 +2,14 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import {
-  generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs,getMaterialOrigins, getGridTypes, fetchInverterBrands, 
-  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities
+  generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
+  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs
 } from '../../services/quotationService';
 
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-  CurrencyRupeeIcon
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
 
 
@@ -43,8 +37,9 @@ export const SystemSpecifications = () => {
   const [govIdName, setGovIdName] = useState("");
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogType, setDialogType] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
@@ -81,6 +76,13 @@ export const SystemSpecifications = () => {
 
   const [batterySpecId, setBatterySpecId] = useState<number | null>(null);
   const [batteryCapacities, setBatteryCapacities] = useState([]);
+
+  const [savedSpecs, setSavedSpecs] = useState([]);
+  const [selectedSpecId, setSelectedSpecId] = useState(null);
+  const [selectedSystemSpecsInverterId, setSelectedSystemSpecsInverterId] = useState(null);
+
+  const [isPrefilling, setIsPrefilling] = useState(false);
+
 
 
   const { userClaims } = useUser();
@@ -216,6 +218,23 @@ export const SystemSpecifications = () => {
     fetchConnection();
   }, [connectionId]);
 
+  const fetchSavedSpecs = async () => {
+    try {
+      const data = await getSavedSystemSpecs(connectionId);
+      setSavedSpecs(data);
+    } catch (err) {
+      console.error("Error fetching saved specs", err);
+    }
+  };
+
+  useEffect(() => {
+    if (connectionId) {
+      fetchSavedSpecs();
+    }
+  }, [connectionId]);
+
+
+
   useEffect(() => {
     const fetchOrigins = async () => {
       const data = await getMaterialOrigins();
@@ -234,111 +253,122 @@ export const SystemSpecifications = () => {
     fetchGrids();
   }, []);
 
- useEffect(() => {
-  const loadInverterBrands = async () => {
-    setInverters([]);
-    setInverterBrandId(null);
-    setInverterCapacities([]);
-    setInverterSpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      inverterBrandId: null,
-      inverterSpecId: null
-    }));
-
-    
-    if (phaseTypeId !== null && gridTypeId !== null) {
-      try {
-        const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-        
-        setInverters([...data]);
-      } catch (error) {
-        console.error("Failed to fetch inverter brands:", error);
+  useEffect(() => {
+    const loadInverterBrands = async () => {
+      if (!isPrefilling) {
         setInverters([]);
-      }
-    }
-  };
-
-  loadInverterBrands();
-}, [phaseTypeId, gridTypeId]);
-
-useEffect(() => {
-  const loadInverterBrandCapacities = async () => {
-
-    setInverterCapacities([]);
-    setInverterSpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      inverterSpecId: null
-    }));
-
-
-    if (inverterBrandId !== null && systemCapacityKw !== null) {
-      try {
-        const data = await fetchInverterBrandCapacities(inverterBrandId, systemCapacityKw);
-        
-        setInverterCapacities([...data]);
-      } catch (error) {
-        console.error("Failed to fetch inverter brand capacities:", error);
+        setInverterBrandId(null);
         setInverterCapacities([]);
+        setInverterSpecId(null);
+        setFormData((prev) => ({
+          ...prev,
+          inverterBrandId: null,
+          inverterSpecId: null
+        }));
       }
-    }
-  };
 
-  loadInverterBrandCapacities();
-}, [inverterBrandId, systemCapacityKw]);
+      if (phaseTypeId !== null && gridTypeId !== null) {
+        try {
+          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+          setInverters([...data]);
+        } catch (error) {
+          console.error("Failed to fetch inverter brands:", error);
+          setInverters([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      }
+    };
+
+    loadInverterBrands();
+  }, [phaseTypeId, gridTypeId]);
 
 
   useEffect(() => {
-  const loadPanelBrands = async () => {
-    setPanels([]);
-    setPanelSpecId(null);
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
-    setFormData((prev) => ({
-      ...prev,
-      panelSpecId: null,
-      systemCapacityKw: null
-    }));
+    const loadInverterBrandCapacities = async () => {
+      if (!isPrefilling) {
+        setInverterCapacities([]);
+        setInverterSpecId(null);
+        setFormData((prev) => ({
+          ...prev,
+          inverterSpecId: null
+        }));
+      }
 
-    if (materialOriginId) {
-      try {
-        const data = await fetchPanelBrands(Number(materialOriginId));
-        setPanels([...data]);
-      } catch (error) {
-        console.error("Failed to fetch panel brands:", error);
+      if (inverterBrandId !== null && systemCapacityKw !== null) {
+        try {
+          const data = await fetchInverterBrandCapacities(inverterBrandId, systemCapacityKw);
+          setInverterCapacities([...data]);
+        } catch (error) {
+          console.error("Failed to fetch inverter brand capacities:", error);
+          setInverterCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      }
+    };
+
+    loadInverterBrandCapacities();
+  }, [inverterBrandId, systemCapacityKw]);
+
+
+  useEffect(() => {
+    const loadPanelBrands = async () => {
+      if (!isPrefilling) {
         setPanels([]);
-      }
-    }
-  };
-
-  loadPanelBrands();
-}, [materialOriginId]);
-
-
-useEffect(() => {
-  const loadPanelBrandCapacities = async () => {
-
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
-    setFormData((prev) => ({
-      ...prev,
-      systemCapacityKw: null
-    }));
-
-    if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
-      try {
-        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
-        setPanelCapacities([...data]);
-      } catch (error) {
-        console.error("Failed to fetch panel brand capacities:", error);
+        setPanelSpecId(null);
         setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          panelSpecId: null,
+          systemCapacityKw: null
+        }));
       }
-    }
-  };
 
-  loadPanelBrandCapacities();
-}, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
+      if (materialOriginId) {
+        try {
+          const data = await fetchPanelBrands(Number(materialOriginId));
+          setPanels([...data]);
+        } catch (error) {
+          console.error("Failed to fetch panel brands:", error);
+          setPanels([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      }
+    };
+
+    loadPanelBrands();
+  }, [materialOriginId]);
+
+
+  useEffect(() => {
+    const loadPanelBrandCapacities = async () => {
+      if (!isPrefilling) {
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          systemCapacityKw: null
+        }));
+      }
+
+      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
+        try {
+          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
+          setPanelCapacities([...data]);
+        } catch (error) {
+          console.error("Failed to fetch panel brand capacities:", error);
+          setPanelCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      }
+    };
+
+    loadPanelBrandCapacities();
+  }, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
 
 
   useEffect(() => {
@@ -350,31 +380,32 @@ useEffect(() => {
     loadBatteryBrands();
   }, []);
 
-useEffect(() => {
-  const loadBatteryBrandCapacities = async () => {
-    
-    setBatteryCapacities([]);
-    setBatterySpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      batterySpecId: null
-    }));
-
-    
-    if (batteryBrandId !== null) {
-      try {
-        const data = await fetchBatteryBrandCapacities(batteryBrandId);
-        
-        setBatteryCapacities([...data]);
-      } catch (error) {
-        console.error("Failed to fetch battery brand capacities:", error);
+  useEffect(() => {
+    const loadBatteryBrandCapacities = async () => {
+      if (!isPrefilling) {
         setBatteryCapacities([]);
+        setBatterySpecId(null);
+        setFormData((prev) => ({
+          ...prev,
+          batterySpecId: null
+        }));
       }
-    }
-  };
 
-  loadBatteryBrandCapacities();
-}, [batteryBrandId]);
+      if (batteryBrandId !== null) {
+        try {
+          const data = await fetchBatteryBrandCapacities(batteryBrandId);
+          setBatteryCapacities([...data]);
+        } catch (error) {
+          console.error("Failed to fetch battery brand capacities:", error);
+          setBatteryCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      }
+    };
+
+    loadBatteryBrandCapacities();
+  }, [batteryBrandId]);
 
 
   const handleSaveSpecs = async () => {
@@ -401,12 +432,14 @@ useEffect(() => {
 
       console.log("Inverter specs saved:", inverterResponse);
 
+      await fetchSavedSpecs();
+
       toast.success("System Specification details saved successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
     } catch (error) {
-      console.error("❌ Error saving specs:", error);
+      console.error("Error saving specs:", error);
       toast.error("Failed to save system specs or inverter specs.", {
         autoClose: 1000,
         hideProgressBar: true,
@@ -414,193 +447,100 @@ useEffect(() => {
     }
   };
 
+  const handleUpdateSpecs = async () => {
+    try {
+      if (!selectedSpecId || !selectedSystemSpecsInverterId) {
+        console.error("No system specification selected for update!");
+        toast.error("Please select a system specification to update.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+        return;
+      }
+
+      const systemResponse = await updateSystemSpecs(selectedSpecId, {
+        ...formData,
+        connectionId,
+        specSourceId: 2,
+        panelSpecsId: formData.panelSpecId,
+        batterySpecsId: formData.batterySpecId,
+      });
+
+      console.log("System specs updated:", systemResponse);
+      const systemSpecsId = systemResponse.id;
+
+      const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
+        systemSpecsId: selectedSpecId,
+        inverterSpecId,
+        inverterCount: 1,
+      });
+
+      console.log("Inverter specs updated:", inverterResponse);
+
+      toast.success("System Specification details updated successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (error) {
+      console.error("Error updating specs:", error);
+      toast.error("Failed to update system specs or inverter specs.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    }
+  };
 
 
+  const handleSaveButtonClick = () => {
+    setDialogType("confirm");
+    setDialogMessage("Do you want to save system specification details?");
+    setDialogAction(() => handleSaveSpecs);
+    setDialogOpen(true);
+  };
+
+  const handleUpdateButtonClick = () => {
+    setDialogType("confirm");
+    setDialogMessage("Do you want to update system specification details?");
+    setDialogAction(() => handleUpdateSpecs);
+    setDialogOpen(true);
+  };
 
 
-  let hasShownError = false;
+  const handleSelectSpec = (spec) => {
+    setIsPrefilling(true);
 
-  // useEffect(() => {
+    setSelectedSpecId(spec.id);
+    setSelectedSystemSpecsInverterId(spec.systemSpecsInverterId);
 
-  //   if (!connectionId || !connectionDetails) return;
+    setFormData({
+      ...formData,
+      installationSpaceType: spec.installationSpaceType,
+      installationStructureType: spec.installationStructureType,
+      systemCost: spec.systemCost || 0,
+      fabricationCost: spec.fabricationCost || 0,
+      totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
+      hasWaterSprinkler: spec.hasWaterSprinkler,
+      hasHeavydutyRamp: spec.hasHeavydutyRamp,
+      hasHeavydutyStairs: spec.hasHeavydutyStairs,
+      panelSpecId: spec.panelSpecsId,
+      materialOriginId: spec.materialOriginId,
+      gridTypeId: spec.gridTypeId,
+      inverterSpecId: spec.inverterSpecId,
+      batteryBrandId: spec.batteryBrandId,
+      batterySpecId: spec.batterySpecsId,
+      systemCapacityKw: spec.systemCapacityKw,
+      inverterBrandId: spec.inverterBrandId
+    });
 
-  //   const fetchData = async () => {
-
-  //     setIsFetchingRecommendations(true);
-
-  //     try {
-
-  //       const customerData = await fetchCustomerAgreedDetails(connectionId);
-
-  //       const phaseType = connectionDetails?.phaseTypeName || "";
-
-
-  //       if (customerData.success === false || customerData.message?.includes("Data not found")) {
-
-  //         const recommendation = await fetchRecommendedDetails(connectionId);
-  //         console.log("Recommended Data:", recommendation);
-
-  //         const recommendedKW = recommendation.recommendedKW || "";
-
-  //         const inverterWattages = await fetchInverterWattages(
-  //           phaseType,
-  //           recommendation.inverterBrand
-  //         );
-  //         const selectedInverterKw = inverterWattages[0] || "";
-
-
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           installationSpaceType: recommendation.recommendedInstallationSpaceType || "",
-  //           installationStructureType: recommendation.recommendedInstallationStructureType || "",
-  //           Kw: recommendedKW,
-  //           numberOfGpPipes: recommendation.numberOfGpPipes || 0,
-  //           dcrNonDcrType:
-  //             recommendation.dcrNonDcrType?.toLowerCase() === "non-dcr" ? "Non-DCR" : "DCR",
-  //           panelBrand: recommendation.panelBrand || "",
-  //           inverterBrand: recommendation.inverterBrand || "",
-  //           inverterKw: selectedInverterKw,
-  //           inversionType: recommendation.inversionType,
-  //         }));
-
-  //         setConnectionType(recommendation.connectionType || "");
-  //         setPhaseType(phaseType);
-
-  //         if (phaseType && recommendation.inversionType) {
-  //           const inverters = await fetchInverters(phaseType, recommendation.inversionType);
-  //           setInverterBrands(inverters || []);
-  //         }
-
-  //         if (phaseType && recommendation.dcrNonDcrType) {
-  //           const panels = await fetchPanels(phaseType, recommendation.dcrNonDcrType);
-  //           setPanelBrands(panels || []);
-  //         }
-
-
-  //         if (phaseType && recommendation.dcrNonDcrType && recommendation.panelBrand) {
-  //           const wattages = await fetchPanelWattages(
-  //             phaseType,
-  //             recommendation.dcrNonDcrType,
-  //             recommendation.panelBrand
-  //           );
-  //           const uniqueWattages = wattages.filter((w) => w !== recommendedKW);
-  //           setPanelWattages([recommendedKW, ...uniqueWattages]);
-  //         }
-
-  //         if (recommendation.inverterBrand && phaseType) {
-  //           const inverterWattages = await fetchInverterWattages(
-  //             phaseType,
-  //             recommendation.inverterBrand
-  //           );
-  //           setInverterWattages(inverterWattages);
-  //         }
-  //       } else {
-
-  //         console.log("Customer Agreed Data:", customerData);
-
-  //         setIsCustomSpecs(true);
-  //         setIsSpecsSaved(true);
-  //         setPriceAlreadySetFromCustomerData(true);
-
-  //         const customerSelectedKW = customerData.customerSelectedKW || "";
-  //         const inverterCapacity = customerData.inverterCapacity || "";
-
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           installationSpaceType: customerData.customerSelectedInstallationSpaceType || "",
-  //           installationStructureType: customerData.customerSelectedInstallationStructureType || "",
-  //           Kw: customerSelectedKW,
-  //           panelBrand: customerData.customerSelectedBrand || "",
-  //           dcrNonDcrType: customerData.dcrNonDcrType || "",
-  //           inverterBrand: customerData.inverterBrand || "",
-  //           inverterKw: inverterCapacity,
-  //           solarSystemCost: customerData.solarSystemCost || 0,
-  //           fabricationCost: customerData.fabricationCost || 0,
-  //           totalCost: customerData.totalCost || 0,
-  //           hasWaterSprinklerSystem: customerData.hasWaterSprinklerSystem || false,
-  //           hasHeavyDutyRamp: customerData.hasHeavyDutyRamp || false,
-  //           hasHeavyDutyStairs: customerData.hasHeavyDutyStairs || false,
-  //           inversionType: customerData.inversionType || "On Grid",
-  //           batteryBrand: customerData.batteryBrand || "",
-  //           batteryCapacity: customerData.batteryCapacity || 5,
-  //         }));
-
-  //         setPhaseType(phaseType);
-
-  //         if (phaseType && customerData.inversionType) {
-  //           const inverters = await fetchInverters(phaseType, customerData.inversionType);
-  //           setInverterBrands(inverters || []);
-  //         }
-
-  //         if (phaseType && customerData.dcrNonDcrType) {
-  //           const panels = await fetchPanels(phaseType, customerData.dcrNonDcrType);
-  //           setPanelBrands(panels || []);
-  //         }
-
-
-  //         if (phaseType && customerData.dcrNonDcrType && customerData.customerSelectedBrand) {
-  //           const wattages = await fetchPanelWattages(
-  //             phaseType,
-  //             customerData.dcrNonDcrType,
-  //             customerData.customerSelectedBrand
-  //           );
-  //           const uniqueWattages = wattages.filter((w) => w !== customerSelectedKW);
-  //           setPanelWattages([customerSelectedKW, ...uniqueWattages]);
-  //         }
-
-  //         if (customerData.inverterBrand && phaseType) {
-  //           const inverterWattages = await fetchInverterWattages(
-  //             phaseType,
-  //             customerData.inverterBrand
-  //           );
-  //           const uniqueInverterWattages = inverterWattages.filter((iw) => iw !== inverterCapacity);
-  //           setInverterWattages([inverterCapacity, ...uniqueInverterWattages]);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error during fetch:", error);
-  //       if (!hasShownError) {
-  //         hasShownError = true;
-  //         toast.error("Failed to fetch details. Please try again later.", {
-  //           autoClose: 1000,
-  //           hideProgressBar: true,
-  //         });
-  //       }
-  //     } finally {
-  //       setIsFetchingRecommendations(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [connectionId, connectionDetails]);
-
-  // useEffect(() => {
-  //   if (formData.inversionType === "Hybrid") {
-  //     const loadBatteryBrands = async () => {
-  //       const brands = await fetchBatteryBrands();
-  //       setBatteryBrands(brands || []);
-  //       if (brands.length > 0 && !formData.batteryBrand) {
-  //         setFormData((prev) => ({ ...prev, batteryBrand: brands[0] }));
-  //       }
-  //     };
-  //     loadBatteryBrands();
-  //   }
-  // }, [formData.inversionType]);
-
-  // useEffect(() => {
-  //   if (formData.batteryBrand) {
-  //     const loadCapacities = async () => {
-  //       const capacities = await fetchBatteryWattages(formData.batteryBrand);
-  //       setBatteryCapacities(capacities);
-
-  //       // Auto-select first if none selected
-  //       if (capacities.length > 0 && !formData.batteryCapacity) {
-  //         setFormData((prev) => ({ ...prev, batteryCapacity: capacities[0] }));
-  //       }
-  //     };
-  //     loadCapacities();
-  //   }
-  // }, [formData.batteryBrand]);
+    setMaterialOriginId(spec.materialOriginId);
+    setGridTypeId(spec.gridTypeId);
+    setPanelSpecId(spec.panelSpecsId);
+    setInverterSpecId(spec.inverterSpecId);
+    setBatteryBrandId(spec.batteryBrandId);
+    setBatterySpecId(spec.batterySpecsId);
+    setInverterBrandId(spec.inverterBrandId);
+    setSystemCapacityKw(spec.systemCapacityKw);
+  };
 
 
 
@@ -612,6 +552,14 @@ useEffect(() => {
       totalCost: (Number(prev.systemCost) || 0) + (Number(prev.fabricationCost) || 0),
     }));
   }, [formData.systemCost, formData.fabricationCost]);
+
+
+  useEffect(() => {
+    if (savedSpecs.length === 1) {
+      handleSelectSpec(savedSpecs[0]);
+    }
+  }, [savedSpecs]);
+
 
 
 
@@ -628,31 +576,12 @@ useEffect(() => {
         [name]: type === "checkbox" ? checked : value,
       };
 
-      // const matchedSpace = availableSpaceTypes.find(
-      //   (space) => space.installationSpaceType === value
-      // );
-      // if (matchedSpace) {
-      //   setSelectedSpace(matchedSpace);
-      // }
-
 
       updatedData.totalCost =
         (Number(updatedData.systemCost) || 0) +
         (Number(updatedData.fabricationCost) || 0);
 
 
-      // if (name === "installationSpaceType") {
-      //   const selectedSpace = availableSpaceTypes.find(
-      //     (space: any) => space.installationSpaceType === value
-      //   );
-      //   if (selectedSpace) {
-      //     updatedData.numberOfGpPipes = selectedSpace.numberOfGpPipes || 0;
-      //   }
-      // }
-
-      // if (name === "inversionType") {
-      //   updatedData.inverterBrand = value === "Hybrid" ? "VSole" : "KSolare";
-      // }
 
       updatedFormData = updatedData;
       return updatedData;
@@ -661,176 +590,8 @@ useEffect(() => {
     setIsCustomSpecs(true);
     setIsSpecsSaved(false);
     setPriceAlreadySetFromCustomerData(false);
-
-    // if (["panelBrand", "dcrNonDcrType", "inverterBrand", "inversionType"].includes(name)) {
-    //   let dcrNonDcrValue = name === "dcrNonDcrType" ? value : formData.dcrNonDcrType;
-    //   let panelBrandValue = name === "panelBrand" ? value : formData.panelBrand;
-    //   const inverterBrandValue =
-    //     name === "inverterBrand"
-    //       ? value
-    //       : name === "inversionType"
-    //         ? value === "Hybrid"
-    //           ? "VSole"
-    //           : "KSolare"
-    //         : formData.inverterBrand;
-    //   const inversionTypeValue = name === "inversionType" ? value : formData.inversionType;
-
-    //   try {
-    //     if (name === "dcrNonDcrType") {
-    //       const panels = await fetchPanels(phaseType, value);
-    //       console.log("Fetched Panels:", panels);
-    //       setPanelBrands(panels || []);
-
-    //       if (panels.length > 0) {
-    //         panelBrandValue = panels[0].brand;
-    //         setFormData((prev) => ({
-    //           ...prev,
-    //           panelBrand: panels[0].brand,
-    //         }));
-    //       }
-
-    //       dcrNonDcrValue = value;
-    //     }
-
-    //     console.log("Fetching panel wattages with:");
-    //     console.log("Connection ID:", connectionId);
-    //     console.log("Phase Type:", phaseType);
-    //     console.log("DCR/Non-DCR Type:", dcrNonDcrValue);
-    //     console.log("Panel Brand:", panelBrandValue);
-
-    //     const wattages = await fetchPanelWattages(
-    //       phaseType,
-    //       dcrNonDcrValue,
-    //       panelBrandValue
-    //     );
-
-    //     setPanelWattages(wattages);
-
-    //     const inverterWattages = await fetchInverterWattages(phaseType, inverterBrandValue);
-    //     setInverterWattages(inverterWattages);
-
-    //     if (phaseType && inversionTypeValue) {
-    //       const inverterBrands = await fetchInverters(phaseType, inversionTypeValue);
-    //       setInverterBrands(inverterBrands || []);
-    //     }
-
-    //     setFormData((prev) => ({
-    //       ...prev,
-    //       Kw: wattages.includes(prev.Kw) ? prev.Kw : wattages[0] || "",
-    //       inverterKw: inverterWattages.includes(prev.inverterKw)
-    //         ? prev.inverterKw
-    //         : inverterWattages[0] || "",
-    //     }));
-    //   } catch (error) {
-    //     console.error("Error fetching panel wattages:", error);
-    //   }
-    // }
-
   };
 
-
-
-  // useEffect(() => {
-  //   const handleGetPrice = async () => {
-  //     try {
-  //       const phaseType = connectionDetails?.phaseTypeName || "";
-
-  //       const requestData = {
-  //         customerSelectedInstallationSpaceType: formData.installationSpaceType || null,
-  //         customerSelectedInstallationStructureType: formData.installationStructureType,
-  //         customerSelectedKW: formData.Kw,
-  //         customerSelectedBrand: formData.panelBrand,
-  //         phaseType,
-  //         dcrNonDcrType: formData.dcrNonDcrType,
-  //         connectionType,
-  //         numberOfGpPipes: formData.numberOfGpPipes || 0,
-  //         hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
-  //         hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
-  //         hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
-  //       };
-
-  //       console.log("Request Data:", requestData);
-
-  //       const priceDetails = await getPriceDetails(requestData);
-
-  //       if (priceDetails) {
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           solarSystemCost: priceDetails.solarSystemCost || 0,
-  //           fabricationCost: priceDetails.fabricationCost || 0,
-  //           totalCost:
-  //             (priceDetails.solarSystemCost || 0) + (priceDetails.fabricationCost || 0),
-  //         }));
-
-  //         setShowCostDetails(true);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching price details:", error);
-  //     }
-  //   };
-
-  //   if (
-  //     !priceAlreadySetFromCustomerData &&
-  //     formData.installationStructureType &&
-  //     formData.Kw &&
-  //     formData.panelBrand &&
-  //     formData.dcrNonDcrType &&
-  //     phaseType
-  //   ) {
-  //     handleGetPrice();
-  //   }
-  // }, [
-  //   formData.installationSpaceType,
-  //   formData.installationStructureType,
-  //   formData.Kw,
-  //   formData.panelBrand,
-  //   formData.dcrNonDcrType,
-  //   phaseType,
-  //   formData.hasWaterSprinklerSystem,
-  //   formData.hasHeavyDutyRamp,
-  //   formData.hasHeavyDutyStairs
-  // ]);
-
-  //const handleSaveSpecs = async () => {
-  // const phaseType = connectionDetails?.phaseTypeName || "";
-  // const requestData = {
-  //   customerSelectedInstallationStructureType: formData.installationStructureType,
-  //   customerSelectedKW: formData.Kw,
-  //   customerSelectedBrand: formData.panelBrand,
-  //   customerSelectedInstallationSpaceType: formData.installationSpaceType,
-  //   dcrNonDcrType: formData.dcrNonDcrType,
-  //   phaseType: phaseType,
-  //   connectionType: connectionType,
-  //   inversionType: formData.inversionType,
-  //   solarSystemCost: formData.solarSystemCost,
-  //   fabricationCost: formData.fabricationCost,
-  //   totalCost: formData.totalCost,
-  //   hasWaterSprinklerSystem: formData.hasWaterSprinklerSystem,
-  //   hasHeavyDutyRamp: formData.hasHeavyDutyRamp,
-  //   hasHeavyDutyStairs: formData.hasHeavyDutyStairs,
-  //   inverterCapacity: formData.inverterKw,
-  //   inverterBrand: formData.inverterBrand,
-  //   batteryCapacity: formData.batteryCapacity,
-  //   batteryBrand: formData.batteryBrand,
-  // };
-
-  // try {
-  //   await saveCustomerSpecs(connectionId, requestData);
-  //   toast.success("System specifications saved successfully.", {
-  //     autoClose: 1000,
-  //     hideProgressBar: true,
-  //   });
-  //   //////
-  //   setIsSpecsSaved(true);
-  //   ///////
-  // } catch (error) {
-
-  //   toast.error("Erroe while saving specifications.", {
-  //     autoClose: 1000,
-  //     hideProgressBar: true,
-  //   });
-  // }
-  //};
 
 
 
@@ -1030,13 +791,57 @@ useEffect(() => {
 
 
       <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-            <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
+        <div className="flex items-center justify-between mb-3">
+          {/* Left side: Icon + Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+              <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
           </div>
-          <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
+
+          {/* Right side: Button */}
+          {savedSpecs.length > 0 && (<button
+            type="button"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <PlusIcon className="w-4 h-4 text-white" />
+            Add Another System Specs
+          </button>)}
+
         </div>
+
         <div className="border-b border-gray-200 mb-4" />
+
+        {savedSpecs.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {savedSpecs.map((spec) => (
+              <div
+                key={spec.id}
+                onClick={() => handleSelectSpec(spec)}
+                className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+          ${selectedSpecId === spec.id ? "bg-blue-50 border-blue-400" : "bg-gray-50 border-gray-200"}`}
+              >
+                <h3 className="text-lg font-bold text-gray-800 mb-2">
+                  {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
+                </h3>
+
+
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  {spec.inverterBrandName} – {spec.inverterCapacity} kW
+                </p>
+
+
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
+                  <span>Fabrication: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-1">
@@ -1492,20 +1297,29 @@ useEffect(() => {
 
 
             <div className="flex flex-wrap gap-4 justify-center">
-              <button
-                type="button"
-                onClick={handleSaveSpecs}
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save System Specs
-              </button>
+              {selectedSpecId ? (
+                <button
+                  type="button"
+                  onClick={handleUpdateButtonClick}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Update System Specs
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSaveButtonClick}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Save System Specs
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={handlePreview}
-                disabled={!isSpecsSaved || isPreviewLoading}
+                disabled={!selectedSpecId || isPreviewLoading}
                 className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              //disabled={isPreviewLoading}
               >
                 {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
               </button>
@@ -1516,8 +1330,7 @@ useEffect(() => {
                   <button
                     type="submit"
                     onClick={handleGenerateQuotation}
-                    disabled={!isSpecsSaved || isLoading}
-                    //disabled={isLoading}
+                    disabled={!selectedSpecId || isLoading}
                     className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? "Generating..." : "Generate & Save Quotation"}
@@ -1527,38 +1340,70 @@ useEffect(() => {
           </div>
 
         </form>
+
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle id="alert-dialog-title">
+            {dialogType === "success" && "Success"}
+            {dialogType === "error" && "Error"}
+            {dialogType === "confirm" && "Confirm"}
+          </DialogTitle>
+
+          <DialogContent dividers>
+            <Alert
+              severity={
+                dialogType === "success"
+                  ? "success"
+                  : dialogType === "error"
+                    ? "error"
+                    : "info"
+              }
+            >
+              {dialogMessage}
+            </Alert>
+          </DialogContent>
+
+          <DialogActions>
+            {dialogType === "confirm" ? (
+              <>
+                <Button
+                  onClick={() => setDialogOpen(false)}
+                // color="error"
+                >
+                  No
+                </Button>
+                <Button
+                  onClick={() => {
+                    setDialogOpen(false);
+                    if (dialogAction) dialogAction();
+                  }}
+                  autoFocus
+                >
+                  Yes
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                OK
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
+
       </div>
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>
-          {dialogType === "success" && "Success"}
-          {dialogType === "error" && "Error"}
-          {dialogType === "confirm" && "Confirm"}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Alert
-            severity={
-              dialogType === "success"
-                ? "success"
-                : dialogType === "error"
-                  ? "error"
-                  : "info"
-            }
-          >
-            {dialogMessage}
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} autoFocus>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
 
     </div>
   );

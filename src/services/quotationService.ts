@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getAuthToken } from './jwtService';
 import { getConfig } from '../config';
+import { toast } from "react-toastify";
 
 export const getQuotationAPI = () => {
   const { VITE_QUOTATION_API } = getConfig();
@@ -219,20 +220,6 @@ export const fetchBrandCapacityDetails = async (connectionId: number): Promise<R
   }
 };
 
-// export const saveCustomerSpecs = async (connectionId: string, requestData: any): Promise<any> => {
-//   const quotationAPI = getQuotationAPI();
-//   if (!connectionId) {
-//     throw new Error("Connection ID is missing!");
-//   }
-
-//   try {
-//     const response = await quotationAPI.post(`/api/customer-agreed/${connectionId}`, requestData);
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error saving system specs:", error);
-//     throw new Error("Failed to save specifications.");
-//   }
-// };
 
 export const saveSystemSpecs = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
@@ -255,7 +242,7 @@ export const saveInverterSpecs = async (requestData: any): Promise<any> => {
 
   try {
     const response = await quotationAPI.post(
-      `/api/system-spec-inverters?inverterSpecId=${requestData.inverterSpecId}`, // ✅ query param
+      `/api/system-spec-inverters?inverterSpecId=${requestData.inverterSpecId}`, 
       {
         systemSpecsId: requestData.systemSpecsId,
         inverterCount: requestData.inverterCount,
@@ -267,6 +254,50 @@ export const saveInverterSpecs = async (requestData: any): Promise<any> => {
     throw new Error("Failed to save inverter specs.");
   }
 };
+
+export const updateSystemSpecs = async (id: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!id) {
+    throw new Error("systemSpecsId is missing for update!");
+  }
+
+  try {
+    const response = await quotationAPI.put(`/api/system-specs/${id}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating system specs:", error);
+    throw new Error("Failed to update system specs.");
+  }
+};
+
+export const updateInverterSpecs = async (id: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!id) {
+    throw new Error("inverterSpecsId is missing for update!");
+  }
+
+  if (!requestData.inverterSpecId) {
+    throw new Error("inverterSpecId is missing in requestData!");
+  }
+
+  try {
+    const response = await quotationAPI.put(
+      `/api/system-spec-inverters/${id}?inverterSpecId=${requestData.inverterSpecId}`,
+      {
+        systemSpecsId: requestData.systemSpecsId,
+        inverterCount: requestData.inverterCount,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating inverter specs:", error);
+    throw new Error("Failed to update inverter specs.");
+  }
+};
+
+
 
 
 export const checkSystemSpecificationsExists = async (
@@ -320,13 +351,17 @@ export const fetchSystemRelatedDetails = async (connectionId: number) => {
 export const getMaterialOrigins = async (): Promise<any[] | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get('/api/material-origins');
-    console.log('Material origins:', response.data);
+    const response = await quotationAPI.get("/api/material-origins");
+    console.log("Material origins:", response.data);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to fetch material origins.';
-    alert(message);
-    console.error('Error fetching material origins:', error);
+    const message =
+      error.response?.data?.message || "Failed to fetch material origins.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching material origins:", error);
     return null;
   }
 };
@@ -334,13 +369,17 @@ export const getMaterialOrigins = async (): Promise<any[] | null> => {
 export const getGridTypes = async (): Promise<any[] | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get('/api/grid-types');
-    console.log('Grid types:', response.data);
+    const response = await quotationAPI.get("/api/grid-types");
+    console.log("Grid types:", response.data);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to fetch grid types.';
-    alert(message);
-    console.error('Error fetching grid types:', error);
+    const message =
+      error.response?.data?.message || "Failed to fetch grid types.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching grid types:", error);
     return null;
   }
 };
@@ -438,13 +477,17 @@ export const fetchPanelBrandCapacities = async (
 export const fetchBatteryBrands = async (): Promise<any[] | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get('/api/battery-brands');
-    console.log('battery brands:', response.data);
+    const response = await quotationAPI.get("/api/battery-brands");
+    console.log("Battery brands:", response.data);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to fetch battery brands.';
-    alert(message);
-    console.error('Error fetching battery brands:', error);
+    const message =
+      error.response?.data?.message || "Failed to fetch battery brands.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching battery brands:", error);
     return null;
   }
 };
@@ -466,6 +509,22 @@ export const fetchBatteryBrandCapacities = async (
   } catch (error) {
     console.error("API Error:", error);
     throw new Error("Failed to fetch battery brand capacities from server");
+  }
+};
+
+export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!connectionId) {
+    throw new Error("connectionId is required to fetch saved system specs!");
+  }
+
+  try {
+    const response = await quotationAPI.get(`/api/system-specs/by-connection/${connectionId}`);
+    return response.data; 
+  } catch (error) {
+    console.error("Error fetching saved system specs:", error);
+    return []; 
   }
 };
 

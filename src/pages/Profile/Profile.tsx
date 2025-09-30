@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
@@ -10,7 +9,7 @@ import { useUser } from '../../contexts/UserContext';
 
 
 const Profile: React.FC = () => {
-  const navigate = useNavigate();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   //const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -248,7 +247,7 @@ const Profile: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        {/* <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate(-1)}
             className="p-2 rounded-full hover:bg-gray-200 transition-colors"
@@ -259,14 +258,28 @@ const Profile: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
             <p className="text-gray-600">Manage your account information and signature</p>
           </div>
-        </div>
+        </div> */}
 
         <div className="space-y-6">
           {/* Personal Information Card */}
           <Card>
             <CardBody className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="w-6 h-6 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{user?.name_as_per_gov_id || 'Not provided'}</p>
+                  <p className="text-sm text-gray-700">{user?.preferred_name || 'Not provided'}</p>
+                  <p className="text-sm text-gray-600">
+                    {user?.email_address || 'Not provided'}
+                    {user?.email_address && user?.contact_number ? ' | ' : ''}
+                    {user?.contact_number || ''}
+                  </p>
+                </div>
+              </div>
 
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -296,7 +309,7 @@ const Profile: React.FC = () => {
                     <p className="text-gray-900">{user?.contact_number || 'Not provided'}</p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </CardBody>
           </Card>
 
