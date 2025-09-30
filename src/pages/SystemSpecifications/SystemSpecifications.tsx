@@ -467,7 +467,7 @@ export const SystemSpecifications = () => {
       });
 
       console.log("System specs updated:", systemResponse);
-      const systemSpecsId = systemResponse.id;
+  
 
       const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
         systemSpecsId: selectedSpecId,
