@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
-  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands, fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs
+  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails
 } from '../../services/quotationService';
 
 import { ArrowLeft } from "lucide-react";
@@ -83,6 +84,8 @@ export const SystemSpecifications = () => {
 
   const [isPrefilling, setIsPrefilling] = useState(false);
 
+  const [isFormOpen, setIsFormOpen] = useState(savedSpecs.length === 0 || savedSpecs.length === 1);
+
 
 
   const { userClaims } = useUser();
@@ -121,6 +124,28 @@ export const SystemSpecifications = () => {
     batterySpecId: null,
     systemCapacityKw: null,
   });
+
+  const defaultFormData = {
+    systemCost: 0,
+    fabricationCost: 0,
+    totalCost: 0,
+    installationSpaceType: "",
+    installationStructureType: "Static",
+    hasWaterSprinkler: false,
+    hasHeavydutyRamp: false,
+    hasHeavydutyStairs: false,
+    inverterBrandId: null,
+    materialOriginId: null,
+    gridTypeId: null,
+    inverterSpecId: null,
+    inverterCount: 1,
+    panelBrandId: null,
+    panelSpecId: null,
+    batteryBrandId: null,
+    batterySpecId: null,
+    systemCapacityKw: null,
+  };
+
 
 
   const connectionId = location.state?.connectionId;
@@ -381,17 +406,18 @@ export const SystemSpecifications = () => {
   }, []);
 
   useEffect(() => {
-    const loadBatteryBrandCapacities = async () => {
-      if (!isPrefilling) {
-        setBatteryCapacities([]);
-        setBatterySpecId(null);
-        setFormData((prev) => ({
-          ...prev,
-          batterySpecId: null
-        }));
-      }
 
-      if (batteryBrandId !== null) {
+    if (!isPrefilling) {
+      setBatteryCapacities([]);
+      setBatterySpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        batterySpecId: null
+      }));
+    }
+
+    if (batteryBrandId !== null) {
+      const loadBatteryCapacities = async () => {
         try {
           const data = await fetchBatteryBrandCapacities(batteryBrandId);
           setBatteryCapacities([...data]);
@@ -401,11 +427,12 @@ export const SystemSpecifications = () => {
         } finally {
           setIsPrefilling(false);
         }
-      }
-    };
+      };
 
-    loadBatteryBrandCapacities();
-  }, [batteryBrandId]);
+      loadBatteryCapacities();
+    }
+  }, [batteryBrandId, gridTypeId]);
+
 
 
   const handleSaveSpecs = async () => {
@@ -467,7 +494,7 @@ export const SystemSpecifications = () => {
       });
 
       console.log("System specs updated:", systemResponse);
-  
+
 
       const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
         systemSpecsId: selectedSpecId,
@@ -476,6 +503,8 @@ export const SystemSpecifications = () => {
       });
 
       console.log("Inverter specs updated:", inverterResponse);
+
+      await fetchSavedSpecs();
 
       toast.success("System Specification details updated successfully!", {
         autoClose: 1000,
@@ -540,6 +569,8 @@ export const SystemSpecifications = () => {
     setBatterySpecId(spec.batterySpecsId);
     setInverterBrandId(spec.inverterBrandId);
     setSystemCapacityKw(spec.systemCapacityKw);
+
+    setPriceAlreadySetFromCustomerData(true);
   };
 
 
@@ -553,44 +584,75 @@ export const SystemSpecifications = () => {
     }));
   }, [formData.systemCost, formData.fabricationCost]);
 
-
   useEffect(() => {
     if (savedSpecs.length === 1) {
       handleSelectSpec(savedSpecs[0]);
+      setIsFormOpen(true);
+    } else if (savedSpecs.length === 0) {
+      setIsFormOpen(true);
+    } else {
+      setIsFormOpen(false);
     }
   }, [savedSpecs]);
 
 
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const { name, value, type, checked } = e.target;
 
+  const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
-
-    let updatedFormData: any;
-
-
-
-    setFormData((prev) => {
-      const updatedData = {
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      };
-
-
-      updatedData.totalCost =
-        (Number(updatedData.systemCost) || 0) +
-        (Number(updatedData.fabricationCost) || 0);
-
-
-
-      updatedFormData = updatedData;
-      return updatedData;
-    });
-
-    setIsCustomSpecs(true);
-    setIsSpecsSaved(false);
-    setPriceAlreadySetFromCustomerData(false);
+  const updatedFormData = {
+    ...formData,
+    [name]: newValue,
   };
+
+  updatedFormData.totalCost =
+    (Number(updatedFormData.systemCost) || 0) +
+    (Number(updatedFormData.fabricationCost) || 0);
+
+  setFormData(updatedFormData);
+  setIsCustomSpecs(true);
+  setIsSpecsSaved(false);
+  setPriceAlreadySetFromCustomerData(false);
+};
+
+
+ useEffect(() => {
+  const fetchPriceDetails = async () => {
+    if (formData.systemCapacityKw && formData.panelSpecId) {
+      try {
+        const response = await getPriceDetails({
+          panelSpecsId: formData.panelSpecId ?? "",
+          systemCapacityKw: formData.systemCapacityKw ?? "",
+          inverterSpecsId: formData.inverterSpecId ?? "",
+          batterySpecsId: formData.batterySpecId ?? "",
+          inverterCount: 1,
+          batteryCount: 1,
+        });
+
+        if (response) {
+          setFormData((prev: any) => ({
+            ...prev,
+            systemCost: response.systemCost || 0,
+            fabricationCost: response.fabricationCost || 0,
+            totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch price details", err);
+      }
+    } else {
+      setFormData((prev: any) => ({
+        ...prev,
+        systemCost: 0,
+        fabricationCost: 0,
+        totalCost: 0,
+      }));
+    }
+  };
+
+  fetchPriceDetails();
+}, [formData.systemCapacityKw, formData.panelSpecId, formData.inverterSpecId, formData.batterySpecId]);
 
 
 
@@ -645,14 +707,14 @@ export const SystemSpecifications = () => {
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
-      if (!connectionId) {
-        console.error("Connection ID is missing");
+      if (!selectedSpecId) {
+        console.error("System Specs ID is missing");
         return;
       }
 
-      console.log("Fetching PDF for Connection ID:", connectionId);
+      console.log("Fetching PDF for System Specs ID:", selectedSpecId);
 
-      const pdfBlob = await previewQuotationPDF(connectionId);
+      const pdfBlob = await previewQuotationPDF(selectedSpecId);
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
       window.open(pdfUrl, "_blank");
@@ -800,13 +862,31 @@ export const SystemSpecifications = () => {
             <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
           </div>
 
-          {savedSpecs.length > 0 && (<button
-            type="button"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <PlusIcon className="w-4 h-4 text-white" />
-            Add Another System Specs
-          </button>)}
+          {savedSpecs.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSpecId(null);
+                setFormData(defaultFormData);
+                setMaterialOriginId(null);
+                setGridTypeId(null);
+                setPanelSpecId(null);
+                setInverterSpecId(null);
+                setBatteryBrandId(null);
+                setBatterySpecId(null);
+                setInverterBrandId(null);
+                setSystemCapacityKw(null);
+
+                setIsFormOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <PlusIcon className="w-4 h-4 text-white" />
+              Add Another System Specs
+            </button>
+
+          )}
+
 
         </div>
 
@@ -817,7 +897,10 @@ export const SystemSpecifications = () => {
             {savedSpecs.map((spec) => (
               <div
                 key={spec.id}
-                onClick={() => handleSelectSpec(spec)}
+                onClick={() => {
+                  handleSelectSpec(spec);
+                  setIsFormOpen(true);
+                }}
                 className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
           ${selectedSpecId === spec.id ? "bg-blue-50 border-blue-400" : "bg-gray-50 border-gray-200"}`}
               >
@@ -827,13 +910,13 @@ export const SystemSpecifications = () => {
 
 
                 <p className="text-sm font-medium text-gray-700 mb-1">
-                  {spec.inverterBrandName} – {spec.inverterCapacity} kW
+                  Inverter: {spec.inverterBrandName} – {spec.inverterCapacity} kW
                 </p>
 
 
                 <div className="flex justify-between text-sm text-gray-600 mt-2">
                   <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-                  <span>Fabrication: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                  <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
                 </div>
               </div>
             ))}
@@ -842,7 +925,7 @@ export const SystemSpecifications = () => {
 
 
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-1">
 
             <label className="block text-sm font-medium text-gray-700">Installation Space</label>
@@ -984,13 +1067,13 @@ export const SystemSpecifications = () => {
             <select
               id="gridTypeId"
               name="gridTypeId"
-              value={formData.gridTypeId}
+              value={formData.gridTypeId ?? ""}
               onChange={(e) => {
-                const selectedId = Number(e.target.value);
+                const selectedId = e.target.value === "" ? null : Number(e.target.value);
                 setGridTypeId(selectedId);
                 handleChange({
                   target: { name: "gridTypeId", value: selectedId },
-                });
+                } as any);
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
@@ -1012,13 +1095,13 @@ export const SystemSpecifications = () => {
             <select
               id="materialOriginId"
               name="materialOriginId"
-              value={formData.materialOriginId}
+              value={formData.materialOriginId ?? ""}
               onChange={(e) => {
-                const selectedId = Number(e.target.value);
+                const selectedId = e.target.value === "" ? null : Number(e.target.value);
                 setMaterialOriginId(selectedId);
                 handleChange({
                   target: { name: "materialOriginId", value: selectedId },
-                });
+                } as any);
               }}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
@@ -1033,17 +1116,17 @@ export const SystemSpecifications = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">PV Panel Brand - Wattage - Model Number</label>
+            <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
             <select
               id="panelSpecId"
               name="panelSpecId"
-              value={formData.panelSpecId}
+              value={formData.panelSpecId ?? ""}
               onChange={(e) => {
-                const selectedId = Number(e.target.value);
+                const selectedId = e.target.value === "" ? null : Number(e.target.value);
                 setPanelSpecId(selectedId);
                 handleChange({
                   target: { name: "panelSpecId", value: selectedId },
-                });
+                } as any);
               }}
               disabled={!materialOriginId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
@@ -1064,11 +1147,15 @@ export const SystemSpecifications = () => {
             <select
               id="systemCapacityKw"
               name="systemCapacityKw"
-              value={formData.systemCapacityKw}
+              value={formData.systemCapacityKw ?? ""}
               onChange={(e) => {
-                setSystemCapacityKw(e.target.value);
-                handleChange(e);
+                const selectedValue = e.target.value === "" ? null : Number(e.target.value);
+                setSystemCapacityKw(selectedValue);
+                handleChange({
+                  target: { name: "systemCapacityKw", value: selectedValue },
+                } as any);
               }}
+              //onChange={(e) => handleChange(e)}
               disabled={!materialOriginId || !panelSpecId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
               required
@@ -1088,13 +1175,13 @@ export const SystemSpecifications = () => {
             <select
               id="inverterBrandId"
               name="inverterBrandId"
-              value={formData.inverterBrandId}
+              value={formData.inverterBrandId ?? ""}
               onChange={(e) => {
-                const selectedId = Number(e.target.value);
+                const selectedId = e.target.value === "" ? null : Number(e.target.value);
                 setInverterBrandId(selectedId);
                 handleChange({
                   target: { name: "inverterBrandId", value: selectedId },
-                });
+                } as any);
               }}
               disabled={!gridTypeId}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
@@ -1111,17 +1198,17 @@ export const SystemSpecifications = () => {
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Inverter Capacity & Warranty</label>
+            <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
             <select
               id="inverterSpecId"
               name="inverterSpecId"
-              value={formData.inverterSpecId}
+              value={formData.inverterSpecId ?? ""}
               onChange={(e) => {
-                const selectedId = Number(e.target.value);
+                const selectedId = e.target.value === "" ? null : Number(e.target.value);
                 setInverterSpecId(selectedId);
                 handleChange({
                   target: { name: "inverterSpecId", value: selectedId },
-                });
+                } as any);
               }}
               disabled={!gridTypeId || !inverterBrandId || !systemCapacityKw}
               className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
@@ -1145,7 +1232,7 @@ export const SystemSpecifications = () => {
                 <select
                   id="batteryBrandId"
                   name="batteryBrandId"
-                  value={formData.batteryBrandId}
+                  value={formData.batteryBrandId ?? ""}
                   onChange={(e) => {
                     const selectedId = Number(e.target.value);
                     setBatteryBrandId(selectedId);
@@ -1165,17 +1252,17 @@ export const SystemSpecifications = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Battery Capacity (kW)</label>
+                <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
                 <select
                   id="batterySpecId"
                   name="batterySpecId"
-                  value={formData.batterySpecId}
+                  value={formData.batterySpecId ?? ""}
                   onChange={(e) => {
-                    const selectedId = Number(e.target.value);
+                    const selectedId = e.target.value === "" ? null : Number(e.target.value);
                     setBatterySpecId(selectedId);
                     handleChange({
                       target: { name: "batterySpecId", value: selectedId },
-                    });
+                    } as any);
                   }}
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
                 >
@@ -1338,7 +1425,7 @@ export const SystemSpecifications = () => {
             </div>
           </div>
 
-        </form>
+        </form>)}
 
         <Dialog
           open={dialogOpen}

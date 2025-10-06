@@ -42,14 +42,14 @@ export const generateQuotationPDF = async (connectionId: number): Promise<Blob> 
   }
 };
 
-export const previewQuotationPDF = async (connectionId: number): Promise<Blob> => {
+export const previewQuotationPDF = async (systemSpecsId: number): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
   try {
-    if (!connectionId) {
-      throw new Error("Connection ID is missing");
+    if (!systemSpecsId) {
+      throw new Error("System Specs ID is missing");
     }
 
-    const response = await quotationAPI.get(`/api/preview-quotation/${connectionId}`, {
+    const response = await quotationAPI.get(`/api/quotation-details/preview-quotation/${systemSpecsId}`, {
       responseType: 'blob', 
     });
 
@@ -189,21 +189,26 @@ export const fetchCustomerAgreedDetails = async (connectionId: number) => {
 };
 
 
-export const getPriceDetails = async (data: Record<string, any>): Promise<Record<string, any> | null> => {
+export const getPriceDetails = async (
+  data: Record<string, any>
+): Promise<Record<string, any> | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.post('/api/getPrice', data);
-
-    console.log('API response data:', response.data); 
-
+    const response = await quotationAPI.post("/api/system-cost", data);
+    console.log("API response data:", response.data);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Failed to fetch price details.';
-    alert(message);
-    console.error('Error details:', error);
+    const message =
+      error.response?.data?.message || "Failed to fetch price details.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error details:", error);
     return null;
   }
 };
+
 
 export const fetchBrandCapacityDetails = async (connectionId: number): Promise<Record<string, any> | null> => {
   const quotationAPI = getQuotationAPI();

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical } from 'lucide-react';
-import { getChildOrganizations, deleteOrganization, Organization } from '../../services/organizationService';
+import { getChildOrganizations, deleteOrganization, Organization, getChildOrganizationsInPagination } from '../../services/organizationService';
 import { toast } from 'react-toastify';
+import { Button } from '../../components/ui';
 
 const AgencyList: React.FC = () => {
   const navigate = useNavigate();
@@ -14,15 +15,42 @@ const AgencyList: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   useEffect(() => {
     if (orgId) {
-      loadAgencies(parseInt(orgId));
+      loadAgencies(0, parseInt(orgId)); // Load first page initially
     }
   }, [orgId]);
 
+  useEffect(() => {
+    if (orgId) {
+      loadAgencies(currentPage, parseInt(orgId)); // Load data when page changes
+    }
+  }, [currentPage, orgId]);
+
   const toggleDropdown = (id: number) => {
     setOpenDropdown(openDropdown === id ? null : id);
+  };
+
+
+
+  const loadAgencies = async (page: number, parentId: number) => {
+    try {
+      setLoading(true);
+      const data = await getChildOrganizationsInPagination(parentId, page);
+      setAgencies(data.content);
+      setFilteredAgencies(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      setCurrentPage(data.currentPage);
+    } catch (error) {
+      toast.error('Failed to load agencies');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -30,18 +58,6 @@ const AgencyList: React.FC = () => {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
-
-  const loadAgencies = async (parentId: number) => {
-    try {
-      const data = await getChildOrganizations(parentId);
-      setAgencies(data);
-      setFilteredAgencies(data);
-    } catch (error) {
-      toast.error('Failed to load agencies');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -53,17 +69,94 @@ const AgencyList: React.FC = () => {
     setFilteredAgencies(filtered);
   };
 
+  const renderPagination = () => {
+    if (searchTerm.trim() !== "") return null;
+
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 0; i < totalPages; i++) {
+        pages.push(
+          <Button
+            key={i}
+            variant={i === currentPage ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setCurrentPage(i)}
+            className="min-w-[40px]"
+          >
+            {i + 1}
+          </Button>
+        );
+      }
+    } else {
+      // First page
+      pages.push(
+        <Button
+          key="first"
+          variant={currentPage === 0 ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setCurrentPage(0)}
+        >
+          1
+        </Button>
+      );
+
+      // Ellipsis if needed
+      if (currentPage > 2) {
+        pages.push(<span key="dots1" className="px-2">...</span>);
+      }
+
+      // Current page and neighbors
+      for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages - 2, currentPage + 1); i++) {
+        pages.push(
+          <Button
+            key={i}
+            variant={i === currentPage ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setCurrentPage(i)}
+          >
+            {i + 1}
+          </Button>
+        );
+      }
+
+      // Ellipsis if needed
+      if (currentPage < totalPages - 3) {
+        pages.push(<span key="dots2" className="px-2">...</span>);
+      }
+
+      // Last page
+      pages.push(
+        <Button
+          key="last"
+          variant={currentPage === totalPages - 1 ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setCurrentPage(totalPages - 1)}
+        >
+          {totalPages}
+        </Button>
+      );
+    }
+
+    return pages;
+  };
+
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this agency?')) {
       try {
         await deleteOrganization(id);
         toast.success('Agency deleted successfully');
-        loadAgencies(parseInt(orgId!));
+        // Reload agencies for the current page and parent org
+        if (orgId) {
+          loadAgencies(currentPage, parseInt(orgId));
+        }
       } catch (error) {
         toast.error('Failed to delete agency');
       }
     }
   };
+
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
 
@@ -131,7 +224,7 @@ const AgencyList: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredAgencies.map((agency) => (
             <div
               key={agency.id}
@@ -240,8 +333,8 @@ const AgencyList: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => navigate(`/edit-agency`,{
-                      state:{
+                    onClick={() => navigate(`/edit-agency`, {
+                      state: {
                         orgId: orgId,
                         agencyId: agency.id,
                       }
@@ -257,6 +350,13 @@ const AgencyList: React.FC = () => {
           ))}
         </div>
       )}
+
+      {renderPagination() && (
+        <div className="flex justify-center items-center mt-8 gap-2">
+          {renderPagination()}
+        </div>
+      )}
+
     </div>
   );
 };

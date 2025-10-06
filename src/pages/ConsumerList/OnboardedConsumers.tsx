@@ -144,88 +144,88 @@ const OnboardedConsumers: React.FC = () => {
 
 
   const handleSearch = (query: string) => {
-      setSearchQuery(query);
-    };
-  
-    
-    useEffect(() => {
-      // Clear any pending timeout
+    setSearchQuery(query);
+  };
+
+
+  useEffect(() => {
+    // Clear any pending timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    const trimmed = searchQuery.trim();
+
+
+    if (trimmed === "") {
+      setSearchResults([]);
+      return;
+    }
+
+
+    if (trimmed.length < 2) {
+      return;
+    }
+
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      const currentSeq = ++latestSearchSeqRef.current;
+
+      try {
+        let orgId = selectedOrgId ?? null;
+        let agencyId = selectedAgencyId ?? null;
+        let userId = selectedUserId ?? null;
+
+        if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
+        if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
+        if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
+          orgId = userInfo.orgId;
+        }
+        if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
+          agencyId = userInfo.orgId;
+          orgId = null;
+        }
+
+        const params = {
+          orgId,
+          agencyId,
+          userRole: userRole || userInfo?.role || null,
+          userId,
+        };
+
+        console.log("Sending search request with params:", { query: trimmed, ...params });
+        const results = await searchOnboardedConsumers(trimmed, params);
+
+
+        if (currentSeq === latestSearchSeqRef.current) {
+          setSearchResults(results);
+        }
+      } catch (error) {
+        console.error("Error searching customers:", error);
+        if (currentSeq === latestSearchSeqRef.current) {
+          setSearchResults([]);
+        }
+      }
+    }, 300);
+
+    return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
-  
-      const trimmed = searchQuery.trim();
-  
-      
-      if (trimmed === "") {
-        setSearchResults([]);
-        return;
-      }
-  
-      
-      if (trimmed.length < 2) {
-        return;
-      }
-  
-      
-      searchTimeoutRef.current = setTimeout(async () => {
-        const currentSeq = ++latestSearchSeqRef.current;
-  
-        try {
-          let orgId = selectedOrgId ?? null;
-          let agencyId = selectedAgencyId ?? null;
-          let userId = selectedUserId ?? null;
-  
-          if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
-            orgId = userInfo.orgId;
-          }
-          if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
-            agencyId = userInfo.orgId;
-            orgId = null;
-          }
-          if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
-            orgId = userInfo.orgId;
-          }
-          if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
-            agencyId = userInfo.orgId;
-            orgId = null;
-          }
-          if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
-            orgId = userInfo.orgId;
-          }
-          if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
-            agencyId = userInfo.orgId;
-            orgId = null;
-          }
-  
-          const params = {
-            orgId,
-            agencyId,
-            userRole: userRole || userInfo?.role || null,
-            userId,
-          };
-  
-          console.log("Sending search request with params:", { query: trimmed, ...params });
-          const results = await searchOnboardedConsumers(trimmed, params);
-  
-          
-          if (currentSeq === latestSearchSeqRef.current) {
-            setSearchResults(results);
-          }
-        } catch (error) {
-          console.error("Error searching customers:", error);
-          if (currentSeq === latestSearchSeqRef.current) {
-            setSearchResults([]);
-          }
-        }
-      }, 300);
-  
-      return () => {
-        if (searchTimeoutRef.current) {
-          clearTimeout(searchTimeoutRef.current);
-        }
-      };
-    }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
+    };
+  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
 
 
   useEffect(() => {
@@ -245,11 +245,11 @@ const OnboardedConsumers: React.FC = () => {
       try {
         const materialsResults = await Promise.all(materialsPromises);
         const newMaterialsMap = { ...materialsMap };
-        
+
         materialsResults.forEach(({ consumerId, hasMaterials }) => {
           newMaterialsMap[consumerId] = hasMaterials;
         });
-        
+
         setMaterialsMap(newMaterialsMap);
       } catch (error) {
         console.error("Error loading materials for search results:", error);
@@ -277,11 +277,11 @@ const OnboardedConsumers: React.FC = () => {
       try {
         const materialsResults = await Promise.all(materialsPromises);
         const newMaterialsMap = { ...materialsMap };
-        
+
         materialsResults.forEach(({ consumerId, hasMaterials }) => {
           newMaterialsMap[consumerId] = hasMaterials;
         });
-        
+
         setMaterialsMap(newMaterialsMap);
       } catch (error) {
         console.error("Error loading materials for consumers:", error);
@@ -302,7 +302,7 @@ const OnboardedConsumers: React.FC = () => {
         if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
           setUserRole("ROLE_SUPER_ADMIN");
 
-          
+
           const orgs = await fetchOrganizations();
           setOrganizations(orgs);
         } else {
@@ -357,7 +357,7 @@ const OnboardedConsumers: React.FC = () => {
       try {
         let orgIdToFetch: number | null = null;
 
-        
+
         if (selectedAgencyId) {
           orgIdToFetch = selectedAgencyId;
         } else if (selectedOrgId) {
@@ -459,7 +459,7 @@ const OnboardedConsumers: React.FC = () => {
         );
       }
 
-      
+
       if (currentPage < totalPages - 3) {
         pages.push(<span key="dots2" className="px-2">...</span>);
       }
@@ -482,14 +482,14 @@ const OnboardedConsumers: React.FC = () => {
 
   const renderConsumerCard = (consumer: Consumer) => (
     <Card key={consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-      <CardBody className="p-6">
+      <CardBody className="p-4">
 
-        <div className="flex items-start justify-between mb-5">
+        <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3">
 
               {materialsMap[consumer.id] && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-50 text-solar-700 dark:bg-solar-900/20 dark:text-solar-300 px-2.5 py-1 text-xs">
@@ -517,14 +517,14 @@ const OnboardedConsumers: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
+          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <User className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               Consumer ID: {consumer.consumerId}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
+          <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
             <Zap className="w-4 h-4 text-primary-500 flex-shrink-0" />
             <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
               {consumer.connectionType}
@@ -540,8 +540,8 @@ const OnboardedConsumers: React.FC = () => {
               size="sm"
               onClick={() => handleViewConsumer(consumer)}
               className="flex-1"
+              leftIcon={<Eye className="w-4 h-4" />}
             >
-              <Eye className="w-4 h-4 mr-2" />
               View Details
             </Button>
 
@@ -550,8 +550,8 @@ const OnboardedConsumers: React.FC = () => {
               size="sm"
               onClick={() => handleGenerateDocuments(consumer)}
               className="flex-1"
+              leftIcon={<FileText className="w-4 h-4" />}
             >
-              <FileText className="w-4 h-4 mr-2" />
               Generate Docs
             </Button>
           </div>
@@ -565,19 +565,17 @@ const OnboardedConsumers: React.FC = () => {
                 : handleMaterialDetails(consumer)
             }
             className="w-full"
+            leftIcon={
+              materialsMap[consumer.id] ? (
+                <Package className="w-4 h-4" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )
+            }
           >
-            {materialsMap[consumer.id] ? (
-              <>
-                <Package className="w-4 h-4 mr-2" />
-                View Materials
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Materials
-              </>
-            )}
+            {materialsMap[consumer.id] ? "View Materials" : "Add Materials"}
           </Button>
+
         </div>
       </CardBody>
     </Card>
@@ -596,7 +594,7 @@ const OnboardedConsumers: React.FC = () => {
 
 
           </div>
-          
+
           <div className="flex gap-4">
 
 
@@ -631,7 +629,7 @@ const OnboardedConsumers: React.FC = () => {
                   ))}
                 </select>
 
-                
+
                 {!selectedOrgId && (
                   <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-900">
                     <svg

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical } from 'lucide-react';
-import { fetchOrganizations, deleteOrganization, Organization } from '../../services/organizationService';
+import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw } from 'lucide-react';
+import { fetchOrganizationsInPagination, deleteOrganization, Organization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
+import { Button } from '../../components/ui';
 
 const OrganizationList: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -10,17 +11,28 @@ const OrganizationList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadOrganizations();
+    loadOrganizations(0);
   }, []);
 
-  const loadOrganizations = async () => {
+  useEffect(() => {
+    loadOrganizations(currentPage);
+  }, [currentPage]);
+
+  const loadOrganizations = async (page: number) => {
     try {
-      const data = await fetchOrganizations();
-      setOrganizations(data);
-      setFilteredOrganizations(data);
+      setLoading(true);
+      const data = await fetchOrganizationsInPagination(page);
+      setOrganizations(data.content);
+      setFilteredOrganizations(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      setCurrentPage(data.currentPage);
     } catch (error) {
       toast.error('Failed to load organizations');
     } finally {
@@ -30,13 +42,90 @@ const OrganizationList: React.FC = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    const filtered = organizations.filter(org =>
-      org.name.toLowerCase().includes(term.toLowerCase()) ||
-      org.displayName?.toLowerCase().includes(term.toLowerCase()) ||
-      org.contactNumber?.includes(term) ||
-      org.gstNumber?.toLowerCase().includes(term.toLowerCase())
-    );
-    setFilteredOrganizations(filtered);
+    if (term.trim() === '') {
+      setFilteredOrganizations(organizations);
+    } else {
+      const filtered = organizations.filter(org =>
+        org.name.toLowerCase().includes(term.toLowerCase()) ||
+        org.displayName?.toLowerCase().includes(term.toLowerCase()) ||
+        org.contactNumber?.includes(term) ||
+        org.gstNumber?.toLowerCase().includes(term.toLowerCase())
+      );
+      setFilteredOrganizations(filtered);
+    }
+  };
+
+  const renderPagination = () => {
+    if (searchTerm.trim() !== "") return null;
+
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 0; i < totalPages; i++) {
+        pages.push(
+          <Button
+            key={i}
+            variant={i === currentPage ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setCurrentPage(i)}
+            className="min-w-[40px]"
+          >
+            {i + 1}
+          </Button>
+        );
+      }
+    } else {
+      // First page
+      pages.push(
+        <Button
+          key="first"
+          variant={currentPage === 0 ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setCurrentPage(0)}
+        >
+          1
+        </Button>
+      );
+
+      // Ellipsis if needed
+      if (currentPage > 2) {
+        pages.push(<span key="dots1" className="px-2">...</span>);
+      }
+
+      // Current page and neighbors
+      for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages - 2, currentPage + 1); i++) {
+        pages.push(
+          <Button
+            key={i}
+            variant={i === currentPage ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setCurrentPage(i)}
+          >
+            {i + 1}
+          </Button>
+        );
+      }
+
+      // Ellipsis if needed
+      if (currentPage < totalPages - 3) {
+        pages.push(<span key="dots2" className="px-2">...</span>);
+      }
+
+      // Last page
+      pages.push(
+        <Button
+          key="last"
+          variant={currentPage === totalPages - 1 ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setCurrentPage(totalPages - 1)}
+        >
+          {totalPages}
+        </Button>
+      );
+    }
+
+    return pages;
   };
 
   const handleDelete = async (id: number) => {
@@ -44,7 +133,7 @@ const OrganizationList: React.FC = () => {
       try {
         await deleteOrganization(id);
         toast.success('Organization deleted successfully');
-        loadOrganizations();
+        loadOrganizations(currentPage);
       } catch (error) {
         toast.error('Failed to delete organization');
       }
@@ -66,7 +155,10 @@ const OrganizationList: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="inline-flex items-center gap-2 text-gray-700">
+          <RefreshCw className="w-5 h-5 animate-spin" />
+          Loading organizations...
+        </div>
       </div>
     );
   }
@@ -102,6 +194,18 @@ const OrganizationList: React.FC = () => {
         </div>
       </div>
 
+      {/* Results Summary */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-sm text-gray-700">
+        </div>
+
+        {!loading && filteredOrganizations.length > 0 && searchTerm.trim() !== "" && (
+          <div className="text-sm text-gray-700">
+            Search results for "{searchTerm}"
+          </div>
+        )}
+      </div>
+
       {/* Cards Grid */}
       {filteredOrganizations.length === 0 ? (
         <div className="text-center py-12">
@@ -119,7 +223,7 @@ const OrganizationList: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredOrganizations.map((org) => (
             <div
               key={org.id}
@@ -268,6 +372,13 @@ const OrganizationList: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {renderPagination() && (
+        <div className="flex justify-center items-center mt-8 gap-2">
+          {renderPagination()}
         </div>
       )}
     </div>

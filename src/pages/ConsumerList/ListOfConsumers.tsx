@@ -299,7 +299,7 @@ const ListOfConsumers: React.FC = () => {
     };
   }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
 
-    const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
+  const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
 
@@ -417,16 +417,18 @@ const ListOfConsumers: React.FC = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
+              className="px-1 py-1 text-xs gap-0.5 transition-all duration-200 hover:bg-secondary-100 dark:hover:bg-secondary-700 hover:scale-105 hover:shadow-md"
               onClick={() => handleViewConsumer(consumer)}
-              className=""
+              leftIcon={<Eye className="w-3 h-3" />}
             >
-              <Eye className="w-4 h-4" />
               View
             </Button>
+
+
           </div>
         </div>
 
@@ -466,9 +468,10 @@ const ListOfConsumers: React.FC = () => {
                     },
                   })
                 }
+                leftIcon={<Plus className="w-4 h-4" />}
                 className="whitespace-nowrap"
               >
-                + Add New Connection
+               Add New Connection
               </Button>
             </div>
             {consumer.connections.map((connection, index) => (
@@ -562,9 +565,9 @@ const ListOfConsumers: React.FC = () => {
                   },
                 })
               }
+              leftIcon={<Plus className="w-4 h-4" />}
               className="whitespace-nowrap"
             >
-              <Plus className="w-4 h-4 mr-2" />
               Add New Connection
             </Button>
           </div>

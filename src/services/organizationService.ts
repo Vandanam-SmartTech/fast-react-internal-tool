@@ -31,11 +31,13 @@ export interface Organization {
   legalName?: string;
   addressLine1?: string;
   addressLine2?: string;
-  pincode?: string;
-  stateCode?: number;
-  districtCode?: number;
-  talukaCode?: number;
+  pinCode?: number;
   villageCode?: number;
+  villageName?: string;
+  talukaCode?: number;
+  talukaName?: string;
+  districtCode?: number;
+  districtName?: string;
   contactNumber?: string;
   logoUrl?: string;
   gstNumber?: string;
@@ -325,4 +327,46 @@ export const fetchUsersByOrgId = async (organizationId: string | number) => {
     throw error;
   }
 };
+
+export const fetchOrganizationsInPagination = async (page = 0) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get('/api/organizations/getAll/paginated', {
+      params: { page },
+    });
+
+    return {
+      content: response.data.content,
+      totalPages: response.data.totalPages,
+      totalElements: response.data.totalElements,
+      currentPage: response.data.number,
+      size: response.data.size,
+    };
+  } catch (error) {
+    console.error('Error fetching organizations:', error);
+    throw new Error('Failed to fetch organizations.');
+  }
+};
+
+export const getChildOrganizationsInPagination = async (parentId: number, page = 0) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(`/api/organizations/${parentId}/child-org/paginated`, {
+      params: { page },
+    });
+
+    return {
+      content: response.data.content,
+      totalPages: response.data.totalPages,
+      totalElements: response.data.totalElements,
+      currentPage: response.data.number,
+      size: response.data.size,
+    };
+  } catch (error) {
+    console.error(`Error fetching child organizations for parentId ${parentId}:`, error);
+    throw new Error('Failed to fetch child organizations.');
+  }
+};
+
+
 

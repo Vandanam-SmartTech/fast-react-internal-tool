@@ -277,7 +277,7 @@ const UserFormManagement: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isEdit ? 'Edit User' : 'Create User'}
+          {isEdit ? 'Edit User' : 'Add User'}
         </h1>
       </div>
 
@@ -444,7 +444,7 @@ const UserFormManagement: React.FC = () => {
               )}
           </div>
 
-          <div className="mt-3">
+          {/* <div className="mt-3">
   {!showAlternateContact ? (
     <button
       type="button"
@@ -467,7 +467,6 @@ const UserFormManagement: React.FC = () => {
   )}
 </div>
 
-{/* Alternate Contact Number (Optional) */}
 {showAlternateContact && (
   <div className="mt-3">
     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -508,7 +507,7 @@ const UserFormManagement: React.FC = () => {
         </p>
       )}
   </div>
-)}
+)} */}
 
 
 
@@ -695,9 +694,6 @@ const UserFormManagement: React.FC = () => {
                   required
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
-                {fieldErrors.addressLine1 && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
-                )}
               </div>
 
               <div className="md:col-span-2">
@@ -715,9 +711,6 @@ const UserFormManagement: React.FC = () => {
                   maxLength={100}
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
-                {fieldErrors.addressLine2 && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
-                )}
               </div>
 
 

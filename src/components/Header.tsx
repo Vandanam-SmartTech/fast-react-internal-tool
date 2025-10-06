@@ -130,16 +130,32 @@ const Header: React.FC = () => {
     navigate("/login");
   };
 
+
   useEffect(() => {
-    const loadProfilePhoto = async () => {
-      const photoUrl = await getUserProfilePhoto();
-      if (photoUrl) {
-        setProfilePhoto(photoUrl);
-        setHasUploadedPhoto(true);
-      }
-    };
-    loadProfilePhoto();
-  }, []);
+  const loadProfilePhoto = async () => {
+    const photoUrl = await getUserProfilePhoto();
+    if (photoUrl) {
+      setProfilePhoto(photoUrl);
+      setHasUploadedPhoto(true);
+    }
+  };
+
+  loadProfilePhoto();
+
+
+  const handlePhotoUpdate = (e: Event) => {
+    const customEvent = e as CustomEvent<string>;
+    setProfilePhoto(customEvent.detail);
+    setHasUploadedPhoto(true);
+  };
+
+  window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
+
+  return () => {
+    window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+  };
+}, []);
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -188,6 +204,8 @@ const Header: React.FC = () => {
 
       setProfilePhoto(croppedImage);
       setShowCropModal(false);
+
+      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: croppedImage }));
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {

@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut, User } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
-import { uploadUserSignature, getUserSignature, editUserSignature } from '../../services/oneDriveService';
+import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto } from '../../services/oneDriveService';
 import { useUser } from '../../contexts/UserContext';
-
+import { croppedImg } from '../../utils/croppedImage';
 
 const Profile: React.FC = () => {
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   //const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -18,8 +19,17 @@ const Profile: React.FC = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
 
-  const { userClaims: user, loading} = useUser();
-  
+  const { userClaims: user, loading } = useUser();
+
+  const [showCropModalForProfile, setShowCropModalForProfile] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [previewUrlForProfile, setPreviewUrlForProfile] = useState<string | null>(null);
+
+  const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
+  const [loadingForProfile, setLoadingForProfile] = useState(false);
+
+  const navigate = useNavigate();
+
 
   // Cropping states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -27,6 +37,103 @@ const Profile: React.FC = () => {
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [croppedAreaPixelsForProfile, setCroppedAreaPixelsForProfile] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      const photoUrl = await getUserProfilePhoto();
+      if (photoUrl) {
+        setProfilePhoto(photoUrl);
+        setHasUploadedPhoto(true);
+      }
+    };
+
+    loadProfilePhoto();
+
+
+    const handlePhotoUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setProfilePhoto(customEvent.detail);
+      setHasUploadedPhoto(true);
+    };
+
+    window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
+
+    return () => {
+      window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+    };
+  }, []);
+
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        setPreviewUrlForProfile(reader.result as string);
+        setShowCropModalForProfile(true);
+      };
+
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+  const handleCropSaveForProfile = async () => {
+    if (!previewUrlForProfile || !croppedAreaPixelsForProfile) return;
+
+    setLoadingForProfile(true);
+
+    try {
+      const croppedImageForProfile = await croppedImg(
+        previewUrlForProfile,
+        croppedAreaPixelsForProfile,
+        rotation,
+        true
+      );
+
+      const byteString = atob(croppedImageForProfile.split(",")[1]);
+      const mimeString = croppedImageForProfile.split(",")[0].split(":")[1].split(";")[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const file = new File([ab], "profile-photo.png", { type: mimeString });
+
+
+      if (hasUploadedPhoto) {
+        await editUserProfilePhoto(file);
+      } else {
+        await uploadUserProfilePhoto(file);
+        setHasUploadedPhoto(true);
+      }
+
+      setProfilePhoto(croppedImageForProfile);
+      setShowCropModalForProfile(false);
+
+      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: croppedImageForProfile }));
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setLoadingForProfile(false);
+    }
+  };
+
+  const onCropComplete = useCallback(
+    (_: any, croppedAreaPixelsForProfile: { x: number; y: number; width: number; height: number }) => {
+      setCroppedAreaPixelsForProfile(croppedAreaPixelsForProfile);
+    },
+    []
+  );
 
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +238,8 @@ const Profile: React.FC = () => {
 
     return finalCanvas.toDataURL('image/png', 0.95);
   };
+
+
 
   const handleCropSave = async () => {
     if (!croppedAreaPixels || !previewUrl) {
@@ -264,56 +373,217 @@ const Profile: React.FC = () => {
           {/* Personal Information Card */}
           <Card>
             <CardBody className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-6 h-6 text-gray-600" />
+              <div className="flex items-center justify-between mb-4">
+                {/* Left Section - Profile Info */}
+                <div className="flex items-center gap-4 group relative">
+                  {/* Profile Photo Section */}
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative">
+                    {profilePhoto ? (
+                      <img
+                        src={profilePhoto}
+                        alt="User"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-600" />
+                    )}
+
+                    {/* Overlay for Edit / Upload */}
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                      onClick={() => {
+                        if (profilePhoto) {
+                          setCrop({ x: 0, y: 0 });
+                          setZoom(1);
+                          setRotation(0);
+                          setCroppedAreaPixelsForProfile(null);
+
+                          setPreviewUrlForProfile(profilePhoto);
+                          setShowCropModalForProfile(true);
+                        } else {
+                          document.getElementById("profile-file-input")?.click();
+                        }
+                      }}
+                    >
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+
+                    {/* Hidden File Input */}
+                    <input
+                      id="profile-file-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+
+                  {/* User Info Section */}
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {user?.name_as_per_gov_id || "Not provided"}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      {user?.preferred_name || "Not provided"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {user?.email_address || "Not provided"}
+                      {user?.email_address && user?.contact_number ? " | " : ""}
+                      {user?.contact_number || ""}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-semibold text-gray-900">{user?.name_as_per_gov_id || 'Not provided'}</p>
-                  <p className="text-sm text-gray-700">{user?.preferred_name || 'Not provided'}</p>
-                  <p className="text-sm text-gray-600">
-                    {user?.email_address || 'Not provided'}
-                    {user?.email_address && user?.contact_number ? ' | ' : ''}
-                    {user?.contact_number || ''}
-                  </p>
-                </div>
+
+                {/* Right Section - Change Password Button */}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  leftIcon={<Key className="w-4 h-4" />}
+                  onClick={() => navigate("/password-reset")}
+                >
+                  Change Password
+                </Button>
               </div>
 
-              {/* <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
-                    </label>
-                    <p className="text-gray-900">{user?.name_as_per_gov_id || 'Not provided'}</p>
-                  </div>
+              {/* Crop Modal (same as your code) */}
+              {showCropModalForProfile && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+                  <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-3 border-b border-gray-200">
+                      {/* Left side - Title */}
+                      <h3 className="text-base font-semibold text-gray-900">Profile Photo</h3>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Preferred Name
-                    </label>
-                    <p className="text-gray-900">{user?.preferred_name || 'Not provided'}</p>
-                  </div>
+                      <div className="flex items-center gap-2">
+                        {/* {hasUploadedPhoto && (
+                                <button
+                                  onClick={handleRemovePhoto}
+                                  className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                                >
+                                  Remove Current Photo
+                                </button>
+                              )} */}
+                        <button
+                          onClick={() => setShowCropModalForProfile(false)}
+                          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                          <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </label>
-                    <p className="text-gray-900">{user?.email_address || 'Not provided'}</p>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Contact Number
-                    </label>
-                    <p className="text-gray-900">{user?.contact_number || 'Not provided'}</p>
+                    <div className="text-center text-sm text-gray-600 mt-2">
+                      Adjust the crop area to select your photo.
+                    </div>
+
+                    {/* Crop Section */}
+                    <div className="p-4 flex flex-col gap-4">
+                      {previewUrlForProfile ? (
+                        <div className="relative w-full h-[250px] bg-gray-100 rounded-lg overflow-hidden">
+                          <Cropper
+                            image={previewUrlForProfile}
+                            crop={crop}
+                            zoom={zoom}
+                            rotation={rotation}
+                            cropShape="round"
+                            aspect={1}
+                            showGrid={false}
+                            onCropChange={setCrop}
+                            onZoomChange={setZoom}
+                            onRotationChange={setRotation}
+                            onCropComplete={onCropComplete}
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-center text-sm text-gray-600">
+                          No image selected
+                        </div>
+                      )}
+
+                      {/* Controls */}
+                      <div className="flex flex-col gap-3 items-center">
+                        {/* Zoom Controls */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setZoom(Math.max(1, zoom - 0.1))}
+                            className="p-2 rounded-full hover:bg-gray-100 transition"
+                          >
+                            <ZoomOut className="w-5 h-5 text-gray-600" />
+                          </button>
+                          <span className="text-sm text-gray-600 w-14 text-center">
+                            {Math.round(zoom * 100)}%
+                          </span>
+                          <button
+                            onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+                            className="p-2 rounded-full hover:bg-gray-100 transition"
+                          >
+                            <ZoomIn className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Rotation Controls */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setRotation(rotation - 15)}
+                            className="p-2 rounded-full hover:bg-gray-100 transition"
+                          >
+                            <RotateCcw className="w-5 h-5 text-gray-600" />
+                          </button>
+                          <span className="text-sm text-gray-600 w-14 text-center">
+                            {rotation}°
+                          </span>
+                          <button
+                            onClick={() => setRotation(rotation + 15)}
+                            className="p-2 rounded-full hover:bg-gray-100 transition"
+                          >
+                            <RotateCcw className="w-5 h-5 text-gray-600 transform scale-x-[-1]" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setZoom(1);
+                            setRotation(0);
+                            setCrop({ x: 0, y: 0 });
+                          }}
+                          className="text-sm text-primary-600 hover:underline"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+                      {/* Choose Another Photo moved here */}
+                      <label className="cursor-pointer bg-gray-200 text-gray-700 text-sm px-3 py-2 rounded-lg hover:bg-gray-300">
+                        Choose Another Photo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                      </label>
+
+                      <Button
+                        onClick={handleCropSaveForProfile}
+                        size="sm"
+                        className="justify-center"
+                        loading={loadingForProfile}
+                        leftIcon={!loadingForProfile && <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />}
+                      >
+                        {!loadingForProfile && (hasUploadedPhoto ? "Edit Photo" : "Upload Photo")}
+                      </Button>
+
+                    </div>
                   </div>
                 </div>
-              </div> */}
+              )}
             </CardBody>
           </Card>
 
-          {/* Account Information Card */}
           <Card>
             <CardBody className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
