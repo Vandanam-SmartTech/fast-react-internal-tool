@@ -41,6 +41,7 @@ import OrganizationView from './pages/Organizations/OrganizationView';
 import EditOrganization from './pages/Organizations/EditOrganization';
 import UserManagement from './pages/Organizations/UserManagement';
 import UserFormManagement from './pages/Organizations/UserFormManagement';
+import EditUser from './pages/Organizations/EditUser';
 import UserView from './pages/Organizations/UserView';
 import RoleManagement from './pages/Organizations/RoleManagement';
 import UserOrgRoles from './pages/Organizations/UserOrgRoles';
@@ -368,7 +369,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/admin-management"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}>
                   <AdminManagement />
                 </RoleProtectedRoute>
               }
@@ -448,7 +449,16 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/user-view/:id"
+              path="/edit-user"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <EditUser />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/user-view"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <UserView />
@@ -466,9 +476,9 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-              path="/user-org-roles/:id"
+              path="/user-org-roles"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}>
                   <UserOrgRoles />
                 </RoleProtectedRoute>
               }

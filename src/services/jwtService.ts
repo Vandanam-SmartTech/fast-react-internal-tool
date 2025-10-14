@@ -213,7 +213,7 @@ export const checkUsernameExists = async (
   }
 };
 
-export const saveRepresentative = async (
+export const saveUser = async (
   data: Record<string, any>
 ): Promise<{ id: number | null; message?: string }> => {
   const jwtAPI = getJwtAPI();
@@ -233,12 +233,70 @@ export const saveRepresentative = async (
   }
 };
 
+export const updateUser = async (
+  userId: number,
+  data: Record<string, any>
+): Promise<{ id: number | null; message?: string }> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.put(`/api/users/${userId}`, data);
+    const responseData = response.data;
+
+    return { id: responseData.userId || null, message: 'User updated successfully!' };
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    return { id: null, message: 'An error occurred while updating user data.' };
+  }
+};
+
+export const deleteUser = async (userId: number): Promise<{ success: boolean; message?: string }> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.delete(`/api/users/${userId}`);
+    const responseData = response.data;
+
+    return {
+      success: true,
+      message: responseData.message || `User deactivated successfully.`,
+    };
+  } catch (error: any) {
+    console.error('Error deactivating user:', error);
+    return {
+      success: false,
+      message: 'An error occurred while deactivating the user.',
+    };
+  }
+};
+
+
+
 export const getUserById = async (
   userId: number
 ): Promise<{ data: Record<string, any> | null; message?: string }> => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/users/${userId}`);
+    const userData = response.data;
+    console.log('User data from API:', userData);
+
+    if (userData) {
+      return { data: userData, message: 'User fetched successfully!' };
+    } else {
+      return { data: null, message: 'User not found.' };
+    }
+  } catch (error: any) {
+    console.error('Error fetching user:', error);
+    return { data: null, message: 'An error occurred while fetching user data.' };
+  }
+};
+
+export const getUserOrgRolesById = async (
+  userId: number,
+  organizationId: number
+): Promise<{ data: Record<string, any> | null; message?: string }> => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/users/${userId}/organizations/${organizationId}`);
     const userData = response.data;
     console.log('User data from API:', userData);
 
@@ -279,16 +337,16 @@ export const fetchRepresentativesPaginated = async (page = 0, role?: string) => 
 
 
 
-export const updateUser = async (userId: number, data: any) => {
-  const jwtAPI = getJwtAPI();
-  try {
-    const response = await jwtAPI.put(`/api/users/${userId}`, data);
-    return response;
-  } catch (error) {
-    console.error("Update failed", error);
-    return { message: "Update error" };
-  }
-};
+// export const updateUser = async (userId: number, data: any) => {
+//   const jwtAPI = getJwtAPI();
+//   try {
+//     const response = await jwtAPI.put(`/api/users/${userId}`, data);
+//     return response;
+//   } catch (error) {
+//     console.error("Update failed", error);
+//     return { message: "Update error" };
+//   }
+// };
 
 export const fetchDistricts = async (): Promise<District[]> => {
   const jwtAPI = getJwtAPI();
@@ -370,6 +428,21 @@ export const getVillageNameByCode = async (code: number): Promise<string> => {
     return 'Unknown Village'; 
   }
 };
+
+export const getAllRoles = async () => {
+  const jwtAPI = getJwtAPI();
+  try {
+    const response = await jwtAPI.get(`/api/roles`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching roles:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch roles'
+    );
+  }
+};
+
+
 
 
 

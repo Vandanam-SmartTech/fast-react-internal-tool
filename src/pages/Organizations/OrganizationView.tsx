@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
-import { getOrganizationById, fetchOrganizationUsers } from '../../services/organizationService';
+import { getOrganizationById, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 interface OrganizationUser {
@@ -19,7 +19,7 @@ interface OrganizationUser {
 }
 
 const OrganizationView: React.FC = () => {
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const orgId = location.state?.orgId;
@@ -32,7 +32,7 @@ const OrganizationView: React.FC = () => {
   useEffect(() => {
     if (orgId) {
       loadOrganization(parseInt(orgId));
-      loadOrganizationUsers(parseInt(orgId));
+      loadUsersByOrg(orgId);
     }
   }, [orgId]);
 
@@ -48,25 +48,19 @@ const OrganizationView: React.FC = () => {
     }
   };
 
-  const loadOrganizationUsers = async (orgId: number) => {
-    setUsersLoading(true);
+
+  const loadUsersByOrg = async (organizationId: string | number) => {
     try {
-      const usersWithOrgRoles: OrganizationUser[] = await fetchOrganizationUsers(orgId);
-      setOrgUsers(usersWithOrgRoles);
+      setUsersLoading(true);
+      const data = await fetchAllUsersByOrgId(organizationId);
+      setOrgUsers(data);  
     } catch (error) {
-      console.error('Failed to load organization users:', error);
+      toast.error("Failed to load organization users");
     } finally {
       setUsersLoading(false);
     }
   };
 
-  const getUsersByRole = (roleName: string) => {
-    return orgUsers.filter(user =>
-      user.organizationRoles?.some(role =>
-        role.organizationId === parseInt(orgId!) && role.roleName === roleName
-      )
-    );
-  };
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
   if (!organization) return <div className="flex justify-center p-8">Organization not found</div>;
@@ -75,17 +69,15 @@ const OrganizationView: React.FC = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() =>
-            navigate(isAgency ? "/agencies" : "/organizations", {
-              state: isAgency ? { orgId: organization.parentId } : undefined
-            })
+            navigate(-1)
           }
 
-          className="text-gray-600 hover:text-gray-800"
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           {isAgency ? <Building2 className="h-6 w-6" /> : <Building className="h-6 w-6" />}
@@ -94,18 +86,15 @@ const OrganizationView: React.FC = () => {
         <button
           onClick={() =>
             navigate("/edit-organization", {
-              state: {
-                organizationId: orgId
-              }
+              state: { organizationId: orgId }
             })
           }
-
-
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
         >
           <Edit className="h-4 w-4" />
           Edit
         </button>
+
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -160,7 +149,7 @@ const OrganizationView: React.FC = () => {
             <button
               onClick={() =>
                 navigate("/agencies", {
-                  state: { orgId }
+                  state: { orgId, gstNumber:organization.gstNumber }
                 })
               }
 
@@ -177,136 +166,61 @@ const OrganizationView: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6 mt-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Organization Members
+          Organization Members ({orgUsers.length})
         </h2>
 
         {usersLoading ? (
           <div className="text-center py-4">Loading users...</div>
         ) : (
           <div className="space-y-6">
-            {/* Admins */}
-            {(() => {
-              const admins = getUsersByRole('ROLE_ORG_ADMIN').concat(getUsersByRole('ROLE_AGENCY_ADMIN'));
-              return admins.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-red-600" />
-                    Administrators ({admins.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {admins.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-                            {user.organizationRoles.find(r => r.organizationId === parseInt(orgId!))?.roleName.replace('ROLE_', '')}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
+            {orgUsers.length > 0 ? (
+              <div>
+                {/* <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4 text-blue-600" />
+          Organization Users ({orgUsers.length})
+        </h3> */}
 
-            {/* Representatives */}
-            {(() => {
-              const representatives = getUsersByRole('ROLE_ORG_REPRESENTATIVE').concat(getUsersByRole('ROLE_AGENCY_REPRESENTATIVE'));
-              return representatives.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                    Representatives ({representatives.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {representatives.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                            REPRESENTATIVE
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {orgUsers.map(user => (
+                    <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                            }`}
+                        >
+                          {user.isActive ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Staff */}
-            {(() => {
-              const staff = getUsersByRole('ROLE_ORG_STAFF').concat(getUsersByRole('ROLE_AGENCY_STAFF'));
-              return staff.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-blue-600" />
-                    Staff ({staff.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {staff.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                            STAFF
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                      <div className="text-xs text-gray-600 mb-2">
+                        <div>{user.emailAddress}</div>
+                        <div>{user.contactNumber}</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Customers */}
-            {(() => {
-              const customers = getUsersByRole('ROLE_CUSTOMER');
-              return customers.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-600" />
-                    Customers ({customers.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {customers.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-                            CUSTOMER
+                      {/* ✅ Show all roles with organization names */}
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {user.organizationRoles?.map((role, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 text-[11px] rounded-full bg-blue-100 text-blue-800"
+                          >
+                            {role.roleName.replace('ROLE_', '')} — {role.organizationName}
                           </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              );
-            })()}
-
-            {orgUsers.length === 0 && (
+              </div>
+            ) : (
               <div className="text-center py-8 text-gray-500">
                 No users assigned to this organization
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   );

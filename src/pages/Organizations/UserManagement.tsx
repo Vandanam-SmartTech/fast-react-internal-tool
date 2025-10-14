@@ -1,84 +1,130 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter,Mail,Phone,User,CheckCircle,XCircle,RefreshCw} from 'lucide-react';
-import { updateUser, fetchAllUsers } from '../../services/jwtService';
-import { fetchOrganizations, Organization, fetchAllUserRoles } from '../../services/organizationService';
+import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, User, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
+import { fetchOrganizations, Organization, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 import Card, { CardBody, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';
+import { useUser } from '../../contexts/UserContext';
 
-const UserOrgRolesList: React.FC<{ userId: number; organizations: Organization[] }> = ({ userId, organizations }) => {
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-
-useEffect(() => {
-  const loadRoles = async () => {
-    const roles = await fetchAllUserRoles(
-      userId,
-      organizations.filter((org): org is { id: number; name: string } => typeof org.id === 'number')
-    );
-    setUserRoles(roles);
-  };
-
-  if (organizations.length > 0) {
-    loadRoles();
-  }
-}, [userId, organizations]);
-
-
-  return (
-    <div className="flex flex-wrap gap-1">
-      {userRoles.length > 0 ? (
-        userRoles.map((role, index) => (
-          <span key={index} className="badge badge-primary text-xs">
-            {role}
-          </span>
-        ))
-      ) : (
-        <span className="text-xs text-secondary-400">No roles assigned</span>
-      )}
-    </div>
-  );
-};
 
 const UserManagement: React.FC = () => {
+  const { userClaims } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [userRole, setUserRole] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  //const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [roleFilter, setRoleFilter] = useState("all");
+  //const [userRole, setUserRole] = useState("");
+  const [userInfo, setUserInfo] = useState<any>(null);
+
+
+
   useEffect(() => {
-    loadUsers();
+    if (!userClaims) return;
+
+    const storedUserInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+    setUserInfo(storedUserInfo);
+
+    // Determine user role
+    if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      setUserRole("ROLE_SUPER_ADMIN");
+      loadAllUsers();
+    } else if (
+      storedUserInfo?.role === "ROLE_ORG_ADMIN" ||
+      storedUserInfo?.role === "ROLE_AGENCY_ADMIN"
+    ) {
+      setUserRole(storedUserInfo.role);
+      loadUsersByOrg(storedUserInfo.orgId);
+    }
+
     loadOrganizations();
-  }, []);
+    loadRoles();
+  }, [userClaims]);
+
+  const loadRoles = async () => {
+    try {
+      const data = await getAllRoles();
+      setRoles(data);
+    } catch (error) {
+      console.error("Failed to load roles", error);
+    }
+  };
+
+  // Filter roles based on logged-in user
+  const getFilteredRoles = () => {
+    if (userRole === "ROLE_SUPER_ADMIN") {
+      return roles; // show all roles
+    } else if (userRole === "ROLE_ORG_ADMIN") {
+      return roles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
+    } else if (userRole === "ROLE_AGENCY_ADMIN") {
+      return roles.filter(
+        (r) =>
+          ![
+            "ROLE_SUPER_ADMIN",
+            "ROLE_ORG_ADMIN",
+            "ROLE_ORG_STAFF",
+            "ROLE_ORG_REPRESENTATIVE",
+          ].includes(r.name)
+      );
+    } else {
+      return []; // if other roles shouldn't see anything
+    }
+  };
+
+
 
   const loadOrganizations = async () => {
     try {
       const data = await fetchOrganizations();
       setOrganizations(data);
     } catch (error) {
-      console.error('Failed to load organizations');
+      console.error("Failed to load organizations");
     }
   };
 
-const loadUsers = async () => {
-  try {
-    setLoading(true);
-    const data = await fetchAllUsers();
-    setUsers(data);
-    setFilteredUsers(data);
-  } catch (error) {
-    toast.error('Failed to load users');
-  } finally {
-    setLoading(false);
-  }
-};
+  const loadAllUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAllUsers();
+      setUsers(data);
+      setFilteredUsers(data);
+    } catch (error) {
+      toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUsersByOrg = async (organizationId: string | number) => {
+    try {
+      setLoading(true);
+      const data = await fetchAllUsersByOrgId(organizationId);
+      setUsers(data);
+      setFilteredUsers(data);
+    } catch (error) {
+      toast.error("Failed to load organization users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -87,17 +133,17 @@ const loadUsers = async () => {
 
   const applyFilters = (search: string, status: string, role: string) => {
     let filtered = users.filter(user => {
-      const matchesSearch = 
+      const matchesSearch =
         user.username?.toLowerCase().includes(search.toLowerCase()) ||
         user.nameAsPerGovId?.toLowerCase().includes(search.toLowerCase()) ||
         user.emailAddress?.toLowerCase().includes(search.toLowerCase()) ||
         user.contactNumber?.includes(search);
 
-      const matchesStatus = status === 'all' || 
-        (status === 'active' && user.isActive) || 
+      const matchesStatus = status === 'all' ||
+        (status === 'active' && user.isActive) ||
         (status === 'inactive' && !user.isActive);
 
-      const matchesRole = role === 'all' || 
+      const matchesRole = role === 'all' ||
         user.roles?.some((r: any) => r.name.includes(role)) ||
         user.organizationRoles?.some((r: any) => r.roleName.includes(role));
 
@@ -117,17 +163,41 @@ const loadUsers = async () => {
     applyFilters(searchTerm, statusFilter, role);
   };
 
-  const handleDelete = async (userId: number) => {
-    if (window.confirm('Are you sure you want to deactivate this user?')) {
+  const handleDelete = (userId: number) => {
+    setDialogType("confirm");
+    setDialogMessage("Do you really want to delete this user?");
+    setDialogAction(() => async () => {
+      setLoading(true);
       try {
-        await updateUser(userId, { isActive: false });
-        toast.success('User deactivated successfully');
-        loadUsers();
+        const result = await deleteUser(userId);
+
+        if (result.success) {
+          toast.success(result.message || "User deactivated successfully", {
+            autoClose: 1000,
+            hideProgressBar: true,
+          });
+
+          if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+            await loadAllUsers();
+          } else if (
+            userInfo?.role === "ROLE_ORG_ADMIN" ||
+            userInfo?.role === "ROLE_AGENCY_ADMIN"
+          ) {
+            await loadUsersByOrg(userInfo?.orgId);
+          }
+        } else {
+          toast.error(result.message || "Failed to deactivate user");
+        }
       } catch (error) {
-        toast.error('Failed to deactivate user');
+        toast.error("An error occurred while deactivating the user");
+      } finally {
+        setLoading(false);
       }
-    }
+    });
+    setDialogOpen(true);
   };
+
+
 
   const getRoleBadgeColor = (roleName: string) => {
     if (roleName.includes('SUPER_ADMIN')) return 'badge-error';
@@ -150,7 +220,7 @@ const loadUsers = async () => {
               <h3 className="font-semibold text-secondary-900">
                 {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
               </h3>
-                              <p className="text-sm text-secondary-600 dark:text-secondary-300">@{user.username}</p>
+              <p className="text-sm text-secondary-600 dark:text-secondary-300">@{user.username}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -172,7 +242,7 @@ const loadUsers = async () => {
           {user.contactNumber && (
             <div className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
               <Phone className="h-4 w-4" />
-              <span>{user.contactNumber}</span>
+              <span>+91 {user.contactNumber}</span>
             </div>
           )}
         </div>
@@ -204,23 +274,28 @@ const loadUsers = async () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/user-view/${user.id}`)}
+              title="View User"
+              onClick={() => navigate("/user-view", { state: { userId: user.id } })}
               className="p-1 h-8 w-8"
             >
               <Eye className="h-4 w-4" />
             </Button>
+
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/user-form/${user.id}`)}
+              title="Edit User"
+              onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
               className="p-1 h-8 w-8"
             >
               <Edit className="h-4 w-4" />
             </Button>
+
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/user-org-roles/${user.id}`)}
+              title="Manage Role"
+              onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
               className="p-1 h-8 w-8"
             >
               <Shield className="h-4 w-4" />
@@ -228,6 +303,7 @@ const loadUsers = async () => {
             <Button
               variant="ghost"
               size="sm"
+              title="Delete User"
               onClick={() => handleDelete(user.id)}
               className="p-1 h-8 w-8 text-error-600 hover:text-error-700"
             >
@@ -253,44 +329,38 @@ const loadUsers = async () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-5 max-w-7xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-secondary-900 flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg">
-              <Users className="h-6 w-6 text-white" />
-            </div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Users className="h-6 w-6" />
             User Management
           </h1>
           <p className="text-secondary-700 dark:text-secondary-300 mt-1">Manage system users, roles, and permissions</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            leftIcon={<Filter className="h-4 w-4" />}
-          >
-            Filters
-          </Button>
-          <Button
+
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={() => setViewMode(viewMode === 'table' ? 'cards' : 'table')}
             leftIcon={viewMode === 'table' ? <Users className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           >
-            {viewMode === 'table' ? 'Cards' : 'Table'}
-          </Button>
+            {viewMode === 'table' ? 'Card View' : 'Table View'}
+          </Button> */}
+
+
           <Button
             variant="primary"
-            size="sm"
             onClick={() => navigate('/user-form')}
-            leftIcon={<Plus className="h-4 w-4" />}
+            leftIcon={<Plus className="h-5 w-5" />}
+            className="px-6 py-3 text-base"
           >
             Add User
           </Button>
+
         </div>
       </div>
 
@@ -306,7 +376,7 @@ const loadUsers = async () => {
                 leftIcon={<Search className="h-4 w-4" />}
               />
             </div>
-            
+
             <div>
               <select
                 value={statusFilter}
@@ -318,21 +388,22 @@ const loadUsers = async () => {
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            
+
             <div>
               <select
                 value={roleFilter}
                 onChange={(e) => handleRoleFilter(e.target.value)}
-                className="form-select w-full"
+                className="form-select w-full border-gray-300 rounded-md px-3 py-2"
               >
                 <option value="all">All Roles</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-                <option value="ORG_ADMIN">Org Admin</option>
-                <option value="AGENCY_ADMIN">Agency Admin</option>
-                <option value="STAFF">Staff</option>
-                <option value="REPRESENTATIVE">Representative</option>
+                {getFilteredRoles().map((role) => (
+                  <option key={role.id} value={role.name.replace("ROLE_", "")}>
+                    {role.name.replace("ROLE_", "").replaceAll("_", " ")}
+                  </option>
+                ))}
               </select>
             </div>
+
           </div>
 
           {showFilters && (
@@ -425,7 +496,7 @@ const loadUsers = async () => {
       </div>
 
       {/* Content */}
-      {viewMode === 'table' ? (
+      {/* {viewMode === 'table' ? (
         <Card>
           <CardHeader className="px-6 py-4 border-b border-secondary-200">
             <h2 className="text-lg font-semibold text-secondary-900">Users List</h2>
@@ -462,7 +533,7 @@ const loadUsers = async () => {
                       {user.contactNumber ? (
                         <div className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {user.contactNumber}
+                          +91 {user.contactNumber}
                         </div>
                       ) : '-'}
                     </td>
@@ -493,23 +564,27 @@ const loadUsers = async () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/user-view/${user.id}`)}
+                          title='View User'
+                          onClick={() => navigate("/user-view", { state: { userId: user.id } })}
                           className="p-1 h-8 w-8"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/user-form/${user.id}`)}
+                          title="Edit User"
+                          onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
                           className="p-1 h-8 w-8"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/user-org-roles/${user.id}`)}
+                          onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
                           className="p-1 h-8 w-8"
                         >
                           <Shield className="h-4 w-4" />
@@ -536,7 +611,14 @@ const loadUsers = async () => {
             <UserCard key={user.id} user={user} />
           ))}
         </div>
-      )}
+      )} */}
+
+      {/*-------Showing users in card view only---------*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredUsers.map((user) => (
+          <UserCard key={user.id} user={user} />
+        ))}
+      </div>
 
       {/* Empty State */}
       {filteredUsers.length === 0 && (
@@ -551,8 +633,8 @@ const loadUsers = async () => {
                   {searchTerm || statusFilter !== 'all' || roleFilter !== 'all' ? 'No users found' : 'No users yet'}
                 </h3>
                 <p className="text-secondary-600 mb-4">
-                  {searchTerm || statusFilter !== 'all' || roleFilter !== 'all' 
-                    ? 'Try adjusting your search or filters' 
+                  {searchTerm || statusFilter !== 'all' || roleFilter !== 'all'
+                    ? 'Try adjusting your search or filters'
                     : 'Get started by adding your first user'}
                 </p>
                 <Button
@@ -567,7 +649,70 @@ const loadUsers = async () => {
           </CardBody>
         </Card>
       )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          {dialogType === "confirm" ? (
+            <>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                }}
+              >
+                No
+              </MuiButton>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                Yes
+              </MuiButton>
+            </>
+          ) : (
+            <MuiButton
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction();
+              }}
+              autoFocus
+            >
+              OK
+            </MuiButton>
+          )}
+        </DialogActions>
+      </Dialog>
+
     </div>
+
+
   );
 };
 

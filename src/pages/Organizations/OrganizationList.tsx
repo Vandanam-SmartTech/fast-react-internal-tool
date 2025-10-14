@@ -281,7 +281,8 @@ const OrganizationList: React.FC = () => {
                           onClick={() => {
                             navigate(`/edit-organization`, {
                               state: {
-                                organizationId: org.id
+                                organizationId: org.id,
+                                gstNumber: org.gstNumber,
                               }
                             });
                             setOpenDropdown(null);
@@ -347,7 +348,7 @@ const OrganizationList: React.FC = () => {
                   <button
                     onClick={() =>
                       navigate("/agencies", {
-                        state: { orgId: org.id }
+                        state: { orgId: org.id, gstNumber:org.gstNumber }
                       })
                     }
 

@@ -45,7 +45,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   const handleSelectOrg = (orgId: string, orgName: string) => {
     setShowOrgSelector(false);
-    navigate(`/agencies/${orgId}`);
+    navigate(`/agencies`,{ state: {orgId: orgId}});
   };
 
   const handleCancel = () => setShowOrgSelector(false);

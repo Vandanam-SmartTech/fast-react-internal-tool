@@ -788,7 +788,7 @@ useEffect(() => {
                 </label>
 
                 <input
-                  type="text"
+                  type={showEmail ? "text" : "password"}
                   name="emailAddress"
                   value={formData.emailAddress}
                   onChange={(e) => {

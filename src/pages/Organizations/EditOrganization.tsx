@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation} from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateOrganization, getOrganizationById } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 
 interface District {
   code: number;
@@ -33,31 +34,36 @@ const EditOrganization: React.FC = () => {
     legalName: '',
     addressLine1: '',
     addressLine2: '',
-    villageCode:0,
-    pinCode:'',
+    villageCode: 0,
+    pinCode: '',
     contactNumber: '',
     gstNumber: '',
     govtRegNumber: '',
-    logoUrl:'',
+    logoUrl: '',
   });
 
-    const [districts, setDistricts] = useState<District[]>([]);
-    const [talukas, setTalukas] = useState<Taluka[]>([]);
-    const [villages, setVillages] = useState<Village[]>([]);
-  
-    const [districtCode, setDistrictCode] = useState<number>(0);
-    const [talukaCode, setTalukaCode] = useState<number>(0);
-    const [pinCode, setPinCode] = useState<string>("");
-    const [villageCode, setVillageCode] = useState<number>(0);
-    const [districtName, setDistrictName] = useState<string>("");
-    const [talukaName, setTalukaName] = useState<string>("");
-    const [villageName, setVillageName] = useState<string>("");
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [talukas, setTalukas] = useState<Taluka[]>([]);
+  const [villages, setVillages] = useState<Village[]>([]);
 
-    const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
+  const [districtCode, setDistrictCode] = useState<number>(0);
+  const [talukaCode, setTalukaCode] = useState<number>(0);
+  const [pinCode, setPinCode] = useState<string>("");
+  const [villageCode, setVillageCode] = useState<number>(0);
+  const [districtName, setDistrictName] = useState<string>("");
+  const [talukaName, setTalukaName] = useState<string>("");
+  const [villageName, setVillageName] = useState<string>("");
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"success" | "error" | "confirm">("confirm");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+
+  const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
-  const { userClaims } = useUser(); 
+  const { userClaims } = useUser();
 
   useEffect(() => {
     if (organizationId) {
@@ -79,11 +85,11 @@ const EditOrganization: React.FC = () => {
 
   useEffect(() => {
     if (districtCode) {
-        getDistrictNameByCode(districtCode)
-            .then((name) => setDistrictName(name))
-            .catch(() => setDistrictName("Unknown District"));
+      getDistrictNameByCode(districtCode)
+        .then((name) => setDistrictName(name))
+        .catch(() => setDistrictName("Unknown District"));
     }
-}, [districtCode]);
+  }, [districtCode]);
 
   useEffect(() => {
     const fetchTalukasData = async () => {
@@ -122,8 +128,8 @@ const EditOrganization: React.FC = () => {
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
-    setTalukaName(""); 
-    setVillageName(""); 
+    setTalukaName("");
+    setVillageName("");
     setPinCode("");
     setFormData((prev) => ({
       ...prev,
@@ -164,89 +170,101 @@ const EditOrganization: React.FC = () => {
     }
   };
 
-const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  setPinCode(value);
-  setFormData((prev) => ({ ...prev, pinCode: value }));
-  console.log("Current state PINcode:", value);
-};
+  const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPinCode(value);
+    setFormData((prev) => ({ ...prev, pinCode: value }));
+    console.log("Current state PINcode:", value);
+  };
 
 
-const loadOrganization = async (organizationId: number) => {
-  try {
-    const org = await getOrganizationById(organizationId);
+  const loadOrganization = async (organizationId: number) => {
+    try {
+      const org = await getOrganizationById(organizationId);
 
-    setFormData({
-      ...org,
-      pinCode: org.pinCode || "", 
-    });
+      setFormData({
+        ...org,
+        pinCode: org.pinCode || "",
+      });
 
-    setDistrictCode(org.districtCode);
-    setTalukaCode(org.talukaCode);
-    setVillageCode(org.villageCode);
-    setPinCode(org.pinCode || "");
+      setDistrictCode(org.districtCode);
+      setTalukaCode(org.talukaCode);
+      setVillageCode(org.villageCode);
+      setPinCode(org.pinCode || "");
 
-  } catch (error) {
-    toast.error('Failed to load organization');
-    navigate('/organizations');
-  }
-};
+    } catch (error) {
+      toast.error('Failed to load organization');
+      navigate('/organizations');
+    }
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  setLoading(true);
 
-  try {
+  // ✅ Ask for confirmation before submitting
+  setDialogType("confirm");
+  setDialogMessage("Do you want to update this organization?");
+  setDialogAction(() => async () => {
+    setLoading(true);
+    try {
+      const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
 
-    const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
+      const orgData = {
+        ...formData,
+        createdBy: userId,
+        pinCode: formData.pinCode
+      };
 
-    const orgData = {
-      ...formData,
-      createdBy: userId,
-      pinCode: formData.pinCode
-    };
+      console.log('User ID:', userId);
+      console.log('Updating organization with data:', orgData);
 
- 
-    console.log('User ID:', userId);
-    console.log('Updating organization with data:', orgData);
+      await updateOrganization(parseInt(organizationId), orgData);
 
-    await updateOrganization(parseInt(organizationId), orgData);
-    toast.success('Organization updated successfully',{
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
-    navigate('/organizations');
-  } catch (error) {
-    toast.error('Failed to update organization');
-  } finally {
-    setLoading(false);
-  }
+      toast.success('Organization updated successfully', {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      navigate('/organization-view', {
+        state: { orgId: organizationId }
+      });
+
+    } catch (error) {
+      toast.error('Failed to update organization');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ✅ Open the confirmation dialog
+  setDialogOpen(true);
 };
 
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
 
-  if (name === 'legalName') {
-    setFormData((prev) => ({
-      ...prev,
-      legalName: value,
-      displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
-    }));
-  } else if (name === 'displayName') {
-    setIsDisplayNameManuallyEdited(true);
-    setFormData((prev) => ({
-      ...prev,
-      displayName: value,
-    }));
-  } else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    if (name === 'legalName') {
+      setFormData((prev) => ({
+        ...prev,
+        legalName: value,
+        displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
+      }));
+    } else if (name === 'displayName') {
+      setIsDisplayNameManuallyEdited(true);
+      setFormData((prev) => ({
+        ...prev,
+        displayName: value,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
 
 
   return (
@@ -327,7 +345,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
-                    <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               GST Number
             </label>
@@ -342,7 +360,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
-          
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -430,7 +448,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </select>
           </div>
 
-<div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
             <input
               type="text"
@@ -446,21 +464,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Logo URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="logoUrl"
-              value={formData.logoUrl}
-              placeholder="e.g. https://example.com/logo.png"
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
               Government Registration Number
             </label>
             <input
@@ -469,31 +472,88 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               value={formData.govtRegNumber || ''}
               onChange={handleChange}
               maxLength={50}
+              placeholder="e.g. L01631KA2010PTC096843"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
         </div>
 
-        <div className="col-span-2 flex justify-start gap-4 mt-8">
-  <button
-    type="button"
-    onClick={() => navigate('/organizations')}
-    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-  >
-    Cancel
-  </button>
-  <button
-    type="submit"
-    disabled={loading}
-    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-  >
-    <Save className="h-4 w-4" />
-    {loading ? 'Updating' : 'Update'}
-  </button>
-</div>
+        <div className="col-span-2 flex justify-center gap-4 mt-8">
+          <button
+            type="button"
+            onClick={() => navigate('/organizations')}
+            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {loading ? 'Updating' : 'Update'}
+          </button>
+        </div>
 
       </form>
+
+            <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+
+        <DialogActions>
+          {dialogType === "confirm" ? (
+            <>
+              <Button onClick={() => setDialogOpen(false)}>No</Button>
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                Yes
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction();
+              }}
+              autoFocus
+            >
+              OK
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

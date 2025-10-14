@@ -9,6 +9,7 @@ const AgencyList: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const orgId = location.state?.orgId;
+  const gstNumber = location.state?.gstNumber;
   const [agencies, setAgencies] = useState<Organization[]>([]);
   const [filteredAgencies, setFilteredAgencies] = useState<Organization[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,7 +168,7 @@ const AgencyList: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-200 transition"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -192,7 +193,7 @@ const AgencyList: React.FC = () => {
           <button
             onClick={() =>
               navigate("/agency-form", {
-                state: { orgId: orgId },
+                state: { orgId: orgId, gstNumber:gstNumber },
               })
             }
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
@@ -258,6 +259,7 @@ const AgencyList: React.FC = () => {
                           onClick={() => {
                             navigate(`/agency-view`, {
                               state: {
+                                orgId: orgId,
                                 agencyId: agency.id,
                               },
                             });

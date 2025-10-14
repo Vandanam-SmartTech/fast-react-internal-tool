@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
-import { saveRepresentative, getUserById } from '../../services/jwtService';
+import { saveUser } from '../../services/jwtService';
 import { fetchOrganizations, Organization } from '../../services/organizationService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/customerRequisitionService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 
 const UserFormManagement: React.FC = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const isEdit = Boolean(id);
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [confirmContactNumber, setConfirmContactNumber] = useState("");
 
@@ -26,11 +24,11 @@ const UserFormManagement: React.FC = () => {
     alternateContactNumber: '',
     preferredName: '',
     villageCode: 0,
-    pincode: '',
+    pinCode: '',
     addressLine1: '',
     addressLine2: '',
     isActive: true,
-    roleIds: [4]
+    //roleIds: [4]
   });
 
   interface District {
@@ -46,7 +44,7 @@ const UserFormManagement: React.FC = () => {
   interface Village {
     code: number;
     nameEnglish: string;
-    pincode: string;
+    pinCode: string;
   }
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -55,24 +53,26 @@ const UserFormManagement: React.FC = () => {
   const [showMobile, setShowMobile] = useState(false);
   const handleToggleMobile = () => setShowMobile(!showMobile);
 
+  const [showEmail, setShowEmail] = useState(false);
+
   const [districts, setDistricts] = useState<District[]>([]);
   const [talukas, setTalukas] = useState<Taluka[]>([]);
   const [villages, setVillages] = useState<Village[]>([]);
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pincode, setPincode] = useState<string>("");
+  const [pinCode, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
 
-  useEffect(() => {
-    loadOrganizations();
-    if (isEdit && id) {
-      loadUser(parseInt(id));
-    }
-  }, [id, isEdit]);
+  // useEffect(() => {
+  //   loadOrganizations();
+  //   if (isEdit && id) {
+  //     loadUser(parseInt(id));
+  //   }
+  // }, [id, isEdit]);
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -133,13 +133,13 @@ const UserFormManagement: React.FC = () => {
     setVillageCode(0);
     setTalukaName("");
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       districtCode: value,
       talukaCode: 0,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -149,12 +149,12 @@ const UserFormManagement: React.FC = () => {
 
     setVillageCode(0);
     setVillageName("");
-    setPincode("");
+    setPinCode("");
     setFormData((prev) => ({
       ...prev,
       talukaCode: value,
       villageCode: 0,
-      pincode: "",
+      pinCode: "",
     }));
   };
 
@@ -164,20 +164,20 @@ const UserFormManagement: React.FC = () => {
 
     if (selectedVillage) {
       setVillageCode(value);
-      setPincode(selectedVillage.pincode || "");
+      setPinCode(selectedVillage.pinCode || "");
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pincode: selectedVillage.pincode,
+        pinCode: selectedVillage.pinCode,
       }));
     }
   };
 
-  const handlepincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    setPincode(value);
-    setFormData((prev) => ({ ...prev, pincode: value }));
-    console.log("Current state pincode:", pincode);
+  const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPinCode(value);
+    setFormData((prev) => ({ ...prev, pinCode: value }));
+    console.log("Current state PINcode:", value);
   };
 
   const loadOrganizations = async () => {
@@ -189,32 +189,32 @@ const UserFormManagement: React.FC = () => {
     }
   };
 
-  const loadUser = async (userId: number) => {
-    try {
-      const { data } = await getUserById(userId);
-      if (data) {
-        setFormData({
-          username: data.username || '',
-          password: '',
-          nameAsPerGovId: data.nameAsPerGovId || '',
-          emailAddress: data.emailAddress || '',
-          userCode: data.userCode || '',
-          contactNumber: data.contactNumber || '',
-          alternateContactNumber: data.alternateContactNumber || '',
-          preferredName: data.preferredName || '',
-          villageCode: data.villageCode,
-          pincode: data.pincode || '',
-          addressLine1: data.addressLine1 || '',
-          addressLine2: data.addressLine2 || '',
-          isActive: data.isActive ?? true,
-          roleIds: data.roles?.map((role: any) => role.id) || [4]
-        });
-      }
-    } catch (error) {
-      toast.error('Failed to load user');
-      navigate('/user-management');
-    }
-  };
+  // const loadUser = async (userId: number) => {
+  //   try {
+  //     const { data } = await getUserById(userId);
+  //     if (data) {
+  //       setFormData({
+  //         username: data.username || '',
+  //         password: '',
+  //         nameAsPerGovId: data.nameAsPerGovId || '',
+  //         emailAddress: data.emailAddress || '',
+  //         userCode: data.userCode || '',
+  //         contactNumber: data.contactNumber || '',
+  //         alternateContactNumber: data.alternateContactNumber || '',
+  //         preferredName: data.preferredName || '',
+  //         villageCode: data.villageCode,
+  //         pinCode: data.pinCode || '',
+  //         addressLine1: data.addressLine1 || '',
+  //         addressLine2: data.addressLine2 || '',
+  //         isActive: data.isActive ?? true,
+  //         //roleIds: data.roles?.map((role: any) => role.id) || [4]
+  //       });
+  //     }
+  //   } catch (error) {
+  //     toast.error('Failed to load user');
+  //     navigate('/user-management');
+  //   }
+  // };
 
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -233,14 +233,13 @@ const UserFormManagement: React.FC = () => {
     try {
       const userData = {
         ...formData,
-        ...(isEdit && { id: parseInt(id!) })
       };
 
-      await saveRepresentative(userData);
-      toast.success(`User ${isEdit ? 'updated' : 'created'} successfully`);
+      await saveUser(userData);
+      toast.success(`User added successfully`);
       navigate('/user-management');
     } catch (error) {
-      toast.error(`Failed to ${isEdit ? 'update' : 'create'} user`);
+      toast.error(`Failed to add user`);
     } finally {
       setLoading(false);
     }
@@ -254,13 +253,27 @@ const UserFormManagement: React.FC = () => {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
 
-    if (name === 'emailAddress') {
-
+    if (name === 'emailAddress' && value === '') {
       setConfirmEmailAddress('');
     }
 
     if (name === 'contactNumber' && value === '') {
       setConfirmContactNumber('');
+    }
+
+    if (name === 'contactNumber') {
+      if (value !== confirmContactNumber) {
+        setConfirmContactNumber('');
+
+      }
+
+    }
+
+    if (name === 'emailAddress') {
+      if (value !== confirmEmailAddress) {
+        setConfirmEmailAddress('');
+
+      }
 
     }
 
@@ -277,7 +290,7 @@ const UserFormManagement: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isEdit ? 'Edit User' : 'Add User'}
+          Add User Details
         </h1>
       </div>
 
@@ -290,7 +303,7 @@ const UserFormManagement: React.FC = () => {
             </label>
             <input
               type="text"
-              name="govIdName"
+              name="nameAsPerGovId"
               value={formData.nameAsPerGovId}
               onChange={(e) => {
                 const value = e.target.value;
@@ -517,7 +530,7 @@ const UserFormManagement: React.FC = () => {
             </label>
 
             <input
-              type="text"
+              type={showEmail ? "text" : "password"}
               name="emailAddress"
               value={formData.emailAddress}
               onChange={(e) => {
@@ -661,15 +674,14 @@ const UserFormManagement: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pincode <span className="text-red-500">*</span>
+              PIN Code <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              name="pincode"
-              value={formData.pincode || ''}
-              onChange={handlepincodeChange}
+              name="pinCode"
+              value={formData.pinCode}
+              onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
-              pattern="^[0-9]{6}$"
               title="Pincode must be exactly 6 digits (0-9)"
               maxLength={6}
               inputMode="numeric"
@@ -679,46 +691,46 @@ const UserFormManagement: React.FC = () => {
           </div>
 
           <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 1 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="addressLine1"
-                  value={formData.addressLine1}
-                  onChange={handleChange}
-                  placeholder="e.g. Flat No, House No, Street Name"
-                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                  maxLength={100}
-                  required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 1 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="addressLine1"
+              value={formData.addressLine1}
+              onChange={handleChange}
+              placeholder="e.g. Flat No, House No, Street Name"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              required
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 2
-                </label>
-                <input
-                  type="text"
-                  name="addressLine2"
-                  value={formData.addressLine2}
-                  onChange={handleChange}
-                  placeholder="e.g. Apartment, Suite, Unit, Building"
-                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                  maxLength={100}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 2
+            </label>
+            <input
+              type="text"
+              name="addressLine2"
+              value={formData.addressLine2}
+              onChange={handleChange}
+              placeholder="e.g. Apartment, Suite, Unit, Building"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          </div>
 
 
 
 
         </div>
 
-        <div className="flex justify-end gap-4 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate('/user-management')}
@@ -732,7 +744,7 @@ const UserFormManagement: React.FC = () => {
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Saving User' : 'Save User'}
           </button>
         </div>
       </form>

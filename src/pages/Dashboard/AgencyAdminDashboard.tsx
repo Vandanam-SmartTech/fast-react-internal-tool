@@ -39,21 +39,21 @@ const AgencyAdminDashboard: React.FC = () => {
     },
     {
       title: 'My Agency',
-      description: 'List, View, Update my agencies',
+      description: 'View, Update my agency',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
       path: '/organizations',
       color: 'bg-purple-50 hover:bg-purple-100'
     },
     {
       title: 'Agency Users',
-      description: 'Manage users within my agencies',
+      description: 'Manage users within my agency',
       icon: <UserCog className="h-12 w-12 text-orange-600" />,
       path: '/user-management',
       color: 'bg-orange-50 hover:bg-orange-100'
     },
     {
       title: 'User Agency Roles',
-      description: 'Manage user roles in my agencies',
+      description: 'Manage user roles in my agency',
       icon: <Settings className="h-12 w-12 text-indigo-600" />,
       path: '/admin-management',
       color: 'bg-indigo-50 hover:bg-indigo-100'

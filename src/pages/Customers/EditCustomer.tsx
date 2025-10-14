@@ -425,7 +425,7 @@ export const EditCustomer = () => {
 
                 <div className="relative">
                   <input
-                    type="text"
+                    type={showEmail ? "text" : "password"}
                     name="emailAddress"
                     value={formData.emailAddress}
                     onChange={(e) => {

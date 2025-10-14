@@ -1,100 +1,95 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, User } from 'lucide-react';
-import { getUserById } from '../../services/jwtService';
-import { fetchOrganizations, Organization, fetchUserRolesByOrganization } from '../../services/organizationService';
+import { getUserById, getUserOrgRolesById } from '../../services/jwtService';
 import { toast } from 'react-toastify';
+import { useUser } from '../../contexts/UserContext';
 
-const UserOrgRolesDisplay: React.FC<{ userId: number }> = ({ userId }) => {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [userRoles, setUserRoles] = useState<{ org: string; roles: string[] }[]>([]);
-
-  useEffect(() => {
-  const loadData = async () => {
-    try {
-      const orgs = await fetchOrganizations();
-      setOrganizations(orgs);
-
-      const rolesByOrg = await fetchUserRolesByOrganization(Number(userId), orgs);
-      setUserRoles(rolesByOrg);
-    } catch (error) {
-      console.error('Failed to load organizations or roles', error);
-    }
-  };
-
-  loadData();
-}, [userId]);
-
-  return (
-    <div className="space-y-2">
-      {userRoles.length > 0 ? (
-        userRoles.map((orgRole, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="font-medium text-gray-700">{orgRole.org}:</span>
-            <div className="flex flex-wrap gap-1">
-              {orgRole.roles.map((role, roleIndex) => (
-                <span key={roleIndex} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                  {role}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))
-      ) : (
-        <span className="text-gray-500">No organization roles assigned</span>
-      )}
-    </div>
-  );
-};
 
 const UserView: React.FC = () => {
-  const { id } = useParams();
+  const { userClaims } = useUser();
+  const location = useLocation();
   const navigate = useNavigate();
+  const userId = location.state?.userId;
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      loadUser(parseInt(id));
-    }
-  }, [id]);
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const [userRole, setUserRole] = useState("");
 
-  const loadUser = async (userId: number) => {
-    try {
-      const { data } = await getUserById(userId);
-      setUser(data);
-    } catch (error) {
-      toast.error('Failed to load user');
-      navigate('/user-management');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+  if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+    setUserRole("ROLE_SUPER_ADMIN");
+  } else if (userInfo?.role === "ROLE_ORG_ADMIN") {
+    setUserRole("ROLE_ORG_ADMIN");
+  } else if (userInfo?.role === "ROLE_AGENCY_ADMIN") {
+    setUserRole("ROLE_AGENCY_ADMIN");
+  }
+}, [userClaims, userInfo]);
+
+
+  useEffect(() => {
+  if (userId && userRole) {
+    loadUserData(parseInt(userId));
+  }
+}, [userId, userRole]);
+
+const loadUserData = async (userId: number) => {
+  setLoading(true);
+  try {
+    let response;
+
+    if (userRole === "ROLE_SUPER_ADMIN") {
+      // Super Admin can view any user directly
+      response = await getUserById(userId);
+    } else {
+      // Org Admin or Agency Admin — view within their organization only
+      response = await getUserOrgRolesById(userId, userInfo?.orgId);
     }
-  };
+
+    if (response?.data) {
+      setUser(response.data);
+    } else {
+      toast.error(response?.message || "User not found");
+      navigate("/user-management");
+    }
+  } catch (error) {
+    console.error("Error loading user:", error);
+    toast.error("Failed to load user");
+    navigate("/user-management");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
   if (!user) return <div className="flex justify-center p-8">User not found</div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => navigate('/user-management')}
-          className="text-gray-600 hover:text-gray-800"
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-6 w-6 text-gray-700" />
         </button>
+
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <User className="h-6 w-6" />
           User Details
         </h1>
+
         <button
-          onClick={() => navigate(`/user-form/${id}`)}
+          onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
         >
           <Edit className="h-4 w-4" />
           Edit
         </button>
       </div>
+
 
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,17 +130,51 @@ const UserView: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+            <span className={`px-2 py-1 text-xs rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
               {user.isActive ? 'Active' : 'Inactive'}
             </span>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Roles</label>
-            <UserOrgRolesDisplay userId={parseInt(id!)} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Organization Roles
+            </label>
+
+            {user?.organizationRoles?.length > 0 ? (
+              <div className="space-y-2">
+                {Object.values(
+                  user.organizationRoles.reduce((acc: any, orgRole: any) => {
+                    if (!acc[orgRole.organizationName]) {
+                      acc[orgRole.organizationName] = {
+                        org: orgRole.organizationName,
+                        roles: [],
+                      };
+                    }
+                    acc[orgRole.organizationName].roles.push(orgRole.roleName.replace("ROLE_", ""));
+                    return acc;
+                  }, {})
+                ).map((org: any, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="font-medium text-gray-700">{org.org}:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {org.roles.map((role: string, roleIndex: number) => (
+                        <span
+                          key={roleIndex}
+                          className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+                        >
+                          {role}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="text-gray-500">No organization roles assigned</span>
+            )}
           </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
@@ -159,7 +188,7 @@ const UserView: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-            <p className="text-gray-900">{user.postalCode || '-'}</p>
+            <p className="text-gray-900">{user.pinCode || '-'}</p>
           </div>
 
           <div>

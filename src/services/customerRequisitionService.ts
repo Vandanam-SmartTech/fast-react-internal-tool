@@ -125,12 +125,10 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.post('/api/installations', data);
-
-    
+ 
     const responseData = await response.data;
     console.log('API response data:', responseData); 
 
-    
     if (responseData.id) {
 
       return { id: responseData.id, message: 'Installation data saved successfully! '};

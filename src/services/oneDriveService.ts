@@ -241,3 +241,23 @@ export const editUserProfilePhoto = async (file: File): Promise<void> => {
     throw error;
   }
 };
+
+export const uploadOrganizationImage = async (orgId: number, file: File): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await oneDriveAPI.post(`/api/document-manager/organization-media/${orgId}/logo`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log(`Logo uploaded successfully for organization ${orgId}`);
+  } catch (error: any) {
+    console.error("Failed to upload logo:", error);
+    throw error;
+  }
+};

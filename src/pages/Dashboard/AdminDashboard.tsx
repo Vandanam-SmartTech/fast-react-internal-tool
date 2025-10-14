@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building2, UserCog, UserPlus, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
+import { Users, Building, Building2, UserCog, UserPlus, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
 
@@ -36,10 +36,19 @@ const AdminDashboard: React.FC = () => {
   const dashboardItems = [
 
     {
+      title: 'My Organization',
+      description: 'View, Update my organization',
+      icon: <Building className="h-8 w-8 text-purple-600" />,
+      path: '/organization-view',
+      state: { orgId: userInfo?.orgId},
+      color: 'bg-purple-50 hover:bg-purple-100'
+    },
+
+    {
       title: 'Manage Agencies',
       description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-8 w-8 text-warning-600" />,
-      path: '/agencies',                     // ✅ stays static
+      path: '/agencies',                     
       state: { orgId: userInfo?.orgId },
       color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
     },

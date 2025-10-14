@@ -692,7 +692,7 @@ const ListOfConsumers: React.FC = () => {
                   disabled={agencies.length === 0}
                   className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
                 >
-                  <option value="">Self</option>
+                  <option value="">All</option>
                   {agencies.map((agency) => (
                     <option key={agency.id} value={agency.id}>
                       {agency.name}

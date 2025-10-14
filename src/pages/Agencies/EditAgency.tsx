@@ -29,6 +29,8 @@ const EditAgency: React.FC = () => {
   const orgId = location.state?.orgId;
   const agencyId = location.state?.agencyId
 
+  const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
+
 
   const [formData, setFormData] = useState({
     name: '',
@@ -40,7 +42,9 @@ const EditAgency: React.FC = () => {
     pinCode: '',
     contactNumber: '',
     logoUrl: '',
-    parentId: parseInt(orgId!)
+    parentId: parseInt(orgId!),
+    gstNumber: '',
+    govtRegNumber:'',
   });
 
   const [loading, setLoading] = useState(false);
@@ -254,9 +258,27 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+      const { name, value } = e.target;
+  
+      if (name === 'legalName') {
+        setFormData((prev) => ({
+          ...prev,
+          legalName: value,
+          displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
+        }));
+      } else if (name === 'displayName') {
+        setIsDisplayNameManuallyEdited(true);
+        setFormData((prev) => ({
+          ...prev,
+          displayName: value,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+    };
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
@@ -332,37 +354,121 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               type="text"
               name="contactNumber"
               value={formData.contactNumber}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[6-9][0-9]*$/.test(value) || value === "") {
+                  if (value.length <= 10) {
+                    handleChange(e);
+                  }
+                }
+              }}
+              placeholder="e.g. 9567023456"
+              maxLength={10}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Enter a valid 10-digit mobile number starting with 6-9"
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+            />
+            {formData.contactNumber?.length > 0 &&
+              !/^[6-9]{1}[0-9]{0,9}$/.test(formData.contactNumber) && (
+                <p className="text-red-600 text-sm mt-1">
+                  Enter a valid 10-digit mobile number starting with 6-9
+                </p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="emailAddress"
+              value={formData.emailAddress}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (
+                  value === "" ||
+                  /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                    value
+                  )
+                ) {
+                  handleChange(e);
+                } else {
+                  handleChange(e);
+                }
+              }}
+              placeholder="e.g. johndoe@example.com"
+              maxLength={50}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+
+            {/* Error messages */}
+            {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email must start with a letter or number
+              </p>
+            )}
+
+            {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot contain consecutive dots
+              </p>
+            )}
+
+            {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot end with a dot before @
+              </p>
+            )}
+
+            {formData.emailAddress &&
+              !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                formData.emailAddress
+              ) &&
+              !/\.\./.test(formData.emailAddress) &&
+              !/\.@/.test(formData.emailAddress) &&
+              /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+                <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              GST Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="gstNumber"
+              value={formData.gstNumber || ''}
               onChange={handleChange}
-              placeholder="9567023456"
+              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+              title="GSTIN must be in format: 22AAAAA0000A1Z6"
+              placeholder="e.g. 22AAAAA0000A1Z6"
               maxLength={15}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address Line 1 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="addressLine1"
-              value={formData.addressLine1 || ''}
-              onChange={handleChange}
-
-              placeholder="e.g. Flat No, House No, Street Name"
+              required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address Line 2
+              Government Registration Number
             </label>
             <input
               type="text"
-              name="addressLine2"
-              placeholder="e.g. Apartment, Suite, Unit, Building"
-              value={formData.addressLine2 || ''}
+              name="govtRegNumber"
+              value={formData.govtRegNumber || ''}
               onChange={handleChange}
+              maxLength={50}
+              placeholder="e.g. L01631KA2010PTC096843"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -438,9 +544,41 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
 
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 1 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="addressLine1"
+              value={formData.addressLine1 || ''}
+              onChange={handleChange}
+
+              placeholder="e.g. Flat No, House No, Street Name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address Line 2
+            </label>
+            <input
+              type="text"
+              name="addressLine2"
+              placeholder="e.g. Apartment, Suite, Unit, Building"
+              value={formData.addressLine2 || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          
+
         </div>
 
-        <div className="col-span-2 flex justify-start gap-4 mt-8">
+        <div className="col-span-2 flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() =>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
-import { getOrganizationById, Organization, fetchOrganizationUsers } from '../../services/organizationService';
+import { getOrganizationById, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 
 interface OrganizationUser {
@@ -19,7 +19,7 @@ interface OrganizationUser {
 }
 
 const AgencyView: React.FC = () => {
-  const { id } = useParams();
+  //const { id } = useParams();
   const navigate = useNavigate();
   const [organization, setOrganization] = useState<any>(null);
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([]);
@@ -33,9 +33,9 @@ const AgencyView: React.FC = () => {
   useEffect(() => {
     if (agencyId) {
       loadOrganization(parseInt(agencyId));
-      loadOrganizationUsers(parseInt(agencyId));
+      loadUsersByOrg(agencyId);
     }
-  }, [id]);
+  }, [agencyId]);
 
   const loadOrganization = async (agencyId: number) => {
     try {
@@ -49,25 +49,18 @@ const AgencyView: React.FC = () => {
     }
   };
 
-  const loadOrganizationUsers = async (agencyId: number) => {
-    setUsersLoading(true);
-    try {
-      const usersWithOrgRoles: OrganizationUser[] = await fetchOrganizationUsers(agencyId);
-      setOrgUsers(usersWithOrgRoles);
-    } catch (error) {
-      console.error('Failed to load organization users:', error);
-    } finally {
-      setUsersLoading(false);
-    }
-  };
+  const loadUsersByOrg = async (agencyId: string | number) => {
+      try {
+        setUsersLoading(true);
+        const data = await fetchAllUsersByOrgId(agencyId);
+        setOrgUsers(data);  
+      } catch (error) {
+        toast.error("Failed to load organization users");
+      } finally {
+        setUsersLoading(false);
+      }
+    };
 
-  const getUsersByRole = (roleName: string) => {
-    return orgUsers.filter(user =>
-      user.organizationRoles?.some(role =>
-        role.organizationId === parseInt(agencyId!) && role.roleName === roleName
-      )
-    );
-  };
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
   if (!organization) return <div className="flex justify-center p-8">Organization not found</div>;
@@ -154,153 +147,67 @@ const AgencyView: React.FC = () => {
           )}
         </div>
 
-        {/* {!isAgency && (
-          <div className="mt-8 pt-6 border-t">
-            <button
-              onClick={() => navigate(`/agencies/${id}`)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
-            >
-              <Building2 className="h-4 w-4" />
-              View Agencies
-            </button>
-          </div>
-        )} */}
       </div>
 
       {/* Organization Users Section */}
       <div className="bg-white rounded-lg shadow p-6 mt-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Agency Members
+          Agency Members ({orgUsers.length})
         </h2>
 
         {usersLoading ? (
           <div className="text-center py-4">Loading users...</div>
         ) : (
           <div className="space-y-6">
-            {/* Admins */}
-            {(() => {
-              const admins = getUsersByRole('ROLE_ORG_ADMIN').concat(getUsersByRole('ROLE_AGENCY_ADMIN'));
-              return admins.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-red-600" />
-                    Administrators ({admins.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {admins.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-                            {user.organizationRoles.find(r => r.organizationId === parseInt(id!))?.roleName.replace('ROLE_', '')}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
+            {orgUsers.length > 0 ? (
+              <div>
+                {/* <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4 text-blue-600" />
+          Organization Users ({orgUsers.length})
+        </h3> */}
 
-            {/* Representatives */}
-            {(() => {
-              const representatives = getUsersByRole('ROLE_ORG_REPRESENTATIVE').concat(getUsersByRole('ROLE_AGENCY_REPRESENTATIVE'));
-              return representatives.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                    Representatives ({representatives.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {representatives.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                            REPRESENTATIVE
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {orgUsers.map(user => (
+                    <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                            }`}
+                        >
+                          {user.isActive ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Staff */}
-            {(() => {
-              const staff = getUsersByRole('ROLE_ORG_STAFF').concat(getUsersByRole('ROLE_AGENCY_STAFF'));
-              return staff.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-blue-600" />
-                    Staff ({staff.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {staff.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                            STAFF
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                      <div className="text-xs text-gray-600 mb-2">
+                        <div>{user.emailAddress}</div>
+                        <div>{user.contactNumber}</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Customers */}
-            {(() => {
-              const customers = getUsersByRole('ROLE_CUSTOMER');
-              return customers.length > 0 && (
-                <div>
-                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-600" />
-                    Customers ({customers.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {customers.map(user => (
-                      <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{user.nameAsPerGovId}</span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-                            CUSTOMER
+                      {/* ✅ Show all roles with organization names */}
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {user.organizationRoles?.map((role, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 text-[11px] rounded-full bg-blue-100 text-blue-800"
+                          >
+                            {role.roleName.replace('ROLE_', '')} — {role.organizationName}
                           </span>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div>{user.emailAddress}</div>
-                          <div>{user.contactNumber}</div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              );
-            })()}
-
-            {orgUsers.length === 0 && (
+              </div>
+            ) : (
               <div className="text-center py-8 text-gray-500">
-                No users assigned to this Agency
+                No users assigned to this organization
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   );

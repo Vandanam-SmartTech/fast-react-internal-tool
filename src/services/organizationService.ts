@@ -323,6 +323,19 @@ export const fetchUsersByOrgId = async (organizationId: string | number) => {
     );
     return response.data;
   } catch (error) {
+    console.error("Failed to fetch organization and agency users:", error);
+    throw error;
+  }
+};
+
+export const fetchAllUsersByOrgId = async (organizationId: string | number) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(
+      `/api/users/getAllUsers/organizations/${organizationId}`
+    );
+    return response.data;
+  } catch (error) {
     console.error("Failed to fetch organization users:", error);
     throw error;
   }
