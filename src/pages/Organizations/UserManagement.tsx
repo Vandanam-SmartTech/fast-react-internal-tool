@@ -46,6 +46,7 @@ const UserManagement: React.FC = () => {
     // Determine user role
     if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
       setUserRole("ROLE_SUPER_ADMIN");
+      loadOrganizations();
       loadAllUsers();
     } else if (
       storedUserInfo?.role === "ROLE_ORG_ADMIN" ||
@@ -55,7 +56,7 @@ const UserManagement: React.FC = () => {
       loadUsersByOrg(storedUserInfo.orgId);
     }
 
-    loadOrganizations();
+    
     loadRoles();
   }, [userClaims]);
 

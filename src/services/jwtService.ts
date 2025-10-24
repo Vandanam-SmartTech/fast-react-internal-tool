@@ -221,9 +221,9 @@ export const saveUser = async (
     const response = await jwtAPI.post('/api/users', data);
     const responseData = response.data;
 
-    // Extract userId from backend response
-    if (responseData.userId) {
-      return { id: responseData.userId, message: 'User data saved successfully!' };
+    // ✅ Backend returns "id", not "userId"
+    if (responseData.id) {
+      return { id: responseData.id, message: 'User data saved successfully!' };
     } else {
       return { id: null, message: responseData.message || 'Failed to save user data.' };
     }
@@ -232,6 +232,7 @@ export const saveUser = async (
     return { id: null, message: 'An error occurred while saving user data.' };
   }
 };
+
 
 export const updateUser = async (
   userId: number,

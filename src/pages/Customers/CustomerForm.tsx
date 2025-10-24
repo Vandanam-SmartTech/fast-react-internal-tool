@@ -117,18 +117,18 @@ export const CustomerForm = () => {
     checkExists();
   }, [formData.mobileNumber]);
 
-useEffect(() => {
-  if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-    setUserRole("ROLE_SUPER_ADMIN");
+  useEffect(() => {
+    if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      setUserRole("ROLE_SUPER_ADMIN");
 
-    // Fetch organizations only for Super Admin
-    fetchOrganizations()
-      .then((data) => setOrganizations(data))
-      .catch((err) => console.error("Failed to fetch organizations:", err));
-  } else {
-    setUserRole("USER");
-  }
-}, [userClaims]);
+      // Fetch organizations only for Super Admin
+      fetchOrganizations()
+        .then((data) => setOrganizations(data))
+        .catch((err) => console.error("Failed to fetch organizations:", err));
+    } else {
+      setUserRole("USER");
+    }
+  }, [userClaims]);
 
   useEffect(() => {
     if (!organizationId) return;
@@ -192,11 +192,11 @@ useEffect(() => {
     }
   }, []);
 
-useEffect(() => {
-  if (selectedOrg?.orgId) {
-    setOrganizationId(Number(selectedOrg.orgId));
-  }
-}, [selectedOrg]);
+  useEffect(() => {
+    if (selectedOrg?.orgId) {
+      setOrganizationId(Number(selectedOrg.orgId));
+    }
+  }, [selectedOrg]);
 
   useEffect(() => {
     if (selectedOrg?.role === "ROLE_ORG_STAFF") {
@@ -305,7 +305,7 @@ useEffect(() => {
     const value = e.target.value;
     setConfirmMobileNumber(value);
   };
-  
+
   const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmEmailAddress(value);
@@ -467,8 +467,8 @@ useEffect(() => {
                   >
                     <div
                       className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                          ? "bg-blue-500 text-white"
-                          : "bg-white border border-gray-300 text-gray-500"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white border border-gray-300 text-gray-500"
                         }`}
                     >
                       <Icon className="w-6 h-6" />
@@ -877,7 +877,17 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="flex justify-center pt-1">
+          <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
+
+
             <button
               type="submit"
               className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"

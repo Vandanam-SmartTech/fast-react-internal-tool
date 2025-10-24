@@ -7,17 +7,18 @@ import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import bgImage from '../../assets/Solar_Image.jpg';
-import { useUser } from "../../contexts/UserContext"; 
+import { useUser } from "../../contexts/UserContext";
 
 interface OrgRoleData {
-  role: string;
+  roles: string[];
   org_name: string;
 }
 
 interface UserClaims {
-  name?: string;
+  id: number;
+  name_as_per_gov_id?: string;
   preferred_name?: string;
-  email?: string;
+  email_address?: string;
   global_roles?: string[];
   org_roles?: Record<string, OrgRoleData>;
   has_password_changed?: boolean;
@@ -59,19 +60,19 @@ const Login = () => {
   }, []);
 
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  try {
-    const { jwt } = await login({ identifier, password });
-    localStorage.setItem('jwtToken', jwt);
-    setAuthToken(jwt);
+    try {
+      const { jwt } = await login({ identifier, password });
+      localStorage.setItem('jwtToken', jwt);
+      setAuthToken(jwt);
 
-    window.dispatchEvent(new Event('userUpdated'));
+      window.dispatchEvent(new Event('userUpdated'));
 
-    const claims = await fetchClaims();
+      const claims = await fetchClaims();
 
       if (!claims.has_password_changed) {
         navigate('/password-reset');
@@ -81,16 +82,16 @@ const handleLogin = async (e: React.FormEvent) => {
 
       handleRoleRouting(claims);
 
-  } catch (err) {
-    setError('Invalid login credentials.');
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      setError('Invalid login credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
-    const handleRoleRouting = (claims: UserClaims) => {
+  const handleRoleRouting = (claims: UserClaims) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       navigate('/super-admin-dashboard');
       return;
@@ -104,31 +105,35 @@ const handleLogin = async (e: React.FormEvent) => {
       return;
     }
 
-    if (orgEntries.length === 1) {
-      const [orgId, orgData] = orgEntries[0];
-      routeByOrgRole(orgData.role, orgId, orgData.org_name);
+    const roleOptions = orgEntries.flatMap(([orgId, orgData]) =>
+      orgData.roles.map((role: string) => ({
+        orgId,
+        orgName: orgData.org_name,
+        role
+      }))
+    );
+
+    if (roleOptions.length === 1) {
+      // Only one org-role combination, route directly
+      const { role, orgId, orgName } = roleOptions[0];
+      routeByOrgRole(role, orgId, orgName);
       return;
     }
 
-    // Multiple roles
-    setRoleOptions(orgEntries);
+    // Multiple org-role combinations → show dropdown
+    setRoleOptions(roleOptions);
     setShowOrgSelection(true);
   };
 
+
   const routeByOrgRole = (role: string, orgId?: string, orgName?: string) => {
-    if (orgId && orgName) {
-      localStorage.setItem(
-        'selectedOrg',
-        JSON.stringify({ orgId, orgName, role })
-      );
-    }else if (orgName) {
-      
+    if (orgId && orgName && role) {
       localStorage.setItem(
         'selectedOrg',
         JSON.stringify({ orgId, orgName, role })
       );
     }
-    
+
 
     switch (role) {
       case 'ROLE_ORG_ADMIN':
@@ -248,18 +253,20 @@ const handleLogin = async (e: React.FormEvent) => {
                   className="w-full p-3 border rounded-xl"
                 >
                   <option value="">Select Role & Organization</option>
-                  {roleOptions.map(([orgId, orgData]) => (
+                  {roleOptions.map(({ orgId, orgName, role }) => (
                     <option
-                      key={orgId}
-                      value={`${orgData.role}|${orgId}|${orgData.org_name}`}
+                      key={`${orgId}-${role}`}
+                      value={`${role}|${orgId}|${orgName}`}
                     >
-                      {orgData.org_name} ({orgData.role})
+                      {orgName} ({role.replace('ROLE_', '').replace(/_/g, ' ')})
                     </option>
                   ))}
                 </select>
 
+
+
                 <div className="flex gap-3">
-                   <Button
+                  <Button
                     variant="outline"
                     onClick={() => {
                       setShowOrgSelection(false);
@@ -270,7 +277,7 @@ const handleLogin = async (e: React.FormEvent) => {
                     leftIcon={<ArrowLeft className="h-4 w-4" />}
                   >
                     Back
-                  </Button> 
+                  </Button>
                   <Button
                     variant="primary"
                     onClick={() => {

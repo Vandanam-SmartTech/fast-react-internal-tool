@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
 
@@ -458,6 +459,7 @@ export const ConnectionForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
+
     if (name === "isDiscomConsumer" && value === "No") {
       setConfirmConsumerNumber("");
     }
@@ -482,8 +484,14 @@ export const ConnectionForm = () => {
 
     // Real-time validation
     if (name === 'consumerId') {
-      validateFieldOnChange('consumerNumber', value);
-    } else if (name === 'gstIn') {
+  if (value === '') {
+    // Clear consumerNumber field error when input is empty
+    setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
+  } else {
+    validateFieldOnChange('consumerNumber', value);
+  }
+}
+ else if (name === 'gstIn') {
       validateFieldOnChange('gstIn', value);
     } else if (name === 'billedTo') {
       validateFieldOnChange('billedTo', value);
@@ -691,7 +699,16 @@ export const ConnectionForm = () => {
         {/* Header */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+            <div className="flex items-center gap-2">
+          {/* Back Arrow */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
               <h1 className="text-2xl font-bold text-gray-700">Add New Connection</h1>
             </div>
 
@@ -814,7 +831,7 @@ export const ConnectionForm = () => {
                   )}
                 </label>
                 <input
-                  type="text"
+                  type="password"
                   inputMode="numeric"
                   name="consumerId"
                   value={formData.consumerId}
@@ -1335,7 +1352,17 @@ export const ConnectionForm = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-1">
+          <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
+
+
             <button
               type="submit"
               className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"

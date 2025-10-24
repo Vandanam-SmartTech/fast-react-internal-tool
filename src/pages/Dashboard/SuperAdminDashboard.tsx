@@ -89,13 +89,13 @@ const SuperAdminDashboard: React.FC = () => {
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
     },
-    {
-      title: 'User Organization Roles',
-      description: 'Manage user roles across organizations',
-      icon: <Settings className="h-8 w-8 text-solar-600" />,
-      path: '/admin-management',
-      color: 'bg-gradient-to-r from-solar-50 to-solar-100 dark:from-solar-900/20 dark:to-solar-800/20 border-solar-200 dark:border-solar-700'
-    }
+    // {
+    //   title: 'User Organization Roles',
+    //   description: 'Manage user roles across organizations',
+    //   icon: <Settings className="h-8 w-8 text-solar-600" />,
+    //   path: '/admin-management',
+    //   color: 'bg-gradient-to-r from-solar-50 to-solar-100 dark:from-solar-900/20 dark:to-solar-800/20 border-solar-200 dark:border-solar-700'
+    // }
   ];
 
 

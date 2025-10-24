@@ -61,7 +61,10 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         }
 
         const [orgId, orgData] = matchingOrg;
-        const currentRole = orgData.role;
+        const currentRole =
+          selectedOrg.role && orgData.roles.includes(selectedOrg.role)
+            ? selectedOrg.role
+            : orgData.roles[0];
 
         
         localStorage.setItem(

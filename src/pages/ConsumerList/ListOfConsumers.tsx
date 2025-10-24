@@ -215,8 +215,8 @@ const ListOfConsumers: React.FC = () => {
   };
 
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const handleSearch = (searchTerm: string) => {
+    setSearchQuery(searchTerm);
   };
 
   // Debounced remote search with race protection
@@ -277,7 +277,7 @@ const ListOfConsumers: React.FC = () => {
           userId,
         };
 
-        console.log("Sending search request with params:", { query: trimmed, ...params });
+        console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
         const results = await searchCustomers(trimmed, params);
 
         // Only apply results if this is the latest search

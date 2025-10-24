@@ -439,14 +439,6 @@ const AppContent: React.FC = () => {
               }
             />
 
-            <Route
-              path="/user-form/:id"
-              element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
-                  <UserFormManagement />
-                </RoleProtectedRoute>
-              }
-            />
 
             <Route
               path="/edit-user"

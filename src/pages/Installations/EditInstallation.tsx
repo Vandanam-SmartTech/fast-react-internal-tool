@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getInstallationByConnectionId, updateInstallationSpaceDetails, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { ArrowLeft } from "lucide-react";
 import {
   UserCircleIcon,
   BoltIcon,
@@ -169,9 +170,18 @@ export const EditInstallation = () => {
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-18">
-        <h1 className="text-2xl font-bold text-gray-700">Update Installation</h1>
+      <div className="flex items-center gap-2">
+        {/* Back Arrow */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="p-2 rounded-full hover:bg-gray-200 transition"
+        >
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
+        </button>
 
+        {/* Heading - Adjusts Position on Small Screens */}
+        <h1 className="text-2xl font-bold text-gray-700">Edit Installation</h1>
       </div>
 
 
@@ -218,8 +228,8 @@ export const EditInstallation = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white"
+                      : "bg-white border border-gray-300 text-gray-500"
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -280,13 +290,13 @@ export const EditInstallation = () => {
                     setFormData((prev) => ({
                       ...prev,
                       installationSpaceTitle: 'Other',
-                      customInstallationSpaceTitle: '', 
+                      customInstallationSpaceTitle: '',
                     }));
                   } else {
                     setFormData((prev) => ({
                       ...prev,
                       installationSpaceTitle: value,
-                      customInstallationSpaceTitle: '', 
+                      customInstallationSpaceTitle: '',
                     }));
                   }
                 }}
@@ -363,105 +373,105 @@ export const EditInstallation = () => {
               />
             </div>
 
-                    <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="structureInverterDistanceFt"
-            name="structureInverterDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.structureInverterDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="structureInverterDistanceFt"
+                name="structureInverterDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.structureInverterDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="inverterMeterDistanceFt"
-            name="inverterMeterDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.inverterMeterDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="inverterMeterDistanceFt"
+                name="inverterMeterDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.inverterMeterDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="inverterEarthDistanceFt"
-            name="inverterEarthDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.inverterEarthDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="inverterEarthDistanceFt"
+                name="inverterEarthDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.inverterEarthDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="arresterEarthDistanceFt"
-            name="arresterEarthDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.arresterEarthDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="arresterEarthDistanceFt"
+                name="arresterEarthDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.arresterEarthDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="minimumElevationFt"
-            name="minimumElevationFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.minimumElevationFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="minimumElevationFt"
+                name="minimumElevationFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.minimumElevationFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
 
 
@@ -482,7 +492,17 @@ export const EditInstallation = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-center pt-1">
+        <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+          >
+            Cancel
+          </button>
+
+
           <button
             type="submit"
             className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"

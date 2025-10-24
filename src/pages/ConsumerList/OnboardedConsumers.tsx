@@ -17,7 +17,6 @@ interface Consumer {
   customerId: number;
   consumerId: number;
   connectionType: string;
-  materials?: { materialId: number; materialName: string; quantity: number; unitPrice: number }[];
 }
 
 const OnboardedConsumers: React.FC = () => {
@@ -114,14 +113,6 @@ const OnboardedConsumers: React.FC = () => {
         orgId = null;
       }
 
-      const orgName = orgId
-        ? organizations.find((o) => o.id === orgId)?.name || null
-        : null;
-
-      const agencyName = agencyId
-        ? agencies.find((a) => a.id === agencyId)?.name || null
-        : null;
-
       const params = {
         orgId,
         agencyId,
@@ -143,8 +134,8 @@ const OnboardedConsumers: React.FC = () => {
   };
 
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const handleSearch = (searchTerm: string) => {
+    setSearchQuery(searchTerm);
   };
 
 
@@ -205,7 +196,7 @@ const OnboardedConsumers: React.FC = () => {
           userId,
         };
 
-        console.log("Sending search request with params:", { query: trimmed, ...params });
+        console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
         const results = await searchOnboardedConsumers(trimmed, params);
 
 
@@ -228,68 +219,70 @@ const OnboardedConsumers: React.FC = () => {
   }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
 
 
-  useEffect(() => {
-    const loadMaterialsForSearchResults = async () => {
-      if (searchResults.length === 0) return;
+  // useEffect(() => {
+  //   const loadMaterialsForSearchResults = async () => {
+  //     if (searchResults.length === 0) return;
 
-      const materialsPromises = searchResults.map(async (consumer) => {
-        try {
-          const materials = await getMaterialsByConnectionId(consumer.id);
-          return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
-        } catch (error) {
-          console.error(`Error loading materials for consumer ${consumer.id}:`, error);
-          return { consumerId: consumer.id, hasMaterials: false };
-        }
-      });
+  //     const materialsPromises = searchResults.map(async (consumer) => {
+  //       try {
+  //         const materials = await getMaterialsByConnectionId(consumer.id);
+  //         return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
+  //       } catch (error) {
+  //         console.error(`Error loading materials for consumer ${consumer.id}:`, error);
+  //         return { consumerId: consumer.id, hasMaterials: false };
+  //       }
+  //     });
 
-      try {
-        const materialsResults = await Promise.all(materialsPromises);
-        const newMaterialsMap = { ...materialsMap };
+  //     try {
+  //       const materialsResults = await Promise.all(materialsPromises);
+  //       const newMaterialsMap = { ...materialsMap };
 
-        materialsResults.forEach(({ consumerId, hasMaterials }) => {
-          newMaterialsMap[consumerId] = hasMaterials;
-        });
+  //       materialsResults.forEach(({ consumerId, hasMaterials }) => {
+  //         newMaterialsMap[consumerId] = hasMaterials;
+  //       });
 
-        setMaterialsMap(newMaterialsMap);
-      } catch (error) {
-        console.error("Error loading materials for search results:", error);
-      }
-    };
+  //       setMaterialsMap(newMaterialsMap);
+  //     } catch (error) {
+  //       console.error("Error loading materials for search results:", error);
+  //     }
+  //   };
 
-    loadMaterialsForSearchResults();
-  }, [searchResults]);
+  //   loadMaterialsForSearchResults();
+  // }, [searchResults]);
 
   // Load materials for regular consumers list
-  useEffect(() => {
-    const loadMaterialsForConsumers = async () => {
-      if (consumers.length === 0) return;
 
-      const materialsPromises = consumers.map(async (consumer) => {
-        try {
-          const materials = await getMaterialsByConnectionId(consumer.id);
-          return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
-        } catch (error) {
-          console.error(`Error loading materials for consumer ${consumer.id}:`, error);
-          return { consumerId: consumer.id, hasMaterials: false };
-        }
-      });
 
-      try {
-        const materialsResults = await Promise.all(materialsPromises);
-        const newMaterialsMap = { ...materialsMap };
+  // useEffect(() => {
+  //   const loadMaterialsForConsumers = async () => {
+  //     if (consumers.length === 0) return;
 
-        materialsResults.forEach(({ consumerId, hasMaterials }) => {
-          newMaterialsMap[consumerId] = hasMaterials;
-        });
+  //     const materialsPromises = consumers.map(async (consumer) => {
+  //       try {
+  //         const materials = await getMaterialsByConnectionId(consumer.id);
+  //         return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
+  //       } catch (error) {
+  //         console.error(`Error loading materials for consumer ${consumer.id}:`, error);
+  //         return { consumerId: consumer.id, hasMaterials: false };
+  //       }
+  //     });
 
-        setMaterialsMap(newMaterialsMap);
-      } catch (error) {
-        console.error("Error loading materials for consumers:", error);
-      }
-    };
+  //     try {
+  //       const materialsResults = await Promise.all(materialsPromises);
+  //       const newMaterialsMap = { ...materialsMap };
 
-    loadMaterialsForConsumers();
-  }, [consumers]);
+  //       materialsResults.forEach(({ consumerId, hasMaterials }) => {
+  //         newMaterialsMap[consumerId] = hasMaterials;
+  //       });
+
+  //       setMaterialsMap(newMaterialsMap);
+  //     } catch (error) {
+  //       console.error("Error loading materials for consumers:", error);
+  //     }
+  //   };
+
+  //   loadMaterialsForConsumers();
+  // }, [consumers]);
 
   const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
@@ -489,7 +482,7 @@ const OnboardedConsumers: React.FC = () => {
             <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
 
               {materialsMap[consumer.id] && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-50 text-solar-700 dark:bg-solar-900/20 dark:text-solar-300 px-2.5 py-1 text-xs">
@@ -497,7 +490,7 @@ const OnboardedConsumers: React.FC = () => {
                   Materials Added
                 </span>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -556,7 +549,7 @@ const OnboardedConsumers: React.FC = () => {
             </Button>
           </div>
 
-          <Button
+          {/* <Button
             variant={materialsMap[consumer.id] ? "outline" : "primary"}
             size="sm"
             onClick={() =>
@@ -574,7 +567,22 @@ const OnboardedConsumers: React.FC = () => {
             }
           >
             {materialsMap[consumer.id] ? "View Materials" : "Add Materials"}
+          </Button> */}
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() =>
+              navigate("/material-form", {
+                state: { consumer, connectionId: consumer.id },
+              })
+            }
+            className="w-full"
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            Add Materials
           </Button>
+
 
         </div>
       </CardBody>
@@ -692,7 +700,7 @@ const OnboardedConsumers: React.FC = () => {
                   disabled={agencies.length === 0}
                   className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
                 >
-                  <option value="">Self</option>
+                  <option value="">All</option>
                   {agencies.map((agency) => (
                     <option key={agency.id} value={agency.id}>
                       {agency.name}

@@ -66,7 +66,7 @@ export const ViewInstallation = () => {
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
       <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2 mb-2">
         {/* Backward Arrow Button (Before Title on Mobile) */}
-        <div className="flex items-center w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <button
             onClick={() =>
               navigate(`/view-connection`, {

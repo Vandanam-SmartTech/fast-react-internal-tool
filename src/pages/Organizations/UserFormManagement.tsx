@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { saveUser } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+import { Organization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 
@@ -180,14 +180,6 @@ const UserFormManagement: React.FC = () => {
     console.log("Current state PINcode:", value);
   };
 
-  const loadOrganizations = async () => {
-    try {
-      const data = await fetchOrganizations();
-      setOrganizations(data);
-    } catch (error) {
-      console.error('Failed to load organizations');
-    }
-  };
 
   // const loadUser = async (userId: number) => {
   //   try {

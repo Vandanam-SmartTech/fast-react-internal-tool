@@ -8,16 +8,17 @@ const AgencyAdminDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
   const { userClaims } = useUser();
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
       const hour = new Date().getHours();
       if (hour < 12) {
-        setGreeting('Good Morning!');
+        setGreeting('Good Morning');
       } else if (hour < 16) {
-        setGreeting('Good Afternoon!');
+        setGreeting('Good Afternoon');
       } else {
-        setGreeting('Good Evening!');
+        setGreeting('Good Evening');
       }
     };
 
@@ -41,7 +42,8 @@ const AgencyAdminDashboard: React.FC = () => {
       title: 'My Agency',
       description: 'View, Update my agency',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
-      path: '/organizations',
+      path: '/agency-view',
+      state: { agencyId : userInfo?.orgId || null},
       color: 'bg-purple-50 hover:bg-purple-100'
     },
     {
@@ -51,13 +53,13 @@ const AgencyAdminDashboard: React.FC = () => {
       path: '/user-management',
       color: 'bg-orange-50 hover:bg-orange-100'
     },
-    {
-      title: 'User Agency Roles',
-      description: 'Manage user roles in my agency',
-      icon: <Settings className="h-12 w-12 text-indigo-600" />,
-      path: '/admin-management',
-      color: 'bg-indigo-50 hover:bg-indigo-100'
-    }
+    // {
+    //   title: 'User Agency Roles',
+    //   description: 'Manage user roles in my agency',
+    //   icon: <Settings className="h-12 w-12 text-indigo-600" />,
+    //   path: '/admin-management',
+    //   color: 'bg-indigo-50 hover:bg-indigo-100'
+    // }
   ];
 
   return (
@@ -89,11 +91,13 @@ const AgencyAdminDashboard: React.FC = () => {
               </div>
               </div>
       
+            <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-secondary-900">Management Tools</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardItems.map((item, index) => (
           <div 
             key={index}
-            onClick={() => navigate(item.path)}
+            onClick={() => navigate(item.path, { state: item.state })}
             className={`${item.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200`}
           >
             <div className="flex items-start gap-4">
@@ -105,6 +109,7 @@ const AgencyAdminDashboard: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

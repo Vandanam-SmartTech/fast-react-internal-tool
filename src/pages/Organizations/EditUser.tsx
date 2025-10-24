@@ -758,7 +758,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 <div className="flex justify-center gap-4 mt-8">
                     <button
                         type="button"
-                        onClick={() => navigate('/user-management')}
+                        onClick={() => navigate(-1)}
                         className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                     >
                         Cancel

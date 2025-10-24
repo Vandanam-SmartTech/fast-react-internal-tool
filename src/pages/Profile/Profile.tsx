@@ -603,18 +603,21 @@ const Profile: React.FC = () => {
                 {/* All Organization Roles with Names */}
                 {user?.org_roles &&
                   Object.entries(user.org_roles).map(([orgId, org]) => (
-                    <div key={orgId} className="flex items-center gap-3">
-                      <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {org.org_name}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {org.role.replace('ROLE_', '').replace(/_/g, ' ')}
-                        </p>
+                    <div key={orgId} className="flex flex-col gap-1">
+                      <div className="flex items-center gap-3">
+                        <Building className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <p className="text-sm font-medium text-gray-900">{org.org_name}</p>
+                      </div>
+                      <div className="ml-8 flex flex-col gap-0.5">
+                        {org.roles.map((role) => (
+                          <p key={role} className="text-sm text-gray-600">
+                            {role.replace('ROLE_', '').replace(/_/g, ' ')}
+                          </p>
+                        ))}
                       </div>
                     </div>
                   ))}
+
               </div>
             </CardBody>
           </Card>

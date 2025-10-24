@@ -70,8 +70,8 @@ const AdminDashboard: React.FC = () => {
       color: 'bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700'
     },
     {
-      title: 'Manage Roles',
-      description: 'List, View, Add new roles',
+      title: 'Manage User Roles',
+      description: 'Manage user roles across organizations',
       icon: <Shield className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'

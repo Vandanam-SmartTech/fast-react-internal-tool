@@ -132,29 +132,29 @@ const Header: React.FC = () => {
 
 
   useEffect(() => {
-  const loadProfilePhoto = async () => {
-    const photoUrl = await getUserProfilePhoto();
-    if (photoUrl) {
-      setProfilePhoto(photoUrl);
+    const loadProfilePhoto = async () => {
+      const photoUrl = await getUserProfilePhoto();
+      if (photoUrl) {
+        setProfilePhoto(photoUrl);
+        setHasUploadedPhoto(true);
+      }
+    };
+
+    loadProfilePhoto();
+
+
+    const handlePhotoUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setProfilePhoto(customEvent.detail);
       setHasUploadedPhoto(true);
-    }
-  };
+    };
 
-  loadProfilePhoto();
+    window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
 
-
-  const handlePhotoUpdate = (e: Event) => {
-    const customEvent = e as CustomEvent<string>;
-    setProfilePhoto(customEvent.detail);
-    setHasUploadedPhoto(true);
-  };
-
-  window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
-
-  return () => {
-    window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+    };
+  }, []);
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -315,33 +315,37 @@ const Header: React.FC = () => {
                       <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">Choose your organization and role</p>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      {Object.entries(userClaims.org_roles).map(([orgId, orgData]: [string, any]) => {
-                        const isSelected = orgData.org_name === selectedOrgName && orgData.role === selectedRole;
-                        return (
-                          <button
-                            key={orgId}
-                            onClick={() => handleOrgChange(orgId, orgData.org_name, orgData.role)}
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${isSelected
-                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600'
-                              : 'text-secondary-700 dark:text-secondary-300 border-l-transparent'
-                              }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium">{orgData.org_name}</div>
-                                <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
-                                  {orgData.role.replace('ROLE_', '').replace('_', ' ')}
+                      {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
+                        orgData.roles.map(role => {
+                          const isSelected = orgData.org_name === selectedOrgName && role === selectedRole;
+
+                          return (
+                            <button
+                              key={`${orgId}-${role}`}
+                              onClick={() => handleOrgChange(orgId, orgData.org_name, role)}
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${isSelected
+                                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
+                                  : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
+                                }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium">{orgData.org_name}</div>
+                                  <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                                    {role.replace("ROLE_", "").replace("_", " ")}
+                                  </div>
                                 </div>
+                                {isSelected && (
+                                  <div className="flex items-center">
+                                    <Check className="h-4 w-4 text-primary-600" />
+                                  </div>
+                                )}
                               </div>
-                              {isSelected && (
-                                <div className="flex items-center">
-                                  <Check className="h-4 w-4 text-primary-600" />
-                                </div>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
+                            </button>
+                          );
+                        })
+                      )}
+
                     </div>
                   </div>
                 </div>
@@ -413,17 +417,17 @@ const Header: React.FC = () => {
                         className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
                         onClick={() => {
                           if (profilePhoto) {
-                            
+
                             setCrop({ x: 0, y: 0 });
                             setZoom(1);
                             setRotation(0);
                             setCroppedAreaPixels(null);
 
-                            
+
                             setPreviewUrl(profilePhoto);
                             setShowCropModal(true);
                           } else {
-                            
+
                             document.getElementById("profile-file-input")?.click();
                           }
                         }}

@@ -3,8 +3,8 @@
   "VITE_OTP_API": "https://dev.vandanam.co.in/otp",
   "VITE_CRS_API": "https://dev.vandanam.co.in/crs",
   "VITE_QUOTATION_API": "https://dev.vandanam.co.in/quotation",
-  "VITE_DOCGENERATOR_API": "http://localhost:8365",
-  "VITE_DOCMANAGER_API": "http://localhost:8192",
+  "VITE_DOCGENERATOR_API": "https://dev.vandanam.co.in/document-generator",
+  "VITE_DOCMANAGER_API": "https://dev.vandanam.co.in/document-manager",
   "BASE_PATH": "/solarpro/",
   "VITE_MODE": "development",
   "VITE_ENV_LABEL": "Development"

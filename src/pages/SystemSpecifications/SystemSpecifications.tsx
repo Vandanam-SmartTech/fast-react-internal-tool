@@ -735,14 +735,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
 
-      <div className="flex flex-col md:flex-row items-center justify-between md:space-x-4 col-span-1 md:col-span-2">
+      
 
-        <div className="flex items-center w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <button
             onClick={() =>
-              navigate(`/view-connection`, {
-                state: { consumerId, customerId, connectionId },
-              })
+              navigate(-1)
             }
             className="p-2 rounded-full hover:bg-gray-200 transition"
           >
@@ -755,7 +753,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
             System Specification Details
           </h2>
         </div>
-      </div>
+
 
       <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">

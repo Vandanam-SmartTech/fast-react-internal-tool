@@ -54,21 +54,21 @@ export const ViewConnection = () => {
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
-  const sessionMap = {
-    Aadhar: "Aadhaar Card",
-    Passbook: "Bank Passbook",
-    Electricity: "Electricity Bill",
-  } as const;
+  // const sessionMap = {
+  //   Aadhar: "Aadhaar Card",
+  //   Passbook: "Bank Passbook",
+  //   Electricity: "Electricity Bill",
+  // } as const;
 
-  type SessionKey = keyof typeof sessionMap;
-  type SessionName = (typeof sessionMap)[SessionKey];
+  // type SessionKey = keyof typeof sessionMap;
+  // type SessionName = (typeof sessionMap)[SessionKey];
 
-  const [sessionFiles, setSessionFiles] = useState<{
-    [key in SessionKey]?: File[];
-  }>({});
-  const [uploadedFiles, setUploadedFiles] = useState<{
-    [key in SessionKey]?: UploadedFile[];
-  }>({});
+  // const [sessionFiles, setSessionFiles] = useState<{
+  //   [key in SessionKey]?: File[];
+  // }>({});
+  // const [uploadedFiles, setUploadedFiles] = useState<{
+  //   [key in SessionKey]?: UploadedFile[];
+  // }>({});
 
   const tabs = [
     "Customer Details",
@@ -78,38 +78,41 @@ export const ViewConnection = () => {
   ];
 
 
-  useEffect(() => {
-    const fetchConnection = async () => {
-      if (!customerId || !connectionId) {
-        console.error("Customer ID or Connection ID not found!");
-        return;
-      }
+// ⬇️ Move this function outside useEffect so it can be reused
+const fetchConnection = async () => {
+  if (!customerId || !connectionId) {
+    console.error("Customer ID or Connection ID not found!");
+    return;
+  }
 
-      const data = await fetchConsumerNumber(customerId);
-      if (Array.isArray(data) && data.length > 0) {
-        const selectedConnection = data.find(conn => conn.id === Number(connectionId));
-        if (selectedConnection) {
-          setConnection(selectedConnection);
-        } else {
-          console.warn("No matching connection found for given connectionId.");
-          setConnection(null);
-        }
-      } else {
-        console.warn("No connections found for customer.");
-        setConnection(null);
-      }
-    };
-
-    fetchConnection();
-  }, [customerId, connectionId]);
-
-
-
-  useEffect(() => {
-    if (modalOpen) {
-      fetchAndSetUploadedFiles();
+  const data = await fetchConsumerNumber(customerId);
+  if (Array.isArray(data) && data.length > 0) {
+    const selectedConnection = data.find(conn => conn.id === Number(connectionId));
+    if (selectedConnection) {
+      setConnection(selectedConnection);
+    } else {
+      console.warn("No matching connection found for given connectionId.");
+      setConnection(null);
     }
-  }, [modalOpen]);
+  } else {
+    console.warn("No connections found for customer.");
+    setConnection(null);
+  }
+};
+
+// Keep your useEffect clean
+useEffect(() => {
+  fetchConnection();
+}, [customerId, connectionId]);
+
+
+
+
+  // useEffect(() => {
+  //   if (modalOpen) {
+  //     fetchAndSetUploadedFiles();
+  //   }
+  // }, [modalOpen]);
 
   const handleMessageBoxClose = () => {
     setMessageBoxOpen(false);
@@ -117,91 +120,89 @@ export const ViewConnection = () => {
 
 
 
-  const fetchAndSetUploadedFiles = async () => {
-    const connectionId = location.state?.connectionId;
+  // const fetchAndSetUploadedFiles = async () => {
+  //   const connectionId = location.state?.connectionId;
 
-    const fileMap: { [key in SessionKey]?: UploadedFile[] } = {};
-
-    // SessionKey to backend prefix
-    const sessionIdentifierMap: Record<SessionKey, string> = {
-      Aadhar: "AadhaarCard",
-      Passbook: "BankPassbook",
-      Electricity: "EBill",
-    };
-
-    await Promise.all(
-      (Object.entries(sessionMap) as [SessionKey, SessionName][]).map(
-        async ([key]) => {
-          const backendSessionName = `${sessionIdentifierMap[key]}_${govIdName}`;
-          const files = await fetchUploadedFilesBySession(connectionId, backendSessionName);
-          fileMap[key] = files;
-        }
-      )
-    );
-
-    setUploadedFiles(fileMap);
-  };
+  //   const fileMap: { [key in SessionKey]?: UploadedFile[] } = {};
 
 
+  //   const sessionIdentifierMap: Record<SessionKey, string> = {
+  //     Aadhar: "AadhaarCard",
+  //     Passbook: "BankPassbook",
+  //     Electricity: "EBill",
+  //   };
+
+  //   await Promise.all(
+  //     (Object.entries(sessionMap) as [SessionKey, SessionName][]).map(
+  //       async ([key]) => {
+  //         const backendSessionName = `${sessionIdentifierMap[key]}_${govIdName}`;
+  //         const files = await fetchUploadedFilesBySession(connectionId, backendSessionName);
+  //         fileMap[key] = files;
+  //       }
+  //     )
+  //   );
+
+  //   setUploadedFiles(fileMap);
+  // };
 
 
-  const handleSingleFileUpload = async (files: File[]) => {
-    if (!files || files.length === 0) {
-      toast.error("Please select files to upload.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      return;
-    }
 
-    setIsLoading(true);
-    try {
-      const connectionId = location.state?.connectionId;
-      // Map internal session key to session identifier
-      const sessionIdentifierMap: Record<SessionKey, string> = {
-        Aadhar: "AadhaarCard",
-        Passbook: "BankPassbook",
-        Electricity: "EBill",
-      };
 
-      // Construct backend session name
-      const backendSessionName = `${sessionIdentifierMap[activeDocTab]}_${govIdName}`;
+  // const handleSingleFileUpload = async (files: File[]) => {
+  //   if (!files || files.length === 0) {
+  //     toast.error("Please select files to upload.", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //     return;
+  //   }
 
-      // Upload with modified session name
-      const result = await uploadDocuments(connectionId, backendSessionName, files);
+  //   setIsLoading(true);
+  //   try {
+  //     const connectionId = location.state?.connectionId;
 
-      toast.success(`${sessionMap[activeDocTab]} uploaded successfully`, {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      await fetchAndSetUploadedFiles();
-      setSessionFiles((prev) => ({ ...prev, [activeDocTab]: [] }));
-    } catch (error: any) {
-      toast.error(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`, {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     const sessionIdentifierMap: Record<SessionKey, string> = {
+  //       Aadhar: "AadhaarCard",
+  //       Passbook: "BankPassbook",
+  //       Electricity: "EBill",
+  //     };
 
-  const handleDownload = async (fileId: string, fileName: string) => {
-    try {
-      const blob = await downloadDocumentById(fileId);
-      const url = window.URL.createObjectURL(blob);
+  //     const backendSessionName = `${sessionIdentifierMap[activeDocTab]}_${govIdName}`;
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
+  //     const result = await uploadDocuments(connectionId, backendSessionName, files);
 
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download file.");
-    }
-  };
+  //     toast.success(`${sessionMap[activeDocTab]} uploaded successfully`, {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //     await fetchAndSetUploadedFiles();
+  //     setSessionFiles((prev) => ({ ...prev, [activeDocTab]: [] }));
+  //   } catch (error: any) {
+  //     toast.error(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`, {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleDownload = async (fileId: string, fileName: string) => {
+  //   try {
+  //     const blob = await downloadDocumentById(fileId);
+  //     const url = window.URL.createObjectURL(blob);
+
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = fileName;
+  //     a.click();
+
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (error) {
+  //     console.error("Download failed:", error);
+  //     alert("Failed to download file.");
+  //   }
+  // };
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -248,36 +249,52 @@ export const ViewConnection = () => {
     return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
   };
 
+  // const handleOnboardClick = async () => {
+  //   if (!connection?.id) return;
+
+  //   try {
+  //     const exists = await checkSystemSpecificationsExists(connection.id);
+
+  //     if (!exists) {
+
+  //       setDialogType("confirm");
+  //       setDialogMessage(
+  //         "System Specification details are not saved for this consumer, do you want to save?"
+  //       );
+  //       setDialogAction(() => handleSaveSpecs);
+  //       setDialogOpen(true);
+  //       return;
+  //     }
+
+  //     setDialogType("confirm");
+  //     setDialogMessage("Do you want to onboard the consumer?");
+  //     setDialogAction(() => handleYes);
+  //     setDialogOpen(true);
+
+  //   } catch (error) {
+  //     console.error("Error checking system specifications:", error);
+  //     setMessageBoxContent("Failed to verify system specification details.");
+  //     setMessageBoxSeverity("error");
+  //     setMessageBoxOpen(true);
+  //   }
+  // };
+
   const handleOnboardClick = async () => {
     if (!connection?.id) return;
 
     try {
-      const exists = await checkSystemSpecificationsExists(connection.id);
-
-      if (!exists) {
-        // Directly show system specification save dialog
-        setDialogType("confirm");
-        setDialogMessage(
-          "System Specification details are not saved for this consumer, do you want to save?"
-        );
-        setDialogAction(() => handleSaveSpecs);
-        setDialogOpen(true);
-        return;
-      }
-
-      // If exists, then show normal onboard confirmation
       setDialogType("confirm");
       setDialogMessage("Do you want to onboard the consumer?");
       setDialogAction(() => handleYes);
       setDialogOpen(true);
-
     } catch (error) {
-      console.error("Error checking system specifications:", error);
-      setMessageBoxContent("Failed to verify system specification details.");
+      console.error("Error during onboarding:", error);
+      setMessageBoxContent("Failed to start onboarding process.");
       setMessageBoxSeverity("error");
       setMessageBoxOpen(true);
     }
   };
+
 
   const handleSaveSpecs = () => {
     navigate(`/system-specifications`, {
@@ -302,14 +319,19 @@ export const ViewConnection = () => {
         connection.id,
         updatedConnection
       );
-      setMessageBoxContent("Consumer onboarded successfully!");
-      setMessageBoxSeverity("success");
-      setMessageBoxOpen(true);
+      toast.success("Consumer onboarded successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
       console.log("Updated connection:", response);
+
+      await fetchConnection();
+
     } catch (error) {
-      setMessageBoxContent("Failed to onboard consumer. Please try again.");
-      setMessageBoxSeverity("error");
-      setMessageBoxOpen(true);
+      toast.error("Failed to onboard consumer. Please try again.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
       console.error("Onboarding failed:", error);
     }
   };
@@ -324,14 +346,21 @@ export const ViewConnection = () => {
       };
 
       const response = await updateConsumerConnectionDetails(connection.id, updatedConnection);
-      setMessageBoxContent("Consumer NOT onboarded.");
-      setMessageBoxSeverity("error");
-      setMessageBoxOpen(true);
+      toast.info("Consumer NOT onboarded.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
       console.log("Updated connection:", response);
+
+      await fetchConnection();
     } catch (error) {
-      setMessageBoxContent("Failed to update consumer onboarding status. Please try again.");
-      setMessageBoxSeverity("error");
-      setMessageBoxOpen(true);
+      toast.error(
+        "Failed to update consumer onboarding status. Please try again.",
+        {
+          autoClose: 1000,
+          hideProgressBar: true,
+        }
+      );
       console.error("Onboarding status update failed:", error);
     }
   };
@@ -347,12 +376,10 @@ export const ViewConnection = () => {
     <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-1 sm:pt-1 pr-4 pl-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 w-full">
 
-        <div className="flex items-center w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <button
             onClick={() =>
-              navigate(`/view-customer`, {
-                state: { consumerId: consumerId, customerId, connectionId: connectionId },
-              })
+              navigate(-1)
             }
             className="p-2 rounded-full hover:bg-gray-200 transition"
           >
@@ -720,14 +747,15 @@ export const ViewConnection = () => {
 
 
       {/* Document Upload Modal */}
-      {modalOpen && (
+
+      {/*{modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
               Upload Required Documents
             </h3>
 
-            {/* Tabs */}
+ 
             <div className="flex justify-around mb-4">
               {(Object.keys(sessionMap) as SessionKey[]).map((key) => (
                 <button
@@ -743,7 +771,7 @@ export const ViewConnection = () => {
               ))}
             </div>
 
-            {/* File Upload */}
+     
             <div>
               <label className="block font-medium text-gray-700 mb-1">
                 Upload {sessionMap[activeDocTab]} File(s)
@@ -778,7 +806,7 @@ export const ViewConnection = () => {
                 </label>
               </div>
 
-              {/* Selected Files */}
+ 
               {sessionFiles[activeDocTab]?.length > 0 && (
                 <ul className="text-sm text-gray-700 mb-4">
                   {sessionFiles[activeDocTab].map((file, idx) => (
@@ -805,7 +833,7 @@ export const ViewConnection = () => {
                 </ul>
               )}
 
-              {/* Uploaded Files */}
+
               {uploadedFiles[activeDocTab]?.length > 0 && (
                 <div className="text-sm text-green-600 mb-4 space-y-1">
                   {uploadedFiles[activeDocTab].map((file) => (
@@ -822,7 +850,7 @@ export const ViewConnection = () => {
               )}
             </div>
 
-            {/* Buttons */}
+
             <div className="flex justify-between mt-6">
               <button
                 onClick={() => setModalOpen(false)}
@@ -840,7 +868,7 @@ export const ViewConnection = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
 
 

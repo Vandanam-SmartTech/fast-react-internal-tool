@@ -8,15 +8,23 @@ interface SelectedOrg {
   role: string;
 }
 
+interface OrgRole {
+  roles: string[];
+  org_name: string;
+}
+
 interface UserClaims {
   id: number;
   name_as_per_gov_id?: string;
   preferred_name?: string;
-  email?: string;
+  email_address?: string;
+  user_code?: string;
+  username?: string;
+  contact_number?: string;
   global_roles?: string[];
-  org_roles?: Record<string, any>;
+  org_roles?: Record<string, OrgRole>;
   has_password_changed?: boolean;
-  [key: string]: any;
+  [key: string]: any; 
 }
 
 interface UserContextType {

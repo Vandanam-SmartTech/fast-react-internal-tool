@@ -65,25 +65,21 @@ const AgencyView: React.FC = () => {
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
   if (!organization) return <div className="flex justify-center p-8">Organization not found</div>;
 
-  const isAgency = organization.parentId !== null;
+  //const isAgency = organization.parentId !== null;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() =>
-            navigate("/agencies", {
-              state: {
-                orgId: orgId,
-              },
-            })
+            navigate(-1)
           }
-          className="text-gray-600 hover:text-gray-800"
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-6 w-6 text-gray-700" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {isAgency ? <Building2 className="h-6 w-6" /> : <Building className="h-6 w-6" />}
+          <Building2 className="h-6 w-6" />
           Agency Details
         </h1>
         <button
@@ -162,10 +158,6 @@ const AgencyView: React.FC = () => {
           <div className="space-y-6">
             {orgUsers.length > 0 ? (
               <div>
-                {/* <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center gap-2">
-          <Users className="h-4 w-4 text-blue-600" />
-          Organization Users ({orgUsers.length})
-        </h3> */}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {orgUsers.map(user => (

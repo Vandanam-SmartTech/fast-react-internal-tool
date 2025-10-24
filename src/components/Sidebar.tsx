@@ -62,74 +62,81 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const goToUserManagement = () => navigate("/user-management");
 
 
-  const handleHomeClick = async () => {
-    try {
-      if (!userClaims) {
-        navigate("/login");
-        return;
-      }
-
-      if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-        navigate("/super-admin-dashboard");
-        return;
-      }
-
-
-      const selectedOrgStr = localStorage.getItem("selectedOrg");
-      if (!selectedOrgStr) {
-        navigate("/login");
-        return;
-      }
-
-      let selectedOrgId: string | null = null;
-      try {
-        const selectedOrg = JSON.parse(selectedOrgStr);
-        selectedOrgId = selectedOrg.orgId;
-      } catch {
-        console.error("Invalid selectedOrg format in localStorage");
-        navigate("/login");
-        return;
-      }
-
-      if (!selectedOrgId) {
-        navigate("/login");
-        return;
-      }
-
-      const orgData = userClaims.org_roles?.[selectedOrgId];
-      if (!orgData) {
-        alert("Invalid organization selection.");
-        return;
-      }
-
-      // Navigate by org role
-      switch (orgData.role) {
-        case "ROLE_ORG_ADMIN":
-          navigate("/org-admin-dashboard");
-          break;
-        case "ROLE_AGENCY_ADMIN":
-          navigate("/agency-admin-dashboard");
-          break;
-        case "ROLE_ORG_STAFF":
-          navigate("/staff-dashboard");
-          break;
-        case "ROLE_ORG_REPRESENTATIVE":
-          navigate("/representative-dashboard");
-          break;
-        case "ROLE_AGENCY_STAFF":
-          navigate("/staff-dashboard");
-          break;
-        case "ROLE_AGENCY_REPRESENTATIVE":
-          navigate("/representative-dashboard");
-          break;
-        default:
-          alert("Unauthorized role.");
-      }
-    } catch (error) {
-      console.error("Error fetching claims:", error);
-      alert("Error determining user role.");
+const handleHomeClick = async () => {
+  try {
+    if (!userClaims) {
+      navigate("/login");
+      return;
     }
-  };
+
+    // Super Admin shortcut
+    if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      navigate("/super-admin-dashboard");
+      return;
+    }
+
+    const selectedOrgStr = localStorage.getItem("selectedOrg");
+    if (!selectedOrgStr) {
+      navigate("/login");
+      return;
+    }
+
+    let selectedOrg;
+    try {
+      selectedOrg = JSON.parse(selectedOrgStr);
+    } catch {
+      console.error("Invalid selectedOrg format in localStorage");
+      localStorage.removeItem("selectedOrg");
+      navigate("/login");
+      return;
+    }
+
+    const orgData = userClaims.org_roles?.[selectedOrg.orgId];
+    if (!orgData) {
+      alert("Invalid organization selection.");
+      localStorage.removeItem("selectedOrg");
+      navigate("/login");
+      return;
+    }
+
+    // Validate role
+    let role = selectedOrg.role;
+    if (!role || !orgData.roles.includes(role)) {
+      // If multiple roles, pick the first or show selection
+      role = orgData.roles[0];
+      localStorage.setItem(
+        "selectedOrg",
+        JSON.stringify({ orgId: selectedOrg.orgId, orgName: orgData.org_name, role })
+      );
+    }
+
+    // Navigate based on role
+    switch (role) {
+      case "ROLE_ORG_ADMIN":
+        navigate("/org-admin-dashboard");
+        break;
+      case "ROLE_AGENCY_ADMIN":
+        navigate("/agency-admin-dashboard");
+        break;
+      case "ROLE_ORG_STAFF":
+      case "ROLE_AGENCY_STAFF":
+        navigate("/staff-dashboard");
+        break;
+      case "ROLE_ORG_REPRESENTATIVE":
+      case "ROLE_AGENCY_REPRESENTATIVE":
+        navigate("/representative-dashboard");
+        break;
+      default:
+        alert("Unauthorized role.");
+        localStorage.removeItem("selectedOrg");
+        navigate("/login");
+    }
+  } catch (error) {
+    console.error("Error fetching claims:", error);
+    alert("Error determining user role.");
+    navigate("/login");
+  }
+};
 
 
 
@@ -149,8 +156,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             const selectedOrg = JSON.parse(selectedOrgStr);
             if (selectedOrg.role) {
               allRoles.push(selectedOrg.role);
-            } else if (claims.org_roles?.[selectedOrg.orgId]) {
-              allRoles.push(claims.org_roles[selectedOrg.orgId].role);
+            } else if (claims.org_roles?.[selectedOrg.orgId]?.roles?.length) {
+              allRoles.push(claims.org_roles[selectedOrg.orgId].roles[0]);
             }
           } catch {
             console.error("Invalid selectedOrg format in localStorage");
@@ -188,10 +195,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               redirectToDashboard(allRoles);
             }
           } else if (dashboardPages.includes(currentPath)) {
-            
+
             redirectToDashboard(allRoles);
           }
-          
+
         }
       } catch (err) {
         console.error("Error fetching claims:", err);
@@ -221,7 +228,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     fetchRole();
 
     const handleOrgChange = () => {
-      fetchRole(true); 
+      fetchRole(true);
     };
 
     window.addEventListener("organizationChanged", handleOrgChange);
@@ -300,9 +307,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </button>
 
 
-              
+
               <div className="space-y-1">
-                
+
                 <button
                   onClick={() => setCustomersExpanded(!customersExpanded)}
                   className={`nav-link w-full justify-between ${[
@@ -323,7 +330,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
                 {customersExpanded && (
                   <div className="ml-6 space-y-1 mt-2">
-                    
+
                     <button
                       onClick={goToCustomerForm}
                       className={`nav-link w-full justify-start ${location.pathname === "/customer-form"
@@ -335,7 +342,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       <span>Add Customer</span>
                     </button>
 
-                    
+
                     <button
                       onClick={goToListOfConsumers}
                       className={`nav-link w-full justify-start ${location.pathname === "/list-of-consumers"
@@ -347,7 +354,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       <span>All Customers</span>
                     </button>
 
-                    
+
                     <button
                       onClick={goToOnboardedConsumers}
                       className={`nav-link w-full justify-start ${location.pathname === "/onboarded-consumers"
@@ -362,7 +369,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 )}
               </div>
 
-             
+
               {roles.includes("ROLE_SUPER_ADMIN") && (
                 <button
                   onClick={goToOrganizations}
@@ -374,7 +381,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-              
+
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToAdminManagement}
@@ -386,7 +393,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-              
+
               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
                 <button
                   onClick={goToUserManagement}

@@ -42,14 +42,14 @@ const HomeRedirect: React.FC = () => {
 
       // ✅ 4. If user has exactly one org, select it automatically
       if (orgRoles.length === 1) {
-        const [orgId, orgRole] = orgRoles[0];
-        const role = orgRole.role;
+        const [orgId, orgData] = orgRoles[0];
+        const role = orgData.roles[0]; // pick first role as default
 
         localStorage.setItem(
           'selectedOrg',
           JSON.stringify({
             orgId,
-            orgName: orgRole.org_name,
+            orgName: orgData.org_name,
             role,
           })
         );
@@ -59,21 +59,20 @@ const HomeRedirect: React.FC = () => {
       }
 
       // ✅ 5. If multiple orgs, validate selectedOrg against claims
-      const selectedOrg = localStorage.getItem('selectedOrg');
-      if (!selectedOrg) {
-        // No org selected yet -> force login (or could redirect to org selector page)
+      const selectedOrgRaw = localStorage.getItem('selectedOrg');
+      if (!selectedOrgRaw) {
+        // No org selected yet -> redirect to login or org selector page
         setRedirectPath('/login');
         return;
       }
 
       try {
-        const parsedOrg = JSON.parse(selectedOrg);
+        const parsedOrg = JSON.parse(selectedOrgRaw);
 
         // ✅ Cross-check: ensure orgId from localStorage exists in claims.org_roles
         const matchingOrg = orgRoles.find(([orgId]) => orgId === parsedOrg.orgId);
-
         if (!matchingOrg) {
-          // ⚠️ LocalStorage org is invalid -> logout
+          // Invalid org -> logout
           localStorage.removeItem('jwtToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
@@ -81,17 +80,23 @@ const HomeRedirect: React.FC = () => {
         }
 
         // ✅ Valid org, but update localStorage with latest data from claims
-        const [orgId, orgRole] = matchingOrg;
+        const [orgId, orgData] = matchingOrg;
+
+        const roleToUse =
+          parsedOrg.role && orgData.roles.includes(parsedOrg.role)
+            ? parsedOrg.role
+            : orgData.roles[0];
+
         localStorage.setItem(
           'selectedOrg',
           JSON.stringify({
             orgId,
-            orgName: orgRole.org_name,
-            role: orgRole.role,
+            orgName: orgData.org_name,
+            role: roleToUse,
           })
         );
 
-        routeByOrgRole(orgRole.role);
+        routeByOrgRole(roleToUse);
       } catch (error) {
         console.error("Failed to parse selectedOrg:", error);
         localStorage.removeItem('selectedOrg');

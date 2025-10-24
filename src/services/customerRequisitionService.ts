@@ -570,15 +570,17 @@ export const updateMaterialData = async (
 
 
 export const searchCustomers = async (
-  query: string,
+  searchTerm: string,
   params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
 ): Promise<any[]> => {
   const crsAPI = getCrsAPI();
   try {
-    console.log("CRS API Parameters for searchCustomers:", { ...params, query });
+    console.log("CRS API Request Body for searchCustomers:", { searchTerm, ...params });
 
-    const response = await crsAPI.get(`/api/customers/search`, {
-      params: { query, ...params },
+    // Changed from GET (with query params) to POST (with JSON body)
+    const response = await crsAPI.post(`/api/customers/search`, {
+      searchTerm,
+      ...params,
     });
 
     const data = response.data;
@@ -595,16 +597,18 @@ export const searchCustomers = async (
   }
 };
 
+
 export const searchOnboardedConsumers = async (
-  query: string,
+  searchTerm: string,
   params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
 ): Promise<any[]> => {
   const crsAPI = getCrsAPI();
   try {
-    console.log("CRS API Parameters for searchCustomers:", { ...params, query });
+    console.log("CRS API Parameters for searchCustomers:", { ...params, searchTerm });
 
-    const response = await crsAPI.get(`/api/customers/search/onboarded`, {
-      params: { query, ...params },
+    const response = await crsAPI.post(`/api/customers/search/onboarded`, {
+      searchTerm,
+      ...params,
     });
 
     const data = response.data;

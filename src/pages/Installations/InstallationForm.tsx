@@ -163,13 +163,11 @@ export const InstallationForm = () => {
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
 
-        <div className="flex items-center w-full md:w-auto">
+        <div className="flex items-center gap-2">
+          {/* Back Arrow */}
           <button
-            onClick={() =>
-              navigate(`/view-connection`, {
-                state: { consumerId, customerId, connectionId },
-              })
-            }
+            type="button"
+            onClick={() => navigate(-1)}
             className="p-2 rounded-full hover:bg-gray-200 transition"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700" />
@@ -493,7 +491,17 @@ export const InstallationForm = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-center pt-1">
+        <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
+
+            
           <button
             type="submit"
             className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"

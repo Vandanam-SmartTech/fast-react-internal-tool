@@ -61,12 +61,18 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
           // ✅ Keep selectedOrg in sync with latest claim data
           const [orgId, orgData] = matchingOrg;
+
+          const roleToUse =
+            parsedOrg.role && orgData.roles.includes(parsedOrg.role)
+              ? parsedOrg.role
+              : orgData.roles[0];
+
           localStorage.setItem(
             'selectedOrg',
             JSON.stringify({
               orgId,
               orgName: orgData.org_name,
-              role: orgData.role,
+              role: roleToUse,
             })
           );
 

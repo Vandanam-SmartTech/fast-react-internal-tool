@@ -236,9 +236,6 @@ const UserOrgRoles: React.FC = () => {
   };
 
 
-
-
-
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleId = e.target.value;
     const roleName = roles.find((r) => r.id.toString() === roleId)?.name || "";

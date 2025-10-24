@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid"
-import { Eye, User, Phone, Mail, X } from 'lucide-react';
+import { Eye, User, Phone, Mail, X, ArrowLeft } from 'lucide-react';
 import { getUserById } from "../../services/jwtService";
 
 
@@ -112,7 +112,16 @@ export const ViewCustomer = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
+          <div className="flex items-center gap-2">
+          {/* Back Arrow */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
             <h1 className="text-2xl font-bold text-gray-700">View Customer Details</h1>
           </div>
 

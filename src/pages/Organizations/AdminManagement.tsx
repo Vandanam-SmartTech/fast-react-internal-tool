@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserPlus, Building, Users, Shield, Edit, Eye, Plus, Trash2 } from 'lucide-react';
-import { fetchOrganizations, createAdminUser, Organization, getChildOrganizations } from '../../services/organizationService';
-import { fetchAdmins, fetchRegularUsers, assignUserRole } from '../../services/jwtService';
-import { getAllRoles, createRole, updateRole, deleteRole, RoleDto } from '../../services/roleService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
+import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole, fetchAllUsersByOrgId } from '../../services/organizationService';
+import { createRole, updateRole, deleteRole, RoleDto } from '../../services/roleService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers, assignUserRole } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
 
 
 const AdminManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
-  const [roles, setRoles] = useState<RoleDto[]>([]);
-  const [activeTab, setActiveTab] = useState<'create' | 'promote' | 'list' | 'roles'>('roles');
+  const [allRoles, setAllRoles] = useState([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [newRole, setNewRole] = useState({ name: '' });
   const [editingRole, setEditingRole] = useState<RoleDto | null>(null);
   const [loading, setLoading] = useState(false);
   const { userClaims } = useUser();
   const isSuperAdmin = userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN");
+  const [activeTab, setActiveTab] = useState<'create' | 'promote' | 'list' | 'roles'>(
+    isSuperAdmin ? 'roles' : 'list'
+  );
 
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [confirmContactNumber, setConfirmContactNumber] = useState("");
@@ -43,8 +47,34 @@ const AdminManagement: React.FC = () => {
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
 
+  const [selectedRoleName, setSelectedRoleName] = useState<string>("");
+  const [newAssignment, setNewAssignment] = useState({
+    organizationId: '',
+    roleId: '',
+    agencyId: ''
+  });
 
-  if (!isSuperAdmin) return null;
+  const [promoteData, setPromoteData] = useState({
+    userId: "",
+    roleId: "",
+    organizationId: "",
+    agencyId: ""
+  });
+
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      setUserRole("ROLE_SUPER_ADMIN");
+    } else if (userInfo?.role === "ROLE_ORG_ADMIN") {
+      setUserRole("ROLE_ORG_ADMIN");
+    } else if (userInfo?.role === "ROLE_AGENCY_ADMIN") {
+      setUserRole("ROLE_AGENCY_ADMIN");
+    }
+  }, [userClaims, userInfo]);
+
+
 
   const [formData, setFormData] = useState({
     username: '',
@@ -60,16 +90,10 @@ const AdminManagement: React.FC = () => {
     addressLine1: '',
     addressLine2: '',
     isActive: true,
-    organizationId: '',
-    roleIds: [] // Will be set based on selected role
   });
-  const [promoteData, setPromoteData] = useState({
-    userId: '',
-    roleId: '', // Will be set from dropdown
-    organizationId: '',
-    agencyId: ''
-  });
-  const [agencies, setAgencies] = useState<Organization[]>([]);
+
+
+  const [agencies, setAgencies] = useState([]);
 
   interface District {
     code: number;
@@ -203,19 +227,34 @@ const AdminManagement: React.FC = () => {
     setConfirmContactNumber(value);
   };
 
-
-
   useEffect(() => {
-    loadOrganizations();
-    loadUsers();
-    loadRoles();
-  }, []);
-
-  useEffect(() => {
-    if (organizations.length > 0) {
-      loadAdmins();
+    if (userRole) {
+      loadAllUsers();
     }
-  }, [organizations]);
+  }, [userRole]);
+
+
+  useEffect(() => {
+    const isSuperAdmin = userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN");
+
+    if (isSuperAdmin) {
+      loadOrganizations();
+    }
+
+    const loadRoles = async () => {
+      try {
+        const rolesData = await getAllRoles();
+        setAllRoles(rolesData);
+        setRoles(rolesData);
+      } catch (error) {
+        console.error("Failed to load roles", error);
+      }
+    };
+
+    loadRoles();
+  }, [userClaims]);
+
+
 
   const loadOrganizations = async () => {
     try {
@@ -226,12 +265,61 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  const loadUsers = async () => {
+  // const loadUsers = async () => {
+  //   try {
+  //     const regularUsers = await fetchRegularUsers();
+  //     setUsers(regularUsers);
+  //   } catch (error) {
+  //     toast.error('Failed to load users', {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   }
+  // };
+
+
+  // const loadRoles = async () => {
+  //   try {
+  //     const data = await getAllRoles();
+  //     setRoles(data);
+  //   } catch (error) {
+  //     toast.error('Failed to load roles');
+  //   }
+  // };
+
+  const loadAllUsers = async () => {
     try {
-      const regularUsers = await fetchRegularUsers();
+      let allUsers = [];
+
+      if (userRole === "ROLE_SUPER_ADMIN") {
+        // Super Admin can see all users
+        allUsers = await fetchAllUsers();
+      } else if (["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(userRole)) {
+        // Org/Agency Admins can see users within their organization only
+        allUsers = await fetchAllUsersByOrgId(userInfo?.orgId);
+      }
+
+      const admins = allUsers.filter(
+        (user: any) =>
+          user.roles?.some((role: any) => role.name === "ROLE_SUPER_ADMIN") ||
+          user.organizationRoles?.some((orgRole: any) =>
+            ["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(orgRole.roleName)
+          )
+      );
+
+      const regularUsers = allUsers.filter(
+        (user: any) =>
+          !user.roles?.some((role: any) => role.name === "ROLE_SUPER_ADMIN") &&
+          !user.organizationRoles?.some((orgRole: any) =>
+            ["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(orgRole.roleName)
+          )
+      );
+
+      setAdmins(admins);
       setUsers(regularUsers);
     } catch (error) {
-      toast.error('Failed to load users', {
+      console.error("Failed to load users:", error);
+      toast.error("Failed to load users", {
         autoClose: 1000,
         hideProgressBar: true,
       });
@@ -239,61 +327,192 @@ const AdminManagement: React.FC = () => {
   };
 
 
-  const loadRoles = async () => {
-    try {
-      const data = await getAllRoles();
-      setRoles(data);
-    } catch (error) {
-      toast.error('Failed to load roles');
-    }
-  };
-
-  const loadAdmins = async () => {
-    try {
-      const admins = await fetchAdmins();
-      setAdmins(admins);
-    } catch (error) {
-      toast.error('Failed to load admins');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const userData = {
-        ...formData,
-        isActive: true,
-        organizationId: parseInt(formData.organizationId)
-      };
+      // Step 1: Save the user
+      const userData = { ...formData };
+      const response = await saveUser(userData);
 
-      await createAdminUser(userData);
-      toast.success('Admin user created successfully');
-      loadAdmins();
+      // ✅ Use correct path for ID
+      const userId = response?.id;
 
-      // Reset form
-      setFormData({
-        username: '',
-        password: '',
-        nameAsPerGovId: '',
-        emailAddress: '',
-        userCode: '',
-        contactNumber: '',
-        alternateContactNumber: '',
-        preferredName: '',
-        villageCode: 0,
-        pinCode: '',
-        addressLine1: '',
-        addressLine2: '',
-        isActive: true,
-        organizationId: '',
-        roleIds: []
-      });
+      if (!userId) {
+        toast.error("User ID not returned from saveUser API");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Determine organizationIdToSend
+      let organizationIdToSend: string | undefined;
+
+      if (userRole === "ROLE_SUPER_ADMIN") {
+        if (["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName)) {
+          organizationIdToSend = newAssignment.organizationId;
+        } else {
+          organizationIdToSend = newAssignment.agencyId || newAssignment.organizationId;
+        }
+      } else if (userRole === "ROLE_ORG_ADMIN") {
+        organizationIdToSend = newAssignment.agencyId || userInfo?.orgId;
+      } else if (userRole === "ROLE_AGENCY_ADMIN") {
+        organizationIdToSend = userInfo?.orgId;
+      }
+
+      if (!organizationIdToSend) {
+        toast.error("Please select a valid organization or agency before adding user");
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Assign role
+      await assignUserOrgRole(
+        Number(userId),
+        Number(organizationIdToSend),
+        Number(newAssignment.roleId)
+      );
+
+      toast.success("User added and role assigned successfully");
+      navigate("/user-management");
+
     } catch (error) {
-      toast.error('Failed to create admin user');
+      console.error("Error adding user and assigning role:", error);
+      toast.error("Failed to add user or assign role");
     } finally {
       setLoading(false);
+    }
+  };
+
+
+
+  // const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const roleId = e.target.value;
+  //   const roleName = roles.find((r) => r.id.toString() === roleId)?.name || "";
+  //   setSelectedRoleName(roleName);
+
+
+  //   setNewAssignment({ roleId, organizationId: "", agencyId: "" });
+  //   setAgencies([]);
+
+  //   if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+  //     getChildOrganizations(parseInt(userInfo.orgId))
+  //       .then((res) => setAgencies(res))
+  //       .catch((err) => {
+  //         console.error("Failed to fetch agencies for ORG_ADMIN role", err);
+  //         setAgencies([]);
+  //       });
+  //   }
+  // };
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const roleId = e.target.value;
+    const roleName = roles.find(r => r.id.toString() === roleId)?.name || "";
+
+    setSelectedRoleName(roleName);
+    setPromoteData(prev => ({
+      ...prev,
+      roleId,
+      organizationId: "",
+      agencyId: ""
+    }));
+
+    setNewAssignment({ roleId, organizationId: "", agencyId: "" });
+    setAgencies([]);
+
+    // If the new role is Agency Admin and an organization is already selected, load agencies
+    if (roleName === "ROLE_AGENCY_ADMIN" && promoteData.organizationId) {
+      getChildOrganizations(parseInt(promoteData.organizationId))
+        .then(res => setAgencies(res))
+        .catch(err => {
+          console.error("Failed to fetch agencies for selected role", err);
+          setAgencies([]);
+        });
+    }
+
+      if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+      getChildOrganizations(parseInt(userInfo.orgId))
+        .then((res) => setAgencies(res))
+        .catch((err) => {
+          console.error("Failed to fetch agencies for ORG_ADMIN role", err);
+          setAgencies([]);
+        });
+    }
+  };
+
+  // const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const orgId = e.target.value;
+  //   setNewAssignment((prev) => ({
+  //     ...prev,
+  //     organizationId: orgId,
+  //     agencyId: "",
+  //   }));
+
+
+  //   if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+
+  //     getChildOrganizations(parseInt(userInfo.orgId))
+  //       .then((res) => setAgencies(res))
+  //       .catch((err) => {
+  //         console.error("Failed to fetch agencies for ORG_ADMIN role", err);
+  //         setAgencies([]);
+  //       });
+  //   } else if (
+  //     !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName)
+  //   ) {
+
+  //     getChildOrganizations(parseInt(orgId))
+  //       .then((res) => setAgencies(res))
+  //       .catch((err) => {
+  //         console.error("Failed to fetch agencies", err);
+  //         setAgencies([]);
+  //       });
+  //   }
+  // };
+
+  const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const orgId = e.target.value;
+    setPromoteData(prev => ({
+      ...prev,
+      organizationId: orgId,
+      agencyId: ""
+    }));
+
+      setNewAssignment((prev) => ({
+      ...prev,
+      organizationId: orgId,
+      agencyId: "",
+    }));
+
+    if (selectedRoleName === "ROLE_AGENCY_ADMIN" && orgId) {
+      getChildOrganizations(parseInt(orgId))
+        .then(res => setAgencies(res))
+        .catch(err => {
+          console.error("Failed to fetch agencies for selected organization", err);
+          setAgencies([]);
+        });
+    } else {
+      setAgencies([]);
+    }
+
+    if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+
+      getChildOrganizations(parseInt(userInfo.orgId))
+        .then((res) => setAgencies(res))
+        .catch((err) => {
+          console.error("Failed to fetch agencies for ORG_ADMIN role", err);
+          setAgencies([]);
+        });
+    } else if (
+      !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName)
+    ) {
+
+      getChildOrganizations(parseInt(orgId))
+        .then((res) => setAgencies(res))
+        .catch((err) => {
+          console.error("Failed to fetch agencies", err);
+          setAgencies([]);
+        });
     }
   };
 
@@ -316,52 +535,88 @@ const AdminManagement: React.FC = () => {
     if (name === 'contactNumber') {
       if (value !== confirmContactNumber) {
         setConfirmContactNumber('');
-
       }
-
     }
 
     if (name === 'emailAddress') {
       if (value !== confirmEmailAddress) {
         setConfirmEmailAddress('');
-
       }
-
     }
-
   };
 
+  const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const userId = e.target.value;
+    setPromoteData(prev => ({ ...prev, userId }));
+  };
 
-  const handlePromoteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setPromoteData(prev => ({ ...prev, [name]: value }));
+  // --- 4️⃣ Submit (Assign Role) ---
+  const handlePromoteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-    // Load agencies when organization is selected and role is agency admin
-    const selectedRole = roles.find(r => r.id?.toString() === promoteData.roleId);
-    if (name === 'organizationId' && selectedRole?.name === 'ROLE_AGENCY_ADMIN' && value) {
-      loadAgencies(parseInt(value));
-    }
+    try {
+      const { userId, organizationId, agencyId, roleId } = promoteData;
 
-    // Load agencies when role changes to agency admin
-    const newRole = roles.find(r => r.id?.toString() === value);
-    if (name === 'roleId' && newRole?.name === 'ROLE_AGENCY_ADMIN' && promoteData.organizationId) {
-      loadAgencies(parseInt(promoteData.organizationId));
-    }
+      const selectedRole = roles.find(r => r.id.toString() === roleId);
+      const isAgencyAdmin = selectedRole?.name === "ROLE_AGENCY_ADMIN";
 
-    // Clear agencies when organization changes
-    if (name === 'organizationId') {
-      setPromoteData(prev => ({ ...prev, agencyId: '' }));
-      if (!value) {
-        setAgencies([]);
+      const targetOrgId = isAgencyAdmin && agencyId ? agencyId : organizationId;
+
+      if (!userId || !targetOrgId || !roleId) {
+        toast.error("Please select all required fields", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+        setLoading(false);
+        return;
       }
-    }
 
-    // Clear agency selection when role changes away from agency admin
-    if (name === 'roleId' && newRole?.name !== 'ROLE_AGENCY_ADMIN') {
-      setPromoteData(prev => ({ ...prev, agencyId: '' }));
+      await assignUserRole(userId, targetOrgId, roleId);
+
+      toast.success("Role assigned successfully", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      setPromoteData({ userId: "", roleId: "", organizationId: "", agencyId: "" });
       setAgencies([]);
+    } catch (error) {
+      console.error("Failed to assign role:", error);
+      toast.error("Failed to assign role", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
+
+  const handlePromoteChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const { name, value } = e.target;
+
+  setPromoteData(prev => ({ ...prev, [name]: value }));
+
+  // Role changed to Agency Admin => load agencies
+  const newRole = roles.find(r => r.id?.toString() === (name === 'roleId' ? value : promoteData.roleId));
+  const orgId = name === 'organizationId' ? value : promoteData.organizationId;
+
+if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '') && orgId) {
+  try {
+    const data = await getChildOrganizations(parseInt(orgId));
+    setAgencies(data);
+  } catch (err) {
+    console.error('Failed to fetch agencies', err);
+    setAgencies([]);
+  }
+} else if (name === 'organizationId' || !['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '')) {
+  setAgencies([]);
+  setPromoteData(prev => ({ ...prev, agencyId: '' }));
+}
+
+};
+
 
   const loadAgencies = async (parentId: number) => {
     try {
@@ -375,38 +630,6 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  const handlePromoteUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const selectedRole = roles.find(r => r.id?.toString() === promoteData.roleId);
-      const isAgencyAdmin = selectedRole?.name === 'ROLE_AGENCY_ADMIN';
-
-      const targetOrgId =
-        isAgencyAdmin && promoteData.agencyId
-          ? promoteData.agencyId
-          : promoteData.organizationId;
-
-      await assignUserRole(promoteData.userId, targetOrgId, promoteData.roleId);
-
-      toast.success('Role assigned successfully', {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      loadUsers();
-      loadAdmins();
-      setPromoteData({ userId: '', roleId: '', organizationId: '', agencyId: '' });
-      setAgencies([]);
-    } catch (error) {
-      toast.error('Failed to assign role', {
-        hideProgressBar: true,
-        autoClose: 1000,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -422,30 +645,33 @@ const AdminManagement: React.FC = () => {
 
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <button
+          {isSuperAdmin && (<button
             onClick={() => setActiveTab('roles')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'roles' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
             <Shield className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Manage Roles</span>
             <span className="sm:hidden">Manage Roles</span>
-          </button>
+          </button>)}
           <button
-            onClick={() => setActiveTab('list')}
+            onClick={() => {
+              setActiveTab('list');
+              loadAllUsers();
+            }}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
             <Users className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">List Admin Users</span>
             <span className="sm:hidden">List Admin Users</span>
           </button>
-          <button
+          { isSuperAdmin && (<button
             onClick={() => setActiveTab('promote')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'promote' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
             <Shield className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Assign Role</span>
             <span className="sm:hidden">Assign Role</span>
-          </button>
+          </button>)}
           <button
             onClick={() => setActiveTab('create')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'create' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
@@ -471,7 +697,7 @@ const AdminManagement: React.FC = () => {
                   hideProgressBar: true,
                 });
                 setNewRole({ name: '' });
-                await loadRoles();
+                await getAllRoles();
               } catch (error) {
                 toast.error('Failed to create role', {
                   autoClose: 1000,
@@ -516,7 +742,7 @@ const AdminManagement: React.FC = () => {
                         {role.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {editingRole?.id === role.id ? (
+                        {editingRole && editingRole.id === role.id ? (
                           <input
                             type="text"
                             value={editingRole.name}
@@ -606,7 +832,7 @@ const AdminManagement: React.FC = () => {
                         <span className="text-xs text-gray-500">ID: {role.id}</span>
                       </div>
                       <div className="mb-3">
-                        {editingRole?.id === role.id ? (
+                        {editingRole && editingRole.id === role.id ? (
                           <input
                             type="text"
                             value={editingRole.name}
@@ -748,7 +974,7 @@ const AdminManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => window.open(`/user-view/${admin.id}`, '_blank')}
+                        onClick={() => navigate("/user-view", { state: { userId: admin.id } })}
                         className="text-gray-600 hover:text-gray-900"
                         title="View Details"
                       >
@@ -813,7 +1039,7 @@ const AdminManagement: React.FC = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => window.open(`/user-view/${admin.id}`, '_blank')}
+                        onClick={() => navigate("/user-view", { state: { userId: admin.id } })}
                         className="text-gray-600 hover:text-gray-900"
                         title="View Details"
                       >
@@ -844,7 +1070,7 @@ const AdminManagement: React.FC = () => {
                       {admin.isActive ? 'Active' : 'Inactive'}
                     </span>
                     <button
-                      onClick={() => window.open(`/user-view/${admin.id}`, '_blank')}
+                      onClick={() => navigate("/user-view", { state: { userId: admin.id } })}
                       className="text-gray-600 hover:text-gray-900"
                       title="View Details"
                     >
@@ -888,12 +1114,12 @@ const AdminManagement: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select User *
+                Select User <span className="text-red-500">*</span>
               </label>
               <select
                 name="userId"
                 value={promoteData.userId}
-                onChange={handlePromoteChange}
+                onChange={handleUserChange}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -908,7 +1134,7 @@ const AdminManagement: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role *
+                Select Role <span className="text-red-500">*</span>
               </label>
               <select
                 name="roleId"
@@ -928,7 +1154,7 @@ const AdminManagement: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Assign to Organization *
+                Select Organization <span className="text-red-500">*</span>
               </label>
               <select
                 name="organizationId"
@@ -946,48 +1172,56 @@ const AdminManagement: React.FC = () => {
               </select>
             </div>
 
-            {roles.find(r => r.id?.toString() === promoteData.roleId)?.name === 'ROLE_AGENCY_ADMIN' && (
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Agency *
-                </label>
-                <select
-                  name="agencyId"
-                  value={promoteData.agencyId}
-                  onChange={handlePromoteChange}
-                  required
-                  disabled={!promoteData.organizationId}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="">Select Agency</option>
-                  {agencies.map((agency) => (
-                    <option key={agency.id} value={agency.id}>
-                      {agency.name} {agency.displayName && `(${agency.displayName})`}
-                    </option>
-                  ))}
-                </select>
-                {!promoteData.organizationId && (
-                  <p className="text-sm text-gray-500 mt-1">Select organization first</p>
-                )}
-                {promoteData.organizationId && agencies.length === 0 && (
-                  <p className="text-sm text-gray-500 mt-1">No agencies found for this organization</p>
-                )}
-                {promoteData.organizationId && agencies.length > 0 && (
-                  <p className="text-sm text-green-600 mt-1">{agencies.length} agencies available</p>
-                )}
-              </div>
-            )}
+            {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(
+  roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
+) && (
+  <div className="lg:col-span-2">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Select Agency <span className="text-red-500">*</span>
+    </label>
+    <select
+      name="agencyId"
+      value={promoteData.agencyId}
+      onChange={handlePromoteChange}
+      required
+      disabled={!promoteData.organizationId}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+    >
+      <option value="">Select Agency</option>
+      {agencies.map((agency) => (
+        <option key={agency.id} value={agency.id}>
+          {agency.name} {agency.displayName && `(${agency.displayName})`}
+        </option>
+      ))}
+    </select>
+    {!promoteData.organizationId && (
+      <p className="text-sm text-gray-500 mt-1">Select organization first</p>
+    )}
+    {promoteData.organizationId && agencies.length === 0 && (
+      <p className="text-sm text-gray-500 mt-1">No agencies found for this organization</p>
+    )}
+    {promoteData.organizationId && agencies.length > 0 && (
+      <p className="text-sm text-green-600 mt-1">{agencies.length} agencies available</p>
+    )}
+  </div>
+)}
+
           </div>
 
-          {roles.find(r => r.id?.toString() === promoteData.roleId)?.name === 'ROLE_AGENCY_ADMIN' && !promoteData.agencyId && promoteData.organizationId && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> For Agency Admin role, you must select a specific agency.
-              </p>
-            </div>
-          )}
+          {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(
+            roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
+          ) &&
+            promoteData.agencyId &&
+            promoteData.organizationId && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> For Agency-level roles (Admin, Staff, or Representative), you must select a specific agency.
+                </p>
+              </div>
+            )}
 
-          {roles.find(r => r.id?.toString() === promoteData.roleId)?.name && !['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN'].includes(roles.find(r => r.id?.toString() === promoteData.roleId)?.name || '') && (
+
+          {roles.find(r => r.id?.toString() === promoteData.roleId)?.name && !['ROLE_ORG_ADMIN', 'ROLE_ORG_STAFF', 'ROLE_ORG_REPRESENTATIVE'].includes(roles.find(r => r.id?.toString() === promoteData.roleId)?.name || '') && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
                 <strong>Info:</strong> This role will be assigned to the selected organization.
@@ -995,7 +1229,7 @@ const AdminManagement: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-end gap-4 mt-6 sm:mt-8">
+          <div className="flex justify-center gap-4 mt-6 sm:mt-8">
             <button
               type="submit"
               disabled={loading}
@@ -1010,7 +1244,7 @@ const AdminManagement: React.FC = () => {
 
       {activeTab === 'create' && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New User with Role</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New User with Role</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1441,61 +1675,112 @@ const AdminManagement: React.FC = () => {
             </div>
 
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role *
-              </label>
-              <select
-                name="roleIds"
-                value={formData.roleIds[0] || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, roleIds: e.target.value ? [parseInt(e.target.value)] : [] }))}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Role</option>
-                {roles.filter(role => role.name !== 'ROLE_SUPER_ADMIN').map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name.replace('ROLE_', '').replace('_', ' ')}
-                  </option>
-                ))}
-              </select>
+            <div className="md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                {/* Role Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newAssignment.roleId}
+                    onChange={handleRoleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Role</option>
+                    {roles
+                      .filter((role) => {
+                        if (role.name === "ROLE_SUPER_ADMIN") return false;
+
+                        if (userRole === "ROLE_ORG_ADMIN") {
+                          return role.name !== "ROLE_ORG_ADMIN";
+                        }
+
+                        if (userRole === "ROLE_AGENCY_ADMIN") {
+                          return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE"].includes(role.name);
+                        }
+
+                        return true; // for SUPER_ADMIN
+                      })
+                      .map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                  </select>
+
+                </div>
+
+                {/* Organization Dropdown */}
+                {userRole === "ROLE_SUPER_ADMIN" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Organization
+                    </label>
+                    <select
+                      value={newAssignment.organizationId}
+                      onChange={handleOrganizationChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Organization</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+
+                {/* Agency Dropdown */}
+                {userRole !== "ROLE_AGENCY_ADMIN" &&
+                  !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Agency
+                      </label>
+                      <select
+                        value={newAssignment.agencyId}
+                        onChange={(e) =>
+                          setNewAssignment((prev) => ({
+                            ...prev,
+                            agencyId: e.target.value,
+                          }))
+                        }
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Agency</option>
+                        {agencies.map((agency) => (
+                          <option key={agency.id} value={agency.id}>
+                            {agency.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Assign to Organization *
-              </label>
-              <select
-                name="organizationId"
-                value={formData.organizationId}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Organization</option>
-                {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name} {org.displayName && `(${org.displayName})`}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          <div className="flex justify-end gap-4 mt-6 sm:mt-8">
+          <div className="flex justify-center gap-4 mt-6 sm:mt-8">
             <button
               type="submit"
               disabled={loading}
               className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <UserPlus className="h-4 w-4" />
-              {loading ? 'Creating...' : 'Create Admin'}
+              {loading ? 'Adding...' : 'Add User'}
             </button>
           </div>
         </form>
       )}
-      
-{/* 
+
+      {/* 
       {activeTab === 'create' && organizations.length > 0 && (
         <div className="mt-6 sm:mt-8 bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">

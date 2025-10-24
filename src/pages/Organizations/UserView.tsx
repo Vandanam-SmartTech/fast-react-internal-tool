@@ -70,7 +70,7 @@ const loadUserData = async (userId: number) => {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-2 mb-6">
         <button
-          onClick={() => navigate('/user-management')}
+          onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-gray-200 transition"
         >
           <ArrowLeft className="h-6 w-6 text-gray-700" />
@@ -93,43 +93,45 @@ const loadUserData = async (userId: number) => {
 
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <p className="text-gray-900">{user.username}</p>
-          </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
             <p className="text-gray-900">{user.nameAsPerGovId || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Name</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Preferred Name</label>
             <p className="text-gray-900">{user.preferredName || '-'}</p>
           </div>
 
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Username</label>
+            <p className="text-gray-900">{user.username}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
             <p className="text-gray-900">{user.emailAddress || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Contact Number</label>
             <p className="text-gray-900">{user.contactNumber || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Contact</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Alternate Contact</label>
             <p className="text-gray-900">{user.alternateContactNumber || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">User Code</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">User Code</label>
             <p className="text-gray-900">{user.userCode || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
             <span className={`px-2 py-1 text-xs rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
               }`}>
               {user.isActive ? 'Active' : 'Inactive'}
@@ -137,7 +139,7 @@ const loadUserData = async (userId: number) => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-500 mb-1">
               Organization Roles
             </label>
 
@@ -176,34 +178,27 @@ const loadUserData = async (userId: number) => {
           </div>
 
 
+          <div className='md:col-span-2'>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
-            <p className="text-gray-900">{user.addressLine1 || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
+            <p className="text-gray-900">{`${user.addressLine1}, ${user.villageName}, ${user.talukaName}, ${user.districtName}, ${user.pinCode}`}</p>
+          </div>
+
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
-            <p className="text-gray-900">{user.addressLine2 || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-            <p className="text-gray-900">{user.pinCode || '-'}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Manager Name</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Manager Name</label>
             <p className="text-gray-900">{user.managerName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Manager Email</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Manager Email</label>
             <p className="text-gray-900">{user.managerEmail || '-'}</p>
           </div>
 
           {user.createdAt && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
               <p className="text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
             </div>
           )}
