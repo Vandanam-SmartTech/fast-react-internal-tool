@@ -277,11 +277,11 @@ const UserFormManagement: React.FC = () => {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/user-management')}
-          className="text-gray-600 hover:text-gray-800"
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
           Add User Details
         </h1>
       </div>

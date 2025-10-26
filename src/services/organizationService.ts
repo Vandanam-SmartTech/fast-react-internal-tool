@@ -381,5 +381,14 @@ export const getChildOrganizationsInPagination = async (parentId: number, page =
   }
 };
 
-
+export const getParentDetails = async (orgId: string | number) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(`/api/organizations/parentDetails/${orgId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch organization parent details:", error);
+    throw error;
+  }
+};
 

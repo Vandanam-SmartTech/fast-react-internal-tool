@@ -69,6 +69,9 @@ export default function GenerateDocuments() {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
+  const [quotedTotals, setQuotedTotals] = useState<Record<string, number | ''>>({});
+
+
 
 
   const connectionId = consumer?.id?.toString();
@@ -128,6 +131,18 @@ export default function GenerateDocuments() {
     },
     {
       id: 6,
+      title: "Installation",
+      documents: [
+        { label: "Panel Serial Number Photos", name: "Panel SN", canGenerate: false, canPreview: false },
+        { label: "Inverter Serial Number Photo", name: "Inverter SN", canGenerate: false, canPreview: false },
+        { label: "MCB", name: "MCB", canGenerate: false, canPreview: false },
+        { label: "RCCB", name: "RCCB", canGenerate: false, canPreview: false}
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 7,
       title: "MNRE and Discom Documents",
       documents: [
         { label: "Net Agreement", name: "Net Agreement", canGenerate: true, canPreview: true },
@@ -144,7 +159,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 7,
+      id: 8,
       title: "DCR & Warranty Certificates",
       documents: [
         { label: "DCR Certificate", name: "DCR Certificate", canGenerate: false, canPreview: false },
@@ -155,7 +170,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 8,
+      id: 9,
       title: "Release Order",
       documents: [
         { label: "Release Order", name: "Release Order", canGenerate: false, canPreview: false }
@@ -208,41 +223,63 @@ export default function GenerateDocuments() {
   };
 
 
-  const handleGenerate = async (doc: string) => {
-    if (!consumer?.id) return;
-    setLoadingGenerateDoc(doc);
-    try {
-      const blob = await fetchPdf(consumer.id, doc);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${doc}.pdf`; // or use getSessionName(doc)
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error("Generate error:", err);
-      toast.error("Failed to generate document");
-    } finally {
-      setLoadingGenerateDoc(null);
-    }
-  };
+const handleGenerate = async (doc: string) => {
+  if (!consumer?.id) return;
 
-  const handlePreview = async (doc: string) => {
-    if (!consumer?.id) return;
-    setLoadingPreviewDoc(doc);
-    try {
-      const blob = await fetchPdf(consumer.id, doc);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    } catch (err) {
-      console.error("Preview error:", err);
-      toast.error("Failed to preview document");
-    } finally {
-      setLoadingPreviewDoc(null);
+  let quotedTotal: number | undefined;
+  if (doc === "Consumer Vendor Agreement") {
+    quotedTotal = quotedTotals[doc];
+    if (!quotedTotal || isNaN(quotedTotal)) {
+      toast.error("Please enter a valid quoted total amount before generating.");
+      return;
     }
-  };
+  }
+
+  setLoadingGenerateDoc(doc);
+  try {
+    const blob = await fetchPdf(consumer.id, doc, quotedTotal);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc}_${consumer.govIdName}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error("Generate error:", err);
+    toast.error("Failed to generate document");
+  } finally {
+    setLoadingGenerateDoc(null);
+  }
+};
+
+
+const handlePreview = async (doc: string) => {
+  if (!consumer?.id) return;
+
+  let quotedTotal: number | undefined;
+  if (doc === "Consumer Vendor Agreement") {
+    quotedTotal = quotedTotals[doc];
+    if (!quotedTotal || isNaN(quotedTotal)) {
+      toast.error("Please enter a valid quoted total amount before previewing.");
+      return;
+    }
+  }
+
+  setLoadingPreviewDoc(doc);
+  try {
+    const blob = await fetchPdf(consumer.id, doc, quotedTotal);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  } catch (err) {
+    console.error("Preview error:", err);
+    toast.error("Failed to preview document");
+  } finally {
+    setLoadingPreviewDoc(null);
+  }
+};
+
 
 
 
@@ -578,6 +615,27 @@ const handleDeleteDocument = async (fileId: string, documentType: string) => {
                             className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           />
                         </div>
+
+                        {docDef.name === "Consumer Vendor Agreement" && (
+  <div className="mb-3">
+    <label className="block text-xs font-medium text-gray-700 mb-2">
+      Total Quoted Price (₹)
+    </label>
+    <input
+      type="number"
+      min="0"
+      placeholder="Enter total quoted Price"
+      value={quotedTotals[docDef.name] || ''}
+      onChange={(e) =>
+        setQuotedTotals((prev) => ({
+          ...prev,
+          [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
+        }))
+      }
+      className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+    />
+  </div>
+)}
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2">

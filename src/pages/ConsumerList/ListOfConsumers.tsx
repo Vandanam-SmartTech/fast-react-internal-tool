@@ -541,7 +541,7 @@ const ListOfConsumers: React.FC = () => {
                       })
                     }
                     className="text-blue-600 hover:text-blue-700"
-                    title="Generate Documents"
+                    title="Manage Documents"
                   >
                     <FileText className="w-4 h-4" />
                   </Button>

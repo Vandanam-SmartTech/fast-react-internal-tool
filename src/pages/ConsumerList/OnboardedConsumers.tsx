@@ -545,7 +545,7 @@ const OnboardedConsumers: React.FC = () => {
               className="flex-1"
               leftIcon={<FileText className="w-4 h-4" />}
             >
-              Generate Docs
+              Manage Documents
             </Button>
           </div>
 
@@ -580,7 +580,7 @@ const OnboardedConsumers: React.FC = () => {
             className="w-full"
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            Add Materials
+            Manage Material Data
           </Button>
 
 

@@ -205,245 +205,249 @@ useEffect(() => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <fieldset>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            
+            {/* Inverter Details Section */}
+            <div className="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Inverter Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Brand</label>
+                  <input
+                    type="text"
+                    name="inverterMake"
+                    value={formData.inverterMake}
+                    onChange={handleChange}
+                    readOnly
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ALMM Model Number</label>
+                  <input
+                    type="text"
+                    name="almmModelNo"
+                    value={formData.almmModelNo}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">PV System Capacity (kW)</label>
-                <input
-                  type="text"
-                  name="systemKw"
-                  value={formData.systemKw}
-                  onChange={handleChange}
-                  readOnly
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                  <input
+                    type="text"
+                    name="rating"
+                    value={formData.rating}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Charge Controller Type</label>
+                  <input
+                    type="text"
+                    name="chargeControllerType"
+                    value={formData.chargeControllerType}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Brand</label>
-                <input
-                  type="text"
-                  name="makeOfModule"
-                  value={formData.makeOfModule}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
-                      handleChange(e);
-                    }
-                  }}
-                  readOnly
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Capacity(kW)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="inverterCapacity"
+                    value={formData.inverterCapacity}
+                    onChange={handleChange}
+                    readOnly
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Module Number</label>
+                  <input
+                    type="text"
+                    name="inverterModuleNo"
+                    value={formData.inverterModuleNo}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
               </div>
-          
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ALMM Model Number</label>
-                <input
-                  type="text"
-                  name="almmModelNo"
-                  value={formData.almmModelNo}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel</label>
-                <input
-                  type="text"
-                  name="wattagePerModule"
-                  value={formData.wattagePerModule}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Details</label>
-                <input
-                  type="text"
-                  name="warrantyDetails"
-                  value={formData.warrantyDetails}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Brand</label>
-                <input
-                  type="text"
-                  name="inverterMake"
-                  value={formData.inverterMake}
-                  onChange={handleChange}
-                  readOnly
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Module Number</label>
-                <input
-                  type="text"
-                  name="inverterModuleNo"
-                  value={formData.inverterModuleNo}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Capacity(kW)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="inverterCapacity"
-                  value={formData.inverterCapacity}
-                  onChange={handleChange}
-                  readOnly
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                <input
-                  type="text"
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Charge Controller Type</label>
-                <input
-                  type="text"
-                  name="chargeControllerType"
-                  value={formData.chargeControllerType}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Number of Earthing Rods</label>
-                <input
-                  type="number"
-                  min="0"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="earthingRod"
-                  value={formData.earthingRod}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date of Installation</label>
-                <input
-                  type="date"
-                  name="dateOfInstallation"
-                  value={formData.dateOfInstallation}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Capacity Type</label>
-                <input
-                  type="text"
-                  name="capacityType"
-                  value={formData.capacityType}
-                  onChange={handleChange}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Project Model</label>
-                <input
-                  type="text"
-                  name="projectModel"
-                  value={formData.projectModel}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Rooftop</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="reInstalledCapacityRooftop"
-                  value={formData.reInstalledCapacityRooftop}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Ground</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="reInstalledCapacityGround"
-                  value={formData.reInstalledCapacityGround}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Total</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="reInstalledCapacityTotal"
-                  value={formData.reInstalledCapacityTotal}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Number of PV Panels</label>
-                <input
-                  type="number"
-                  min="0"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  name="noOfModules"
-                  value={formData.noOfModules}
-                  onChange={handleChange}
-                  readOnly
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
-
-
             </div>
 
-            <div className="flex justify-center sm:justify-start mt-4 sm:mt-6">
+            {/* Panel Details Section */}
+            <div className="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Panel Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Brand</label>
+                  <input
+                    type="text"
+                    name="makeOfModule"
+                    value={formData.makeOfModule}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                        handleChange(e);
+                      }
+                    }}
+                    readOnly
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">PV System Capacity (kW)</label>
+                  <input
+                    type="text"
+                    name="systemKw"
+                    value={formData.systemKw}
+                    onChange={handleChange}
+                    readOnly
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Details</label>
+                  <input
+                    type="text"
+                    name="warrantyDetails"
+                    value={formData.warrantyDetails}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of PV Panels</label>
+                  <input
+                    type="number"
+                    min="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="noOfModules"
+                    value={formData.noOfModules}
+                    onChange={handleChange}
+                    readOnly
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel</label>
+                  <input
+                    type="text"
+                    name="wattagePerModule"
+                    value={formData.wattagePerModule}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Installation Details Section */}
+            <div className="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Installation Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of Earthing Rods</label>
+                  <input
+                    type="number"
+                    min="0"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="earthingRod"
+                    value={formData.earthingRod}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date of Installation</label>
+                  <input
+                    type="date"
+                    name="dateOfInstallation"
+                    value={formData.dateOfInstallation}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity Type</label>
+                  <input
+                    type="text"
+                    name="capacityType"
+                    value={formData.capacityType}
+                    onChange={handleChange}
+                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Model</label>
+                  <input
+                    type="text"
+                    name="projectModel"
+                    value={formData.projectModel}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Rooftop</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="reInstalledCapacityRooftop"
+                    value={formData.reInstalledCapacityRooftop}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Ground</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="reInstalledCapacityGround"
+                    value={formData.reInstalledCapacityGround}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Total</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    name="reInstalledCapacityTotal"
+                    value={formData.reInstalledCapacityTotal}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center sm:justify-center mt-4 sm:mt-6">
               <button
                 type="submit"
                 className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"

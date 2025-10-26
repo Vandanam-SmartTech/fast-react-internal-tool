@@ -245,8 +245,8 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       hideProgressBar: true,
     });
 
-    navigate("/agencies", {
-      state: { orgId: orgId }, 
+    navigate("/agency-view", {
+      state: { agencyId: agencyId, orgId: orgId }, 
     });
 
   } catch (error) {

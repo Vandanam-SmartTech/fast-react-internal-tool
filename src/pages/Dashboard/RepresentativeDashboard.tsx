@@ -64,8 +64,10 @@ useEffect(() => {
   const params: Record<string, any> = {};
   if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
     params.orgId = selectedOrg.orgId;
+    params.userRole = selectedOrg.role
   } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
     params.agencyId = selectedOrg.orgId;
+    params.userRole = selectedOrg.role
   }
 
   getCustomerCount(params)

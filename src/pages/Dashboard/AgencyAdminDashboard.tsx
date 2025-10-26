@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Building2, UserCog, Settings, Calendar, Clock } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
+import { getParentDetails } from '../../services/organizationService';
+
 
 const AgencyAdminDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [parentOrgId, setParentOrgId] = useState<number | null>(null);
   const navigate = useNavigate();
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
@@ -27,9 +30,26 @@ const AgencyAdminDashboard: React.FC = () => {
   const timeInterval = setInterval(() => {
         setCurrentTime(new Date());
       }, 1000);
+
+          const fetchParentOrg = async () => {
+      if (userInfo?.orgId) {
+        try {
+          const data = await getParentDetails(userInfo.orgId);
+          setParentOrgId(data.id);
+        } catch (error) {
+          console.error("Error fetching parent org:", error);
+        }
+      }
+    };
+
+    fetchParentOrg();
   
       return () => clearInterval(timeInterval);
-    }, []);
+    }, [userInfo?.orgId]);
+
+
+
+
   const dashboardItems = [
     {
       title: 'Manage Customers',
@@ -43,7 +63,7 @@ const AgencyAdminDashboard: React.FC = () => {
       description: 'View, Update my agency',
       icon: <Building2 className="h-12 w-12 text-purple-600" />,
       path: '/agency-view',
-      state: { agencyId : userInfo?.orgId || null},
+      state: { agencyId : userInfo?.orgId || null, orgId: parentOrgId},
       color: 'bg-purple-50 hover:bg-purple-100'
     },
     {
