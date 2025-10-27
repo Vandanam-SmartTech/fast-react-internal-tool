@@ -692,6 +692,40 @@ export const saveModule = async (data: Record<string, any>) => {
   }
 };
 
+export const fetchInverter = async (connectionId: number) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(`/api-doc/inverters/${connectionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching inverter:", error);
+    throw error;
+  }
+};
+
+export const fetchInstallation = async (connectionId: number) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(`/api-doc/installations/${connectionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching installation:", error);
+    throw error;
+  }
+};
+
+export const fetchModule = async (connectionId: number) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(`/api-doc/modules/${connectionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching module:", error);
+    throw error;
+  }
+};
+
+
 
 
 

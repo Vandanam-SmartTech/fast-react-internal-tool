@@ -392,3 +392,74 @@ export const getParentDetails = async (orgId: string | number) => {
   }
 };
 
+// Package Management Functions
+export interface Package {
+  id?: number;
+  panelBrand: string;
+  panelCapacity: string;
+  inverterBrand: string;
+  phaseType: string;
+  organizationId?: number;
+  agencyId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const fetchPackages = async (organizationId?: number, agencyId?: number): Promise<Package[]> => {
+  const orgAPI = getOrgAPI();
+  try {
+    const params: any = {};
+    if (organizationId) params.organizationId = organizationId;
+    if (agencyId) params.agencyId = agencyId;
+    
+    const response = await orgAPI.get('/api/packages', { params });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch packages:", error);
+    throw error;
+  }
+};
+
+export const createPackage = async (packageData: Package): Promise<Package> => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.post('/api/packages', packageData);
+    return response.data;
+  } catch (error: any) {
+    console.error('Create package error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const updatePackage = async (id: number, packageData: Package): Promise<Package> => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.put(`/api/packages/${id}`, packageData);
+    return response.data;
+  } catch (error: any) {
+    console.error('Update package error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const deletePackage = async (id: number): Promise<void> => {
+  const orgAPI = getOrgAPI();
+  try {
+    await orgAPI.delete(`/api/packages/${id}`);
+  } catch (error: any) {
+    console.error('Delete package error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getPackageById = async (id: number): Promise<Package> => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(`/api/packages/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch package:", error);
+    throw error;
+  }
+};
+

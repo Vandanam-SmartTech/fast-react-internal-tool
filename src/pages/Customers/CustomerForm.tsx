@@ -128,7 +128,7 @@ export const CustomerForm = () => {
         .then((data) => setOrganizations(data))
         .catch((err) => console.error("Failed to fetch organizations:", err));
     } else {
-      setUserRole("USER");
+      setUserRole("Invalid Role");
     }
   }, [userClaims]);
 

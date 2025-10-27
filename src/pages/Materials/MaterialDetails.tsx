@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, getMaterialsByConnectionId, updateMaterialData, saveInverter, saveInstallationDetails, saveModule } from "../../services/customerRequisitionService";
+import { postMaterialData, getMaterialsByConnectionId, updateMaterialData, saveInverter, saveInstallationDetails, saveModule, fetchInverter, fetchInstallation, fetchModule } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { fetchSystemRelatedDetails } from "../../services/quotationService";
 import { toast } from "react-toastify";
@@ -114,35 +114,85 @@ export default function MaterialForm() {
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+  // useEffect(() => {
+  //   const fetchMaterialData = async () => {
+  //     if (!connectionId) return;
+
+  //     const materials = await getMaterialsByConnectionId(connectionId);
+  //     if (materials.length > 0) {
+  //       setFormData({ ...materials[0] });
+  //       setExistingMaterialData(materials[0]);
+  //     } else {
+  //       // Fallback to fetch system details
+  //       try {
+  //         const systemDetails = await fetchSystemRelatedDetails(connectionId);
+  //         setFormData((prev) => ({
+  //           ...prev,
+  //           systemKw: systemDetails.customerSelectedKW || "",
+  //           makeOfModule: systemDetails.customerSelectedBrand || "",
+  //           inverterCapacity: systemDetails.inverterCapacity || "",
+  //           inverterMake: systemDetails.inverterBrand || "",
+  //           noOfModules: systemDetails.panelCount || "",
+  //           reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
+  //         }));
+  //       } catch (error) {
+  //         console.error("Error fetching system details:", error);
+  //       }
+  //     }
+  //   };
+
+  //   fetchMaterialData();
+  // }, [connectionId]);
+
   useEffect(() => {
-    const fetchMaterialData = async () => {
-      if (!connectionId) return;
+  const loadSavedData = async () => {
+    if (!connectionId) {
+      console.warn("No connectionId provided, skipping data fetch");
+      return;
+    }
 
-      const materials = await getMaterialsByConnectionId(connectionId);
-      if (materials.length > 0) {
-        setFormData({ ...materials[0] });
-        setExistingMaterialData(materials[0]);
-      } else {
-        // Fallback to fetch system details
-        try {
-          const systemDetails = await fetchSystemRelatedDetails(connectionId);
-          setFormData((prev) => ({
-            ...prev,
-            systemKw: systemDetails.customerSelectedKW || "",
-            makeOfModule: systemDetails.customerSelectedBrand || "",
-            inverterCapacity: systemDetails.inverterCapacity || "",
-            inverterMake: systemDetails.inverterBrand || "",
-            noOfModules: systemDetails.panelCount || "",
-            reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
-          }));
-        } catch (error) {
-          console.error("Error fetching system details:", error);
-        }
-      }
-    };
+    try {
+      const [inverter, installation, module] = await Promise.all([
+        fetchInverter(connectionId),
+        fetchInstallation(connectionId),
+        fetchModule(connectionId),
+      ]);
 
-    fetchMaterialData();
-  }, [connectionId]);
+      // Prefill data if available
+      setFormData((prev) => ({
+        ...prev,
+        inverterMake: inverter?.inverterMake || "",
+        almmModelNo: inverter?.almmModelNo || "",
+        rating: inverter?.rating || "IP65",
+        chargeControllerType: inverter?.chargeControllerType || "MPPT",
+        inverterCapacity: inverter?.inverterCapacity?.toString() || "",
+
+        earthingRod: installation?.earthingRod?.toString() || "",
+        dateOfInstallation: installation?.dateOfInstallation || "",
+        capacityType: installation?.capacityType || "Rooftop",
+        projectModel: installation?.projectModel || "Capex",
+        reInstalledCapacityRooftop: installation?.reInstallCapacityRooftop?.toString() || "",
+        reInstalledCapacityGround: installation?.reInstallCapacityGround?.toString() || "",
+        reInstalledCapacityTotal: installation?.reInstallCapacityTotal?.toString() || "",
+
+        systemKw: module?.systemKw?.toString() || "",
+        makeOfModule: module?.makeOfModule || "",
+        wattagePerModule: module?.wattagePerModule?.toString() || "",
+        noOfModules: module?.noOfModules?.toString() || "",
+        warrantyDetails: module?.warrantyDetails || "",
+        serials: Array.isArray(module?.serialNumbers)
+          ? module.serialNumbers.map((sn: string) => ({ serialNumber: sn }))
+          : [],
+      }));
+    } catch (error) {
+      console.error("Error loading saved data:", error);
+      // toast.error("Failed to load saved data", { autoClose: 1000, hideProgressBar: true });
+    }
+  };
+
+  loadSavedData();
+}, [connectionId]);
+
 
 
 
@@ -603,12 +653,21 @@ export default function MaterialForm() {
               </div>
             </div>
 
-            <div className="flex justify-center sm:justify-center mt-4 sm:mt-6">
+            <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+              <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
+
+
               <button
                 type="submit"
                 className="py-2 px-6 w-full sm:w-auto bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                {existingMaterialData ? "Update Material Data" : "Save Material Data"}
+                Save Material Data
               </button>
 
             </div>
