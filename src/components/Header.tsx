@@ -7,7 +7,7 @@ import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
 import { Loader2 } from 'lucide-react';
-import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto } from '../services/oneDriveService';
+import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/oneDriveService';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -37,6 +37,8 @@ const Header: React.FC = () => {
 
   const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const isAuthPage = authPages.includes(location.pathname);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
+
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<{
     x: number;
@@ -130,31 +132,62 @@ const Header: React.FC = () => {
     navigate("/login");
   };
 
+  const loadProfilePhoto = async () => {
+  const photoUrl = await getUserProfilePhoto();
+  if (photoUrl) {
+    setProfilePhoto(photoUrl);
+    setHasUploadedPhoto(true);
+  } else {
+    // When photo is deleted, reset UI
+    setProfilePhoto(null);
+    setHasUploadedPhoto(false);
+  }
+};
+
+
 
   useEffect(() => {
-    const loadProfilePhoto = async () => {
-      const photoUrl = await getUserProfilePhoto();
-      if (photoUrl) {
-        setProfilePhoto(photoUrl);
-        setHasUploadedPhoto(true);
-      }
-    };
+  loadProfilePhoto();
 
-    loadProfilePhoto();
+  const handlePhotoUpdate = (e: Event) => {
+  const customEvent = e as CustomEvent<string>;
+  const updatedPhoto = customEvent.detail;
+
+  if (updatedPhoto) {
+    // photo added or updated
+    setProfilePhoto(updatedPhoto);
+    setHasUploadedPhoto(true);
+  } else {
+    // photo removed
+    setProfilePhoto(null);
+    setHasUploadedPhoto(false);
+  }
+};
 
 
-    const handlePhotoUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      setProfilePhoto(customEvent.detail);
-      setHasUploadedPhoto(true);
-    };
+  window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
 
-    window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
+  return () => {
+    window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+  };
+}, []);
 
-    return () => {
-      window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
-    };
-  }, []);
+
+const handleRemovePhoto = async () => {
+  try {
+    setRemovingPhoto(true);
+    await deleteUserProfilePhoto(); // Delete API call
+    await loadProfilePhoto();       // Refresh UI state immediately
+    setShowCropModal(false); // Close modal
+
+    // 🔥 Notify other components about removal
+    window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
+  } catch (error) {
+    console.error("Error removing photo:", error);
+  } finally {
+    setRemovingPhoto(false);
+  }
+};
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,11 +248,10 @@ const Header: React.FC = () => {
 
 
 
-  const handleRemovePhoto = () => {
-    setProfilePhoto(null);
-    setPreviewUrl(null);
-    setShowCropModal(false);
-  };
+
+
+
+
 
   const onCropComplete = useCallback(
     (_: any, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
@@ -324,8 +356,8 @@ const Header: React.FC = () => {
                               key={`${orgId}-${role}`}
                               onClick={() => handleOrgChange(orgId, orgData.org_name, role)}
                               className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${isSelected
-                                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
-                                  : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
+                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
+                                : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
                                 }`}
                             >
                               <div className="flex items-center justify-between">
@@ -454,14 +486,19 @@ const Header: React.FC = () => {
                             <h3 className="text-base font-semibold text-gray-900">Profile Photo</h3>
 
                             <div className="flex items-center gap-2">
-                              {/* {hasUploadedPhoto && (
+                              {hasUploadedPhoto && (
                                 <button
                                   onClick={handleRemovePhoto}
-                                  className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                                  disabled={removingPhoto}
+                                  className={`px-3 py-1 text-sm font-medium text-white rounded-lg transition-colors ${removingPhoto
+                                      ? "bg-gray-400 cursor-not-allowed"
+                                      : "bg-red-600 hover:bg-red-700"
+                                    }`}
                                 >
-                                  Remove Current Photo
+                                  {removingPhoto ? "Removing..." : "Remove Current Photo"}
                                 </button>
-                              )} */}
+                              )}
+
                               <button
                                 onClick={() => setShowCropModal(false)}
                                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"

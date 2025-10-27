@@ -41,6 +41,7 @@ import OrganizationView from './pages/Organizations/OrganizationView';
 import EditOrganization from './pages/Organizations/EditOrganization';
 import UserManagement from './pages/Organizations/UserManagement';
 import UserFormManagement from './pages/Organizations/UserFormManagement';
+import PackageManagement from './pages/Organizations/PackageManagement';
 import EditUser from './pages/Organizations/EditUser';
 import UserView from './pages/Organizations/UserView';
 import RoleManagement from './pages/Organizations/RoleManagement';
@@ -426,6 +427,15 @@ const AppContent: React.FC = () => {
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <UserManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/package-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <PackageManagement />
                 </RoleProtectedRoute>
               }
             />

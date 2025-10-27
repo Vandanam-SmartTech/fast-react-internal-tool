@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId } from '../../services/customerRequisitionService';
+import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById } from '../../services/customerRequisitionService';
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
@@ -36,6 +36,8 @@ export const SystemSpecifications = () => {
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const [govIdName, setGovIdName] = useState("");
+  const [orgId, setOrgId] = useState<number | null>(null);
+  const [agencyId, setAgencyId] = useState<number | null>(null);
   const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState("");
@@ -86,7 +88,7 @@ export const SystemSpecifications = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(savedSpecs.length === 0 || savedSpecs.length === 1);
 
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
@@ -214,6 +216,17 @@ export const SystemSpecifications = () => {
 
 
 
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      if (customerId) {
+        const data = await getCustomerById(Number(customerId));
+        setGovIdName(data?.govIdName || "");
+        setOrgId(data?.organizationId || null);
+        setAgencyId(data?.agencyId || null);
+      }
+    };
+    fetchCustomer();
+  }, [customerId]);
 
 
   useEffect(() => {
@@ -320,9 +333,9 @@ export const SystemSpecifications = () => {
         }));
       }
 
-      if (inverterBrandId !== null && systemCapacityKw !== null) {
+      if (inverterBrandId !== null && gridTypeId !== null) {
         try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId, systemCapacityKw);
+          const data = await fetchInverterBrandCapacities(inverterBrandId);
           setInverterCapacities([...data]);
         } catch (error) {
           console.error("Failed to fetch inverter brand capacities:", error);
@@ -334,7 +347,7 @@ export const SystemSpecifications = () => {
     };
 
     loadInverterBrandCapacities();
-  }, [inverterBrandId, systemCapacityKw]);
+  }, [inverterBrandId]);
 
 
   useEffect(() => {
@@ -437,12 +450,16 @@ export const SystemSpecifications = () => {
 
   const handleSaveSpecs = async () => {
     try {
+      setIsSubmitting(true);
+
       const systemResponse = await saveSystemSpecs({
         ...formData,
         connectionId,
         specSourceId: 2,
         panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId
+        batterySpecsId: formData.batterySpecId,
+        orgId,
+        agencyId
 
       });
 
@@ -471,6 +488,8 @@ export const SystemSpecifications = () => {
         autoClose: 1000,
         hideProgressBar: true,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -485,12 +504,16 @@ export const SystemSpecifications = () => {
         return;
       }
 
+      setIsSubmitting(true);
+
       const systemResponse = await updateSystemSpecs(selectedSpecId, {
         ...formData,
         connectionId,
         specSourceId: 2,
         panelSpecsId: formData.panelSpecId,
         batterySpecsId: formData.batterySpecId,
+        orgId,
+        agencyId
       });
 
       console.log("System specs updated:", systemResponse);
@@ -516,8 +539,12 @@ export const SystemSpecifications = () => {
         autoClose: 1000,
         hideProgressBar: true,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+
 
 
   const handleSaveButtonClick = () => {
@@ -596,63 +623,63 @@ export const SystemSpecifications = () => {
   }, [savedSpecs]);
 
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target;
 
-  const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
+    const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
 
-  const updatedFormData = {
-    ...formData,
-    [name]: newValue,
+    const updatedFormData = {
+      ...formData,
+      [name]: newValue,
+    };
+
+    updatedFormData.totalCost =
+      (Number(updatedFormData.systemCost) || 0) +
+      (Number(updatedFormData.fabricationCost) || 0);
+
+    setFormData(updatedFormData);
+    setIsCustomSpecs(true);
+    setIsSpecsSaved(false);
+    setPriceAlreadySetFromCustomerData(false);
   };
 
-  updatedFormData.totalCost =
-    (Number(updatedFormData.systemCost) || 0) +
-    (Number(updatedFormData.fabricationCost) || 0);
 
-  setFormData(updatedFormData);
-  setIsCustomSpecs(true);
-  setIsSpecsSaved(false);
-  setPriceAlreadySetFromCustomerData(false);
-};
+  useEffect(() => {
+    const fetchPriceDetails = async () => {
+      if (formData.systemCapacityKw && formData.panelSpecId) {
+        try {
+          const response = await getPriceDetails({
+            panelSpecsId: formData.panelSpecId ?? "",
+            systemCapacityKw: formData.systemCapacityKw ?? "",
+            inverterSpecsId: formData.inverterSpecId ?? "",
+            batterySpecsId: formData.batterySpecId ?? "",
+            inverterCount: 1,
+            batteryCount: 1,
+          });
 
-
- useEffect(() => {
-  const fetchPriceDetails = async () => {
-    if (formData.systemCapacityKw && formData.panelSpecId) {
-      try {
-        const response = await getPriceDetails({
-          panelSpecsId: formData.panelSpecId ?? "",
-          systemCapacityKw: formData.systemCapacityKw ?? "",
-          inverterSpecsId: formData.inverterSpecId ?? "",
-          batterySpecsId: formData.batterySpecId ?? "",
-          inverterCount: 1,
-          batteryCount: 1,
-        });
-
-        if (response) {
-          setFormData((prev: any) => ({
-            ...prev,
-            systemCost: response.systemCost || 0,
-            fabricationCost: response.fabricationCost || 0,
-            totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
-          }));
+          if (response) {
+            setFormData((prev: any) => ({
+              ...prev,
+              systemCost: response.systemCost || 0,
+              fabricationCost: response.fabricationCost || 0,
+              totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch price details", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch price details", err);
+      } else {
+        setFormData((prev: any) => ({
+          ...prev,
+          systemCost: 0,
+          fabricationCost: 0,
+          totalCost: 0,
+        }));
       }
-    } else {
-      setFormData((prev: any) => ({
-        ...prev,
-        systemCost: 0,
-        fabricationCost: 0,
-        totalCost: 0,
-      }));
-    }
-  };
+    };
 
-  fetchPriceDetails();
-}, [formData.systemCapacityKw, formData.panelSpecId, formData.inverterSpecId, formData.batterySpecId]);
+    fetchPriceDetails();
+  }, [formData.systemCapacityKw, formData.panelSpecId, formData.inverterSpecId, formData.batterySpecId]);
 
 
 
@@ -735,24 +762,24 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
 
 
-      
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() =>
-              navigate(-1)
-            }
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
 
 
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-            {/* {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"} */}
-            System Specification Details
-          </h2>
-        </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() =>
+            navigate(-1)
+          }
+          className="p-2 rounded-full hover:bg-gray-200 transition"
+        >
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
+        </button>
+
+
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+          {/* {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"} */}
+          System Specification Details
+        </h2>
+      </div>
 
 
       <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
@@ -1385,19 +1412,26 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                 <button
                   type="button"
                   onClick={handleUpdateButtonClick}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  disabled={isSubmitting}
+                  className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
+      ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
                 >
-                  Update System Specs
+                  {isSubmitting ? "Updating..." : "Update System Specs"}
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleSaveButtonClick}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  disabled={isSubmitting}
+                  className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
+      ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
                 >
-                  Save System Specs
+                  {isSubmitting ? "Saving..." : "Save System Specs"}
                 </button>
               )}
+
 
               <button
                 type="button"
@@ -1408,7 +1442,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                 {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
               </button>
 
-              {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+              {/* {(userInfo?.role === "ROLE_ORG_ADMIN" ||
                 userInfo?.role === "ROLE_AGENCY_ADMIN" ||
                 userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
                   <button
@@ -1419,7 +1453,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                   >
                     {isLoading ? "Generating..." : "Generate & Save Quotation"}
                   </button>
-                )}
+                )} */}
             </div>
           </div>
 

@@ -411,21 +411,18 @@ export const fetchInverterBrands = async (
 
 
 export const fetchInverterBrandCapacities = async (
-  inverterBrandId: number,
-  systemCapacityKw: number
+  inverterBrandId: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching inverter capacities...");
     console.log("Request params:", {
-      inverterBrandId,
-      systemCapacityKw
+      inverterBrandId
     });
 
     const response = await quotationAPI.get(`/api/inverter-specs/capacities`, {
       params: {
-        inverterBrandId,
-        systemCapacityKw
+        inverterBrandId
       },
     });
 

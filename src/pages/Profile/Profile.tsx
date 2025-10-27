@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
-import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto } from '../../services/oneDriveService';
+import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto, deleteUserSignaturePhoto } from '../../services/oneDriveService';
 import { useUser } from '../../contexts/UserContext';
 import { croppedImg } from '../../utils/croppedImage';
 
@@ -28,6 +28,8 @@ const Profile: React.FC = () => {
   const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
   const [loadingForProfile, setLoadingForProfile] = useState(false);
 
+  const [removingPhoto, setRemovingPhoto] = useState(false);
+
   const navigate = useNavigate();
 
 
@@ -46,23 +48,38 @@ const Profile: React.FC = () => {
   } | null>(null);
 
 
+
+  const loadProfilePhoto = async () => {
+    const photoUrl = await getUserProfilePhoto();
+    if (photoUrl) {
+      setProfilePhoto(photoUrl);
+      setHasUploadedPhoto(true);
+    } else {
+
+      setProfilePhoto(null);
+      setHasUploadedPhoto(false);
+    }
+  };
+
+
   useEffect(() => {
-    const loadProfilePhoto = async () => {
-      const photoUrl = await getUserProfilePhoto();
-      if (photoUrl) {
-        setProfilePhoto(photoUrl);
-        setHasUploadedPhoto(true);
-      }
-    };
-
     loadProfilePhoto();
-
 
     const handlePhotoUpdate = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
-      setProfilePhoto(customEvent.detail);
-      setHasUploadedPhoto(true);
+      const updatedPhoto = customEvent.detail;
+
+      if (updatedPhoto) {
+        // photo added or updated
+        setProfilePhoto(updatedPhoto);
+        setHasUploadedPhoto(true);
+      } else {
+        // photo removed
+        setProfilePhoto(null);
+        setHasUploadedPhoto(false);
+      }
     };
+
 
     window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
 
@@ -70,6 +87,22 @@ const Profile: React.FC = () => {
       window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
     };
   }, []);
+
+  const handleRemovePhoto = async () => {
+    try {
+      setRemovingPhoto(true);
+      await deleteUserProfilePhoto();
+      await loadProfilePhoto();
+      setShowCropModalForProfile(false);
+
+      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
+    } catch (error) {
+      console.error("Error removing photo:", error);
+    } finally {
+      setRemovingPhoto(false);
+    }
+  };
+
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +116,8 @@ const Profile: React.FC = () => {
       };
 
       reader.readAsDataURL(file);
+
+      e.target.value = "";
     }
   };
 
@@ -141,13 +176,19 @@ const Profile: React.FC = () => {
     if (file) {
 
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+        toast.error('Please select an image file',{
+          autoClose:1000,
+          hideProgressBar: true
+        });
         return;
       }
 
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB');
+        toast.error('File size should be less than 5MB',{
+          autoClose:1000,
+          hideProgressBar: true
+        });
         return;
       }
 
@@ -243,7 +284,10 @@ const Profile: React.FC = () => {
 
   const handleCropSave = async () => {
     if (!croppedAreaPixels || !previewUrl) {
-      toast.error('Please adjust the crop area first');
+      toast.error('Please adjust the crop area first',{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
       return;
     }
 
@@ -260,7 +304,10 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      toast.error('Failed to crop image');
+      toast.error('Failed to crop image',{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -291,7 +338,10 @@ const Profile: React.FC = () => {
 
       await uploadUserSignature(file);
 
-      toast.success("Signature uploaded successfully");
+      toast.success("Signature uploaded successfully",{
+        autoClose:1000,
+        hideProgressBar: true
+      });
 
 
       await fetchSignature();
@@ -301,7 +351,10 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Upload failed:", err);
-      toast.error("Failed to upload signature");
+      toast.error("Failed to upload signature",{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
     } finally {
       setUploading(false);
     }
@@ -319,7 +372,10 @@ const Profile: React.FC = () => {
 
       await editUserSignature(file);
 
-      toast.success("Signature updated successfully");
+      toast.success("Signature updated successfully",{
+        autoClose:1000,
+        hideProgressBar: true
+      });
 
 
       await fetchSignature();
@@ -329,11 +385,49 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Edit failed:", err);
-      toast.error("Failed to update signature");
+      toast.error("Failed to update signature",{
+        autoClose:1000,
+        hideProgressBar: true
+      });
     } finally {
       setUploading(false);
     }
   };
+
+  const handleRemoveSignature = async () => {
+    if (!signatureUrl) return; // nothing to remove
+
+    try {
+      setUploading(true); // show loader if needed
+
+      // Call API to delete signature
+      await deleteUserSignaturePhoto();
+
+      toast.success("Signature removed successfully",{
+        autoClose:1000,
+        hideProgressBar: true
+      });
+
+      // Refresh the signature from server
+      await fetchSignature();
+
+      // Reset preview and selected file (in case user had selected new file before removing)
+      setSelectedFile(null);
+      setPreviewUrl(null);
+
+      // Reset file input so same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err) {
+      console.error("Failed to remove signature:", err);
+      toast.error("Failed to remove signature",{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchSignature();
@@ -455,14 +549,18 @@ const Profile: React.FC = () => {
                       <h3 className="text-base font-semibold text-gray-900">Profile Photo</h3>
 
                       <div className="flex items-center gap-2">
-                        {/* {hasUploadedPhoto && (
-                                <button
-                                  onClick={handleRemovePhoto}
-                                  className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                                >
-                                  Remove Current Photo
-                                </button>
-                              )} */}
+                        {hasUploadedPhoto && (
+                          <button
+                            onClick={handleRemovePhoto}
+                            disabled={removingPhoto}
+                            className={`px-3 py-1 text-sm font-medium text-white rounded-lg transition-colors ${removingPhoto
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-red-600 hover:bg-red-700"
+                              }`}
+                          >
+                            {removingPhoto ? "Removing..." : "Remove Current Photo"}
+                          </button>
+                        )}
                         <button
                           onClick={() => setShowCropModalForProfile(false)}
                           className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -646,15 +744,32 @@ const Profile: React.FC = () => {
                   </div>
 
                   {/* Edit Signature */}
-                  <div>
+                  <div className="flex gap-2">
+                    {/* Edit / Upload Signature */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
-                      Edit Signature
+                      {signatureUrl ? "Edit Signature" : "Upload Signature"}
                     </Button>
+
+                    {/* Remove Signature (only show if signature exists) */}
+                    {signatureUrl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        color="red"
+                        onClick={handleRemoveSignature}
+                        className="focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        loading={uploading}
+                      >
+                        Remove Signature
+                      </Button>
+                    )}
+
+                    {/* Hidden file input */}
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -663,6 +778,7 @@ const Profile: React.FC = () => {
                       className="hidden"
                     />
                   </div>
+
 
                   {/* Show preview only when user selects new file */}
                   {previewUrl && (

@@ -94,8 +94,8 @@ export default function GenerateDocuments() {
       id: 2,
       title: "Quotations",
       documents: [
-        { label: "Normal Quotation", name: "Normal Quotation", canGenerate: false, canPreview: false },
-        { label: "Signed/Agreed Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
+        { label: "Unsigned/Proposed Quotation", name: "Unsigned Quotation", canGenerate: false, canPreview: false },
+        { label: "Signed/Accepted Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -136,7 +136,7 @@ export default function GenerateDocuments() {
         { label: "Panel Serial Number Photos", name: "Panel SN", canGenerate: false, canPreview: false },
         { label: "Inverter Serial Number Photo", name: "Inverter SN", canGenerate: false, canPreview: false },
         { label: "MCB", name: "MCB", canGenerate: false, canPreview: false },
-        { label: "RCCB", name: "RCCB", canGenerate: false, canPreview: false}
+        { label: "RCCB", name: "RCCB", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -223,62 +223,62 @@ export default function GenerateDocuments() {
   };
 
 
-const handleGenerate = async (doc: string) => {
-  if (!consumer?.id) return;
+  const handleGenerate = async (doc: string) => {
+    if (!consumer?.id) return;
 
-  let quotedTotal: number | undefined;
-  if (doc === "Consumer Vendor Agreement") {
-    quotedTotal = quotedTotals[doc];
-    if (!quotedTotal || isNaN(quotedTotal)) {
-      toast.error("Please enter a valid quoted total amount before generating.");
-      return;
+    let quotedTotal: number | undefined;
+    if (doc === "Consumer Vendor Agreement") {
+      quotedTotal = quotedTotals[doc];
+      if (!quotedTotal || isNaN(quotedTotal)) {
+        toast.error("Please enter a valid quoted total amount before generating.");
+        return;
+      }
     }
-  }
 
-  setLoadingGenerateDoc(doc);
-  try {
-    const blob = await fetchPdf(consumer.id, doc, quotedTotal);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${doc}_${consumer.govIdName}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  } catch (err) {
-    console.error("Generate error:", err);
-    toast.error("Failed to generate document");
-  } finally {
-    setLoadingGenerateDoc(null);
-  }
-};
-
-
-const handlePreview = async (doc: string) => {
-  if (!consumer?.id) return;
-
-  let quotedTotal: number | undefined;
-  if (doc === "Consumer Vendor Agreement") {
-    quotedTotal = quotedTotals[doc];
-    if (!quotedTotal || isNaN(quotedTotal)) {
-      toast.error("Please enter a valid quoted total amount before previewing.");
-      return;
+    setLoadingGenerateDoc(doc);
+    try {
+      const blob = await fetchPdf(consumer.id, doc, quotedTotal);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc}_${consumer.govIdName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Generate error:", err);
+      toast.error("Failed to generate document");
+    } finally {
+      setLoadingGenerateDoc(null);
     }
-  }
+  };
 
-  setLoadingPreviewDoc(doc);
-  try {
-    const blob = await fetchPdf(consumer.id, doc, quotedTotal);
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-  } catch (err) {
-    console.error("Preview error:", err);
-    toast.error("Failed to preview document");
-  } finally {
-    setLoadingPreviewDoc(null);
-  }
-};
+
+  const handlePreview = async (doc: string) => {
+    if (!consumer?.id) return;
+
+    let quotedTotal: number | undefined;
+    if (doc === "Consumer Vendor Agreement") {
+      quotedTotal = quotedTotals[doc];
+      if (!quotedTotal || isNaN(quotedTotal)) {
+        toast.error("Please enter a valid quoted total amount before previewing.");
+        return;
+      }
+    }
+
+    setLoadingPreviewDoc(doc);
+    try {
+      const blob = await fetchPdf(consumer.id, doc, quotedTotal);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error("Preview error:", err);
+      toast.error("Failed to preview document");
+    } finally {
+      setLoadingPreviewDoc(null);
+    }
+  };
 
 
 
@@ -359,27 +359,27 @@ const handlePreview = async (doc: string) => {
     });
   };
 
-const handleDeleteDocument = async (fileId: string, documentType: string) => {
-  try {
+  const handleDeleteDocument = async (fileId: string, documentType: string) => {
+    try {
 
-    await deleteDocumentById(fileId);
+      await deleteDocumentById(fileId);
 
-    setUploadedDocuments((prev) => {
-      const currentList = prev[documentType] || [];
-      const updatedList = currentList.filter((d: any) => d.fileId !== fileId);
-      return { ...prev, [documentType]: updatedList };
-    });
+      setUploadedDocuments((prev) => {
+        const currentList = prev[documentType] || [];
+        const updatedList = currentList.filter((d: any) => d.fileId !== fileId);
+        return { ...prev, [documentType]: updatedList };
+      });
 
-    await loadDocuments();
+      await loadDocuments();
 
-    toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
+      toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
 
-  } catch (error) {
-    console.error("Delete failed", error);
-    toast.error("Failed to delete document");
-    await loadDocuments(); 
-  }
-};
+    } catch (error) {
+      console.error("Delete failed", error);
+      toast.error("Failed to delete document");
+      await loadDocuments();
+    }
+  };
 
 
   const handleReplaceFileChange = (docId: string, file: File | null) => {
@@ -466,7 +466,7 @@ const handleDeleteDocument = async (fileId: string, documentType: string) => {
       {/* Header */}
       <div className="flex items-center space-x-2">
         <button
-          onClick={() => navigate(`/list-of-consumers`)}
+          onClick={() => navigate(-1)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
           aria-label="Go back to consumers list"
         >
@@ -617,25 +617,25 @@ const handleDeleteDocument = async (fileId: string, documentType: string) => {
                         </div>
 
                         {docDef.name === "Consumer Vendor Agreement" && (
-  <div className="mb-3">
-    <label className="block text-xs font-medium text-gray-700 mb-2">
-      Total Quoted Price (₹)
-    </label>
-    <input
-      type="number"
-      min="0"
-      placeholder="Enter total quoted Price"
-      value={quotedTotals[docDef.name] || ''}
-      onChange={(e) =>
-        setQuotedTotals((prev) => ({
-          ...prev,
-          [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
-        }))
-      }
-      className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-    />
-  </div>
-)}
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                              Total Quoted Price (₹)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Enter total quoted Price"
+                              value={quotedTotals[docDef.name] || ''}
+                              onChange={(e) =>
+                                setQuotedTotals((prev) => ({
+                                  ...prev,
+                                  [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
+                                }))
+                              }
+                              className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2">
@@ -880,7 +880,7 @@ const handleDeleteDocument = async (fileId: string, documentType: string) => {
             <Button
               onClick={() => {
                 setDialogOpen(false);
-                if (dialogAction) dialogAction(); 
+                if (dialogAction) dialogAction();
               }}
               autoFocus
             >

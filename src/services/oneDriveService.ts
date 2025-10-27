@@ -179,6 +179,23 @@ export const editUserSignature = async (file: File): Promise<void> => {
   }
 };
 
+export const deleteUserSignaturePhoto = async (): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    await oneDriveAPI.delete(`/api/document-manager/user-media/${userId}`, {
+      params: { type: "SIGNATURE" },
+    });
+
+    console.log("Profile photo deleted successfully");
+  } catch (error: any) {
+    console.error("Failed to delete profile photo:", error);
+    throw error;
+  }
+};
+
 export const uploadUserProfilePhoto = async (file: File): Promise<void> => {
   try {
     const oneDriveAPI = getOneDriveAPI();
@@ -241,6 +258,26 @@ export const editUserProfilePhoto = async (file: File): Promise<void> => {
     throw error;
   }
 };
+
+export const deleteUserProfilePhoto = async (): Promise<void> => {
+  try {
+    const oneDriveAPI = getOneDriveAPI();
+    const claims = await fetchClaims();
+    const userId = claims.id;
+
+    // Add ?type=PROFILE (or lowercase "profile" if your MediaTypes enum handles it case-insensitively)
+    await oneDriveAPI.delete(`/api/document-manager/user-media/${userId}`, {
+      params: { type: "PROFILE" },
+    });
+
+    console.log("Profile photo deleted successfully");
+  } catch (error: any) {
+    console.error("Failed to delete profile photo:", error);
+    throw error;
+  }
+};
+
+
 
 export const uploadOrganizationImage = async (orgId: number, file: File): Promise<void> => {
   try {

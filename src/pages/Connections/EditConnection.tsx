@@ -1224,6 +1224,7 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   name="latitude"
                   value={formData.latitude}
                   onChange={handleChange}
+                  onWheel={(e) => e.currentTarget.blur()}
                   placeholder="e.g. 16.7049873"
                   min="-90"
                   max="90"
@@ -1245,6 +1246,7 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   name="longitude"
                   value={formData.longitude}
                   onChange={handleChange}
+                  onWheel={(e) => e.currentTarget.blur()}
                   placeholder="e.g. 74.2432527"
                   min="-180"
                   max="180"

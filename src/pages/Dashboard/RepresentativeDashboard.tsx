@@ -3,6 +3,7 @@ import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '.
 import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from 'react-router-dom';
 import { UserCheck, Users, BarChart3, Calendar, Clock } from 'lucide-react';
+import Card, { CardBody } from '../../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { useUser } from '../../contexts/UserContext';
@@ -116,6 +117,16 @@ useEffect(() => {
     }, 5);
   };
 
+  const handleActivate = (path: string) => navigate(path);
+  
+    const handleKeyActivate: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const target = e.currentTarget.getAttribute('data-path');
+        if (target) navigate(target);
+      }
+    };
+
   const dashboardItems = [
     {
       title: 'Manage Customers',
@@ -152,10 +163,43 @@ useEffect(() => {
         </div>
       </div>
 
-      
+      {/* Statistics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+
+        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover-lift focus-ring" onClick={() => handleActivate('/list-of-consumers')}>
+          <CardBody className="p-4" >
+            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/list-of-consumers" aria-label="View total customers" onKeyDown={handleKeyActivate}>
+              <div>
+                <p className="text-sm font-medium text-purple-600">Total Customers</p>
+                <p className="text-2xl font-bold text-purple-900" aria-live="polite">
+                  {count !== null ? animatedCount : 0}
+                </p>
+              </div>
+              <div className="p-2 bg-purple-200 rounded-lg">
+                <Users className="h-6 w-6 text-purple-700" />
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/OnboardedConsumers')}>
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/onboarded-consumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
+              <div>
+                <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
+                <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : 0}</p>
+              </div>
+              <div className="p-2 bg-solar-200 rounded-lg">
+                <UserCheck className="h-6 w-6 text-solar-700" />
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+      </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-6">
         {dashboardItems.map((item, index) => (
           <div 
             key={index}
@@ -171,31 +215,6 @@ useEffect(() => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <button 
-          onClick={goToListOfConsumers}
-          className="flex flex-col items-center justify-center bg-blue-200 text-blue-800 px-4 py-7 rounded-xl shadow-md hover:bg-blue-300 transition-all h-40"
-        >
-          <Users className="w-7 h-7 mb-1" />
-          <div className="text-5xl font-extrabold mb-1">
-            {count !== null ? animatedCount : '0'}
-          </div>
-          <div className="text-base font-medium tracking-wide text-center">All Customers</div>
-        </button>
-
-        <button 
-          onClick={goToOnboardedCustomers}
-          className="flex flex-col items-center justify-center bg-green-200 text-green-800 px-4 py-7 rounded-xl shadow-md hover:bg-green-300 transition-all h-40"
-        >
-          <UserCheck className="w-7 h-7 mb-1" />
-          <div className="text-5xl font-extrabold mb-1">
-            {onboardedCount !== null ? animatedOnboardedCount : '0'}
-          </div>
-          <div className="text-base font-medium tracking-wide text-center">Onboarded Consumers</div>
-        </button>
       </div>
 
       {/* Progress Chart */}

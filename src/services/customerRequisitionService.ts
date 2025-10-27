@@ -654,6 +654,44 @@ export const getCustomerStats = async (params: Record<string, any>) => {
   }
 };
 
+export const saveInverter = async (data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.post("/api-doc/inverters", data);
+    console.log("Inverter saved:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving inverter:", error);
+    throw error;
+  }
+};
+
+/** Save installation details */
+export const saveInstallationDetails = async (data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.post("/api-doc/installations", data);
+    console.log("Installation saved:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving installation:", error);
+    throw error;
+  }
+};
+
+/** Save module details */
+export const saveModule = async (data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.post("/api-doc/modules", data);
+    console.log("Module saved:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving module:", error);
+    throw error;
+  }
+};
+
 
 
 

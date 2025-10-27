@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./ui";
-import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
+import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight, Package } from "lucide-react";
 import Button from "./ui/Button";
 import { fetchClaims } from "../services/jwtService";
 import { useUser } from "../contexts/UserContext";
@@ -60,6 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const goToOrganizations = () => navigate("/organizations");
   const goToAdminManagement = () => navigate("/admin-management");
   const goToUserManagement = () => navigate("/user-management");
+  const goToPackageManagement = () => navigate("package-management");
 
 
 const handleHomeClick = async () => {
@@ -172,6 +173,7 @@ const handleHomeClick = async () => {
           const restrictedPages = [
             "/admin-management",
             "/user-management",
+            "/package-management"
           ];
           const dashboardPages = [
             "/org-admin-dashboard",
@@ -402,6 +404,17 @@ const handleHomeClick = async () => {
                 >
                   <UserCheck size={20} />
                   <span>User Management</span>
+                </button>
+              )}
+
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+                <button
+                  onClick={goToPackageManagement}
+                  className={`nav-link w-full justify-start ${isActive("/package-management") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
+                >
+                  <Package size={20} />
+                  <span>Package Management</span>
                 </button>
               )}
 

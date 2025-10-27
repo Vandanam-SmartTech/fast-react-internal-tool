@@ -184,7 +184,7 @@ useEffect(() => {
           </CardBody>
         </Card>
 
-        <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/OnboardedConsumers')}>
+        <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/onboarded-consumers')}>
           <CardBody className="p-4">
             <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/onboarded-consumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
               <div>

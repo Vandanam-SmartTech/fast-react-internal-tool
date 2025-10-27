@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, getMaterialsByConnectionId, updateMaterialData } from "../../services/customerRequisitionService";
+import { postMaterialData, getMaterialsByConnectionId, updateMaterialData, saveInverter, saveInstallationDetails, saveModule } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { fetchSystemRelatedDetails } from "../../services/quotationService";
 import { toast } from "react-toastify";
@@ -21,13 +21,13 @@ export default function MaterialForm() {
     systemKw: "",
     makeOfModule: "",
     almmModelNo: "",
-    wattagePerModule: null,
-    noOfModules: null,
+    wattagePerModule: "",
+    noOfModules: "",
     warrantyDetails: "",
     inverterModuleNo: "",
     inverterMake: "",
     rating: "IP65",
-    chargeControllerType: "",
+    chargeControllerType: "MPPT",
     inverterCapacity: "",
     earthingRod: "",
     dateOfInstallation: "",
@@ -35,11 +35,15 @@ export default function MaterialForm() {
     projectModel: "Capex",
     reInstalledCapacityRooftop: "",
     reInstalledCapacityGround: "",
-    reInstalledCapacityTotal: ""
+    reInstalledCapacityTotal: "",
+    serials: [] as { serialNumber: string }[],
   });
+
+
   const location = useLocation();
   const navigate = useNavigate();
   const connectionId = location.state?.connectionId;
+  //const [connectionId, setConnectionId] = useState<number | null>(null);
   const [messageBoxOpen, setMessageBoxOpen] = useState(false);
   const [messageBoxContent, setMessageBoxContent] = useState("");
   const [messageBoxSeverity, setMessageBoxSeverity] = useState<"success" | "error">("success");
@@ -48,104 +52,194 @@ export default function MaterialForm() {
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+  const { name, value } = e.target;
 
-    if (name === "systemKw" || name === "makeOfModule" || name === "wattagePerModule") {
+  // Helper function to check valid decimal >= 0 (no negatives)
+  const isValidDecimal = (val: string) => /^(\d+(\.\d*)?)?$/.test(val);
 
-      if (value === "Other") {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-          [`custom${capitalize(name)}`]: "", 
-        }));
-      } else {
+  // Special handling for number of modules (already done)
+  if (name === "noOfModules") {
+    if (/^[1-9][0-9]*$/.test(value) || value === "") {
+      const count = value === "" ? 0 : parseInt(value);
+      const newSerials = Array.from({ length: count }, (_, i) => ({
+        serialNumber: formData.serials[i]?.serialNumber || "",
+      }));
 
-        setFormData((prev) => ({
-          ...prev,
-          [name]: type === "number" ? Number(value) : value,
-          [`custom${capitalize(name)}`]: "",
-        }));
-      }
-    } else {
-      const parsedValue =
-        type === "number" ? (value === "" ? "" : Number(value)) : value;
-
-      setFormData({ ...formData, [name]: parsedValue });
+      setFormData((prev) => ({
+        ...prev,
+        noOfModules: value,
+        serials: newSerials,
+      }));
     }
+    return;
+  }
+
+  // Handle Rooftop, Ground, and Total fields
+  if (
+    name === "reInstalledCapacityRooftop" ||
+    name === "reInstalledCapacityGround" ||
+    name === "reInstalledCapacityTotal"
+  ) {
+    if (!isValidDecimal(value)) return;
+
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // Convert values safely to floats
+      const rooftop = parseFloat(updated.reInstalledCapacityRooftop) || 0;
+      const ground = parseFloat(updated.reInstalledCapacityGround) || 0;
+
+      // Auto-update total whenever rooftop or ground changes
+      if (name !== "reInstalledCapacityTotal") {
+        updated.reInstalledCapacityTotal = (rooftop + ground).toString();
+      }
+
+      return updated;
+    });
+    return;
+  }
+
+  // Default case
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+
+  const handleSerialChange = (index: number, value: string) => {
+    const updatedSerials = [...formData.serials];
+    updatedSerials[index].serialNumber = value;
+    setFormData((prev) => ({ ...prev, serials: updatedSerials }));
   };
+
+
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-useEffect(() => {
-  const fetchMaterialData = async () => {
-    if (!connectionId) return;
+  useEffect(() => {
+    const fetchMaterialData = async () => {
+      if (!connectionId) return;
 
-    const materials = await getMaterialsByConnectionId(connectionId);
-    if (materials.length > 0) {
-      setFormData({ ...materials[0] });
-      setExistingMaterialData(materials[0]);
-    } else {
-      // Fallback to fetch system details
-      try {
-        const systemDetails = await fetchSystemRelatedDetails(connectionId);
-        setFormData((prev) => ({
-          ...prev,
-          systemKw: systemDetails.customerSelectedKW || "",
-          makeOfModule: systemDetails.customerSelectedBrand || "",
-          inverterCapacity: systemDetails.inverterCapacity || "",
-          inverterMake: systemDetails.inverterBrand || "",
-          noOfModules: systemDetails.panelCount || "",
-          reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
-        }));
-      } catch (error) {
-        console.error("Error fetching system details:", error);
+      const materials = await getMaterialsByConnectionId(connectionId);
+      if (materials.length > 0) {
+        setFormData({ ...materials[0] });
+        setExistingMaterialData(materials[0]);
+      } else {
+        // Fallback to fetch system details
+        try {
+          const systemDetails = await fetchSystemRelatedDetails(connectionId);
+          setFormData((prev) => ({
+            ...prev,
+            systemKw: systemDetails.customerSelectedKW || "",
+            makeOfModule: systemDetails.customerSelectedBrand || "",
+            inverterCapacity: systemDetails.inverterCapacity || "",
+            inverterMake: systemDetails.inverterBrand || "",
+            noOfModules: systemDetails.panelCount || "",
+            reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
+          }));
+        } catch (error) {
+          console.error("Error fetching system details:", error);
+        }
       }
-    }
-  };
+    };
 
-  fetchMaterialData();
-}, [connectionId]);
-
+    fetchMaterialData();
+  }, [connectionId]);
 
 
 
+
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!connectionId) {
+  //     toast.error("Connection Id is missing", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //     return;
+  //   }
+
+  //   const dataToSubmit = {
+  //     ...formData,
+  //   };
+
+  //   try {
+  //     if (existingMaterialData) {
+  //       await updateMaterialData(connectionId, dataToSubmit);
+  //       toast.success("Material data updated successfully!", {
+  //         autoClose: 1000,
+  //         hideProgressBar: true,
+  //       });
+  //     } else {
+  //       await postMaterialData(connectionId, dataToSubmit);
+  //       toast.success("Material data saved successfully!", {
+  //         autoClose: 1000,
+  //         hideProgressBar: true,
+  //       });
+  //     }
+  //     navigate("/onboarded-consumers");
+  //   } catch (error) {
+  //     console.error("Material submission error:", error);
+  //     toast.error("Failed to submit the data", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!connectionId) {
-      toast.error("Connection Id is missing", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
+      toast.error("Connection Id is missing", { autoClose: 1000, hideProgressBar: true });
       return;
     }
 
-    const dataToSubmit = {
-      ...formData,
-    };
-
     try {
-      if (existingMaterialData) {
-        await updateMaterialData(connectionId, dataToSubmit);
-        toast.success("Material data updated successfully!", {
-          autoClose: 1000,
-          hideProgressBar: true,
-        });
-      } else {
-        await postMaterialData(connectionId, dataToSubmit);
-        toast.success("Material data saved successfully!", {
-          autoClose: 1000,
-          hideProgressBar: true,
-        });
+      const inverterData = {
+        connectionId: Number(connectionId),
+        inverterMake: formData.inverterMake,
+        almmModelNo: formData.almmModelNo,
+        rating: formData.rating,
+        chargeControllerType: formData.chargeControllerType,
+        inverterCapacity: parseFloat(formData.inverterCapacity),
+      };
 
+      const installationData = {
+        connectionId: Number(connectionId),
+        earthingRod: parseInt(formData.earthingRod),
+        dateOfInstallation: formData.dateOfInstallation,
+        capacityType: formData.capacityType,
+        projectModel: formData.projectModel,
+        reInstallCapacityRooftop: parseFloat(formData.reInstalledCapacityRooftop),
+        reInstallCapacityGround: parseFloat(formData.reInstalledCapacityGround),
+        reInstallCapacityTotal: parseFloat(formData.reInstalledCapacityTotal),
+      };
 
-      }
+      const moduleData = {
+        connectionId: Number(connectionId),
+        systemKw: parseFloat(formData.systemKw),
+        makeOfModule: formData.makeOfModule,
+        wattagePerModule: parseFloat(formData.wattagePerModule),
+        noOfModules: parseInt(formData.noOfModules),
+        warrantyDetails: formData.warrantyDetails,
+        serials: formData.serials.filter((s) => s.serialNumber.trim() !== ""),
+      };
+
+      // Call imported APIs
+      await saveInverter(inverterData);
+      await saveInstallationDetails(installationData);
+      await saveModule(moduleData);
+
+      toast.success("All data submitted successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
 
       navigate("/onboarded-consumers");
     } catch (error) {
       console.error("Material submission error:", error);
-      toast.error("Failed to submit the data", {
+      toast.error("Failed to submit one or more requests", {
         autoClose: 1000,
         hideProgressBar: true,
       });
@@ -216,11 +310,11 @@ useEffect(() => {
                     name="inverterMake"
                     value={formData.inverterMake}
                     onChange={handleChange}
-                    readOnly
+                    placeholder="e.g. Growatt"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">ALMM Model Number</label>
                   <input
@@ -228,6 +322,7 @@ useEffect(() => {
                     name="almmModelNo"
                     value={formData.almmModelNo}
                     onChange={handleChange}
+                    placeholder="e.g. ALMM12345"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
@@ -239,10 +334,11 @@ useEffect(() => {
                     name="rating"
                     value={formData.rating}
                     onChange={handleChange}
+                    placeholder="e.g. IP65"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Charge Controller Type</label>
                   <input
@@ -250,35 +346,33 @@ useEffect(() => {
                     name="chargeControllerType"
                     value={formData.chargeControllerType}
                     onChange={handleChange}
+                    placeholder="e.g. MPPT"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Capacity(kW)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    name="inverterCapacity"
-                    value={formData.inverterCapacity}
-                    onChange={handleChange}
-                    readOnly
-                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Module Number</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Inverter Capacity (kW)
+                  </label>
                   <input
                     type="text"
-                    name="inverterModuleNo"
-                    value={formData.inverterModuleNo}
-                    onChange={handleChange}
+                    name="inverterCapacity"
+                    inputMode="decimal"
+                    value={formData.inverterCapacity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow only positive decimals or integers, no leading zeros unless "0."
+                      if (/^(?!0\d)\d*(\.\d*)?$/.test(val) || val === "") {
+                        handleChange(e);
+                      }
+                    }}
+                    placeholder="e.g. 4.4"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
+
+
               </div>
             </div>
 
@@ -292,28 +386,53 @@ useEffect(() => {
                     type="text"
                     name="makeOfModule"
                     value={formData.makeOfModule}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
-                        handleChange(e);
-                      }
-                    }}
-                    readOnly
+                    onChange={handleChange}
+                    placeholder="e.g. Sova"
+
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">PV System Capacity (kW)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    PV System Capacity (kW)
+                  </label>
                   <input
                     type="text"
                     name="systemKw"
+                    inputMode="decimal"
                     value={formData.systemKw}
-                    onChange={handleChange}
-                    readOnly
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow only positive integers or decimals (no negatives or invalid formats)
+                      if (/^(?!0\d)\d*(\.\d*)?$/.test(val) || val === "") {
+                        handleChange(e);
+                      }
+                    }}
+                    placeholder="e.g. 3.3"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
+
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel</label>
+                  <input
+                    type="text"
+                    name="wattagePerModule"
+                    value={formData.wattagePerModule}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow empty value or positive numbers with optional decimal
+                      if (/^\d*\.?\d*$/.test(val)) {
+                        handleChange(e);
+                      }
+                    }}
+                    placeholder="e.g. 550"
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Details</label>
@@ -322,34 +441,57 @@ useEffect(() => {
                     name="warrantyDetails"
                     value={formData.warrantyDetails}
                     onChange={handleChange}
+                    placeholder="e.g. 10 yrs product + 25 yrs performance"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of PV Panels</label>
-                  <input
-                    type="number"
-                    min="0"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    name="noOfModules"
-                    value={formData.noOfModules}
-                    onChange={handleChange}
-                    readOnly
-                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of PV Panels
+                  </label>
                   <input
                     type="text"
-                    name="wattagePerModule"
-                    value={formData.wattagePerModule}
-                    onChange={handleChange}
+                    name="noOfModules"
+                    inputMode="numeric"
+                    value={formData.noOfModules}
+                    onChange={(e) => {
+                      // Allow only positive integers, no leading zeros
+                      const val = e.target.value;
+                      if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                        handleChange(e);
+                      }
+                    }}
+                    placeholder="e.g. 6"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
+
+                  {formData.noOfModules === "0" && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Number of panels must be greater than 0
+                    </p>
+                  )}
                 </div>
+
+                {formData.serials.length > 0 && (
+                  <div className="mt-4 col-span-full">
+                    <h4 className="text-md font-semibold text-gray-700 mb-2">Panel Serial Numbers</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {formData.serials.map((serial, index) => (
+                        <input
+                          key={index}
+                          type="text"
+                          value={serial.serialNumber}
+                          onChange={(e) => handleSerialChange(index, e.target.value)}
+                          placeholder={`Serial Number ${index + 1}`}
+                          className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+
               </div>
             </div>
 
@@ -357,19 +499,28 @@ useEffect(() => {
             <div className="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800">Installation Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Number of Earthing Rods</label>
                   <input
-                    type="number"
-                    min="0"
-                    onWheel={(e) => e.currentTarget.blur()}
+                    type="text"
                     name="earthingRod"
                     value={formData.earthingRod}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow empty or digits only (no negatives, no decimals)
+                      if (/^\d*$/.test(val)) {
+                        handleChange(e);
+                      }
+                    }}
+                    placeholder="e.g. 7"
+                    inputMode="numeric"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
-                
+
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date of Installation</label>
                   <input
@@ -388,10 +539,11 @@ useEffect(() => {
                     name="capacityType"
                     value={formData.capacityType}
                     onChange={handleChange}
+                    placeholder="e.g., Rooftop"
                     className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Project Model</label>
                   <input
@@ -399,6 +551,7 @@ useEffect(() => {
                     name="projectModel"
                     value={formData.projectModel}
                     onChange={handleChange}
+                    placeholder="e.g. Capex"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
@@ -413,10 +566,11 @@ useEffect(() => {
                     name="reInstalledCapacityRooftop"
                     value={formData.reInstalledCapacityRooftop}
                     onChange={handleChange}
+                    placeholder="e.g. 2.2"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Ground</label>
                   <input
@@ -427,10 +581,11 @@ useEffect(() => {
                     name="reInstalledCapacityGround"
                     value={formData.reInstalledCapacityGround}
                     onChange={handleChange}
+                    placeholder="e.g. 1.1"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Total</label>
                   <input
@@ -441,6 +596,7 @@ useEffect(() => {
                     name="reInstalledCapacityTotal"
                     value={formData.reInstalledCapacityTotal}
                     onChange={handleChange}
+                    placeholder="e.g. 3.3"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>

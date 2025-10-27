@@ -57,6 +57,8 @@ export const CustomerForm = () => {
 
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
 
+  const [isPreferredEdited, setIsPreferredEdited] = useState(false);
+
   const { userClaims } = useUser();
 
 
@@ -230,6 +232,11 @@ export const CustomerForm = () => {
     const { name, value } = e.target;
 
     const updatedFormData = { ...formData, [name]: value };
+
+    if (name === "govIdName" && !isPreferredEdited) {
+      updatedFormData.preferredName = value;
+    }
+
 
     if (name === 'mobileNumber' && value === '') {
       setConfirmMobileNumber('');
@@ -690,6 +697,7 @@ export const CustomerForm = () => {
                   onChange={(e) => {
                     const value = e.target.value;
                     if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                      setIsPreferredEdited(true); // 👈 once user types here, stop syncing
                       handleChange(e);
                     }
                   }}
@@ -699,7 +707,6 @@ export const CustomerForm = () => {
                 {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
                   <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
                 )}
-
               </div>
 
               <div>
