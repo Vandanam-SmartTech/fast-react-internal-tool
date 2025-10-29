@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { postMaterialData, getMaterialsByConnectionId, updateMaterialData, saveInverter, saveInstallationDetails, saveModule, fetchInverter, fetchInstallation, fetchModule } from "../../services/customerRequisitionService";
+import {
+  postMaterialData, getMaterialsByConnectionId, updateMaterialData,
+  saveInverter, saveInstallationDetails, saveModule, fetchInverter, fetchInstallation, fetchModule, updateModule, updateInstallationDetails, updateInverter
+} from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { fetchSystemRelatedDetails } from "../../services/quotationService";
 import { toast } from "react-toastify";
@@ -52,56 +55,57 @@ export default function MaterialForm() {
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
 
-  // Helper function to check valid decimal >= 0 (no negatives)
-  const isValidDecimal = (val: string) => /^(\d+(\.\d*)?)?$/.test(val);
+    // Helper function to check valid decimal >= 0 (no negatives)
+    const isValidDecimal = (val: string) => /^(\d+(\.\d*)?)?$/.test(val);
 
-  // Special handling for number of modules (already done)
-  if (name === "noOfModules") {
-    if (/^[1-9][0-9]*$/.test(value) || value === "") {
-      const count = value === "" ? 0 : parseInt(value);
-      const newSerials = Array.from({ length: count }, (_, i) => ({
-        serialNumber: formData.serials[i]?.serialNumber || "",
-      }));
+    // Special handling for number of modules (already done)
+    if (name === "noOfModules") {
+      if (/^[1-9][0-9]*$/.test(value) || value === "") {
+        const count = value === "" ? 0 : parseInt(value);
+        const newSerials = Array.from({ length: count }, (_, i) => ({
+          serialNumber: formData.serials[i]?.serialNumber || "",
+        }));
 
-      setFormData((prev) => ({
-        ...prev,
-        noOfModules: value,
-        serials: newSerials,
-      }));
-    }
-    return;
-  }
-
-  // Handle Rooftop, Ground, and Total fields
-  if (
-    name === "reInstalledCapacityRooftop" ||
-    name === "reInstalledCapacityGround" ||
-    name === "reInstalledCapacityTotal"
-  ) {
-    if (!isValidDecimal(value)) return;
-
-    setFormData((prev) => {
-      const updated = { ...prev, [name]: value };
-
-      // Convert values safely to floats
-      const rooftop = parseFloat(updated.reInstalledCapacityRooftop) || 0;
-      const ground = parseFloat(updated.reInstalledCapacityGround) || 0;
-
-      // Auto-update total whenever rooftop or ground changes
-      if (name !== "reInstalledCapacityTotal") {
-        updated.reInstalledCapacityTotal = (rooftop + ground).toString();
+        setFormData((prev) => ({
+          ...prev,
+          noOfModules: value,
+          serials: newSerials,
+        }));
       }
+      return;
+    }
 
-      return updated;
-    });
-    return;
-  }
+    // Handle Rooftop, Ground, and Total fields
+    if (
+      name === "reInstalledCapacityRooftop" ||
+      name === "reInstalledCapacityGround" ||
+      name === "reInstalledCapacityTotal"
+    ) {
+      if (!isValidDecimal(value)) return;
 
-  // Default case
-  setFormData((prev) => ({ ...prev, [name]: value }));
-};
+      setFormData((prev) => {
+        const updated = { ...prev, [name]: value };
+
+        // Convert values safely to floats
+        const rooftop = parseFloat(updated.reInstalledCapacityRooftop) || 0;
+        const ground = parseFloat(updated.reInstalledCapacityGround) || 0;
+
+        // Auto-update total whenever rooftop or ground changes
+        if (name !== "reInstalledCapacityTotal") {
+          const total = rooftop + ground;
+          updated.reInstalledCapacityTotal = total.toFixed(2); 
+        }
+
+        return updated;
+      });
+      return;
+    }
+
+    // Default case
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
 
   const handleSerialChange = (index: number, value: string) => {
@@ -145,58 +149,52 @@ export default function MaterialForm() {
   // }, [connectionId]);
 
   useEffect(() => {
-  const loadSavedData = async () => {
-    if (!connectionId) {
-      console.warn("No connectionId provided, skipping data fetch");
-      return;
-    }
+    const loadSavedData = async () => {
+      if (!connectionId) {
+        console.warn("No connectionId provided, skipping data fetch");
+        return;
+      }
 
-    try {
-      const [inverter, installation, module] = await Promise.all([
-        fetchInverter(connectionId),
-        fetchInstallation(connectionId),
-        fetchModule(connectionId),
-      ]);
+      try {
+        const [inverter, installation, module] = await Promise.all([
+          fetchInverter(connectionId),
+          fetchInstallation(connectionId),
+          fetchModule(connectionId),
+        ]);
 
-      // Prefill data if available
-      setFormData((prev) => ({
-        ...prev,
-        inverterMake: inverter?.inverterMake || "",
-        almmModelNo: inverter?.almmModelNo || "",
-        rating: inverter?.rating || "IP65",
-        chargeControllerType: inverter?.chargeControllerType || "MPPT",
-        inverterCapacity: inverter?.inverterCapacity?.toString() || "",
+        // Prefill only if data exists
+        setFormData((prev) => ({
+          ...prev,
+          inverterMake: inverter?.inverterMake || "",
+          almmModelNo: inverter?.almmModelNo || "",
+          rating: inverter?.rating || "IP65",
+          chargeControllerType: inverter?.chargeControllerType || "MPPT",
+          inverterCapacity: inverter?.inverterCapacity?.toString() || "",
 
-        earthingRod: installation?.earthingRod?.toString() || "",
-        dateOfInstallation: installation?.dateOfInstallation || "",
-        capacityType: installation?.capacityType || "Rooftop",
-        projectModel: installation?.projectModel || "Capex",
-        reInstalledCapacityRooftop: installation?.reInstallCapacityRooftop?.toString() || "",
-        reInstalledCapacityGround: installation?.reInstallCapacityGround?.toString() || "",
-        reInstalledCapacityTotal: installation?.reInstallCapacityTotal?.toString() || "",
+          earthingRod: installation?.earthingRod?.toString() || "",
+          dateOfInstallation: installation?.dateOfInstallation || "",
+          capacityType: installation?.capacityType || "Rooftop",
+          projectModel: installation?.projectModel || "Capex",
+          reInstalledCapacityRooftop: installation?.reInstallCapacityRooftop?.toString() || "",
+          reInstalledCapacityGround: installation?.reInstallCapacityGround?.toString() || "",
+          reInstalledCapacityTotal: installation?.reInstallCapacityTotal?.toString() || "",
 
-        systemKw: module?.systemKw?.toString() || "",
-        makeOfModule: module?.makeOfModule || "",
-        wattagePerModule: module?.wattagePerModule?.toString() || "",
-        noOfModules: module?.noOfModules?.toString() || "",
-        warrantyDetails: module?.warrantyDetails || "",
-        serials: Array.isArray(module?.serialNumbers)
-          ? module.serialNumbers.map((sn: string) => ({ serialNumber: sn }))
-          : [],
-      }));
-    } catch (error) {
-      console.error("Error loading saved data:", error);
-      // toast.error("Failed to load saved data", { autoClose: 1000, hideProgressBar: true });
-    }
-  };
+          systemKw: module?.systemKw?.toString() || "",
+          makeOfModule: module?.makeOfModule || "",
+          wattagePerModule: module?.wattagePerModule?.toString() || "",
+          noOfModules: module?.noOfModules?.toString() || "",
+          warrantyDetails: module?.warrantyDetails || "",
+          serials: Array.isArray(module?.serialNumbers)
+            ? module.serialNumbers.map((sn: string) => ({ serialNumber: sn }))
+            : [],
+        }));
+      } catch (error) {
+        console.error("Error loading saved data:", error);
+      }
+    };
 
-  loadSavedData();
-}, [connectionId]);
-
-
-
-
-
+    loadSavedData();
+  }, [connectionId]);
 
   // const handleSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault();
@@ -246,6 +244,14 @@ export default function MaterialForm() {
     }
 
     try {
+      // ✅ Check if existing data is present
+      const [existingInverter, existingInstallation, existingModule] = await Promise.all([
+        fetchInverter(connectionId),
+        fetchInstallation(connectionId),
+        fetchModule(connectionId),
+      ]);
+
+      // Prepare payloads
       const inverterData = {
         connectionId: Number(connectionId),
         inverterMake: formData.inverterMake,
@@ -276,12 +282,26 @@ export default function MaterialForm() {
         serials: formData.serials.filter((s) => s.serialNumber.trim() !== ""),
       };
 
-      // Call imported APIs
-      await saveInverter(inverterData);
-      await saveInstallationDetails(installationData);
-      await saveModule(moduleData);
+      // ✅ Save or update depending on existence
+      if (existingInverter) {
+        await updateInverter(connectionId, inverterData);
+      } else {
+        await saveInverter(inverterData);
+      }
 
-      toast.success("All data submitted successfully!", {
+      if (existingInstallation) {
+        await updateInstallationDetails(connectionId, installationData);
+      } else {
+        await saveInstallationDetails(installationData);
+      }
+
+      if (existingModule) {
+        await updateModule(connectionId, moduleData);
+      } else {
+        await saveModule(moduleData);
+      }
+
+      toast.success("Data saved successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
@@ -289,12 +309,13 @@ export default function MaterialForm() {
       navigate("/onboarded-consumers");
     } catch (error) {
       console.error("Material submission error:", error);
-      toast.error("Failed to submit one or more requests", {
+      toast.error("Failed to save data", {
         autoClose: 1000,
         hideProgressBar: true,
       });
     }
   };
+
 
   const handleDialogClose = () => {
     setMessageBoxOpen(false);
@@ -354,13 +375,14 @@ export default function MaterialForm() {
               <h3 className="text-lg font-semibold text-gray-800">Inverter Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Brand</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Inverter Brand <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="inverterMake"
                     value={formData.inverterMake}
                     onChange={handleChange}
                     placeholder="e.g. Growatt"
+                    required
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
@@ -403,7 +425,7 @@ export default function MaterialForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Inverter Capacity (kW)
+                    Inverter Capacity (kW) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -417,6 +439,7 @@ export default function MaterialForm() {
                         handleChange(e);
                       }
                     }}
+                    required
                     placeholder="e.g. 4.4"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
@@ -431,21 +454,21 @@ export default function MaterialForm() {
               <h3 className="text-lg font-semibold text-gray-800">Panel Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Brand</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Brand <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="makeOfModule"
                     value={formData.makeOfModule}
                     onChange={handleChange}
                     placeholder="e.g. Sova"
-
+                    required
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    PV System Capacity (kW)
+                    PV System Capacity (kW) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -459,6 +482,7 @@ export default function MaterialForm() {
                         handleChange(e);
                       }
                     }}
+                    required
                     placeholder="e.g. 3.3"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
@@ -466,7 +490,7 @@ export default function MaterialForm() {
 
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Wattage Per Panel <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="wattagePerModule"
@@ -478,6 +502,7 @@ export default function MaterialForm() {
                         handleChange(e);
                       }
                     }}
+                    required
                     placeholder="e.g. 550"
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
@@ -583,13 +608,14 @@ export default function MaterialForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity Type <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="capacityType"
                     value={formData.capacityType}
                     onChange={handleChange}
                     placeholder="e.g., Rooftop"
+                    required
                     className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
@@ -637,7 +663,7 @@ export default function MaterialForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Total</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ReInstalled Capacity Total <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     min="0"
@@ -647,6 +673,7 @@ export default function MaterialForm() {
                     value={formData.reInstalledCapacityTotal}
                     onChange={handleChange}
                     placeholder="e.g. 3.3"
+                    required
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 </div>
@@ -655,12 +682,12 @@ export default function MaterialForm() {
 
             <div className="flex justify-center sm:justify-center space-x-3 pt-1">
               <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-            >
-              Cancel
-            </button>
+                type="button"
+                onClick={() => navigate(-1)}
+                className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+              >
+                Cancel
+              </button>
 
 
               <button

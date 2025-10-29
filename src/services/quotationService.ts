@@ -242,6 +242,18 @@ export const saveSystemSpecs = async (requestData: any): Promise<any> => {
   }
 };
 
+export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(`/api/system-spec-package`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving system specs:", error);
+    throw new Error("Failed to save system specs.");
+  }
+};
+
 export const saveInverterSpecs = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 
@@ -257,6 +269,24 @@ export const saveInverterSpecs = async (requestData: any): Promise<any> => {
   } catch (error) {
     console.error("Error saving inverter specs:", error);
     throw new Error("Failed to save inverter specs.");
+  }
+};
+
+export const saveInverterSpecPackage = async (requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(
+      `/api/system-spec-inverter-packages?inverterSpecId=${requestData.inverterSpecId}`, 
+      {
+        systemSpecsPackageId: requestData.systemSpecsPackageId,
+        inverterCount: requestData.inverterCount,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating inverter spec package:", error);
+    throw new Error("Failed to create inverter spec package.");
   }
 };
 
@@ -301,8 +331,6 @@ export const updateInverterSpecs = async (id: number, requestData: any): Promise
     throw new Error("Failed to update inverter specs.");
   }
 };
-
-
 
 
 export const checkSystemSpecificationsExists = async (
@@ -454,8 +482,7 @@ export const fetchPanelBrands = async (
 
 export const fetchPanelBrandCapacities = async (
   phaseTypeId: number,
-  panelSpecId: number,
-  avgMonthlyConsumption: number
+  panelSpecId: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -464,8 +491,7 @@ export const fetchPanelBrandCapacities = async (
     const response = await quotationAPI.get("/api/panel-specs/pv-capacity", {
       params: {
         phaseTypeId,
-        panelSpecId,
-        monthlyAvgUnit: avgMonthlyConsumption
+        panelSpecId
       },
     });
 
@@ -529,6 +555,19 @@ export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> 
     return []; 
   }
 };
+
+export const getSavedSystemSpecPackages = async (): Promise<any[]> => { 
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.get(`/api/system-spec-package`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching saved system spec packages:", error);
+    return [];
+  }
+};
+
 
 
 

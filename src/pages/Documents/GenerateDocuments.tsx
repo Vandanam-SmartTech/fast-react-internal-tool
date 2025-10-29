@@ -218,7 +218,10 @@ export default function GenerateDocuments() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download file.");
+      toast.error("Failed to download file",{
+        autoClose:1000,
+        hideProgressBar:true
+      })
     }
   };
 
@@ -230,7 +233,10 @@ export default function GenerateDocuments() {
     if (doc === "Consumer Vendor Agreement") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before generating.");
+        toast.error("Please enter a valid quoted total amount before generating.",{
+          autoClose:1000,
+          hideProgressBar:true
+        });
         return;
       }
     }
@@ -248,7 +254,10 @@ export default function GenerateDocuments() {
       document.body.removeChild(a);
     } catch (err) {
       console.error("Generate error:", err);
-      toast.error("Failed to generate document");
+      toast.error("Failed to generate document",{
+        autoClose:1000,
+        hideProgressBar:true
+      });
     } finally {
       setLoadingGenerateDoc(null);
     }
@@ -262,7 +271,10 @@ export default function GenerateDocuments() {
     if (doc === "Consumer Vendor Agreement") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before previewing.");
+        toast.error("Please enter a valid quoted total amount before previewing.",{
+          autoClose:1000,
+          hideProgressBar:true
+        });
         return;
       }
     }
@@ -274,7 +286,10 @@ export default function GenerateDocuments() {
       window.open(url, "_blank");
     } catch (err) {
       console.error("Preview error:", err);
-      toast.error("Failed to preview document");
+      toast.error("Failed to preview document",{
+        autoClose:1000,
+        hideProgressBar:true
+      });
     } finally {
       setLoadingPreviewDoc(null);
     }
@@ -339,7 +354,7 @@ export default function GenerateDocuments() {
 
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error("Document Upload Failed!", { autoClose: 2000 });
+      toast.error("Document Upload Failed!", { autoClose: 1000,hideProgressBar: true });
     } finally {
       setLoadingUploadDoc(null);
     }
@@ -372,11 +387,14 @@ export default function GenerateDocuments() {
 
       await loadDocuments();
 
-      toast.success("Document deleted", { autoClose: 800, hideProgressBar: true });
+      toast.success("Document deleted", { autoClose: 1000, hideProgressBar: true });
 
     } catch (error) {
       console.error("Delete failed", error);
-      toast.error("Failed to delete document");
+      toast.error("Failed to delete document",{
+        autoClose:1000,
+        hideProgressBar:true
+      });
       await loadDocuments();
     }
   };
@@ -390,14 +408,22 @@ export default function GenerateDocuments() {
     const file = replaceFiles[fileId];
     if (!file) return;
     try {
+      setLoadingUploadDoc(fileId);
+
       await updateDocumentById(fileId, file);
       toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
       setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
       await loadDocuments();
     } catch (error) {
       console.error("Update failed", error);
-      toast.error("Failed to update document");
-    }
+      toast.error("Failed to update document",{
+        autoClose:1000,
+        hideProgressBar:true
+      });
+    }finally {
+    // Stop spinner
+    setLoadingUploadDoc(null);
+  }
   };
 
   const getStepStatus = (step: DocumentStep) => {
@@ -494,7 +520,7 @@ export default function GenerateDocuments() {
             </div>
             <div>
               <span className="font-medium text-gray-700">Email Address:</span>
-              <span className="ml-2 text-gray-800">{consumer.emailAddress || "—"}</span>
+              <span className="ml-2 text-gray-800 break-all">{consumer.emailAddress || "—"}</span>
             </div>
           </div>
         </div>

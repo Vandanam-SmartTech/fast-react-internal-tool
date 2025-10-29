@@ -49,17 +49,31 @@ const OrganizationView: React.FC = () => {
   };
 
 
-  const loadUsersByOrg = async (organizationId: string | number) => {
-    try {
-      setUsersLoading(true);
-      const data = await fetchAllUsersByOrgId(organizationId);
-      setOrgUsers(data);  
-    } catch (error) {
-      toast.error("Failed to load organization users");
-    } finally {
-      setUsersLoading(false);
+const loadUsersByOrg = async (organizationId: string | number) => {
+  try {
+    setUsersLoading(true);
+    const data = await fetchAllUsersByOrgId(organizationId);
+
+    if (data?.success === false && data?.message?.includes("Users not found")) {
+      setOrgUsers([]); 
+      return;
     }
-  };
+
+
+    setOrgUsers(data);
+  } catch (error: any) {
+
+    if (!error.response?.data?.message?.includes("Users not found")) {
+      toast.error("Failed to load organization users");
+    } else {
+      setOrgUsers([]); 
+    }
+  } finally {
+    setUsersLoading(false);
+  }
+};
+
+
 
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;

@@ -73,24 +73,25 @@ const Modal: React.FC<ModalProps> = ({
         role="document"
       >
         {(title || showCloseButton) && (
-          <div className="modal-header">
-            {title && (
-              <h2 id="modal-title" className="text-lg font-semibold text-secondary-900">
-                {title}
-              </h2>
-            )}
-            {showCloseButton && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="p-1 h-8 w-8"
-                aria-label="Close modal"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <div className="modal-header flex justify-between items-center border-b border-gray-200 px-4 py-4">
+  {title && (
+    <h2 id="modal-title" className="text-lg font-semibold text-secondary-900">
+      {title}
+    </h2>
+  )}
+  {showCloseButton && (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClose}
+      className="p-1 h-8 w-8"
+      aria-label="Close modal"
+    >
+      <X className="h-4 w-4" />
+    </Button>
+  )}
+</div>
+
         )}
         
         <div className="modal-body">

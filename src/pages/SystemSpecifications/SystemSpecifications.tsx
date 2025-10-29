@@ -394,7 +394,7 @@ export const SystemSpecifications = () => {
 
       if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
         try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId, avgMonthlyConsumption);
+          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
           setPanelCapacities([...data]);
         } catch (error) {
           console.error("Failed to fetch panel brand capacities:", error);
@@ -406,7 +406,7 @@ export const SystemSpecifications = () => {
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId, avgMonthlyConsumption]);
+  }, [phaseTypeId, panelSpecId]);
 
 
   useEffect(() => {
@@ -448,101 +448,165 @@ export const SystemSpecifications = () => {
 
 
 
+  // const handleSaveSpecs = async () => {
+  //   try {
+  //     setIsSubmitting(true);
+
+  //     const systemResponse = await saveSystemSpecs({
+  //       ...formData,
+  //       connectionId,
+  //       specSourceId: 2,
+  //       panelSpecsId: formData.panelSpecId,
+  //       batterySpecsId: formData.batterySpecId,
+  //       orgId,
+  //       agencyId
+
+  //     });
+
+  //     console.log("System specs saved:", systemResponse);
+
+  //     const systemSpecsId = systemResponse.id;
+
+
+  //     const inverterResponse = await saveInverterSpecs({
+  //       systemSpecsId,
+  //       inverterSpecId,
+  //       inverterCount: 1,
+  //     });
+
+  //     console.log("Inverter specs saved:", inverterResponse);
+
+  //     await fetchSavedSpecs();
+
+  //     toast.success("System Specification details saved successfully!", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving specs:", error);
+  //     toast.error("Failed to save system specs or inverter specs.", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSaveSpecs = async () => {
-    try {
-      setIsSubmitting(true);
-
-      const systemResponse = await saveSystemSpecs({
-        ...formData,
-        connectionId,
-        specSourceId: 2,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        orgId,
-        agencyId
-
-      });
-
-      console.log("System specs saved:", systemResponse);
-
-      const systemSpecsId = systemResponse.id;
-
-
-      const inverterResponse = await saveInverterSpecs({
-        systemSpecsId,
-        inverterSpecId,
-        inverterCount: 1,
-      });
-
-      console.log("Inverter specs saved:", inverterResponse);
-
-      await fetchSavedSpecs();
-
-      toast.success("System Specification details saved successfully!", {
-        autoClose: 1000,
+  try {
+    // ✅ Validation before API calls
+    if (!formData.inverterBrandId || !formData.inverterSpecId) {
+      toast.error("Please select both Inverter Brand and Inverter Specification before saving.", {
+        autoClose: 1500,
         hideProgressBar: true,
       });
-    } catch (error) {
-      console.error("Error saving specs:", error);
-      toast.error("Failed to save system specs or inverter specs.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+      return; // stop execution here
     }
-  };
+
+    setIsSubmitting(true);
+
+    // ✅ Proceed only if inverter fields are selected
+    const systemResponse = await saveSystemSpecs({
+      ...formData,
+      connectionId,
+      specSourceId: 2,
+      panelSpecsId: formData.panelSpecId,
+      batterySpecsId: formData.batterySpecId,
+      orgId,
+      agencyId
+    });
+
+    console.log("System specs saved:", systemResponse);
+
+    const systemSpecsId = systemResponse.id;
+
+    const inverterResponse = await saveInverterSpecs({
+      systemSpecsId,
+      inverterSpecId: formData.inverterSpecId,
+      inverterCount: 1,
+    });
+
+    console.log("Inverter specs saved:", inverterResponse);
+
+    await fetchSavedSpecs();
+
+    toast.success("System Specification details saved successfully!", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+  } catch (error) {
+    console.error("Error saving specs:", error);
+    toast.error("Failed to save system specs or inverter specs.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleUpdateSpecs = async () => {
-    try {
-      if (!selectedSpecId || !selectedSystemSpecsInverterId) {
-        console.error("No system specification selected for update!");
-        toast.error("Please select a system specification to update.", {
-          autoClose: 1000,
-          hideProgressBar: true,
-        });
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      const systemResponse = await updateSystemSpecs(selectedSpecId, {
-        ...formData,
-        connectionId,
-        specSourceId: 2,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        orgId,
-        agencyId
-      });
-
-      console.log("System specs updated:", systemResponse);
-
-
-      const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
-        systemSpecsId: selectedSpecId,
-        inverterSpecId,
-        inverterCount: 1,
-      });
-
-      console.log("Inverter specs updated:", inverterResponse);
-
-      await fetchSavedSpecs();
-
-      toast.success("System Specification details updated successfully!", {
+  try {
+    // ✅ Validate selection of system and inverter specs
+    if (!selectedSpecId || !selectedSystemSpecsInverterId) {
+      console.error("No system specification selected for update!");
+      toast.error("Please select a system specification to update.", {
         autoClose: 1000,
         hideProgressBar: true,
       });
-    } catch (error) {
-      console.error("Error updating specs:", error);
-      toast.error("Failed to update system specs or inverter specs.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
-  };
+
+    // ✅ Validate inverter selection before making API calls
+    if (!formData.inverterBrandId || !formData.inverterSpecId) {
+      toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
+        autoClose: 1500,
+        hideProgressBar: true,
+      });
+      return; // stop execution here
+    }
+
+    setIsSubmitting(true);
+
+    // ✅ Proceed only if validations passed
+    const systemResponse = await updateSystemSpecs(selectedSpecId, {
+      ...formData,
+      connectionId,
+      specSourceId: 2,
+      panelSpecsId: formData.panelSpecId,
+      batterySpecsId: formData.batterySpecId,
+      orgId,
+      agencyId
+    });
+
+    console.log("System specs updated:", systemResponse);
+
+    const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
+      systemSpecsId: selectedSpecId,
+      inverterSpecId: formData.inverterSpecId,
+      inverterCount: 1,
+    });
+
+    console.log("Inverter specs updated:", inverterResponse);
+
+    await fetchSavedSpecs();
+
+    toast.success("System Specification details updated successfully!", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+  } catch (error) {
+    console.error("Error updating specs:", error);
+    toast.error("Failed to update system specs or inverter specs.", {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
 

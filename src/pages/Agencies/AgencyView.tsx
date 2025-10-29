@@ -49,17 +49,30 @@ const AgencyView: React.FC = () => {
     }
   };
 
-  const loadUsersByOrg = async (agencyId: string | number) => {
-      try {
-        setUsersLoading(true);
-        const data = await fetchAllUsersByOrgId(agencyId);
-        setOrgUsers(data);  
-      } catch (error) {
-        toast.error("Failed to load organization users");
-      } finally {
-        setUsersLoading(false);
-      }
-    };
+const loadUsersByOrg = async (agencyId: string | number) => {
+  try {
+    setUsersLoading(true);
+    const data = await fetchAllUsersByOrgId(agencyId);
+
+    if (data?.success === false && data?.message?.includes("Users not found")) {
+      setOrgUsers([]); 
+      return;
+    }
+
+
+    setOrgUsers(data);
+  } catch (error: any) {
+
+    if (!error.response?.data?.message?.includes("Users not found")) {
+      toast.error("Failed to load agency users");
+    } else {
+      setOrgUsers([]); 
+    }
+  } finally {
+    setUsersLoading(false);
+  }
+};
+
 
 
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;

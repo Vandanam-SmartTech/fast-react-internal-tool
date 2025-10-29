@@ -666,6 +666,7 @@ export const saveInverter = async (data: Record<string, any>) => {
   }
 };
 
+
 /** Save installation details */
 export const saveInstallationDetails = async (data: Record<string, any>) => {
   const crsAPI = getCrsAPI();
@@ -692,14 +693,17 @@ export const saveModule = async (data: Record<string, any>) => {
   }
 };
 
+
+
 export const fetchInverter = async (connectionId: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api-doc/inverters/${connectionId}`);
+    if (response.data?.success === false) return null; // not found
     return response.data;
   } catch (error) {
     console.error("Error fetching inverter:", error);
-    throw error;
+    return null; // gracefully return null
   }
 };
 
@@ -707,10 +711,11 @@ export const fetchInstallation = async (connectionId: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api-doc/installations/${connectionId}`);
+    if (response.data?.success === false) return null;
     return response.data;
   } catch (error) {
     console.error("Error fetching installation:", error);
-    throw error;
+    return null;
   }
 };
 
@@ -718,12 +723,52 @@ export const fetchModule = async (connectionId: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api-doc/modules/${connectionId}`);
+    if (response.data?.success === false) return null;
     return response.data;
   } catch (error) {
     console.error("Error fetching module:", error);
+    return null;
+  }
+};
+
+export const updateInverter = async (connectionId: number, data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.put(`/api-doc/inverters/${connectionId}`, data);
+    console.log("Inverter updated:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating inverter:", error);
     throw error;
   }
 };
+
+export const updateInstallationDetails = async (connectionId: number, data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.put(`/api-doc/installations/${connectionId}`, data);
+    console.log("Installation updated:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating installation:", error);
+    throw error;
+  }
+};
+
+export const updateModule = async (connectionId: number, data: Record<string, any>) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.put(`/api-doc/modules/${connectionId}`, data);
+    console.log("Module updated:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating module:", error);
+    throw error;
+  }
+};
+
+
+
 
 
 
