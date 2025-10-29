@@ -178,7 +178,6 @@ export default function GenerateDocuments() {
       isCompleted: false,
       isExpanded: false
     },
-
   ];
 
 
