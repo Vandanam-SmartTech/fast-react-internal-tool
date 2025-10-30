@@ -114,18 +114,34 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const loadUsersByOrg = async (organizationId: string | number) => {
-    try {
-      setLoading(true);
-      const data = await fetchAllUsersByOrgId(organizationId);
-      setUsers(data);
-      setFilteredUsers(data);
-    } catch (error) {
-      toast.error("Failed to load organization users");
-    } finally {
-      setLoading(false);
+const loadUsersByOrg = async (organizationId: string | number) => {
+  try {
+    setLoading(true);
+    const data = await fetchAllUsersByOrgId(organizationId);
+
+    if (data?.success === false && data?.message?.includes("Users not found")) {
+      setUsers([]);
+      setFilteredUsers([]);
+      return;
     }
-  };
+
+    setUsers(data);
+    setFilteredUsers(data);
+  } catch (error: any) {
+    if (!error.response?.data?.message?.includes("Users not found")) {
+      toast.error("Failed to load organization users",{
+        autoClose:1000,
+        hideProgressBar:true
+      });
+    } else {
+      setUsers([]);
+      setFilteredUsers([]);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
