@@ -70,7 +70,7 @@ export const ViewInstallation = () => {
           <button
             onClick={() =>
               navigate(`/view-connection`, {
-                state: { consumerId, customerId, connectionId },
+                state: { consumerId:consumerId, customerId:customerId, connectionId:connectionId },
               })
             }
             className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -113,12 +113,12 @@ export const ViewInstallation = () => {
                     if (tab === "Customer Details") {
                       navigate(`/view-customer`, {
                         state: {
-                          customerId,
+                          customerId:customerId,
                         },
                       });
                     } else if (tab === "Connection Details") {
                       navigate(`/view-connection`, {
-                        state: { consumerId, customerId, connectionId },
+                        state: { consumerId:consumerId, customerId:customerId, connectionId:connectionId },
                       });
                     }
                   }}
@@ -228,7 +228,7 @@ export const ViewInstallation = () => {
         <button
           onClick={() =>
             navigate(`/edit-installation`, {
-              state: { installationId, connectionId, consumerId, customerId },
+              state: { installationId, connectionId:connectionId, consumerId:consumerId, customerId:customerId },
             })
           }
           className="w-full sm:w-auto max-w-xs py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -239,7 +239,7 @@ export const ViewInstallation = () => {
         <button
           onClick={() =>
             navigate(`/view-connection`, {
-              state: { consumerId, customerId, connectionId },
+              state: { consumerId:consumerId, customerId:customerId, connectionId:connectionId },
             })
           }
           className="w-full sm:w-auto max-w-xs py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"

@@ -50,7 +50,6 @@ export const ViewConnection = () => {
   const [installationsByConsumer, setInstallationsByConsumer] = useState({});
 
   const { userClaims } = useUser();
-
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 

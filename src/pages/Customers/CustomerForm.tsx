@@ -445,7 +445,7 @@ export const CustomerForm = () => {
         </div>
 
         {/* Progress Steps */}
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
             {/* Connector Line: between the first and last icon only */}

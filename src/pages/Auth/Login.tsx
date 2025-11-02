@@ -199,8 +199,8 @@ const Login = () => {
           <CardBody className="p-8 sm:p-10">
             {/* Logo and title */}
 
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-6">
+            <div className="text-center mb-4">
+              <div className="flex justify-center mb-4">
                 <div className="relative">
                   <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
                   <Logo
@@ -297,7 +297,7 @@ const Login = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleLogin} className="space-y-6">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <Input
                   label="Login ID"
                   type="text"
@@ -319,7 +319,7 @@ const Login = () => {
                   required
                 />
 
-                <div className="text-center">
+                <div className="text-right">
                   <button
                     onClick={() => navigate("/password-reset")}
                     className="text-sm text-blue-600 font-medium hover:underline"
@@ -327,6 +327,7 @@ const Login = () => {
                     Forgot your password?
                   </button>
                 </div>
+
 
 
                 <Button

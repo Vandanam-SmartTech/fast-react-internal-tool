@@ -8,6 +8,7 @@ import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
+import { useUser } from "../../contexts/UserContext";
 
 interface Consumer {
   id: number;
@@ -45,6 +46,7 @@ const OnboardedConsumers: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
 
+  const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
 
@@ -569,7 +571,7 @@ const OnboardedConsumers: React.FC = () => {
             {materialsMap[consumer.id] ? "View Materials" : "Add Materials"}
           </Button> */}
 
-          <Button
+          {(!( userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <Button
             variant="primary"
             size="sm"
             onClick={() =>
@@ -581,7 +583,7 @@ const OnboardedConsumers: React.FC = () => {
             leftIcon={<Plus className="w-4 h-4" />}
           >
             Manage Material Data
-          </Button>
+          </Button>)}
 
 
         </div>

@@ -494,119 +494,119 @@ export const SystemSpecifications = () => {
   // };
 
   const handleSaveSpecs = async () => {
-  try {
-    // ✅ Validation before API calls
-    if (!formData.inverterBrandId || !formData.inverterSpecId) {
-      toast.error("Please select both Inverter Brand and Inverter Specification before saving.", {
-        autoClose: 1500,
-        hideProgressBar: true,
+    try {
+
+      if (!formData.inverterBrandId || !formData.inverterSpecId) {
+        toast.error("Please select both Inverter Brand and Inverter Specification before saving.", {
+          autoClose: 1500,
+          hideProgressBar: true,
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+
+      const systemResponse = await saveSystemSpecs({
+        ...formData,
+        connectionId,
+        specSourceId: 2,
+        panelSpecsId: formData.panelSpecId,
+        batterySpecsId: formData.batterySpecId,
+        orgId,
+        agencyId
       });
-      return; // stop execution here
-    }
 
-    setIsSubmitting(true);
+      console.log("System specs saved:", systemResponse);
 
-    // ✅ Proceed only if inverter fields are selected
-    const systemResponse = await saveSystemSpecs({
-      ...formData,
-      connectionId,
-      specSourceId: 2,
-      panelSpecsId: formData.panelSpecId,
-      batterySpecsId: formData.batterySpecId,
-      orgId,
-      agencyId
-    });
+      const systemSpecsId = systemResponse.id;
 
-    console.log("System specs saved:", systemResponse);
+      const inverterResponse = await saveInverterSpecs({
+        systemSpecsId,
+        inverterSpecId: formData.inverterSpecId,
+        inverterCount: 1,
+      });
 
-    const systemSpecsId = systemResponse.id;
+      console.log("Inverter specs saved:", inverterResponse);
 
-    const inverterResponse = await saveInverterSpecs({
-      systemSpecsId,
-      inverterSpecId: formData.inverterSpecId,
-      inverterCount: 1,
-    });
+      await fetchSavedSpecs();
 
-    console.log("Inverter specs saved:", inverterResponse);
-
-    await fetchSavedSpecs();
-
-    toast.success("System Specification details saved successfully!", {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
-  } catch (error) {
-    console.error("Error saving specs:", error);
-    toast.error("Failed to save system specs or inverter specs.", {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-
-  const handleUpdateSpecs = async () => {
-  try {
-    // ✅ Validate selection of system and inverter specs
-    if (!selectedSpecId || !selectedSystemSpecsInverterId) {
-      console.error("No system specification selected for update!");
-      toast.error("Please select a system specification to update.", {
+      toast.success("System Specification details saved successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
-      return;
-    }
-
-    // ✅ Validate inverter selection before making API calls
-    if (!formData.inverterBrandId || !formData.inverterSpecId) {
-      toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
-        autoClose: 1500,
+    } catch (error) {
+      console.error("Error saving specs:", error);
+      toast.error("Failed to save system specs or inverter specs.", {
+        autoClose: 1000,
         hideProgressBar: true,
       });
-      return; // stop execution here
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    setIsSubmitting(true);
 
-    // ✅ Proceed only if validations passed
-    const systemResponse = await updateSystemSpecs(selectedSpecId, {
-      ...formData,
-      connectionId,
-      specSourceId: 2,
-      panelSpecsId: formData.panelSpecId,
-      batterySpecsId: formData.batterySpecId,
-      orgId,
-      agencyId
-    });
+  const handleUpdateSpecs = async () => {
+    try {
+      // ✅ Validate selection of system and inverter specs
+      if (!selectedSpecId || !selectedSystemSpecsInverterId) {
+        console.error("No system specification selected for update!");
+        toast.error("Please select a system specification to update.", {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
+        return;
+      }
 
-    console.log("System specs updated:", systemResponse);
+      // ✅ Validate inverter selection before making API calls
+      if (!formData.inverterBrandId || !formData.inverterSpecId) {
+        toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
+          autoClose: 1500,
+          hideProgressBar: true,
+        });
+        return; // stop execution here
+      }
 
-    const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
-      systemSpecsId: selectedSpecId,
-      inverterSpecId: formData.inverterSpecId,
-      inverterCount: 1,
-    });
+      setIsSubmitting(true);
 
-    console.log("Inverter specs updated:", inverterResponse);
+      // ✅ Proceed only if validations passed
+      const systemResponse = await updateSystemSpecs(selectedSpecId, {
+        ...formData,
+        connectionId,
+        specSourceId: 2,
+        panelSpecsId: formData.panelSpecId,
+        batterySpecsId: formData.batterySpecId,
+        orgId,
+        agencyId
+      });
 
-    await fetchSavedSpecs();
+      console.log("System specs updated:", systemResponse);
 
-    toast.success("System Specification details updated successfully!", {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
-  } catch (error) {
-    console.error("Error updating specs:", error);
-    toast.error("Failed to update system specs or inverter specs.", {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
+        systemSpecsId: selectedSpecId,
+        inverterSpecId: formData.inverterSpecId,
+        inverterCount: 1,
+      });
+
+      console.log("Inverter specs updated:", inverterResponse);
+
+      await fetchSavedSpecs();
+
+      toast.success("System Specification details updated successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (error) {
+      console.error("Error updating specs:", error);
+      toast.error("Failed to update system specs or inverter specs.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
 
@@ -942,7 +942,7 @@ export const SystemSpecifications = () => {
 
 
       <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           {/* Left side: Icon + Title */}
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
@@ -968,7 +968,7 @@ export const SystemSpecifications = () => {
 
                 setIsFormOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <PlusIcon className="w-4 h-4 text-white" />
               Add Another System Specs
@@ -1015,6 +1015,7 @@ export const SystemSpecifications = () => {
 
 
         {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
           <div className="md:col-span-1">
 
             <label className="block text-sm font-medium text-gray-700">Installation Space</label>
@@ -1074,12 +1075,26 @@ export const SystemSpecifications = () => {
             {showModal && selectedSpace && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
                 <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
-                  <button
-                    className="absolute top-2 right-4 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowModal(false)}
-                  >
-                    ✖
-                  </button>
+                  <div className="absolute top-4 right-4 flex items-center space-x-4">
+                    {/* Edit Button */}
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-full shadow-sm transition-all"
+                      onClick={() =>
+                        navigate("/edit-installation", { state: { installationId: selectedSpace.id, connectionId: connectionId, consumerId: consumerId, customerId: customerId } })
+                      }
+                    >
+                      Edit
+                    </button>
+
+
+                    {/* Close Button */}
+                    <button
+                      className="text-gray-500 hover:text-gray-700 text-lg"
+                      onClick={() => setShowModal(false)}
+                    >
+                      ✖
+                    </button>
+                  </div>
 
                   <h2 className="text-lg font-semibold mb-4">
                     Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
@@ -1145,7 +1160,22 @@ export const SystemSpecifications = () => {
               </div>
             )}
           </div>
-          <div className="hidden md:block md:col-span-1"></div>
+          <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/installation-form", {
+                    state: { connectionId, customerId, consumerId },
+                  })
+                }
+                className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                <PlusIcon className="w-4 h-4" />
+                <span>Add New Installation</span>
+              </button>
+      
+          </div>
 
 
           <div>

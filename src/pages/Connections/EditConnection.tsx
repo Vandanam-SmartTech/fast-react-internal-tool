@@ -361,8 +361,8 @@ export const EditConnection = () => {
     }
 
     if (formData.isNameCorrection === "Yes" && !formData.correctionTypeId) {
-    errors.push("Please select a correction type.");
-  }
+      errors.push("Please select a correction type.");
+    }
 
     if (!formData.billedTo) {
       errors.push("Billed To is required");
@@ -497,12 +497,12 @@ export const EditConnection = () => {
     }
   };
 
-const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  setPinCode(value);
-  setFormData((prev) => ({ ...prev, pinCode: value }));
-  console.log("Current state PINcode:", value);
-};
+  const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPinCode(value);
+    setFormData((prev) => ({ ...prev, pinCode: value }));
+    console.log("Current state PINcode:", value);
+  };
 
   const handleNameCorrection = (e) => {
     const { value } = e.target;
@@ -565,14 +565,14 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     // Real-time validation
     if (name === 'consumerId') {
-  if (value === '') {
-    // Clear consumerNumber field error when input is empty
-    setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
-  } else {
-    validateFieldOnChange('consumerNumber', value);
-  }
-}
- else if (name === 'gstIn') {
+      if (value === '') {
+        // Clear consumerNumber field error when input is empty
+        setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
+      } else {
+        validateFieldOnChange('consumerNumber', value);
+      }
+    }
+    else if (name === 'gstIn') {
       validateFieldOnChange('gstIn', value);
     } else if (name === 'billedTo') {
       validateFieldOnChange('billedTo', value);
@@ -646,7 +646,7 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
-      correctionTypeId:formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
+      correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
       avgMonthlyConsumption: formData.avgMonthlyConsumption,
       villageCode: formData.villageCode,
       pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
@@ -697,23 +697,23 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
-        
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
-          {/* Back Arrow */}
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
 
-              <h1 className="text-2xl font-bold text-gray-700">Update Connection</h1>
-            </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Back Arrow */}
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
+            <h1 className="text-2xl font-bold text-gray-700">Update Connection</h1>
           </div>
+
         </div>
+      </div>
 
 
       <div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto">
@@ -942,8 +942,8 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               </label>
               <input
                 type="text"
-                inputMode="numeric"   
-                pattern="[1-9][0-9]*" 
+                inputMode="numeric"
+                pattern="[1-9][0-9]*"
                 name="avgMonthlyConsumption"
                 value={formData.avgMonthlyConsumption}
                 onChange={(e) => {
@@ -972,30 +972,30 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  DISCOM ID{" "}
-                  {formData.isDiscomConsumer === "Yes" && (
-                    <span className="text-red-500">*</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric" 
-                  name="discomId"
-                  value={formData.discomId}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
-                      handleChange(e);
-                    }
-                  }}
-                  placeholder="e.g. 7137"
-                  required={formData.isDiscomConsumer === "Yes"}
-                  disabled={formData.isDiscomConsumer === "No"}
-                  title="DISCOM ID must be a positive integer greater than 0"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                DISCOM ID{" "}
+                {formData.isDiscomConsumer === "Yes" && (
+                  <span className="text-red-500">*</span>
+                )}
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                name="discomId"
+                value={formData.discomId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                    handleChange(e);
+                  }
+                }}
+                placeholder="e.g. 7137"
+                required={formData.isDiscomConsumer === "Yes"}
+                disabled={formData.isDiscomConsumer === "No"}
+                title="DISCOM ID must be a positive integer greater than 0"
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
+              />
+            </div>
           </div>
         </div>
 
@@ -1007,49 +1007,49 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             Business Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GST Number
-                </label>
-                <input
-                  type="text"
-                  name="gstIn"
-                  value={formData.gstIn}
-                  onChange={(e) => {
-                    const target = e.target as HTMLInputElement;
-                    handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
-                  }}
-                  pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-                  title="GSTIN must be in format: 22AAAAA0000A1Z6"
-                  placeholder="e.g. 22AAAAA0000A1Z6"
-                  maxLength={15}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.gstIn && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                GST Number
+              </label>
+              <input
+                type="text"
+                name="gstIn"
+                value={formData.gstIn}
+                onChange={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
+                }}
+                pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+                title="GSTIN must be in format: 22AAAAA0000A1Z6"
+                placeholder="e.g. 22AAAAA0000A1Z6"
+                maxLength={15}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.gstIn && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
+              )}
+            </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Billed To <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="billedTo"
-                  value={formData.billedTo}
-                  onChange={handleChange}
-                  placeholder="Enter the name of the billed person or company"
-                  pattern="^[A-Za-z\s]{2,50}$"
-                  title="Billed To must be 2-50 characters, alphabets and spaces only"
-                  maxLength={50}
-                  required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.billedTo && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Billed To <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="billedTo"
+                value={formData.billedTo}
+                onChange={handleChange}
+                placeholder="Enter the name of the billed person or company"
+                pattern="^[A-Za-z\s]{2,50}$"
+                title="Billed To must be 2-50 characters, alphabets and spaces only"
+                maxLength={50}
+                required
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.billedTo && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1135,26 +1135,26 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pincode <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="pinCode"
-                  value={formData.pinCode || ''}
-                  onChange={handlepinCodeChange}
-                  placeholder="e.g. 416000"
-                  pattern="^[0-9]{6}$"
-                  title="PIN Code must be exactly 6 digits (0-9)"
-                  maxLength={6}
-                  inputMode="numeric"
-                  required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.pinCode && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Pincode <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="pinCode"
+                value={formData.pinCode || ''}
+                onChange={handlepinCodeChange}
+                placeholder="e.g. 416000"
+                pattern="^[0-9]{6}$"
+                title="PIN Code must be exactly 6 digits (0-9)"
+                maxLength={6}
+                inputMode="numeric"
+                required
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.pinCode && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1175,89 +1175,89 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
 
             <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 1 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="addressLine1"
-                  value={formData.addressLine1}
-                  onChange={handleChange}
-                  placeholder="e.g. Flat No, House No, Street Name"
-                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                  maxLength={100}
-                  required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.addressLine1 && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Address Line 1 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="addressLine1"
+                value={formData.addressLine1}
+                onChange={handleChange}
+                placeholder="e.g. Flat No, House No, Street Name"
+                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                maxLength={100}
+                required
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.addressLine1 && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+              )}
+            </div>
 
             <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 2
-                </label>
-                <input
-                  type="text"
-                  name="addressLine2"
-                  value={formData.addressLine2}
-                  onChange={handleChange}
-                  placeholder="e.g. Apartment, Suite, Unit, Building"
-                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                  maxLength={100}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.addressLine2 && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Address Line 2
+              </label>
+              <input
+                type="text"
+                name="addressLine2"
+                value={formData.addressLine2}
+                onChange={handleChange}
+                placeholder="e.g. Apartment, Suite, Unit, Building"
+                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                maxLength={100}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.addressLine2 && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+              )}
+            </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Latitude
-                </label>
-                <input
-                  type="number"
-                  name="latitude"
-                  value={formData.latitude}
-                  onChange={handleChange}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  placeholder="e.g. 16.7049873"
-                  min="-90"
-                  max="90"
-                  step="any"
-                  title="Latitude must be between -90 and 90"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.latitude && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Latitude
+              </label>
+              <input
+                type="number"
+                name="latitude"
+                value={formData.latitude}
+                onChange={handleChange}
+                onWheel={(e) => e.currentTarget.blur()}
+                placeholder="e.g. 16.7049873"
+                min="-90"
+                max="90"
+                step="any"
+                title="Latitude must be between -90 and 90"
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.latitude && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
+              )}
+            </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Longitude
-                </label>
-                <input
-                  type="number"
-                  name="longitude"
-                  value={formData.longitude}
-                  onChange={handleChange}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  placeholder="e.g. 74.2432527"
-                  min="-180"
-                  max="180"
-                  step="any"
-                  title="Longitude must be between -180 and 180"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-                {fieldErrors.longitude && (
-                  <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Longitude
+              </label>
+              <input
+                type="number"
+                name="longitude"
+                value={formData.longitude}
+                onChange={handleChange}
+                onWheel={(e) => e.currentTarget.blur()}
+                placeholder="e.g. 74.2432527"
+                min="-180"
+                max="180"
+                step="any"
+                title="Longitude must be between -180 and 180"
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+              {fieldErrors.longitude && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
+              )}
+            </div>
 
             <div className="md:col-span-2">
               {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
@@ -1293,85 +1293,84 @@ const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
         {/* Name Correction and Correction Type */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Name Correction
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Does the connection require a name correction?
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Name Correction
+          </h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Does the connection require a name correction?
+              </label>
+              <div className="flex items-center space-x-5">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="nameCorrection"
+                    value="Yes"
+                    onChange={handleNameCorrection}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    checked={formData.isNameCorrection === "Yes"}
+                  />
+                  <span className="text-sm text-gray-700">Yes</span>
                 </label>
-                <div className="flex items-center space-x-5">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="nameCorrection"
-                      value="Yes"
-                      onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      checked={formData.isNameCorrection === "Yes"}
-                    />
-                    <span className="text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="nameCorrection"
-                      value="No"
-                      onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      checked={formData.isNameCorrection === "No"}
-                    />
-                    <span className="text-sm text-gray-700">No</span>
-                  </label>
-                </div>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="nameCorrection"
+                    value="No"
+                    onChange={handleNameCorrection}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    checked={formData.isNameCorrection === "No"}
+                  />
+                  <span className="text-sm text-gray-700">No</span>
+                </label>
               </div>
-
-              {formData.isNameCorrection === "Yes" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Correction Type
-                  </label>
-                  <select
-                    name="correctionTypeId"
-                    value={formData.correctionTypeId || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  >
-                    <option value="" disabled>Select an option</option>
-                    {correctionTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.nameEn}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
             </div>
+
+            {formData.isNameCorrection === "Yes" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Correction Type
+                </label>
+                <select
+                  name="correctionTypeId"
+                  value={formData.correctionTypeId || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  <option value="" disabled>Select an option</option>
+                  {correctionTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
+        </div>
 
         {/* Submit Button */}
         <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="py-2 px-5 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+          >
+            Cancel
+          </button>
 
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-            >
-              Cancel
-            </button>
+          <button
+            type="submit"
+            className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
+          >
+            Update Connection
+          </button>
+        </div>
 
-
-            <button
-              type="submit"
-              className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-            >
-              Update Connection
-            </button>
-          </div>
       </form>
 
       <Dialog

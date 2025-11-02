@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import bgImage from '../../assets/Solar_Image.jpg';
-import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { Logo } from '../../components/ui';
 import { verifyAndChangePassword } from '../../services/jwtService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
@@ -68,10 +68,19 @@ const Verification: React.FC = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="w-full max-w-sm p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-        <div className="flex flex-col items-center justify-center mb-2 sm:mb-1">
+        {/* <div className="flex flex-col items-center justify-center mb-2 sm:mb-1">
           <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
-          {/* <h2 className="text-2xl font-bold text-blue-800">Change Password</h2> */}
-        </div>
+        </div> */}
+
+        <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
+                  <Logo
+                    size="xl"
+                    className="relative drop-shadow-lg"
+                  />
+                </div>
+              </div>
 
         {error && (
           <div className="bg-red-100 text-red-700 border border-red-200 rounded-lg p-3 mb-4 text-center">

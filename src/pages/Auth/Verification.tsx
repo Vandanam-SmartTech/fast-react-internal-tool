@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import bgImage from '../../assets/Solar_Image.jpg';
-import logo1 from '../../assets/Vandanam_SmartTech_Logo.png';
+import { Logo } from '../../components/ui';
 import { verifyOtp, sendOtpToEmail } from '../../services/otpService';
 import { validateUser } from '../../services/jwtService';
 import { toast } from 'react-toastify';
@@ -153,9 +153,19 @@ const Verification: React.FC = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-2 sm:mb-1">
+        {/* <div className="flex items-center justify-center mb-2 sm:mb-1">
           <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
-        </div>
+        </div> */}
+
+        <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
+                  <Logo
+                    size="xl"
+                    className="relative drop-shadow-lg"
+                  />
+                </div>
+              </div>
 
         {message && (
           <div className="bg-green-100 text-green-700 border border-green-200 rounded-lg p-2 mb-4 text-center">

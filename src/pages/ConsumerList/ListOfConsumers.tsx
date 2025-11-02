@@ -501,6 +501,7 @@ const ListOfConsumers: React.FC = () => {
                         },
                       })
                     }
+                    title="View Connection"
                     className="text-primary-600 hover:text-primary-700"
                   >
                     <Eye className="w-4 h-4" />
@@ -518,6 +519,7 @@ const ListOfConsumers: React.FC = () => {
                         },
                       })
                     }
+                    title="Get System Specs"
                     className="text-solar-600 hover:text-solar-700"
                   >
                     <Lightbulb className="w-4 h-4" />
