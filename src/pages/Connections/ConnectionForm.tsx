@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 import {
   UserCircleIcon,
@@ -227,8 +228,8 @@ export const ConnectionForm = () => {
     }
 
     if (formData.isNameCorrection === "Yes" && !formData.correctionTypeId) {
-    errors.push("Please select a correction type.");
-  }
+      errors.push("Please select a correction type.");
+    }
 
     if (!formData.billedTo) {
       errors.push("Billed To is required");
@@ -456,64 +457,65 @@ export const ConnectionForm = () => {
 
 
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const { name, value } = e.target;
 
+  if (name === "isDiscomConsumer" && value === "No") {
+    setConfirmConsumerNumber("");
+  }
 
-    if (name === "isDiscomConsumer" && value === "No") {
-      setConfirmConsumerNumber("");
-    }
+  if (name === 'consumerId' && value === '') {
+    setConfirmConsumerNumber('');
+  }
 
-    if (name === 'consumerId' && value === '') {
+  if (name === 'consumerId') {
+    if (value !== confirmConsumerNumber) {
       setConfirmConsumerNumber('');
     }
 
-    if (name === 'consumerId') {
-      if (value !== confirmConsumerNumber) {
+    checkConsumerNumberExists(value).then((exists) => {
+      setConsumerNumberExists(exists);
+      if (exists) {
         setConfirmConsumerNumber('');
       }
-
-      checkConsumerNumberExists(value).then((exists) => {
-        setConsumerNumberExists(exists);
-
-        if (exists) {
-          setConfirmConsumerNumber('');
-        }
-      });
-    }
-
-    // Real-time validation
-    if (name === 'consumerId') {
-  if (value === '') {
-    // Clear consumerNumber field error when input is empty
-    setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
-  } else {
-    validateFieldOnChange('consumerNumber', value);
+    });
   }
-}
- else if (name === 'gstIn') {
-      validateFieldOnChange('gstIn', value);
-    } else if (name === 'billedTo') {
-      validateFieldOnChange('billedTo', value);
-    } else if (name === 'addressLine1') {
-      validateFieldOnChange('addressLine1', value);
-    } else if (name === 'addressLine2') {
-      validateFieldOnChange('addressLine2', value);
-    } else if (name === 'avgMonthlyConsumption') {
-      validateFieldOnChange('avgMonthlyConsumption', value);
-    } else if (name === 'latitude') {
-      validateFieldOnChange('latitude', value);
-    } else if (name === 'longitude') {
-      validateFieldOnChange('longitude', value);
-    } else if (name === 'discomId') {
-      validateFieldOnChange('discomId', value);
-    } else if (name === 'pinCode') {
-      validateFieldOnChange('pinCode', value);
+
+  // Real-time validation
+  if (name === 'consumerId') {
+    if (value === '') {
+      setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
+    } else {
+      validateFieldOnChange('consumerNumber', value);
     }
+  } else if (name === 'gstIn') {
+    validateFieldOnChange('gstIn', value);
+  } else if (name === 'billedTo') {
+    validateFieldOnChange('billedTo', value);
+  } else if (name === 'addressLine1') {
+    validateFieldOnChange('addressLine1', value);
+  } else if (name === 'addressLine2') {
+    validateFieldOnChange('addressLine2', value);
+  } else if (name === 'avgMonthlyConsumption') {
+    validateFieldOnChange('avgMonthlyConsumption', value);
+  } else if (name === 'latitude') {
+    validateFieldOnChange('latitude', value);
+  } else if (name === 'longitude') {
+    validateFieldOnChange('longitude', value);
+  } else if (name === 'discomId') {
+    validateFieldOnChange('discomId', value);
+  } else if (name === 'pinCode') {
+    validateFieldOnChange('pinCode', value);
+  }
+
+  if (name === "connectionTypeId") {
+    const selectedType = connectionTypes.find(type => type.id === Number(value));
+    const isHT = selectedType?.nameEn?.toLowerCase().includes("ht");
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      phaseTypeId: isHT ? 2 : 1, 
       ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
     }));
 
@@ -522,10 +524,31 @@ export const ConnectionForm = () => {
       localStorage.setItem("connectionFormData", JSON.stringify({
         ...formData,
         [name]: value,
+        phaseTypeId: isHT ? 2 : 1,
         ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
       }));
     }, 0);
-  };
+
+    return; 
+  }
+
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+    ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+  }));
+
+
+  setTimeout(() => {
+    localStorage.setItem("connectionFormData", JSON.stringify({
+      ...formData,
+      [name]: value,
+      ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+    }));
+  }, 0);
+};
+
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -625,8 +648,8 @@ export const ConnectionForm = () => {
       customerId,
       consumerId: formData.consumerId,
       isDiscomConsumer,
-      isNameCorrectionRequired: formData.isNameCorrection === "Yes", 
-      correctionTypeId:formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
+      isNameCorrectionRequired: formData.isNameCorrection === "Yes",
+      correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
@@ -700,14 +723,14 @@ export const ConnectionForm = () => {
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-2">
-          {/* Back Arrow */}
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
+              {/* Back Arrow */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full hover:bg-gray-200 transition"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
+              </button>
 
               <h1 className="text-2xl font-bold text-gray-700">Add New Connection</h1>
             </div>
@@ -716,7 +739,7 @@ export const ConnectionForm = () => {
         </div>
 
         {/* Progress Steps */}
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
             {/* Connector Line: between the first and last icon only */}
@@ -755,8 +778,8 @@ export const ConnectionForm = () => {
                   >
                     <div
                       className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                        ? "bg-blue-500 text-white border border-transparent"
+                        : "bg-white border border-gray-300 text-gray-500"}
                         }`}
                     >
                       <Icon className="w-6 h-6" />
@@ -902,7 +925,7 @@ export const ConnectionForm = () => {
                     <span className="text-red-500">*</span>
                   )}
                 </label>
-                <select
+                {/* <select
                   name="connectionTypeId"
                   value={formData.connectionTypeId}
                   onChange={handleChange}
@@ -915,14 +938,25 @@ export const ConnectionForm = () => {
                       {type.nameEn}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="connectionTypeId"
+                  value={formData.connectionTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "connectionTypeId", value: val } })
+                  }
+                  options={connectionTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phase Type <span className="text-red-500">*</span>
                 </label>
-                <select
+                {/* <select
                   name="phaseTypeId"
                   value={formData.phaseTypeId}
                   onChange={handleChange}
@@ -933,7 +967,18 @@ export const ConnectionForm = () => {
                       {type.nameEn}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="phaseTypeId"
+                  value={formData.phaseTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "phaseTypeId", value: val } })
+                  }
+                  options={phaseTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
               </div>
 
               <div>
@@ -1078,7 +1123,7 @@ export const ConnectionForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   District <span className="text-red-500">*</span>
                 </label>
-                <select
+                {/* <select
                   name="district"
                   value={districtCode}
                   onChange={handleDistrictChange}
@@ -1091,14 +1136,30 @@ export const ConnectionForm = () => {
                       {district.nameEnglish}
                     </option>
                   ))}
-                </select>
+                </select> */}
+
+                <ReusableDropdown
+                  name="district"
+                  value={districtCode}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  options={[
+                    { value: 0, label: districtName || "Select District" },
+                    ...districts.map((district) => ({
+                      value: district.code,
+                      label: district.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={districtName || "Select District"}
+                  className="w-full"
+                />
+
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Taluka <span className="text-red-500">*</span>
                 </label>
-                <select
+                {/* <select
                   name="talukaCode"
                   value={talukaCode}
                   onChange={handleTalukaChange}
@@ -1111,14 +1172,29 @@ export const ConnectionForm = () => {
                       {taluka.nameEnglish}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="talukaCode"
+                  value={talukaCode}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  options={[
+                    { value: 0, label: talukaName || "Select Taluka" },
+                    ...talukas.map((taluka) => ({
+                      value: taluka.code,
+                      label: taluka.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={talukaName || "Select Taluka"}
+                  className="w-full"
+                />
+
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Village
                 </label>
-                <select
+                {/* <select
                   name="villageCode"
                   value={villageCode}
                   onChange={handleVillageChange}
@@ -1130,7 +1206,22 @@ export const ConnectionForm = () => {
                       {village.nameEnglish}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="villageCode"
+                  value={villageCode}
+                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  options={[
+                    { value: 0, label: villageName || "Select Village" },
+                    ...villages.map((village) => ({
+                      value: village.code,
+                      label: village.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={villageName || "Select Village"}
+                  className="w-full"
+                />
+
               </div>
 
               <div>
@@ -1159,7 +1250,7 @@ export const ConnectionForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Address Type <span className="text-red-500">*</span>
                 </label>
-                <select
+                {/* <select
                   name="addressTypeId"
                   value={formData.addressTypeId}
                   onChange={handleChange}
@@ -1170,7 +1261,19 @@ export const ConnectionForm = () => {
                       {type.nameEn}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="addressTypeId"
+                  value={formData.addressTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "addressTypeId", value: val } })
+                  }
+                  options={addressTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
+
               </div>
 
               <div className="md:col-span-2">
@@ -1334,7 +1437,7 @@ export const ConnectionForm = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Correction Type
                   </label>
-                  <select
+                  {/* <select
                     name="correctionTypeId"
                     value={formData.correctionTypeId || ""}
                     onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
@@ -1346,7 +1449,28 @@ export const ConnectionForm = () => {
                         {type.nameEn}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+
+                  <ReusableDropdown
+                    name="correctionTypeId"
+                    value={formData.correctionTypeId || ""}
+                    onChange={(val) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        correctionTypeId: val ? Number(val) : "",
+                      }))
+                    }
+                    options={[
+                      { value: "", label: "Select an option" },
+                      ...correctionTypes.map((type) => ({
+                        value: type.id,
+                        label: type.nameEn,
+                      })),
+                    ]}
+                    placeholder="Select an option"
+                    className="w-full"
+                  />
+
                 </div>
               )}
 

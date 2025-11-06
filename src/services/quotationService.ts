@@ -24,14 +24,14 @@ export const getQuotationAPI = () => {
   return quotationAPI;
 };
 
-export const generateQuotationPDF = async (connectionId: number): Promise<Blob> => {
+export const generateQuotationPDF = async (selectedSpecId: number): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
   try {
-    if (!connectionId) {
-      throw new Error("Connection ID is missing");
+    if (!selectedSpecId) {
+      throw new Error("Spec ID is missing");
     }
 
-    const response = await quotationAPI.get(`/api/quotation/generate-pdf/${connectionId}`, {
+    const response = await quotationAPI.get(`/api/quotation-details/generate-pdf/${selectedSpecId}`, {
       responseType: 'blob', 
     });
 
@@ -254,23 +254,22 @@ export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
   }
 };
 
-export const saveInverterSpecs = async (requestData: any): Promise<any> => {
+export const saveInverterSpecs = async (requestData: any | any[]): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 
+  // ✅ Ensure it's always sent as an array
+  const payload = Array.isArray(requestData) ? requestData : [requestData];
+
   try {
-    const response = await quotationAPI.post(
-      `/api/system-spec-inverters?inverterSpecId=${requestData.inverterSpecId}`, 
-      {
-        systemSpecsId: requestData.systemSpecsId,
-        inverterCount: requestData.inverterCount,
-      }
-    );
+    const response = await quotationAPI.post(`/api/system-spec-inverters`, payload);
     return response.data;
   } catch (error) {
     console.error("Error saving inverter specs:", error);
     throw new Error("Failed to save inverter specs.");
   }
 };
+
+
 
 export const saveInverterSpecPackage = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();

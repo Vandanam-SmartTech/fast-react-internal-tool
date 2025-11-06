@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg } from "../../services/organizationService";
 import { useUser } from "../../contexts/UserContext";
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 interface Organization {
   id: string;
@@ -60,10 +61,6 @@ export const CustomerForm = () => {
   const [isPreferredEdited, setIsPreferredEdited] = useState(false);
 
   const { userClaims } = useUser();
-
-
-
-
 
   const tabs = [
     "Customer Details",
@@ -445,7 +442,7 @@ export const CustomerForm = () => {
         </div>
 
         {/* Progress Steps */}
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto border-none shadow-none">
+        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
             {/* Connector Line: between the first and last icon only */}
@@ -474,8 +471,8 @@ export const CustomerForm = () => {
                   >
                     <div
                       className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                        ? "bg-blue-500 text-white border border-transparent"
+                        : "bg-white border border-gray-300 text-gray-500"}
                         }`}
                     >
                       <Icon className="w-6 h-6" />
@@ -538,29 +535,29 @@ export const CustomerForm = () => {
 
 
             {representativeType === "agency" && (
-              <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
-
+              <div className="col-span-2 grid grid-cols-1 rounded-md shadow-sm md:grid-cols-2 gap-3 border rounded-md p-3 sm:p-4 shadow-sm mt-3 sm:mt-4">
                 {!selectedOrg && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Select Organization
                     </label>
-                    <select
-                      value={organizationId}
-                      onChange={(e) => {
-                        setOrganizationId(Number(e.target.value));
+                    <ReusableDropdown
+                      value={organizationId || ""}
+                      onChange={(val) => {
+                        setOrganizationId(Number(val));
                         setAgencyId("");
                         setAgencyUser("");
                       }}
-                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select Organization --</option>
-                      {organizations.map((org) => (
-                        <option key={org.id} value={org.id}>
-                          {org.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: "", label: "-- Select Organization --" },
+                        ...organizations.map((org) => ({
+                          value: org.id,
+                          label: org.name,
+                        })),
+                      ]}
+                      placeholder="Select Organization"
+                      className="mt-1"
+                    />
                   </div>
                 )}
 
@@ -569,21 +566,22 @@ export const CustomerForm = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Select Agency
                   </label>
-                  <select
-                    value={agencyId}
-                    onChange={(e) => {
-                      setAgencyId(Number(e.target.value));
+                  <ReusableDropdown
+                    value={agencyId || ""}
+                    onChange={(val) => {
+                      setAgencyId(Number(val));
                       setAgencyUser("");
                     }}
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Agency --</option>
-                    {agencyList.map((agency) => (
-                      <option key={agency.id} value={agency.id}>
-                        {agency.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "-- Select Agency --" },
+                      ...agencyList.map((agency) => ({
+                        value: agency.id,
+                        label: agency.name,
+                      })),
+                    ]}
+                    placeholder="Select Agency"
+                    className="mt-1"
+                  />
                 </div>
 
 
@@ -591,18 +589,19 @@ export const CustomerForm = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Select Agency User
                   </label>
-                  <select
-                    value={agencyUser}
-                    onChange={(e) => setAgencyUser(Number(e.target.value))}
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select User --</option>
-                    {agencyUsers.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {`${user.nameAsPerGovId} (${user.username})`}
-                      </option>
-                    ))}
-                  </select>
+                  <ReusableDropdown
+                    value={agencyUser || ""}
+                    onChange={(val) => setAgencyUser(Number(val))}
+                    options={[
+                      { value: "", label: "-- Select User --" },
+                      ...agencyUsers.map((user) => ({
+                        value: user.id,
+                        label: `${user.nameAsPerGovId} (${user.username})`,
+                      })),
+                    ]}
+                    placeholder="Select User"
+                    className="mt-1"
+                  />
                 </div>
               </div>
             )}
@@ -617,21 +616,22 @@ export const CustomerForm = () => {
                       <label className="block text-sm font-medium text-gray-700">
                         Select Organization Name
                       </label>
-                      <select
-                        value={organizationId}
-                        onChange={(e) => {
-                          setOrganizationId(Number(e.target.value));
+                      <ReusableDropdown
+                        value={organizationId || ""}
+                        onChange={(val) => {
+                          setOrganizationId(Number(val));
                           setOrganizationUser("");
                         }}
-                        className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="">-- Select Organization --</option>
-                        {organizations.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
-                          </option>
-                        ))}
-                      </select>
+                        options={[
+                          { value: "", label: "-- Select Organization --" },
+                          ...organizations.map((org) => ({
+                            value: org.id,
+                            label: org.name,
+                          })),
+                        ]}
+                        placeholder="Select Organization"
+                        className="mt-1"
+                      />
                     </div>
                   )}
 
@@ -640,18 +640,20 @@ export const CustomerForm = () => {
                     <label className="block text-sm font-medium text-gray-700">
                       Select Organization User
                     </label>
-                    <select
-                      value={organizationUser ?? ""}
-                      onChange={(e) => setOrganizationUser(Number(e.target.value))}
-                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="">-- Select User --</option>
-                      {organizationUsers.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {`${user.nameAsPerGovId} (${user.username})`}
-                        </option>
-                      ))}
-                    </select>
+                    <ReusableDropdown
+                      value={organizationUser || ""}
+                      onChange={(val) => setOrganizationUser(Number(val))}
+                      options={[
+                        { value: "", label: "-- Select User --" },
+                        ...organizationUsers.map((user) => ({
+                          value: user.id,
+                          label: `${user.nameAsPerGovId} (${user.username})`,
+                        })),
+                      ]}
+                      placeholder="Select User"
+                      className="mt-1"
+                    />
+
                   </div>
                 </div>
               </div>

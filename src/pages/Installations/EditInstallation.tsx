@@ -10,6 +10,7 @@ import {
   Cog6ToothIcon,
 } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 export const EditInstallation = () => {
   const location = useLocation();
@@ -185,7 +186,7 @@ export const EditInstallation = () => {
       </div>
 
 
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           {/* Connector Line: between the first and last icon only */}
@@ -228,8 +229,8 @@ export const EditInstallation = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white border border-transparent"
+                      : "bg-white border border-gray-300 text-gray-500"}
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -261,18 +262,19 @@ export const EditInstallation = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
-              <select
+              <ReusableDropdown
                 name="installationSpaceTypeId"
-                value={formData.installationSpaceTypeId}
-                onChange={handleChange}
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              >
-                {installationSpaceTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nameEnglish}
-                  </option>
-                ))}
-              </select>
+                value={formData.installationSpaceTypeId || ""}
+                onChange={(val) =>
+                  handleChange({ target: { name: "installationSpaceTypeId", value: Number(val) } })
+                }
+                options={installationSpaceTypes.map((type) => ({
+                  value: type.id,
+                  label: type.nameEnglish,
+                }))}
+                placeholder="Select Installation Space Type"
+                className="w-full"
+              />
             </div>
 
             <div>
@@ -280,41 +282,40 @@ export const EditInstallation = () => {
                 Installation Space Title <span className="text-red-500">*</span>
               </label>
 
-              <select
+                            <ReusableDropdown
                 name="installationSpaceTitle"
-                value={formData.installationSpaceTitle}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === 'Other') {
-                    // Keep value as 'Other' so the select reflects it
+                value={formData.installationSpaceTitle || ""}
+                onChange={(val) => {
+                  if (val === "Other") {
                     setFormData((prev) => ({
                       ...prev,
-                      installationSpaceTitle: 'Other',
-                      customInstallationSpaceTitle: '',
+                      installationSpaceTitle: "Other",
+                      customInstallationSpaceTitle: "",
                     }));
                   } else {
                     setFormData((prev) => ({
                       ...prev,
-                      installationSpaceTitle: value,
-                      customInstallationSpaceTitle: '',
+                      installationSpaceTitle: val,
+                      customInstallationSpaceTitle: "",
                     }));
                   }
                 }}
+                options={[
+                  { value: "At center", label: "At center" },
+                  { value: "At SW corner", label: "At SW corner" },
+                  { value: "At SE corner", label: "At SE corner" },
+                  { value: "At NW corner", label: "At NW corner" },
+                  { value: "At NE corner", label: "At NE corner" },
+                  { value: "At East side", label: "At East side" },
+                  { value: "At West side", label: "At West side" },
+                  { value: "At North side", label: "At North side" },
+                  { value: "At South side", label: "At South side" },
+                  { value: "Other", label: "Other" },
+                ]}
+                placeholder="Select Installation Title"
                 required
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              >
-                <option value="" disabled>Select Installation Title</option>
-                <option value="At center">At center</option>
-                <option value="At SW corner">At SW corner</option>
-                <option value="At SE corner">At SE corner</option>
-                <option value="At NW corner">At NW corner</option>
-                <option value="At NE corner">At NE corner</option>
-                <option value="At East side">At East side</option>
-                <option value="At West side">At West side</option>
-                <option value="At North side">At North side</option>
-                <option value="At South side">At South side</option>
-                <option value="Other">Other</option>
-              </select>
+                className="w-full"
+              />
 
 
               {/* Show input only when "Other" is selected */}

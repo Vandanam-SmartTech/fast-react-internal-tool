@@ -48,6 +48,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           type={inputType}
           className={`
             form-input
+            py-2.5
             ${leftIcon ? 'pl-10' : ''}
             ${rightIcon || showPasswordToggle ? 'pr-10' : ''}
             ${error ? 'form-input-error' : ''}

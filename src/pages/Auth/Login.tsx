@@ -8,6 +8,7 @@ import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import bgImage from '../../assets/Solar_Image.jpg';
 import { useUser } from "../../contexts/UserContext";
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface OrgRoleData {
   roles: string[];
@@ -164,7 +165,7 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen relative flex items-center justify-center overflow-hidden top-0"
+      className="min-h-screen relative flex items-center justify-center overflow-hidden"
       style={{
         backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%), url(${bgImage})`,
         backgroundSize: 'cover',
@@ -247,7 +248,7 @@ const Login = () => {
             {/* Role selection */}
             {showOrgSelection ? (
               <div className="space-y-6 animate-fade-in">
-                <select
+                {/* <select
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
                   className="w-full p-3 border rounded-xl"
@@ -261,7 +262,19 @@ const Login = () => {
                       {orgName} ({role.replace('ROLE_', '').replace(/_/g, ' ')})
                     </option>
                   ))}
-                </select>
+                </select> */}
+
+                <ReusableDropdown
+                  value={selectedRole}
+                  onChange={(val) => setSelectedRole(val)}
+                  options={roleOptions.map(({ orgId, orgName, role }) => ({
+                    value: `${role}|${orgId}|${orgName}`,
+                    label: `${orgName} (${role.replace("ROLE_", "").replace(/_/g, " ")})`,
+                  }))}
+                  placeholder="Select Role & Organization"
+                />
+
+
 
 
 
@@ -327,8 +340,6 @@ const Login = () => {
                     Forgot your password?
                   </button>
                 </div>
-
-
 
                 <Button
                   type="submit"

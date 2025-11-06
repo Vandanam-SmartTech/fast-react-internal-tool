@@ -5,6 +5,7 @@ import { saveInstallation, fetchInstallationSpaceTypesNames } from "../../servic
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 export const InstallationForm = () => {
   const location = useLocation();
@@ -131,7 +132,7 @@ export const InstallationForm = () => {
         });
         navigate(`/view-installation`, {
           state: {
-            customerId:customerId, connectionId:connectionId, consumerId:consumerId, installationId: result.id
+            customerId: customerId, connectionId: connectionId, consumerId: consumerId, installationId: result.id
           },
         });
 
@@ -178,7 +179,7 @@ export const InstallationForm = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto">
+      <div className="w-full max-w-4xl mx-auto mb-10 mt-6 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           {/* Connector Line: between the first and last icon only */}
@@ -221,8 +222,8 @@ export const InstallationForm = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white border border-transparent"
+                      : "bg-white border border-gray-300 text-gray-500"}
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -247,261 +248,310 @@ export const InstallationForm = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
 
 
-        <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <HomeModernIcon className="w-5 h-5 text-green-500" />
-          Installation Details
-        </h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <HomeModernIcon className="w-5 h-5 text-green-500" />
+            Installation Details
+          </h3>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
-        {/* Input Fields */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
-          <select
-            name="installationSpaceTypeId"
-            value={formData.installationSpaceTypeId}
-            onChange={handleChange}
-            className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          >
-            {installationSpaceTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.nameEnglish}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
+            {/* Input Fields */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
+              {/* <select
+                name="installationSpaceTypeId"
+                value={formData.installationSpaceTypeId}
+                onChange={handleChange}
+                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              >
+                {installationSpaceTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.nameEnglish}
+                  </option>
+                ))}
+              </select> */}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Installation Space Title <span className="text-red-500">*</span>
-          </label>
-
-          <select
-            name="installationSpaceTitle"
-            value={formData.installationSpaceTitle}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === 'Other') {
-                
-                setFormData((prev) => ({
-                  ...prev,
-                  installationSpaceTitle: 'Other',
-                  customInstallationSpaceTitle: '', 
-                }));
-              } else {
-                setFormData((prev) => ({
-                  ...prev,
-                  installationSpaceTitle: value,
-                  customInstallationSpaceTitle: '', 
-                }));
-              }
-            }}
-            required
-            className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          >
-            <option value="" disabled>Select Installation Title</option>
-            <option value="At center">At center</option>
-            <option value="At SW corner">At SW corner</option>
-            <option value="At SE corner">At SE corner</option>
-            <option value="At NW corner">At NW corner</option>
-            <option value="At NE corner">At NE corner</option>
-            <option value="At East side">At East side</option>
-            <option value="At West side">At West side</option>
-            <option value="At North side">At North side</option>
-            <option value="At South side">At South side</option>
-            <option value="Other">Other</option>
-          </select>
-
-
-          {/* Show input only when "Other" is selected */}
-          {formData.installationSpaceTitle === 'Other' && (
-            <input
-              type="text"
-              name="customInstallationSpaceTitle"
-              value={formData.customInstallationSpaceTitle || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
-                  handleChange(e);
+              <ReusableDropdown
+                name="installationSpaceTypeId"
+                value={formData.installationSpaceTypeId || ""}
+                onChange={(val) =>
+                  handleChange({ target: { name: "installationSpaceTypeId", value: Number(val) } })
                 }
-              }}
-              required
-              placeholder="Specify installation space title"
-              className="mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          )}
+                options={installationSpaceTypes.map((type) => ({
+                  value: type.id,
+                  label: type.nameEnglish,
+                }))}
+                placeholder="Select Installation Space Type"
+                className="w-full"
+              />
 
-        </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Installation Space Title <span className="text-red-500">*</span>
+              </label>
+
+              {/* <select
+                name="installationSpaceTitle"
+                value={formData.installationSpaceTitle}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'Other') {
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      installationSpaceTitle: 'Other',
+                      customInstallationSpaceTitle: '',
+                    }));
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      installationSpaceTitle: value,
+                      customInstallationSpaceTitle: '',
+                    }));
+                  }
+                }}
+                required
+                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              >
+                <option value="" disabled>Select Installation Title</option>
+                <option value="At center">At center</option>
+                <option value="At SW corner">At SW corner</option>
+                <option value="At SE corner">At SE corner</option>
+                <option value="At NW corner">At NW corner</option>
+                <option value="At NE corner">At NE corner</option>
+                <option value="At East side">At East side</option>
+                <option value="At West side">At West side</option>
+                <option value="At North side">At North side</option>
+                <option value="At South side">At South side</option>
+                <option value="Other">Other</option>
+              </select> */}
+
+              <ReusableDropdown
+                name="installationSpaceTitle"
+                value={formData.installationSpaceTitle || ""}
+                onChange={(val) => {
+                  if (val === "Other") {
+                    setFormData((prev) => ({
+                      ...prev,
+                      installationSpaceTitle: "Other",
+                      customInstallationSpaceTitle: "",
+                    }));
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      installationSpaceTitle: val,
+                      customInstallationSpaceTitle: "",
+                    }));
+                  }
+                }}
+                options={[
+                  { value: "At center", label: "At center" },
+                  { value: "At SW corner", label: "At SW corner" },
+                  { value: "At SE corner", label: "At SE corner" },
+                  { value: "At NW corner", label: "At NW corner" },
+                  { value: "At NE corner", label: "At NE corner" },
+                  { value: "At East side", label: "At East side" },
+                  { value: "At West side", label: "At West side" },
+                  { value: "At North side", label: "At North side" },
+                  { value: "At South side", label: "At South side" },
+                  { value: "Other", label: "Other" },
+                ]}
+                placeholder="Select Installation Title"
+                required
+                className="w-full"
+              />
+
+              {/* Show input only when "Other" is selected */}
+              {formData.installationSpaceTitle === 'Other' && (
+                <input
+                  type="text"
+                  name="customInstallationSpaceTitle"
+                  value={formData.customInstallationSpaceTitle || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[A-Za-z][A-Za-z\s]*$/.test(value) || value === "") {
+                      handleChange(e);
+                    }
+                  }}
+                  required
+                  placeholder="Specify installation space title"
+                  className="mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              )}
+
+            </div>
 
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            inputMode="numeric"
-            name="availableEastWestLengthFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.availableEastWestLengthFt}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            required
-            placeholder="e.g. 10"
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                inputMode="numeric"
+                name="availableEastWestLengthFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.availableEastWestLengthFt}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                required
+                placeholder="e.g. 10"
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            inputMode="numeric"
-            name="availableSouthNorthLengthFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.availableSouthNorthLengthFt}
-            placeholder="e.g. 10"
-            required
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                inputMode="numeric"
+                name="availableSouthNorthLengthFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.availableSouthNorthLengthFt}
+                placeholder="e.g. 10"
+                required
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="structureInverterDistanceFt"
-            name="structureInverterDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.structureInverterDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="structureInverterDistanceFt"
+                name="structureInverterDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.structureInverterDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="inverterMeterDistanceFt"
-            name="inverterMeterDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.inverterMeterDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="inverterMeterDistanceFt"
+                name="inverterMeterDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.inverterMeterDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="inverterEarthDistanceFt"
-            name="inverterEarthDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.inverterEarthDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="inverterEarthDistanceFt"
+                name="inverterEarthDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.inverterEarthDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="arresterEarthDistanceFt"
-            name="arresterEarthDistanceFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.arresterEarthDistanceFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="arresterEarthDistanceFt"
+                name="arresterEarthDistanceFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.arresterEarthDistanceFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            id="minimumElevationFt"
-            name="minimumElevationFt"
-            //onWheel={(e) => e.currentTarget.blur()}
-            value={formData.minimumElevationFt}
-            placeholder="e.g. 10"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                handleChange(e);
-              }
-            }}
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                id="minimumElevationFt"
+                name="minimumElevationFt"
+                //onWheel={(e) => e.currentTarget.blur()}
+                value={formData.minimumElevationFt}
+                placeholder="e.g. 10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*$/.test(value)) {
+                    handleChange(e);
+                  }
+                }}
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
-          <input
-            type="text"
-            id="descriptionOfInstallation"
-            name="descriptionOfInstallation"
-            value={formData.descriptionOfInstallation}
-            onChange={handleChange}
-            placeholder="e.g. Designated area is on rooftop"
-            className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-          />
-        </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
+              <input
+                type="text"
+                id="descriptionOfInstallation"
+                name="descriptionOfInstallation"
+                value={formData.descriptionOfInstallation}
+                onChange={handleChange}
+                placeholder="e.g. Designated area is on rooftop"
+                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
-        </div>
+          </div>
 
         </div>
 
         {/* Submit Button */}
         <div className="flex justify-center sm:justify-center space-x-3 pt-1">
 
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="py-2 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-            >
-              Cancel
-            </button>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="py-2 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+          >
+            Cancel
+          </button>
 
-            
+
           <button
             type="submit"
             className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"

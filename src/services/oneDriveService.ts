@@ -82,34 +82,34 @@ export const fetchUploadedFilesBySession = async (
   }
 };
 
-export const downloadDocumentById = async (fileId: string): Promise<Blob> => {
+export const downloadDocumentById = async (id: number): Promise<Blob> => {
   const oneDriveAPI = getOneDriveAPI();
-  const response = await oneDriveAPI.get(`/api/document-manager/documents/download/${fileId}`, {
+  const response = await oneDriveAPI.get(`/api/document-manager/documents/download/${id}`, {
     responseType: 'blob',
   });
 
   return response.data;
 };
 
-export const deleteDocumentById = async (fileId: string): Promise<void> => {
+export const deleteDocumentById = async (id:number): Promise<void> => {
   try {
     const oneDriveAPI = getOneDriveAPI();
-    await oneDriveAPI.delete(`/api/document-manager/documents/delete/${fileId}`);
+    await oneDriveAPI.delete(`/api/document-manager/documents/delete/${id}`);
   } catch (error: any) {
     console.error('Failed to delete document:', error);
     throw error;
   }
 };
 
-export const updateDocumentById = async (fileId: string, file: File): Promise<void> => {
+export const updateDocumentById = async (id:number, file: File): Promise<void> => {
   try {
     const oneDriveAPI = getOneDriveAPI();
     const formData = new FormData();
 
-    formData.append("fileId", fileId);
+    formData.append("fileId", id);
     formData.append("fileData", file);
 
-    await oneDriveAPI.put(`/api/document-manager/documents/update/${fileId}`, formData);
+    await oneDriveAPI.put(`/api/document-manager/documents/update/${id}`, formData);
   } catch (error: any) {
     console.error("Failed to update document:", error);
     throw error;

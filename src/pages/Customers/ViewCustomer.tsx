@@ -113,14 +113,14 @@ export const ViewCustomer = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div className="flex items-center gap-2">
-          {/* Back Arrow */}
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
+            {/* Back Arrow */}
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
             <h1 className="text-2xl font-bold text-gray-700">View Customer Details</h1>
           </div>
@@ -128,7 +128,7 @@ export const ViewCustomer = () => {
         </div>
 
 
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto">
+        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
             {/* Connector Line: between the first and last icon only */}
@@ -157,8 +157,8 @@ export const ViewCustomer = () => {
                   >
                     <div
                       className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                          ? "bg-blue-500 text-white"
-                          : "bg-white border border-gray-300 text-gray-500"
+                        ? "bg-blue-500 text-white border border-transparent"
+                        : "bg-white border border-gray-300 text-gray-500"}
                         }`}
                     >
                       <Icon className="w-6 h-6" />

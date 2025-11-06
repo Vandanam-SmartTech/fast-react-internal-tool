@@ -6,7 +6,7 @@ import {
   fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails
 } from '../../services/quotationService';
-
+import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
@@ -95,6 +95,13 @@ export const SystemSpecifications = () => {
 
   const [activeTab, setActiveTab] = useState("System Specifications");
 
+  const [inverterList, setInverterList] = useState([
+    { inverterBrandId: "", inverterSpecId: "", inverterCount: 0 },
+  ]);
+
+  const [inverterCapacitiesMap, setInverterCapacitiesMap] = useState<Record<number, any[]>>({});
+
+
   const tabs = [
     "Customer Details",
     "Connection Details",
@@ -115,16 +122,19 @@ export const SystemSpecifications = () => {
     hasWaterSprinkler: false,
     hasHeavydutyRamp: false,
     hasHeavydutyStairs: false,
-    inverterBrandId: null,
+    //inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
-    inverterSpecId: null,
-    inverterCount: 1,
+    //inverterSpecId: null,
+    //inverterCount: 1,
     panelBrandId: null,
     panelSpecId: null,
     batteryBrandId: null,
     batterySpecId: null,
     systemCapacityKw: null,
+    inverters: [
+      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
+    ],
   });
 
   const defaultFormData = {
@@ -136,16 +146,19 @@ export const SystemSpecifications = () => {
     hasWaterSprinkler: false,
     hasHeavydutyRamp: false,
     hasHeavydutyStairs: false,
-    inverterBrandId: null,
+    //inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
-    inverterSpecId: null,
-    inverterCount: 1,
+    //inverterSpecId: null,
+    //inverterCount: 1,
     panelBrandId: null,
     panelSpecId: null,
     batteryBrandId: null,
     batterySpecId: null,
     systemCapacityKw: null,
+    inverters: [
+      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
+    ],
   };
 
 
@@ -347,7 +360,7 @@ export const SystemSpecifications = () => {
     };
 
     loadInverterBrandCapacities();
-  }, [inverterBrandId]);
+  }, [inverterBrandId, gridTypeId]);
 
 
   useEffect(() => {
@@ -392,7 +405,7 @@ export const SystemSpecifications = () => {
         }));
       }
 
-      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null) {
+      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null && materialOriginId !==null) {
         try {
           const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
           setPanelCapacities([...data]);
@@ -406,7 +419,7 @@ export const SystemSpecifications = () => {
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId]);
+  }, [phaseTypeId, panelSpecId, materialOriginId]);
 
 
   useEffect(() => {
@@ -445,6 +458,53 @@ export const SystemSpecifications = () => {
       loadBatteryCapacities();
     }
   }, [batteryBrandId, gridTypeId]);
+
+
+  const handleInverterChange = async (index, field, value) => {
+    const updatedInverters = [...formData.inverters];
+    updatedInverters[index][field] = value;
+
+    // Reset dependent fields
+    if (field === "inverterBrandId") {
+      updatedInverters[index].inverterSpecId = null;
+
+      // Fetch capacities for this brand and store it in map
+      if (value !== null) {
+        try {
+          const capacities = await fetchInverterBrandCapacities(value);
+          setInverterCapacitiesMap((prev) => ({
+            ...prev,
+            [index]: capacities,
+          }));
+        } catch (error) {
+          console.error("Failed to fetch inverter capacities for brand:", error);
+          setInverterCapacitiesMap((prev) => ({ ...prev, [index]: [] }));
+        }
+      } else {
+        setInverterCapacitiesMap((prev) => ({ ...prev, [index]: [] }));
+      }
+    }
+
+    setFormData({ ...formData, inverters: updatedInverters });
+  };
+
+
+
+  const addNewInverter = () => {
+    setFormData({
+      ...formData,
+      inverters: [
+        ...formData.inverters,
+        { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
+      ],
+    });
+  };
+
+  const removeInverter = (index) => {
+    const updated = formData.inverters.filter((_, i) => i !== index);
+    setFormData({ ...formData, inverters: updated });
+  };
+
 
 
 
@@ -495,18 +555,24 @@ export const SystemSpecifications = () => {
 
   const handleSaveSpecs = async () => {
     try {
-
-      if (!formData.inverterBrandId || !formData.inverterSpecId) {
-        toast.error("Please select both Inverter Brand and Inverter Specification before saving.", {
-          autoClose: 1500,
-          hideProgressBar: true,
-        });
+      // Basic validation: at least one inverter must have brand and spec
+      if (
+        !formData.inverters ||
+        formData.inverters.length === 0 ||
+        formData.inverters.some(
+          (inv) => !inv.inverterBrandId || !inv.inverterSpecId
+        )
+      ) {
+        toast.error(
+          "Please select at least one Inverter Brand and Specification for all inverters before saving.",
+          { autoClose: 1500, hideProgressBar: true }
+        );
         return;
       }
 
       setIsSubmitting(true);
 
-
+      // 1️⃣ Save the System Specs first
       const systemResponse = await saveSystemSpecs({
         ...formData,
         connectionId,
@@ -514,21 +580,29 @@ export const SystemSpecifications = () => {
         panelSpecsId: formData.panelSpecId,
         batterySpecsId: formData.batterySpecId,
         orgId,
-        agencyId
+        agencyId,
+        isRunningCopy: true,
       });
 
       console.log("System specs saved:", systemResponse);
 
       const systemSpecsId = systemResponse.id;
 
-      const inverterResponse = await saveInverterSpecs({
+      // 2️⃣ Build inverter list from formData
+      const inverterList = formData.inverters.map((inv) => ({
         systemSpecsId,
-        inverterSpecId: formData.inverterSpecId,
-        inverterCount: 1,
-      });
+        inverterSpecId: inv.inverterSpecId,
+        inverterCount: inv.inverterCount || 1,
+      }));
+
+      console.log("Inverter list to save:", inverterList);
+
+      // 3️⃣ Save inverters
+      const inverterResponse = await saveInverterSpecs(inverterList);
 
       console.log("Inverter specs saved:", inverterResponse);
 
+      // 4️⃣ Refresh UI
       await fetchSavedSpecs();
 
       toast.success("System Specification details saved successfully!", {
@@ -547,66 +621,64 @@ export const SystemSpecifications = () => {
   };
 
 
-  const handleUpdateSpecs = async () => {
-    try {
-      // ✅ Validate selection of system and inverter specs
-      if (!selectedSpecId || !selectedSystemSpecsInverterId) {
-        console.error("No system specification selected for update!");
-        toast.error("Please select a system specification to update.", {
-          autoClose: 1000,
-          hideProgressBar: true,
-        });
-        return;
-      }
 
-      // ✅ Validate inverter selection before making API calls
-      if (!formData.inverterBrandId || !formData.inverterSpecId) {
-        toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
-          autoClose: 1500,
-          hideProgressBar: true,
-        });
-        return; // stop execution here
-      }
+  // const handleUpdateSpecs = async () => {
+  //   try {
+  //     if (!selectedSpecId || !selectedSystemSpecsInverterId) {
+  //       console.error("No system specification selected for update!");
+  //       toast.error("Please select a system specification to update.", {
+  //         autoClose: 1000,
+  //         hideProgressBar: true,
+  //       });
+  //       return;
+  //     }
 
-      setIsSubmitting(true);
+  //     if (!formData.inverterBrandId || !formData.inverterSpecId) {
+  //       toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
+  //         autoClose: 1500,
+  //         hideProgressBar: true,
+  //       });
+  //       return; 
+  //     }
 
-      // ✅ Proceed only if validations passed
-      const systemResponse = await updateSystemSpecs(selectedSpecId, {
-        ...formData,
-        connectionId,
-        specSourceId: 2,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        orgId,
-        agencyId
-      });
+  //     setIsSubmitting(true);
 
-      console.log("System specs updated:", systemResponse);
+  //     const systemResponse = await updateSystemSpecs(selectedSpecId, {
+  //       ...formData,
+  //       connectionId,
+  //       specSourceId: 2,
+  //       panelSpecsId: formData.panelSpecId,
+  //       batterySpecsId: formData.batterySpecId,
+  //       orgId,
+  //       agencyId
+  //     });
 
-      const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
-        systemSpecsId: selectedSpecId,
-        inverterSpecId: formData.inverterSpecId,
-        inverterCount: 1,
-      });
+  //     console.log("System specs updated:", systemResponse);
 
-      console.log("Inverter specs updated:", inverterResponse);
+  //     const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
+  //       systemSpecsId: selectedSpecId,
+  //       inverterSpecId: formData.inverterSpecId,
+  //       inverterCount: 1,
+  //     });
 
-      await fetchSavedSpecs();
+  //     console.log("Inverter specs updated:", inverterResponse);
 
-      toast.success("System Specification details updated successfully!", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } catch (error) {
-      console.error("Error updating specs:", error);
-      toast.error("Failed to update system specs or inverter specs.", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     await fetchSavedSpecs();
+
+  //     toast.success("System Specification details updated successfully!", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating specs:", error);
+  //     toast.error("Failed to update system specs or inverter specs.", {
+  //       autoClose: 1000,
+  //       hideProgressBar: true,
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
 
 
@@ -626,14 +698,43 @@ export const SystemSpecifications = () => {
   };
 
 
-  const handleSelectSpec = (spec) => {
+  const handleSelectSpec = async (spec) => {
     setIsPrefilling(true);
-
     setSelectedSpecId(spec.id);
-    setSelectedSystemSpecsInverterId(spec.systemSpecsInverterId);
+    console.log("selectedSpecId:", selectedSpecId);
 
-    setFormData({
-      ...formData,
+    // Extract inverters safely
+    const inverterList = (spec.inverters || []).map((inv) => ({
+      inverterBrandId: inv.inverterBrandId,
+      inverterBrandName: inv.inverterBrandName,
+      inverterSpecId: inv.inverterSpecId,
+      inverterCount: inv.inverterCount || 1,
+      inverterCapacity: inv.inverterCapacity,
+      inverterWarrantyMonths: inv.inverterWarrantyMonths,
+      almmModelNumber: inv.almmModelNumber,
+      gridTypeId: inv.gridTypeId,
+    }));
+
+    // Prefill capacities for each inverter row
+    const capacitiesMap = {};
+    for (let i = 0; i < inverterList.length; i++) {
+      const inv = inverterList[i];
+      if (inv.inverterBrandId) {
+        try {
+          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+          capacitiesMap[i] = capacities;
+        } catch (error) {
+          capacitiesMap[i] = [];
+        }
+      } else {
+        capacitiesMap[i] = [];
+      }
+    }
+
+    setInverterCapacitiesMap(capacitiesMap);
+
+    setFormData((prev) => ({
+      ...prev,
       installationSpaceType: spec.installationSpaceType,
       installationStructureType: spec.installationStructureType,
       systemCost: spec.systemCost || 0,
@@ -644,26 +745,26 @@ export const SystemSpecifications = () => {
       hasHeavydutyStairs: spec.hasHeavydutyStairs,
       panelSpecId: spec.panelSpecsId,
       materialOriginId: spec.materialOriginId,
-      gridTypeId: spec.gridTypeId,
-      inverterSpecId: spec.inverterSpecId,
+      gridTypeId: spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId,
       batteryBrandId: spec.batteryBrandId,
       batterySpecId: spec.batterySpecsId,
       systemCapacityKw: spec.systemCapacityKw,
-      inverterBrandId: spec.inverterBrandId
-    });
+      inverters: inverterList,
+    }));
 
+    // Update dependent dropdown states if needed
     setMaterialOriginId(spec.materialOriginId);
-    setGridTypeId(spec.gridTypeId);
+    setGridTypeId(spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId);
     setPanelSpecId(spec.panelSpecsId);
-    setInverterSpecId(spec.inverterSpecId);
     setBatteryBrandId(spec.batteryBrandId);
     setBatterySpecId(spec.batterySpecsId);
-    setInverterBrandId(spec.inverterBrandId);
-    setSystemCapacityKw(spec.systemCapacityKw);
+
+    console.log("Selected spec:", spec);
+    console.log("Loaded inverters:", inverterList);
+    console.log("Prefilled capacities map:", capacitiesMap);
 
     setPriceAlreadySetFromCustomerData(true);
   };
-
 
 
 
@@ -675,16 +776,40 @@ export const SystemSpecifications = () => {
     }));
   }, [formData.systemCost, formData.fabricationCost]);
 
+  // useEffect(() => {
+  //   if (savedSpecs.length === 1) {
+  //     handleSelectSpec(savedSpecs[0]);
+  //     setIsFormOpen(true);
+  //   } else if (savedSpecs.length === 0) {
+  //     setIsFormOpen(true);
+  //   } else {
+  //     setIsFormOpen(false);
+  //   }
+  // }, [savedSpecs]);
+
   useEffect(() => {
-    if (savedSpecs.length === 1) {
-      handleSelectSpec(savedSpecs[0]);
-      setIsFormOpen(true);
-    } else if (savedSpecs.length === 0) {
+  if (savedSpecs.length === 0) {
+    // No specs saved, open empty form
+    setIsFormOpen(true);
+  } else if (savedSpecs.length === 1) {
+    // Only one spec, auto-select it
+    handleSelectSpec(savedSpecs[0]);
+    setSelectedSpecId(savedSpecs[0].id);
+    setIsFormOpen(true);
+  } else {
+    // Multiple specs, try to select the first editable one
+    const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
+    if (firstEditable) {
+      handleSelectSpec(firstEditable);
+      setSelectedSpecId(firstEditable.id);
       setIsFormOpen(true);
     } else {
+      // No editable spec found, keep form closed
       setIsFormOpen(false);
     }
-  }, [savedSpecs]);
+  }
+}, [savedSpecs]);
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -715,9 +840,9 @@ export const SystemSpecifications = () => {
           const response = await getPriceDetails({
             panelSpecsId: formData.panelSpecId ?? "",
             systemCapacityKw: formData.systemCapacityKw ?? "",
-            inverterSpecsId: formData.inverterSpecId ?? "",
+            //inverterSpecsId: formData.inverterSpecId ?? "",
             batterySpecsId: formData.batterySpecId ?? "",
-            inverterCount: 1,
+            //inverterCount: 1,
             batteryCount: 1,
           });
 
@@ -743,24 +868,24 @@ export const SystemSpecifications = () => {
     };
 
     fetchPriceDetails();
-  }, [formData.systemCapacityKw, formData.panelSpecId, formData.inverterSpecId, formData.batterySpecId]);
+  }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
 
 
 
 
 
   const handleGenerateQuotation = async () => {
-    if (!connectionId) {
-      console.error("Connection ID is missing");
+    if (!selectedSpecId) {
+      console.error("Spec ID is missing");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      console.log("Fetching Quotation PDF for Connection ID:", connectionId);
+      console.log("Fetching Quotation PDF for Spec ID:", selectedSpecId);
 
-      const pdfBlob = await generateQuotationPDF(connectionId);
+      const pdfBlob = await generateQuotationPDF(selectedSpecId);
       console.log('PDF Blob size:', pdfBlob.size);
 
       // const fileName = `Quotation_${govIdName}`;
@@ -778,13 +903,14 @@ export const SystemSpecifications = () => {
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
-      link.download = `quotation_${connectionId}.pdf`;
+      link.download = `quotation_${govIdName}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(pdfUrl);
 
       console.log("Quotation PDF downloaded successfully");
+      await fetchSavedSpecs();
 
     } catch (error) {
       console.error("Error generating quotation PDF:", error);
@@ -846,7 +972,7 @@ export const SystemSpecifications = () => {
       </div>
 
 
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
 
@@ -889,8 +1015,8 @@ export const SystemSpecifications = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white border border-transparent"
+                      : "bg-white border border-gray-300 text-gray-500"}
                       }`}
                   >
                     <Icon className="w-6 h-6" />
@@ -951,7 +1077,7 @@ export const SystemSpecifications = () => {
             <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
           </div>
 
-          {savedSpecs.length > 0 && (
+          {/* {savedSpecs.length > 0 && (
             <button
               type="button"
               onClick={() => {
@@ -974,7 +1100,7 @@ export const SystemSpecifications = () => {
               Add Another System Specs
             </button>
 
-          )}
+          )} */}
 
 
         </div>
@@ -983,34 +1109,60 @@ export const SystemSpecifications = () => {
 
         {savedSpecs.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {savedSpecs.map((spec) => (
-              <div
-                key={spec.id}
-                onClick={() => {
-                  handleSelectSpec(spec);
-                  setIsFormOpen(true);
-                }}
-                className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
-          ${selectedSpecId === spec.id ? "bg-blue-50 border-blue-400" : "bg-gray-50 border-gray-200"}`}
-              >
-                <h3 className="text-lg font-bold text-gray-800 mb-2">
-                  {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
-                </h3>
+            {savedSpecs.map((spec) => {
+              const isEditable = spec.isRunningCopy;
 
+              return (
+                <div
+                  key={spec.id}
+                  onClick={() => {
+            if (!isEditable) return; // ✅ prevent click on locked spec
+            handleSelectSpec(spec);
+            setIsFormOpen(true);
+          }}
+                  className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+            ${isEditable
+                      ? "bg-green-50 border-green-400 hover:shadow-lg"
+                      : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
+                    }
+            ${selectedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
+          `}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold text-gray-800">
+                      {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
+                    </h3>
 
-                <p className="text-sm font-medium text-gray-700 mb-1">
-                  Inverter: {spec.inverterBrandName} – {spec.inverterCapacity} kW
-                </p>
+                    {/* ✅ Status badge */}
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                        }`}
+                    >
+                      {isEditable ? "Editable" : "Locked"}
+                    </span>
+                  </div>
 
+                  {/* ✅ Handle list of inverters */}
+                  {spec.inverters && spec.inverters.length > 0 ? (
+                    spec.inverters.map((inv, index) => (
+                      <p key={index} className="text-sm font-medium text-gray-700 mb-1">
+                        Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
+                  )}
 
-                <div className="flex justify-between text-sm text-gray-600 mt-2">
-                  <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-                  <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                  <div className="flex justify-between text-sm text-gray-600 mt-2">
+                    <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
+                    <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
+
 
 
 
@@ -1162,19 +1314,19 @@ export const SystemSpecifications = () => {
           </div>
           <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
 
-              <button
-                type="button"
-                onClick={() =>
-                  navigate("/installation-form", {
-                    state: { connectionId, customerId, consumerId },
-                  })
-                }
-                className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Add New Installation</span>
-              </button>
-      
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/installation-form", {
+                  state: { connectionId, customerId, consumerId },
+                })
+              }
+              className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span>Add New Installation</span>
+            </button>
+
           </div>
 
 
@@ -1183,7 +1335,7 @@ export const SystemSpecifications = () => {
               Grid Type
             </label>
 
-            <select
+            {/* <select
               id="gridTypeId"
               name="gridTypeId"
               value={formData.gridTypeId ?? ""}
@@ -1203,7 +1355,25 @@ export const SystemSpecifications = () => {
                   {grid.gridType}
                 </option>
               ))}
-            </select>
+            </select> */}
+
+            <ReusableDropdown
+              name="gridTypeId"
+              value={formData.gridTypeId ?? ""}
+              onChange={(val) => {
+                const selectedId = val === "" ? null : Number(val);
+                setGridTypeId(selectedId);
+                handleChange({
+                  target: { name: "gridTypeId", value: selectedId },
+                } as any);
+              }}
+              options={grids.map((grid) => ({
+                value: grid.id,
+                label: grid.gridType,
+              }))}
+              placeholder="Select Grid Type"
+              className="mt-1"
+            />
           </div>
 
           <div>
@@ -1211,7 +1381,7 @@ export const SystemSpecifications = () => {
               Material Origin Type
             </label>
 
-            <select
+            {/* <select
               id="materialOriginId"
               name="materialOriginId"
               value={formData.materialOriginId ?? ""}
@@ -1231,12 +1401,30 @@ export const SystemSpecifications = () => {
                   {origin.originCode}
                 </option>
               ))}
-            </select>
+            </select> */}
+
+            <ReusableDropdown
+              name="materialOriginId"
+              value={formData.materialOriginId ?? ""}
+              onChange={(val) => {
+                const selectedId = val === "" ? null : Number(val);
+                setMaterialOriginId(selectedId);
+                handleChange({
+                  target: { name: "materialOriginId", value: selectedId },
+                } as any);
+              }}
+              options={origins.map((origin) => ({
+                value: origin.id,
+                label: origin.originCode,
+              }))}
+              placeholder="Select Material Origin Type"
+              className="mt-1"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
-            <select
+            {/* <select
               id="panelSpecId"
               name="panelSpecId"
               value={formData.panelSpecId ?? ""}
@@ -1257,13 +1445,30 @@ export const SystemSpecifications = () => {
                   {panel.brandShortname} - ({panel.ratedWattageW} W) - ({panel.modelNumber})
                 </option>
               ))}
-            </select>
+            </select> */}
+            <ReusableDropdown
+              name="panelSpecId"
+              value={formData.panelSpecId ?? ""}
+              onChange={(val) => {
+                const selectedId = val === "" ? null : Number(val);
+                setPanelSpecId(selectedId);
+                handleChange({
+                  target: { name: "panelSpecId", value: selectedId },
+                } as any);
+              }}
+              options={panels.map((panel) => ({
+                value: panel.panelSpecId,
+                label: `${panel.brandShortname} - (${panel.ratedWattageW} W) - (${panel.modelNumber})`,
+              }))}
+              placeholder="Select PV System Brand"
+              className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
+            />
           </div>
 
 
           <div>
             <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
-            <select
+            {/* <select
               id="systemCapacityKw"
               name="systemCapacityKw"
               value={formData.systemCapacityKw ?? ""}
@@ -1285,62 +1490,132 @@ export const SystemSpecifications = () => {
                   {panelCapacity}
                 </option>
               ))}
-            </select>
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-            <select
-              id="inverterBrandId"
-              name="inverterBrandId"
-              value={formData.inverterBrandId ?? ""}
-              onChange={(e) => {
-                const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                setInverterBrandId(selectedId);
+            </select> */}
+            <ReusableDropdown
+              name="systemCapacityKw"
+              value={formData.systemCapacityKw ?? ""}
+              onChange={(val) => {
+                const selectedValue = val === "" ? null : Number(val);
+                setSystemCapacityKw(selectedValue);
                 handleChange({
-                  target: { name: "inverterBrandId", value: selectedId },
+                  target: { name: "systemCapacityKw", value: selectedValue },
                 } as any);
               }}
-              disabled={!gridTypeId}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-              required
-            >
-              <option value="">Select Inverter Brand</option>
-              {inverters.map((inverter) => (
-                <option key={inverter.id} value={inverter.id}>
-                  {inverter.inverterBrandName}
-                </option>
-              ))}
-            </select>
+              options={panelCapacities.map((panelCapacity) => ({
+                value: panelCapacity,
+                label: `${panelCapacity} kW`,
+              }))}
+              placeholder="Select PV System Capacity"
+              className={`mt-1 ${!materialOriginId || !panelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+            />
           </div>
 
+          <div className="md:col-span-2">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-base font-semibold text-gray-800">Inverter Details</h3>
+                <button
+                  type="button"
+                  onClick={addNewInverter}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition"
+                >
+                  + Add Another Inverter
+                </button>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
-            <select
-              id="inverterSpecId"
-              name="inverterSpecId"
-              value={formData.inverterSpecId ?? ""}
-              onChange={(e) => {
-                const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                setInverterSpecId(selectedId);
-                handleChange({
-                  target: { name: "inverterSpecId", value: selectedId },
-                } as any);
-              }}
-              disabled={!gridTypeId || !inverterBrandId || !systemCapacityKw}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-              required
-            >
-              <option value="">Select Inverter Capacity</option>
-              {inverterCapacities.map((inverterCapacity) => (
-                <option key={inverterCapacity.id} value={inverterCapacity.id}>
-                  {inverterCapacity.inverterCapacity} kW - ({inverterCapacity.productWarrantyMonths} months) - ({inverterCapacity.almmModelNumber})
-                </option>
+              {formData.inverters.map((inv, index) => (
+                <div
+                  key={index}
+                  className="md:col-span-2 grid grid-cols-12 gap-4 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                >
+                  {formData.inverters.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeInverter(index)}
+                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                    >
+                      ✕
+                    </button>
+                  )}
+
+                  {/* Inverter Brand */}
+                  <div className="col-span-12 md:col-span-5">
+                    <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+                    <ReusableDropdown
+                      name="inverterBrandId"
+                      value={inv.inverterBrandId ?? ""}
+                      onChange={(val) =>
+                        handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
+                      }
+                      options={inverters.map((inv) => ({
+                        value: inv.id,
+                        label: inv.inverterBrandName,
+                      }))}
+                      placeholder="Select Inverter Brand"
+                    />
+                  </div>
+
+                  {/* Inverter Spec */}
+                  <div className="col-span-12 md:col-span-5">
+                    <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
+                    <ReusableDropdown
+                      name="inverterSpecId"
+                      value={inv.inverterSpecId ?? ""}
+                      onChange={(val) =>
+                        handleInverterChange(index, "inverterSpecId", val === "" ? null : Number(val))
+                      }
+                      options={(inverterCapacitiesMap[index] || []).map((spec) => ({
+                        value: spec.id,
+                        label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
+                      }))}
+                      disabled={!inv.inverterBrandId || !formData.systemCapacityKw}
+                      placeholder="Select Inverter Spec"
+                    />
+
+                  </div>
+
+                  {/* Inverter Count */}
+                  <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
+                    <label className="block text-sm font-medium text-gray-700">Count</label>
+                    <div className="flex items-center border rounded-md shadow-sm bg-white">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 0) - 1, 0))
+                        }
+                        className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-red-500 rounded-l-md transition"
+                      >
+                        −
+                      </button>
+
+                      <input
+                        type="text"
+                        name="inverterCount"
+                        inputMode="numeric"
+                        value={inv.inverterCount ?? 1}
+                        onChange={(e) =>
+                          handleInverterChange(index, "inverterCount", Number(e.target.value))
+                        }
+                        className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleInverterChange(index, "inverterCount", (inv.inverterCount || 0) + 1)
+                        }
+                        className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
+
           </div>
+
 
           {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
             <>
@@ -1348,7 +1623,7 @@ export const SystemSpecifications = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Battery Brand
                 </label>
-                <select
+                {/* <select
                   id="batteryBrandId"
                   name="batteryBrandId"
                   value={formData.batteryBrandId ?? ""}
@@ -1367,12 +1642,30 @@ export const SystemSpecifications = () => {
                       {batteryBrand.brandName}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="batteryBrandId"
+                  value={formData.batteryBrandId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setBatteryBrandId(selectedId);
+                    handleChange({
+                      target: { name: "batteryBrandId", value: selectedId },
+                    });
+                  }}
+                  options={batteryBrands.map((batteryBrand) => ({
+                    value: batteryBrand.id,
+                    label: batteryBrand.brandName,
+                  }))}
+                  placeholder="Select Battery Brand"
+                  className="mt-1"
+                />
+
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
-                <select
+                {/* <select
                   id="batterySpecId"
                   name="batterySpecId"
                   value={formData.batterySpecId ?? ""}
@@ -1391,7 +1684,25 @@ export const SystemSpecifications = () => {
                       {batteryCapacity.batteryCapacity} kW - {batteryCapacity.voltage} V - {batteryCapacity.modelNumber} ({batteryCapacity.warrantyMonths} months)
                     </option>
                   ))}
-                </select>
+                </select> */}
+                <ReusableDropdown
+                  name="batterySpecId"
+                  value={formData.batterySpecId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setBatterySpecId(selectedId);
+                    handleChange({
+                      target: { name: "batterySpecId", value: selectedId },
+                    });
+                  }}
+                  options={batteryCapacities.map((batteryCapacity) => ({
+                    value: batteryCapacity.id,
+                    label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
+                  }))}
+                  placeholder="Select Battery Capacity"
+                  className="mt-1"
+                />
+
               </div>
             </>
           )}
@@ -1502,41 +1813,31 @@ export const SystemSpecifications = () => {
 
 
             <div className="flex flex-wrap gap-4 justify-center">
-              {selectedSpecId ? (
-                <button
-                  type="button"
-                  onClick={handleUpdateButtonClick}
-                  disabled={isSubmitting}
-                  className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
-      ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                >
-                  {isSubmitting ? "Updating..." : "Update System Specs"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSaveButtonClick}
-                  disabled={isSubmitting}
-                  className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
-      ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                >
-                  {isSubmitting ? "Saving..." : "Save System Specs"}
-                </button>
-              )}
-
-
               <button
                 type="button"
-                onClick={handlePreview}
-                disabled={!selectedSpecId || isPreviewLoading}
-                className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSaveButtonClick}
+                disabled={isSubmitting}
+                className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
+    ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
               >
-                {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
+                {isSubmitting ? "Saving..." : "Save System Specs"}
               </button>
 
+
+
               {/* {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (<button
+                  type="button"
+                  onClick={handlePreview}
+                  disabled={!selectedSpecId || isPreviewLoading}
+                  className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
+                </button>)} */}
+
+              {(userInfo?.role === "ROLE_ORG_ADMIN" ||
                 userInfo?.role === "ROLE_AGENCY_ADMIN" ||
                 userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
                   <button
@@ -1547,7 +1848,7 @@ export const SystemSpecifications = () => {
                   >
                     {isLoading ? "Generating..." : "Generate & Save Quotation"}
                   </button>
-                )} */}
+                )}
             </div>
           </div>
 

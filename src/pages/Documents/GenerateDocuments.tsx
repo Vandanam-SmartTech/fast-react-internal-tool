@@ -20,7 +20,7 @@ export interface Consumer {
 }
 
 interface UploadedFile {
-  fileId: string;
+  id: string;
   fileName: string;
   filePath: string;
 }
@@ -84,8 +84,8 @@ export default function GenerateDocuments() {
       documents: [
         { label: "Aadhaar Card", name: "AadhaarCard", canGenerate: false, canPreview: false },
         { label: "Bank Passbook/Cancelled Cheque", name: "BankPassbook", canGenerate: false, canPreview: false },
-        { label: "E-Bill", name: "Ebill", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"] },
-        { label: "Regular Bill", name: "Regular Bill", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] }
+        { label: "Downloaded Electricity Bill", name: "Ebill", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"] },
+        { label: "Scanned Electricity Bill", name: "Regular Bill", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] }
       ],
       isCompleted: false,
       isExpanded: true
@@ -94,7 +94,7 @@ export default function GenerateDocuments() {
       id: 2,
       title: "Quotations",
       documents: [
-        { label: "Unsigned/Proposed Quotation", name: "Unsigned Quotation", canGenerate: false, canPreview: false },
+        { label: "Unsigned/Proposed Quotations", name: "Unsigned Quotation", canGenerate: false, canPreview: false },
         { label: "Signed/Accepted Quotation", name: "Signed Quotation", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
@@ -204,9 +204,9 @@ export default function GenerateDocuments() {
   }, [connectionId, loadDocuments]);
 
 
-  const handleDownload = async (fileId: string, fileName: string) => {
+  const handleDownload = async (id:number, fileName: string) => {
     try {
-      const blob = await downloadDocumentById(fileId);
+      const blob = await downloadDocumentById(id);
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -364,23 +364,34 @@ export default function GenerateDocuments() {
   const toggleStepExpansion = (stepId: number) => {
     setExpandedSteps(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(stepId)) {
+      const wasExpanded = newSet.has(stepId);
+      if (wasExpanded) {
+        // If already expanded, allow toggling to collapse
         newSet.delete(stepId);
       } else {
+        // If not expanded, expand it and scroll to it on mobile
+        newSet.clear();
         newSet.add(stepId);
+        // On mobile, scroll to the expanded step content
+        setTimeout(() => {
+          const element = document.getElementById(`step-content-mobile-${stepId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+          }
+        }, 100);
       }
       return newSet;
     });
   };
 
-  const handleDeleteDocument = async (fileId: string, documentType: string) => {
+  const handleDeleteDocument = async (id:number, documentType: string) => {
     try {
 
-      await deleteDocumentById(fileId);
+      await deleteDocumentById(id);
 
       setUploadedDocuments((prev) => {
         const currentList = prev[documentType] || [];
-        const updatedList = currentList.filter((d: any) => d.fileId !== fileId);
+        const updatedList = currentList.filter((d: any) => d.id !== id);
         return { ...prev, [documentType]: updatedList };
       });
 
@@ -403,15 +414,15 @@ export default function GenerateDocuments() {
     setReplaceFiles((prev) => ({ ...prev, [docId]: file }));
   };
 
-  const handleUpdateDocument = async (fileId: string) => {
-    const file = replaceFiles[fileId];
+  const handleUpdateDocument = async (id:number) => {
+    const file = replaceFiles[id];
     if (!file) return;
     try {
-      setLoadingUploadDoc(fileId);
+      setLoadingUploadDoc(id);
 
-      await updateDocumentById(fileId, file);
+      await updateDocumentById(id, file);
       toast.success("Document updated", { autoClose: 800, hideProgressBar: true });
-      setReplaceFiles((prev) => ({ ...prev, [fileId]: null }));
+      setReplaceFiles((prev) => ({ ...prev, [id]: null }));
       await loadDocuments();
     } catch (error) {
       console.error("Update failed", error);
@@ -486,6 +497,299 @@ export default function GenerateDocuments() {
     return `${base.length > keep ? '…' : ''}${suffix}${ext}`;
   };
 
+  // Render step content - reusable for both mobile and desktop
+  const renderStepContent = (step: DocumentStep, contentId?: string) => (
+    <div 
+      id={contentId || `step-content-${step.id}`} 
+      className="bg-white border border-gray-200 shadow-sm rounded-lg" 
+      aria-expanded={expandedSteps.has(step.id)}
+    >
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">Step {step.id}: {step.title}</h2>
+        <p className="text-sm text-gray-600">Upload, generate, and manage documents for this step.</p>
+      </div>
+      <div className="px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          {step.documents.map((docDef) => (
+            <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-center space-x-3 mb-3">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-medium text-gray-900">{docDef.label}</h4>
+              </div>
+
+              {/* File Upload Section */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Choose File
+                </label>
+
+                <input
+                  key={inputKeys[docDef.name] || 0}
+                  type="file"
+                  accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    if (file) {
+                      if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                        const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                        if (!typeOk) {
+                          toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                          setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                          return;
+                        }
+                      }
+                      if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                        toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                        setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                        return;
+                      }
+                    }
+                    handleDocumentFileChange(docDef.name, file);
+                  }}
+                  className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+
+              {docDef.name === "Consumer Vendor Agreement" && (
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Total Quoted Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Enter total quoted Price"
+                    value={quotedTotals[docDef.name] || ''}
+                    onChange={(e) =>
+                      setQuotedTotals((prev) => ({
+                        ...prev,
+                        [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
+                      }))
+                    }
+                    className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+
+                {docDef.canPreview && (
+                  <button
+                    onClick={() => handlePreview(docDef.name)}
+                    disabled={loadingPreviewDoc === docDef.name}
+                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                    title="Preview document"
+                  >
+                    {loadingPreviewDoc === docDef.name ? (
+                      <Play className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Play className="w-3 h-3" />
+                    )}
+                    <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
+                  </button>
+                )}
+
+                {docDef.canGenerate && (
+                  <button
+                    onClick={() => handleGenerate(docDef.name)}
+                    disabled={loadingGenerateDoc === docDef.name}
+                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                    title="Generate document"
+                  >
+                    {loadingGenerateDoc === docDef.name ? (
+                      <Play className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Play className="w-3 h-3" />
+                    )}
+                    <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
+                  </button>
+                )}
+
+                {documentFiles[docDef.name] && (
+                  <button
+                    onClick={() => handleDocumentUpload(docDef.name)}
+                    disabled={loadingUploadDoc === docDef.name}
+                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
+                    title="Upload selected file"
+                  >
+                    {loadingUploadDoc === docDef.name ? (
+                      <>
+                        <Upload className="w-3 h-3 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3 h-3" />
+                        <span>Upload</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {documentFiles[docDef.name] && (
+                <div className="mt-2 text-xs text-gray-600 flex items-center">
+                  <span className="font-medium mr-1">Selected:</span>
+                  <span className="truncate flex-1">
+                    {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
+                  </span>
+                  <button
+                    onClick={() => clearSelectedFile(docDef.name)}
+                    className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
+                  >
+                    ✖
+                  </button>
+                </div>
+              )}
+
+
+
+
+              {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
+                <div className="mt-3">
+                  <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
+                  <ul className="space-y-1">
+                    {uploadedDocuments[docDef.name].map((doc) => (
+                      <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
+
+                        <div className="mb-2">
+                          {/* Row with filename + actions */}
+                          <div className="flex items-center">
+                            <span className="flex-1 truncate" title={doc.fileName}>
+                              {formatFileTail(doc.fileName, 18)}
+                            </span>
+
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {/* Hidden file input for Update */}
+                              <input
+                                id={`update-input-${doc.id}`}
+                                type="file"
+                                accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] || null;
+                                  if (!file) return;
+                                  if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                                    const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                                    if (!ok) {
+                                      toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                                      e.currentTarget.value = '';
+                                      return;
+                                    }
+                                  }
+                                  if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                                    toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                                    e.currentTarget.value = '';
+                                    return;
+                                  }
+                                  handleReplaceFileChange(doc.id, file);
+                                  e.currentTarget.value = "";
+                                }}
+                              />
+
+                              {/* View */}
+                              <IconButton
+                                aria-label={`View ${doc.fileName}`}
+                                title="Download"
+                                size="sm"
+                                variant="outline"
+                                className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                                icon={<Download className="w-4 h-4" />}
+                                onClick={() => handleDownload(doc.id, doc.fileName)}
+                              />
+
+                              {/* Update */}
+                              <IconButton
+                                aria-label={`Update ${doc.fileName}`}
+                                title="Update"
+                                size="sm"
+                                variant="outline"
+                                className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
+                                icon={<Pencil className="w-4 h-4" />}
+                                onClick={() => {
+                                  setDialogMessage(`Do you want to replace the current file?`);
+                                  setDialogAction(() => () => {
+                                    const input = document.getElementById(
+                                      `update-input-${doc.id}`
+                                    ) as HTMLInputElement | null;
+                                    input?.click();
+                                  });
+                                  setDialogOpen(true);
+                                }}
+                              />
+
+                              {/* Delete */}
+                              <IconButton
+                                aria-label={`Delete ${doc.fileName}`}
+                                title="Delete"
+                                size="sm"
+                                variant="outline"
+                                className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
+                                icon={<Trash2 className="w-4 h-4" />}
+                                onClick={() => {
+                                  setDialogMessage(`Do you really want to delete the file?`);
+                                  setDialogAction(() => () => handleDeleteDocument(doc.id, docDef.name));
+                                  setDialogOpen(true);
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {replaceFiles[doc.id] && (
+                            <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium">Selected:</span>{" "}
+                                <span className="truncate inline-block max-w-[180px] align-bottom">
+                                  {replaceFiles[doc.id]?.name}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2 flex-shrink-0">
+                                <button
+                                  onClick={() => handleUpdateDocument(doc.id)}
+                                  disabled={loadingUploadDoc === doc.id}
+                                  className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
+                                  title="Update selected file"
+                                >
+                                  {loadingUploadDoc === doc.id ? (
+                                    <>
+                                      <Upload className="w-3 h-3 animate-spin" />
+                                      <span className="truncate max-w-[80px]">Updating...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-3 h-3" />
+                                      <span>Update</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  onClick={() =>
+                                    setReplaceFiles((prev) => ({ ...prev, [doc.id]: null }))
+                                  }
+                                  className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                                >
+                                  ✖
+                                </button>
+                              </div>
+                            </div>
+
+                          )}
+                        </div>
+
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
@@ -556,330 +860,61 @@ export default function GenerateDocuments() {
                     ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
                     : 'bg-white border-gray-200 hover:bg-gray-50';
               return (
-                <button
-                  key={step.id}
-                  type="button"
-                  className={`${base} ${variant}`}
-                  onClick={() => { setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentStep(step.id); setExpandedSteps(new Set([step.id])); } }}
-                  aria-current={currentStep === step.id ? 'step' : undefined}
-                  aria-controls={`step-content-${step.id}`}
-                >
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
-                    {getStepIcon(step)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
-                      {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
+                <div key={step.id} className="space-y-2">
+                  <button
+                    type="button"
+                    className={`${base} ${variant}`}
+                    onClick={() => { 
+                      setCurrentStep(step.id); 
+                      toggleStepExpansion(step.id);
+                    }}
+                    onKeyDown={(e) => { 
+                      if (e.key === 'Enter' || e.key === ' ') { 
+                        e.preventDefault(); 
+                        setCurrentStep(step.id); 
+                        toggleStepExpansion(step.id);
+                      } 
+                    }}
+                    aria-current={currentStep === step.id ? 'step' : undefined}
+                    aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
+                    aria-expanded={expandedSteps.has(step.id)}
+                  >
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
+                      {getStepIcon(step)}
                     </div>
-                    {uploadedCount === 0 && (
-                      <p className="text-xs text-gray-600">{totalRequired} document{totalRequired !== 1 ? 's' : ''} required</p>
-                    )}
-                    {uploadedCount > 0 && uploadedCount < totalRequired && (
-                      <p className="text-xs text-yellow-700">{uploadedCount} of {totalRequired} documents uploaded</p>
-                    )}
-                    {uploadedCount === totalRequired && (
-                      <p className="text-xs text-green-700">All documents uploaded</p>
-                    )}
-                  </div>
-                </button>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
+                        {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
+                      </div>
+                      {uploadedCount === 0 && (
+                        <p className="text-xs text-gray-600">{totalRequired} document{totalRequired !== 1 ? 's' : ''} required</p>
+                      )}
+                      {uploadedCount > 0 && uploadedCount < totalRequired && (
+                        <p className="text-xs text-yellow-700">{uploadedCount} of {totalRequired} documents uploaded</p>
+                      )}
+                      {uploadedCount === totalRequired && (
+                        <p className="text-xs text-green-700">All documents uploaded</p>
+                      )}
+                    </div>
+                  </button>
+                  {/* Mobile: Show step content inline below button when expanded */}
+                  {expandedSteps.has(step.id) && (
+                    <div id={`step-content-mobile-${step.id}`} className="lg:hidden">
+                      {renderStepContent(step, `step-content-mobile-${step.id}`)}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
         </aside>
 
-        {/* Right: Active Step Content */}
-        <section className="lg:col-span-8">
+        {/* Right: Active Step Content (Desktop only) */}
+        <section className="hidden lg:block lg:col-span-8">
           {(() => {
             const activeStep = documentSteps.find((s) => s.id === currentStep) || documentSteps[0];
-            return (
-              <div id={`step-content-${activeStep.id}`} className="bg-white border border-gray-200 shadow-sm rounded-lg" aria-expanded={expandedSteps.has(activeStep.id)}>
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">Step {activeStep.id}: {activeStep.title}</h2>
-                  <p className="text-sm text-gray-600">Upload, generate, and manage documents for this step.</p>
-                </div>
-                <div className="px-6 py-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                    {activeStep.documents.map((docDef) => (
-                      <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                          <h4 className="font-medium text-gray-900">{docDef.label}</h4>
-                        </div>
-
-                        {/* File Upload Section */}
-                        <div className="mb-3">
-                          <label className="block text-xs font-medium text-gray-700 mb-2">
-                            Choose File
-                          </label>
-
-                          <input
-                            key={inputKeys[docDef.name] || 0}
-                            type="file"
-                            accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              if (file) {
-                                if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-                                  const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-                                  if (!typeOk) {
-                                    toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
-                                    setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
-                                    return;
-                                  }
-                                }
-                                if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-                                  toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
-                                  setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
-                                  return;
-                                }
-                              }
-                              handleDocumentFileChange(docDef.name, file);
-                            }}
-                            className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                          />
-                        </div>
-
-                        {docDef.name === "Consumer Vendor Agreement" && (
-                          <div className="mb-3">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
-                              Total Quoted Price (₹)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="Enter total quoted Price"
-                              value={quotedTotals[docDef.name] || ''}
-                              onChange={(e) =>
-                                setQuotedTotals((prev) => ({
-                                  ...prev,
-                                  [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
-                                }))
-                              }
-                              className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-2">
-
-                          {docDef.canPreview && (
-                            <button
-                              onClick={() => handlePreview(docDef.name)}
-                              disabled={loadingPreviewDoc === docDef.name}
-                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-                              title="Preview document"
-                            >
-                              {loadingPreviewDoc === docDef.name ? (
-                                <Play className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Play className="w-3 h-3" />
-                              )}
-                              <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
-                            </button>
-                          )}
-
-                          {docDef.canGenerate && (
-                            <button
-                              onClick={() => handleGenerate(docDef.name)}
-                              disabled={loadingGenerateDoc === docDef.name}
-                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
-                              title="Generate document"
-                            >
-                              {loadingGenerateDoc === docDef.name ? (
-                                <Play className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Play className="w-3 h-3" />
-                              )}
-                              <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
-                            </button>
-                          )}
-
-                          {documentFiles[docDef.name] && (
-                            <button
-                              onClick={() => handleDocumentUpload(docDef.name)}
-                              disabled={loadingUploadDoc === docDef.name}
-                              className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
-                              title="Upload selected file"
-                            >
-                              {loadingUploadDoc === docDef.name ? (
-                                <>
-                                  <Upload className="w-3 h-3 animate-spin" />
-                                  <span>Uploading...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Upload className="w-3 h-3" />
-                                  <span>Upload</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-
-                        {documentFiles[docDef.name] && (
-                          <div className="mt-2 text-xs text-gray-600 flex items-center">
-                            <span className="font-medium mr-1">Selected:</span>
-                            <span className="truncate flex-1">
-                              {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
-                            </span>
-                            <button
-                              onClick={() => clearSelectedFile(docDef.name)}
-                              className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
-                            >
-                              ✖
-                            </button>
-                          </div>
-                        )}
-
-
-
-
-                        {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
-                          <div className="mt-3">
-                            <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
-                            <ul className="space-y-1">
-                              {uploadedDocuments[docDef.name].map((doc) => (
-                                <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
-
-                                  <div className="mb-2">
-                                    {/* Row with filename + actions */}
-                                    <div className="flex items-center">
-                                      <span className="flex-1 truncate" title={doc.fileName}>
-                                        {formatFileTail(doc.fileName, 18)}
-                                      </span>
-
-                                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                                        {/* Hidden file input for Update */}
-                                        <input
-                                          id={`update-input-${doc.fileId}`}
-                                          type="file"
-                                          accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-                                          className="hidden"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0] || null;
-                                            if (!file) return;
-                                            if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-                                              const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-                                              if (!ok) {
-                                                toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
-                                                e.currentTarget.value = '';
-                                                return;
-                                              }
-                                            }
-                                            if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-                                              toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
-                                              e.currentTarget.value = '';
-                                              return;
-                                            }
-                                            handleReplaceFileChange(doc.fileId, file);
-                                            e.currentTarget.value = "";
-                                          }}
-                                        />
-
-                                        {/* View */}
-                                        <IconButton
-                                          aria-label={`View ${doc.fileName}`}
-                                          title="Download"
-                                          size="sm"
-                                          variant="outline"
-                                          className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
-                                          icon={<Download className="w-4 h-4" />}
-                                          onClick={() => handleDownload(doc.fileId, doc.fileName)}
-                                        />
-
-                                        {/* Update */}
-                                        <IconButton
-                                          aria-label={`Update ${doc.fileName}`}
-                                          title="Update"
-                                          size="sm"
-                                          variant="outline"
-                                          className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
-                                          icon={<Pencil className="w-4 h-4" />}
-                                          onClick={() => {
-                                            setDialogMessage(`Do you want to replace the current file?`);
-                                            setDialogAction(() => () => {
-                                              const input = document.getElementById(
-                                                `update-input-${doc.fileId}`
-                                              ) as HTMLInputElement | null;
-                                              input?.click();
-                                            });
-                                            setDialogOpen(true);
-                                          }}
-                                        />
-
-                                        {/* Delete */}
-                                        <IconButton
-                                          aria-label={`Delete ${doc.fileName}`}
-                                          title="Delete"
-                                          size="sm"
-                                          variant="outline"
-                                          className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
-                                          icon={<Trash2 className="w-4 h-4" />}
-                                          onClick={() => {
-                                            setDialogMessage(`Do you really want to delete the file?`);
-                                            setDialogAction(() => () => handleDeleteDocument(doc.fileId, docDef.name));
-                                            setDialogOpen(true);
-                                          }}
-                                        />
-                                      </div>
-                                    </div>
-
-                                    {replaceFiles[doc.fileId] && (
-                                      <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
-                                        <div className="flex-1 min-w-0">
-                                          <span className="font-medium">Selected:</span>{" "}
-                                          <span className="truncate inline-block max-w-[180px] align-bottom">
-                                            {replaceFiles[doc.fileId]?.name}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center space-x-2 flex-shrink-0">
-                                          <button
-                                            onClick={() => handleUpdateDocument(doc.fileId)}
-                                            disabled={loadingUploadDoc === doc.fileId}
-                                            className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
-                                            title="Update selected file"
-                                          >
-                                            {loadingUploadDoc === doc.fileId ? (
-                                              <>
-                                                <Upload className="w-3 h-3 animate-spin" />
-                                                <span className="truncate max-w-[80px]">Updating...</span>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Upload className="w-3 h-3" />
-                                                <span>Update</span>
-                                              </>
-                                            )}
-                                          </button>
-
-                                          <button
-                                            onClick={() =>
-                                              setReplaceFiles((prev) => ({ ...prev, [doc.fileId]: null }))
-                                            }
-                                            className="ml-2 text-red-500 hover:text-red-700 text-xs"
-                                          >
-                                            ✖
-                                          </button>
-                                        </div>
-                                      </div>
-
-                                    )}
-                                  </div>
-
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
+            return renderStepContent(activeStep);
           })()}
         </section>
 

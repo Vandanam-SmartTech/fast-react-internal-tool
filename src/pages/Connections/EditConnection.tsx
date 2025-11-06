@@ -7,6 +7,7 @@ import MapPreview from '../../components/MapPreview';
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 interface District {
   code: number;
@@ -607,6 +608,14 @@ export const EditConnection = () => {
         updatedForm.discomId = '';
       }
 
+      if (name === 'connectionTypeId') {
+      const selectedType = connectionTypes.find(
+        (type) => type.id === Number(value)
+      );
+      const isHT = selectedType?.nameEn?.toLowerCase().includes('ht');
+      updatedForm.phaseTypeId = isHT ? 2 : 1;
+    }
+
       return updatedForm;
     });
   };
@@ -695,747 +704,760 @@ export const EditConnection = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            {/* Back Arrow */}
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-full hover:bg-gray-200 transition"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              {/* Back Arrow */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full hover:bg-gray-200 transition"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
+              </button>
 
-            <h1 className="text-2xl font-bold text-gray-700">Update Connection</h1>
-          </div>
+              <h1 className="text-2xl font-bold text-gray-700">Update Connection</h1>
+            </div>
 
-        </div>
-      </div>
-
-
-      <div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto">
-        <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-
-          <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
-
-          <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab;
-
-              const Icon =
-                tab === "Customer Details"
-                  ? UserCircleIcon
-                  : tab === "Connection Details"
-                    ? BoltIcon
-                    : tab === "Installation Details"
-                      ? HomeModernIcon
-                      : Cog6ToothIcon;
-
-              const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details";
-
-
-              return (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    if (tab === "Customer Details") {
-                      navigate(`/view-customer`, {
-                        state: {
-                          customerId,
-                        },
-                      });
-                    }
-                  }}
-                  className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-                >
-                  <div
-                    className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500"
-                      }`}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <span
-                    className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
-                      }`}
-                  >
-                    {tab}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* MSEB Connection Question */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <BoltIcon className="w-5 h-5 text-blue-500" />
-            Connection Status
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Does the customer currently have an active grid connection?
-              </label>
-              <div className="flex items-center space-x-6">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isDiscomConsumer"
-                    value="Yes"
-                    onChange={handleChange}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    checked={formData.isDiscomConsumer === "Yes"}
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
+        <div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+
+            <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+
+            <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab;
+
+                const Icon =
+                  tab === "Customer Details"
+                    ? UserCircleIcon
+                    : tab === "Connection Details"
+                      ? BoltIcon
+                      : tab === "Installation Details"
+                        ? HomeModernIcon
+                        : Cog6ToothIcon;
+
+                const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details";
+                
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      if (tab === "Customer Details") {
+                        navigate(`/view-customer`, {
+                          state: {
+                            customerId,
+                          },
+                        });
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+                  >
+                    <div
+                      className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
+                        ? "bg-blue-500 text-white border border-transparent"
+                        : "bg-white border border-gray-300 text-gray-500"}
+                      }`}
+                    >
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
+                        }`}
+                    >
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* MSEB Connection Question */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <BoltIcon className="w-5 h-5 text-blue-500" />
+              Connection Status
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Does the customer currently have an active grid connection?
                 </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isDiscomConsumer"
-                    value="No"
-                    onChange={handleChange}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    checked={formData.isDiscomConsumer === "No"}
-                  />
-                  <span className="text-sm text-gray-700">No</span>
-                </label>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isDiscomConsumer"
+                      value="Yes"
+                      onChange={handleChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isDiscomConsumer === "Yes"}
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isDiscomConsumer"
+                      value="No"
+                      onChange={handleChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isDiscomConsumer === "No"}
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Consumer Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <UserCircleIcon className="w-5 h-5 text-green-500" />
-            Consumer Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                12-Digit Consumer Number{" "}
-                {formData.isDiscomConsumer === "Yes" && (
-                  <span className="text-red-500">*</span>
+          {/* Consumer Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <UserCircleIcon className="w-5 h-5 text-green-500" />
+              Consumer Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  12-Digit Consumer Number{" "}
+                  {formData.isDiscomConsumer === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="consumerId"
+                  value={formData.consumerId}
+                  onChange={handleChange}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  }}
+                  maxLength={12}
+                  pattern="^[0-9]{12}$"
+                  title="Enter exactly 12 digits (0–9)"
+                  required={formData.isDiscomConsumer === "Yes"}
+                  disabled={formData.isDiscomConsumer === "No"}
+                  placeholder="e.g. 987654321000"
+                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    } ${formData.isDiscomConsumer === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                />
+                {fieldErrors.consumerNumber && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.consumerNumber}</p>
                 )}
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                name="consumerId"
-                value={formData.consumerId}
-                onChange={handleChange}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                }}
-                maxLength={12}
-                pattern="^[0-9]{12}$"
-                title="Enter exactly 12 digits (0–9)"
-                required={formData.isDiscomConsumer === "Yes"}
-                disabled={formData.isDiscomConsumer === "No"}
-                placeholder="e.g. 987654321000"
-                className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  } ${formData.isDiscomConsumer === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
-                onCopy={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onPaste={(e) => e.preventDefault()}
-              />
-              {fieldErrors.consumerNumber && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.consumerNumber}</p>
-              )}
-              {consumerNumberExists && formData.consumerId !== originalConsumerNumber && (
-                <p className="text-red-600 text-sm mt-1">
-                  Consumer number already exists
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Consumer Number{" "}
-                {formData.isDiscomConsumer === "Yes" && (
-                  <span className="text-red-500">*</span>
+                {consumerNumberExists && formData.consumerId !== originalConsumerNumber && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Consumer number already exists
+                  </p>
                 )}
-              </label>
+              </div>
 
-              <input
-                type="tel"
-                name="confirmConsumerNumber"
-                value={confirmConsumerNumber}
-                onChange={handleConfirmConsumerNumberChange}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                }}
-                placeholder="Confirm consumer number"
-                maxLength={12}
-                pattern="^[0-9]{12}$"
-                required={formData.isDiscomConsumer === "Yes"}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
-                title="Re-enter the same 12-digit consumer number"
-                disabled={
-                  formData.isDiscomConsumer === "No" ||
-                  !(/^[0-9]{12}$/.test(formData.consumerId) && (!consumerNumberExists || formData.consumerId === originalConsumerNumber))
-                }
-                onCopy={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onPaste={(e) => e.preventDefault()}
-              />
-              {confirmConsumerNumber &&
-                confirmConsumerNumber !== formData.consumerId && (
-                  <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
-                )}
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Consumer Number{" "}
+                  {formData.isDiscomConsumer === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Connection Type{" "}
-                {formData.isDiscomConsumer === "Yes" && (
-                  <span className="text-red-500">*</span>
-                )}
-              </label>
-              <select
-                name="connectionTypeId"
-                value={formData.connectionTypeId}
-                onChange={handleChange}
-                required={formData.isDiscomConsumer === "Yes"}
-                disabled={formData.isDiscomConsumer === "No"}
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300 disabled:bg-gray-200 disabled:cursor-not-allowed"
-              >
-                {connectionTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nameEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phase Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="phaseTypeId"
-                value={formData.phaseTypeId}
-                onChange={handleChange}
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              >
-                {phaseTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nameEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Monthly Average Consumption Units <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[1-9][0-9]*"
-                name="avgMonthlyConsumption"
-                value={formData.avgMonthlyConsumption}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (/^[1-9][0-9]*$/.test(val) || val === "") {
-                    handleChange(e);
+                <input
+                  type="tel"
+                  name="confirmConsumerNumber"
+                  value={confirmConsumerNumber}
+                  onChange={handleConfirmConsumerNumberChange}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  }}
+                  placeholder="Confirm consumer number"
+                  maxLength={12}
+                  pattern="^[0-9]{12}$"
+                  required={formData.isDiscomConsumer === "Yes"}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  title="Re-enter the same 12-digit consumer number"
+                  disabled={
+                    formData.isDiscomConsumer === "No" ||
+                    !(/^[0-9]{12}$/.test(formData.consumerId) && (!consumerNumberExists || formData.consumerId === originalConsumerNumber))
                   }
-                }}
-                onBlur={(e) => {
-                  if (e.target.value) {
-                    validateFieldOnChange("avgMonthlyConsumption", e.target.value);
-                  }
-                }}
-                required
-                placeholder="e.g. 1"
-                title="Enter a positive integer greater than 0"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                />
+                {confirmConsumerNumber &&
+                  confirmConsumerNumber !== formData.consumerId && (
+                    <p className="text-red-600 text-sm mt-1">Consumer numbers do not match</p>
+                  )}
+              </div>
 
-              {/* {fieldErrors.monthlyAvgConsumptionUnits && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Connection Type{" "}
+                  {formData.isDiscomConsumer === "Yes" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <ReusableDropdown
+                  name="connectionTypeId"
+                  value={formData.connectionTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "connectionTypeId", value: val } })
+                  }
+                  options={connectionTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phase Type <span className="text-red-500">*</span>
+                </label>
+                <ReusableDropdown
+                  name="phaseTypeId"
+                  value={formData.phaseTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "phaseTypeId", value: val } })
+                  }
+                  options={phaseTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Monthly Average Consumption Units <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[1-9][0-9]*"
+                  name="avgMonthlyConsumption"
+                  value={formData.avgMonthlyConsumption}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                      handleChange(e);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value) {
+                      validateFieldOnChange("avgMonthlyConsumption", e.target.value);
+                    }
+                  }}
+                  required
+                  placeholder="e.g. 1"
+                  title="Enter a positive integer greater than 0"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+
+                {/* {fieldErrors.monthlyAvgConsumptionUnits && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.monthlyAvgConsumptionUnits}</p>
                 )}
                 {!fieldErrors.monthlyAvgConsumptionUnits && formData.monthlyAvgConsumptionUnits && (
                   <p className="text-green-600 text-sm mt-1">✓ Valid consumption value</p>
                 )} */}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                DISCOM ID{" "}
-                {formData.isDiscomConsumer === "Yes" && (
-                  <span className="text-red-500">*</span>
-                )}
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                name="discomId"
-                value={formData.discomId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (/^[1-9][0-9]*$/.test(val) || val === "") {
-                    handleChange(e);
-                  }
-                }}
-                placeholder="e.g. 7137"
-                required={formData.isDiscomConsumer === "Yes"}
-                disabled={formData.isDiscomConsumer === "No"}
-                title="DISCOM ID must be a positive integer greater than 0"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            Business Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GST Number
-              </label>
-              <input
-                type="text"
-                name="gstIn"
-                value={formData.gstIn}
-                onChange={(e) => {
-                  const target = e.target as HTMLInputElement;
-                  handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
-                }}
-                pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-                title="GSTIN must be in format: 22AAAAA0000A1Z6"
-                placeholder="e.g. 22AAAAA0000A1Z6"
-                maxLength={15}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.gstIn && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Billed To <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="billedTo"
-                value={formData.billedTo}
-                onChange={handleChange}
-                placeholder="Enter the name of the billed person or company"
-                pattern="^[A-Za-z\s]{2,50}$"
-                title="Billed To must be 2-50 characters, alphabets and spaces only"
-                maxLength={50}
-                required
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.billedTo && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Address Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Address Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                State <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value="Maharashtra"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                District <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="district"
-                value={districtCode}
-                onChange={handleDistrictChange}
-                required
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{districtName || "Select District"}</option>
-                {districts.map((district) => (
-                  <option key={district.nameEnglish} value={district.code}>
-                    {district.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Taluka <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="talukaCode"
-                value={talukaCode}
-                onChange={handleTalukaChange}
-                required
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{talukaName || "Select Taluka"}</option>
-                {talukas.map((taluka) => (
-                  <option key={taluka.nameEnglish} value={taluka.code}>
-                    {taluka.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Village
-              </label>
-              <select
-                name="villageCode"
-                value={villageCode}
-                onChange={handleVillageChange}
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{villageName || "Select Village"}</option>
-                {villages.map((village) => (
-                  <option key={village.code} value={village.code}>
-                    {village.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pincode <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="pinCode"
-                value={formData.pinCode || ''}
-                onChange={handlepinCodeChange}
-                placeholder="e.g. 416000"
-                pattern="^[0-9]{6}$"
-                title="PIN Code must be exactly 6 digits (0-9)"
-                maxLength={6}
-                inputMode="numeric"
-                required
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.pinCode && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="addressTypeId"
-                value={formData.addressTypeId}
-                onChange={handleChange}
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                {addressTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nameEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address Line 1 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="addressLine1"
-                value={formData.addressLine1}
-                onChange={handleChange}
-                placeholder="e.g. Flat No, House No, Street Name"
-                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                maxLength={100}
-                required
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.addressLine1 && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address Line 2
-              </label>
-              <input
-                type="text"
-                name="addressLine2"
-                value={formData.addressLine2}
-                onChange={handleChange}
-                placeholder="e.g. Apartment, Suite, Unit, Building"
-                pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-                title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-                maxLength={100}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.addressLine2 && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Latitude
-              </label>
-              <input
-                type="number"
-                name="latitude"
-                value={formData.latitude}
-                onChange={handleChange}
-                onWheel={(e) => e.currentTarget.blur()}
-                placeholder="e.g. 16.7049873"
-                min="-90"
-                max="90"
-                step="any"
-                title="Latitude must be between -90 and 90"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.latitude && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Longitude
-              </label>
-              <input
-                type="number"
-                name="longitude"
-                value={formData.longitude}
-                onChange={handleChange}
-                onWheel={(e) => e.currentTarget.blur()}
-                placeholder="e.g. 74.2432527"
-                min="-180"
-                max="180"
-                step="any"
-                title="Longitude must be between -180 and 180"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-              {fieldErrors.longitude && (
-                <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowMapPreview((prev) => !prev)}
-                    className="px-3 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-                  >
-                    {showMapPreview ? 'Close Map' : 'View Location on Map'}
-                  </button>
-
-                  {showMapPreview && (
-                    <div className="mt-4 w-full h-[300px] rounded-md overflow-hidden border shadow-md">
-                      <MapPreview
-                        latitude={parseFloat(formData.latitude)}
-                        longitude={parseFloat(formData.longitude)}
-                        onLocationChange={(newLat, newLng) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            latitude: newLat.toFixed(6),
-                            longitude: newLng.toFixed(6),
-                          }));
-                        }}
-                      />
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  DISCOM ID{" "}
+                  {formData.isDiscomConsumer === "Yes" && (
+                    <span className="text-red-500">*</span>
                   )}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="discomId"
+                  value={formData.discomId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^[1-9][0-9]*$/.test(val) || val === "") {
+                      handleChange(e);
+                    }
+                  }}
+                  placeholder="e.g. 7137"
+                  required={formData.isDiscomConsumer === "Yes"}
+                  disabled={formData.isDiscomConsumer === "No"}
+                  title="DISCOM ID must be a positive integer greater than 0"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Business Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  GST Number
+                </label>
+                <input
+                  type="text"
+                  name="gstIn"
+                  value={formData.gstIn}
+                  onChange={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    handleChange({ target: { name: "gstIn", value: target.value.toUpperCase() } } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+                  title="GSTIN must be in format: 22AAAAA0000A1Z6"
+                  placeholder="e.g. 22AAAAA0000A1Z6"
+                  maxLength={15}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.gstIn && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Billed To <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="billedTo"
+                  value={formData.billedTo}
+                  onChange={handleChange}
+                  placeholder="Enter the name of the billed person or company"
+                  pattern="^[A-Za-z\s]{2,50}$"
+                  title="Billed To must be 2-50 characters, alphabets and spaces only"
+                  maxLength={50}
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.billedTo && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Address Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Address Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value="Maharashtra"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  District <span className="text-red-500">*</span>
+                </label>
+                <ReusableDropdown
+                  name="district"
+                  value={districtCode}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  options={[
+                    { value: 0, label: districtName || "Select District" },
+                    ...districts.map((district) => ({
+                      value: district.code,
+                      label: district.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={districtName || "Select District"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Taluka <span className="text-red-500">*</span>
+                </label>
+                <ReusableDropdown
+                  name="talukaCode"
+                  value={talukaCode}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  options={[
+                    { value: 0, label: talukaName || "Select Taluka" },
+                    ...talukas.map((taluka) => ({
+                      value: taluka.code,
+                      label: taluka.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={talukaName || "Select Taluka"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Village
+                </label>
+                <ReusableDropdown
+                  name="villageCode"
+                  value={villageCode}
+                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  options={[
+                    { value: 0, label: villageName || "Select Village" },
+                    ...villages.map((village) => ({
+                      value: village.code,
+                      label: village.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={villageName || "Select Village"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pincode <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="pinCode"
+                  value={formData.pinCode || ''}
+                  onChange={handlepinCodeChange}
+                  placeholder="e.g. 416000"
+                  pattern="^[0-9]{6}$"
+                  title="PIN Code must be exactly 6 digits (0-9)"
+                  maxLength={6}
+                  inputMode="numeric"
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.pinCode && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Type <span className="text-red-500">*</span>
+                </label>
+                <ReusableDropdown
+                  name="addressTypeId"
+                  value={formData.addressTypeId}
+                  onChange={(val) =>
+                    handleChange({ target: { name: "addressTypeId", value: val } })
+                  }
+                  options={addressTypes.map((type) => ({
+                    value: type.id,
+                    label: type.nameEn,
+                  }))}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 1 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="addressLine1"
+                  value={formData.addressLine1}
+                  onChange={handleChange}
+                  placeholder="e.g. Flat No, House No, Street Name"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  required
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine1 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address Line 2
+                </label>
+                <input
+                  type="text"
+                  name="addressLine2"
+                  value={formData.addressLine2}
+                  onChange={handleChange}
+                  placeholder="e.g. Apartment, Suite, Unit, Building"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.addressLine2 && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  name="latitude"
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  placeholder="e.g. 16.7049873"
+                  min="-90"
+                  max="90"
+                  step="any"
+                  title="Latitude must be between -90 and 90"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.latitude && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  name="longitude"
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  placeholder="e.g. 74.2432527"
+                  min="-180"
+                  max="180"
+                  step="any"
+                  title="Longitude must be between -180 and 180"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {fieldErrors.longitude && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                {formData.latitude && formData.longitude && !isNaN(Number(formData.latitude)) && !isNaN(Number(formData.longitude)) && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowMapPreview((prev) => !prev)}
+                      className="px-3 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      {showMapPreview ? 'Close Map' : 'View Location on Map'}
+                    </button>
+
+                    {showMapPreview && (
+                      <div className="mt-4 w-full h-[300px] rounded-md overflow-hidden border shadow-md">
+                        <MapPreview
+                          latitude={parseFloat(formData.latitude)}
+                          longitude={parseFloat(formData.longitude)}
+                          onLocationChange={(newLat, newLng) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              latitude: newLat.toFixed(6),
+                              longitude: newLng.toFixed(6),
+                            }));
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Name Correction and Correction Type */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Name Correction
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Does the connection require a name correction?
+                </label>
+                <div className="flex items-center space-x-5">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="nameCorrection"
+                      value="Yes"
+                      onChange={handleNameCorrection}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isNameCorrection === "Yes"}
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="nameCorrection"
+                      value="No"
+                      onChange={handleNameCorrection}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      checked={formData.isNameCorrection === "No"}
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.isNameCorrection === "Yes" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Correction Type
+                  </label>
+                  <ReusableDropdown
+                    name="correctionTypeId"
+                    value={formData.correctionTypeId || ""}
+                    onChange={(val) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        correctionTypeId: val ? Number(val) : "",
+                      }))
+                    }
+                    options={[
+                      { value: "", label: "Select an option" },
+                      ...correctionTypes.map((type) => ({
+                        value: type.id,
+                        label: type.nameEn,
+                      })),
+                    ]}
+                    placeholder="Select an option"
+                    className="w-full"
+                  />
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Name Correction and Correction Type */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Name Correction
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Does the connection require a name correction?
-              </label>
-              <div className="flex items-center space-x-5">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="nameCorrection"
-                    value="Yes"
-                    onChange={handleNameCorrection}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    checked={formData.isNameCorrection === "Yes"}
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="nameCorrection"
-                    value="No"
-                    onChange={handleNameCorrection}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                    checked={formData.isNameCorrection === "No"}
-                  />
-                  <span className="text-sm text-gray-700">No</span>
-                </label>
-              </div>
-            </div>
+          {/* Submit Button */}
+          <div className="flex justify-center sm:justify-center space-x-3 pt-1">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2 px-5 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
 
-            {formData.isNameCorrection === "Yes" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Correction Type
-                </label>
-                <select
-                  name="correctionTypeId"
-                  value={formData.correctionTypeId || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="" disabled>Select an option</option>
-                  {correctionTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <button
+              type="submit"
+              className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
+            >
+              Update Connection
+            </button>
           </div>
-        </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-center sm:justify-center space-x-3 pt-1">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="py-2 px-5 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-          >
-            Cancel
-          </button>
+        </form>
 
-          <button
-            type="submit"
-            className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
-          >
-            Update Connection
-          </button>
-        </div>
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle id="alert-dialog-title">
+            {dialogType === "success" && "Success"}
+            {dialogType === "error" && "Error"}
+            {dialogType === "confirm" && "Confirm"}
+          </DialogTitle>
+          <DialogContent dividers>
+            <Alert
+              severity={
+                dialogType === "success"
+                  ? "success"
+                  : dialogType === "error"
+                    ? "error"
+                    : "info"
+              }
+            >
+              {dialogMessage}
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            {dialogType === "confirm" ? (
+              <>
+                <Button
+                  onClick={() => {
+                    setDialogOpen(false);
+                    // Cancel = reset data
+                    if (connection) {
+                      setFormData({
+                        consumerId: connection.consumerId || "",
+                        isDiscomConsumer: connection.isDiscomConsumer ? "Yes" : "No",
+                        phaseTypeId: connection.phaseTypeId,
+                        connectionTypeId: connection.connectionTypeId,
+                        addressTypeId: connection.addressTypeId,
+                        correctionTypeId: connection.correctionTypeId,
+                        isNameCorrection: connection.isNameCorrectionRequired ? "Yes" : "No",
+                        avgMonthlyConsumption: connection.avgMonthlyConsumption || "",
+                        gstIn: connection.gstIn || "",
+                        billedTo: connection.billedTo || "",
+                        addressLine1: connection.addressLine1 || "",
+                        addressLine2: connection.addressLine2 || "",
+                        districtCode: connection.districtCode || "",
+                        talukaCode: connection.talukaCode || "",
+                        villageCode: connection.villageCode || "",
+                        pinCode: connection.pinCode || "",
+                        latitude: connection.latitude || "",
+                        longitude: connection.longitude || "",
+                        isOnboardedCustomers: connection.isOnboardedCustomers ?? false,
+                        discomId: connection.discomId || "",
+                      });
 
-      </form>
-
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle id="alert-dialog-title">
-          {dialogType === "success" && "Success"}
-          {dialogType === "error" && "Error"}
-          {dialogType === "confirm" && "Confirm"}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Alert
-            severity={
-              dialogType === "success"
-                ? "success"
-                : dialogType === "error"
-                  ? "error"
-                  : "info"
-            }
-          >
-            {dialogMessage}
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          {dialogType === "confirm" ? (
-            <>
-              <Button
-                onClick={() => {
-                  setDialogOpen(false);
-                  // Cancel = reset data
-                  if (connection) {
-                    setFormData({
-                      consumerId: connection.consumerId || "",
-                      isDiscomConsumer: connection.isDiscomConsumer ? "Yes" : "No",
-                      phaseTypeId: connection.phaseTypeId,
-                      connectionTypeId: connection.connectionTypeId,
-                      addressTypeId: connection.addressTypeId,
-                      correctionTypeId: connection.correctionTypeId,
-                      isNameCorrection: connection.isNameCorrectionRequired ? "Yes" : "No",
-                      avgMonthlyConsumption: connection.avgMonthlyConsumption || "",
-                      gstIn: connection.gstIn || "",
-                      billedTo: connection.billedTo || "",
-                      addressLine1: connection.addressLine1 || "",
-                      addressLine2: connection.addressLine2 || "",
-                      districtCode: connection.districtCode || "",
-                      talukaCode: connection.talukaCode || "",
-                      villageCode: connection.villageCode || "",
-                      pinCode: connection.pinCode || "",
-                      latitude: connection.latitude || "",
-                      longitude: connection.longitude || "",
-                      isOnboardedCustomers: connection.isOnboardedCustomers ?? false,
-                      discomId: connection.discomId || "",
-                    });
-
+                    }
                   }
-                }
-                }
-              >
-                No
-              </Button>
+                  }
+                >
+                  No
+                </Button>
+                <Button
+                  onClick={() => {
+                    setDialogOpen(false);
+                    if (dialogAction) dialogAction();
+                  }}
+                  autoFocus
+                >
+                  Yes
+                </Button>
+              </>
+            ) : (
               <Button
                 onClick={() => {
                   setDialogOpen(false);
@@ -1443,23 +1465,13 @@ export const EditConnection = () => {
                 }}
                 autoFocus
               >
-                Yes
+                OK
               </Button>
-            </>
-          ) : (
-            <Button
-              onClick={() => {
-                setDialogOpen(false);
-                if (dialogAction) dialogAction();
-              }}
-              autoFocus
-            >
-              OK
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+            )}
+          </DialogActions>
+        </Dialog>
 
+      </div>
     </div>
   );
 };

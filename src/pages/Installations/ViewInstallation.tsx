@@ -83,7 +83,7 @@ export const ViewInstallation = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto">
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           {/* Connector Line: between the first and last icon only */}
@@ -126,8 +126,8 @@ export const ViewInstallation = () => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-500"
+  ? "bg-blue-500 text-white border border-transparent"
+  : "bg-white border border-gray-300 text-gray-500"}
                       }`}
                   >
                     <Icon className="w-6 h-6" />

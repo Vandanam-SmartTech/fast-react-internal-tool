@@ -77,32 +77,32 @@ export const ViewConnection = () => {
   ];
 
 
-// ⬇️ Move this function outside useEffect so it can be reused
-const fetchConnection = async () => {
-  if (!customerId || !connectionId) {
-    console.error("Customer ID or Connection ID not found!");
-    return;
-  }
+  // ⬇️ Move this function outside useEffect so it can be reused
+  const fetchConnection = async () => {
+    if (!customerId || !connectionId) {
+      console.error("Customer ID or Connection ID not found!");
+      return;
+    }
 
-  const data = await fetchConsumerNumber(customerId);
-  if (Array.isArray(data) && data.length > 0) {
-    const selectedConnection = data.find(conn => conn.id === Number(connectionId));
-    if (selectedConnection) {
-      setConnection(selectedConnection);
+    const data = await fetchConsumerNumber(customerId);
+    if (Array.isArray(data) && data.length > 0) {
+      const selectedConnection = data.find(conn => conn.id === Number(connectionId));
+      if (selectedConnection) {
+        setConnection(selectedConnection);
+      } else {
+        console.warn("No matching connection found for given connectionId.");
+        setConnection(null);
+      }
     } else {
-      console.warn("No matching connection found for given connectionId.");
+      console.warn("No connections found for customer.");
       setConnection(null);
     }
-  } else {
-    console.warn("No connections found for customer.");
-    setConnection(null);
-  }
-};
+  };
 
-// Keep your useEffect clean
-useEffect(() => {
-  fetchConnection();
-}, [customerId, connectionId]);
+  // Keep your useEffect clean
+  useEffect(() => {
+    fetchConnection();
+  }, [customerId, connectionId]);
 
 
 
@@ -391,7 +391,7 @@ useEffect(() => {
       </div>
 
 
-      <div className="col-span-1 md:col-span-2 w-full max-w-4xl mx-auto overflow-x-auto">
+      <div className="col-span-1 md:col-span-2 w-full max-w-4xl mx-auto overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           {/* Connector Line: between the first and last icon only */}
@@ -430,8 +430,8 @@ useEffect(() => {
                 >
                   <div
                     className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500"
+                      ? "bg-blue-500 text-white border border-transparent"
+                      : "bg-white border border-gray-300 text-gray-500"}
                       }`}
                   >
                     <Icon className="w-6 h-6" />

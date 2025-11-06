@@ -311,4 +311,21 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Completely hide the horizontal scrollbar and its track line */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Remove any default borders or lines some browsers add */
+.no-scrollbar {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
 }
