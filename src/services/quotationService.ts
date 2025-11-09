@@ -567,6 +567,22 @@ export const getSavedSystemSpecPackages = async (): Promise<any[]> => {
   }
 };
 
+export const getSecondaryId = async (systemSpecificationId: number): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!systemSpecificationId) {
+    throw new Error("systemSpecificationId is required to fetch secondaryId!");
+  }
+
+  try {
+    const response = await quotationAPI.get(`/api/quotation-details/${systemSpecificationId}`);
+    return response.data; 
+  } catch (error) {
+    console.error("Error fetching secondary Id:", error);
+    return []; 
+  }
+};
+
 
 
 

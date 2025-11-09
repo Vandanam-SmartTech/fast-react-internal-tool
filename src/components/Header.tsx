@@ -133,61 +133,61 @@ const Header: React.FC = () => {
   };
 
   const loadProfilePhoto = async () => {
-  const photoUrl = await getUserProfilePhoto();
-  if (photoUrl) {
-    setProfilePhoto(photoUrl);
-    setHasUploadedPhoto(true);
-  } else {
-    // When photo is deleted, reset UI
-    setProfilePhoto(null);
-    setHasUploadedPhoto(false);
-  }
-};
+    const photoUrl = await getUserProfilePhoto();
+    if (photoUrl) {
+      setProfilePhoto(photoUrl);
+      setHasUploadedPhoto(true);
+    } else {
+      // When photo is deleted, reset UI
+      setProfilePhoto(null);
+      setHasUploadedPhoto(false);
+    }
+  };
 
 
 
   useEffect(() => {
-  loadProfilePhoto();
+    loadProfilePhoto();
 
-  const handlePhotoUpdate = (e: Event) => {
-  const customEvent = e as CustomEvent<string>;
-  const updatedPhoto = customEvent.detail;
+    const handlePhotoUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      const updatedPhoto = customEvent.detail;
 
-  if (updatedPhoto) {
-    // photo added or updated
-    setProfilePhoto(updatedPhoto);
-    setHasUploadedPhoto(true);
-  } else {
-    // photo removed
-    setProfilePhoto(null);
-    setHasUploadedPhoto(false);
-  }
-};
+      if (updatedPhoto) {
+        // photo added or updated
+        setProfilePhoto(updatedPhoto);
+        setHasUploadedPhoto(true);
+      } else {
+        // photo removed
+        setProfilePhoto(null);
+        setHasUploadedPhoto(false);
+      }
+    };
 
 
-  window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
+    window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
 
-  return () => {
-    window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+    return () => {
+      window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
+    };
+  }, []);
+
+
+  const handleRemovePhoto = async () => {
+    try {
+      setRemovingPhoto(true);
+      await deleteUserProfilePhoto(); // Delete API call
+      await loadProfilePhoto();       // Refresh UI state immediately
+      setShowCropModal(false); // Close modal
+
+      // 🔥 Notify other components about removal
+      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
+    } catch (error) {
+      console.error("Error removing photo:", error);
+    } finally {
+      setRemovingPhoto(false);
+    }
   };
-}, []);
-
-
-const handleRemovePhoto = async () => {
-  try {
-    setRemovingPhoto(true);
-    await deleteUserProfilePhoto(); // Delete API call
-    await loadProfilePhoto();       // Refresh UI state immediately
-    setShowCropModal(false); // Close modal
-
-    // 🔥 Notify other components about removal
-    window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
-  } catch (error) {
-    console.error("Error removing photo:", error);
-  } finally {
-    setRemovingPhoto(false);
-  }
-};
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,13 +246,6 @@ const handleRemovePhoto = async () => {
     }
   };
 
-
-
-
-
-
-
-
   const onCropComplete = useCallback(
     (_: any, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
       setCroppedAreaPixels(croppedAreaPixels);
@@ -285,7 +278,7 @@ const handleRemovePhoto = async () => {
           <div className="flex items-center gap-3">
             {/* Super Admin Display */}
             {isSuperAdmin && (
-              <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200">
+              <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200 ml-[40px] sm:ml-0">
                 <Shield className="h-4 w-4 text-primary-600" />
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm">Super Admin</span>
@@ -294,7 +287,7 @@ const handleRemovePhoto = async () => {
               </div>
             )}
 
-            {/* Organization and Role Display  */}
+            {/* Organization and Role Display */}
             {selectedOrgName && selectedRole && !isSuperAdmin && (
               <div className="flex items-center gap-3 text-secondary-700 dark:text-secondary-200">
                 <Building className="h-4 w-4 text-primary-600 hidden sm:block" />
@@ -307,6 +300,7 @@ const handleRemovePhoto = async () => {
               </div>
             )}
           </div>
+
         </div>
 
 
@@ -491,8 +485,8 @@ const handleRemovePhoto = async () => {
                                   onClick={handleRemovePhoto}
                                   disabled={removingPhoto}
                                   className={`px-3 py-1 text-sm font-medium text-white rounded-lg transition-colors ${removingPhoto
-                                      ? "bg-gray-400 cursor-not-allowed"
-                                      : "bg-red-600 hover:bg-red-700"
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-red-600 hover:bg-red-700"
                                     }`}
                                 >
                                   {removingPhoto ? "Removing..." : "Remove Current Photo"}

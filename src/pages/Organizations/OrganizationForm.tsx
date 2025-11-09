@@ -10,6 +10,7 @@ import Cropper from "react-easy-crop";
 import { ZoomIn, ZoomOut, RotateCcw, Crop } from "lucide-react";
 import { croppedImgForLogo } from '../../utils/croppedImageForLogo';
 import { Button } from '../../components/ui';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface District {
   code: number;
@@ -264,6 +265,22 @@ const OrganizationForm: React.FC = () => {
     }
   };
 
+  const handleChooseAnotherImage = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result);
+      setCroppedAreaPixels(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -337,7 +354,7 @@ const OrganizationForm: React.FC = () => {
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
       <div className="flex items-center mb-6">
         <button
-          onClick={() => navigate('/organizations')}
+          onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-gray-200 transition"
         >
           <ArrowLeft className="w-6 h-6 text-gray-700" />
@@ -361,7 +378,7 @@ const OrganizationForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -376,7 +393,7 @@ const OrganizationForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Solar Solutions"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -392,7 +409,7 @@ const OrganizationForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. SunTech, EcoVolt, SolarMax"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -415,7 +432,7 @@ const OrganizationForm: React.FC = () => {
               placeholder="e.g. 9567023456"
               maxLength={10}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               title="Enter a valid 10-digit mobile number starting with 6-9"
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
@@ -426,8 +443,7 @@ const OrganizationForm: React.FC = () => {
                 <p className="text-red-600 text-sm mt-1">
                   Enter a valid 10-digit mobile number starting with 6-9
                 </p>
-              )}
-              
+              )}          
           </div>
 
           <div>
@@ -505,7 +521,7 @@ const OrganizationForm: React.FC = () => {
               placeholder="e.g. 22AAAAA0000A1Z6"
               maxLength={15}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -520,66 +536,63 @@ const OrganizationForm: React.FC = () => {
               onChange={handleChange}
               maxLength={50}
               placeholder="e.g. L01631KA2010PTC096843"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
-            <select
-              name="distrct"
-              id="district"
-              value={districtCode}
-              onChange={handleDistrictChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{districtName || "Select District"}</option>
-              {districts.map((district) => (
-                <option key={district.nameEnglish} value={district.code}>
-                  {district.nameEnglish}
-                </option>
-              ))}
-            </select>
+            <ReusableDropdown
+                  name="district"
+                  value={districtCode}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  options={[
+                    { value: 0, label: districtName || "Select District" },
+                    ...districts.map((district) => ({
+                      value: district.code,
+                      label: district.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={districtName || "Select District"}
+                  className="w-full"
+                />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
-            <select
-              name="talukaCode"
-              id="taluka"
-              value={talukaCode}
-              onChange={handleTalukaChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{talukaName || "Select Taluka"}</option>
-              {talukas.map((taluka) => (
-                <option key={taluka.nameEnglish} value={taluka.code}>
-                  {taluka.nameEnglish}
-                </option>
-              ))}
-            </select>
+            <ReusableDropdown
+                  name="talukaCode"
+                  value={talukaCode}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  options={[
+                    { value: 0, label: talukaName || "Select Taluka" },
+                    ...talukas.map((taluka) => ({
+                      value: taluka.code,
+                      label: taluka.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={talukaName || "Select Taluka"}
+                  className="w-full"
+                />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
-            <select
-              name="villageCode"
-              id="village"
-              value={villageCode}
-              onChange={handleVillageChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{villageName || "Select Village"}</option>
-              {villages.map((village) => (
-                <option key={village.code} value={village.code}>
-                  {village.nameEnglish}
-                </option>
-              ))}
-            </select>
+            <ReusableDropdown
+                  name="villageCode"
+                  value={villageCode}
+                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  options={[
+                    { value: 0, label: villageName || "Select Village" },
+                    ...villages.map((village) => ({
+                      value: village.code,
+                      label: village.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={villageName || "Select Village"}
+                  className="w-full"
+                />
           </div>
 
           <div>
@@ -593,7 +606,7 @@ const OrganizationForm: React.FC = () => {
               placeholder="e.g. 416000"
               inputMode='numeric'
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -608,7 +621,7 @@ const OrganizationForm: React.FC = () => {
               placeholder="e.g. Flat No, House No, Street Name"
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -622,30 +635,32 @@ const OrganizationForm: React.FC = () => {
               value={formData.addressLine2 || ''}
               onChange={handleChange}
               placeholder="e.g. Apartment, Suite, Unit, Building"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
 
         </div>
 
-        <div className="col-span-2 flex justify-center gap-4 mt-8">
+        <div className="col-span-2 flex justify-center gap-6 mt-8">
           <button
             type="button"
-            onClick={() => navigate('/organizations')}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Saving...' : 'Save Organization'}
           </button>
         </div>
+
+
       </form>
 
       {showImageModal && (
@@ -672,72 +687,85 @@ const OrganizationForm: React.FC = () => {
       )}
 
       {/* --- Crop Modal --- */}
-      {showCropModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900">Crop Logo</h3>
-            </div>
+{showCropModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+    <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200">
+        <h3 className="text-base font-semibold text-gray-900">Crop Logo</h3>
+      </div>
 
-            <div className="p-4 flex flex-col gap-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-1">
-                  Adjust the crop area. Final output will be <b>768×325px</b>.
-                </p>
-              </div>
-
-              <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  rotation={rotation}
-                  aspect={768 / 325}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onRotationChange={setRotation}
-                  onCropComplete={handleCropComplete}
-                  objectFit="contain"
-                  showGrid={true}
-                  cropSize={{ width: 300, height: 127 }}
-                />
-              </div>
-
-              <div className="flex justify-center gap-3">
-                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
-                  <ZoomOut className="w-4 h-4 text-gray-600" />
-                </button>
-                <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
-                  <ZoomIn className="w-4 h-4 text-gray-600" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
-              <Button
-                onClick={handleCropReset}
-                variant="outline"
-                size="sm"
-                leftIcon={<RotateCcw className="w-4 h-4" />}
-              >
-                Reset
-              </Button>
-
-              <Button
-                onClick={handleCropAndUpload}
-                size="sm"
-                leftIcon={!loading && <Crop className="w-4 h-4" />}
-                loading={isProcessing}
-                disabled={!croppedAreaPixels}
-              >
-                {isProcessing ? "Uploading..." : "Save & Upload"}
-              </Button>
-
-            </div>
-          </div>
+      <div className="p-4 flex flex-col gap-4">
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-1">
+            Adjust the crop area. Final output will be <b>768×325px</b>.
+          </p>
         </div>
-      )}
+
+        <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            rotation={rotation}
+            aspect={768 / 325}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onRotationChange={setRotation}
+            onCropComplete={handleCropComplete}
+            objectFit="contain"
+            showGrid={true}
+            cropSize={{ width: 300, height: 127 }}
+          />
+        </div>
+
+        {/* ✅ Choose another image option */}
+        <div className="flex justify-center">
+          <label className="cursor-pointer text-blue-600 text-sm font-medium hover:underline">
+            Choose Another Image
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleChooseAnotherImage}
+            />
+          </label>
+        </div>
+
+        <div className="flex justify-center gap-3">
+          <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
+            <ZoomOut className="w-4 h-4 text-gray-600" />
+          </button>
+          <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
+            <ZoomIn className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+        <Button
+          onClick={handleCropReset}
+          variant="outline"
+          size="sm"
+          leftIcon={<RotateCcw className="w-4 h-4" />}
+        >
+          Reset
+        </Button>
+
+        <Button
+          onClick={handleCropAndUpload}
+          size="sm"
+          leftIcon={!loading && <Crop className="w-4 h-4" />}
+          loading={isProcessing}
+          disabled={!croppedAreaPixels}
+        >
+          {isProcessing ? "Uploading..." : "Save & Upload"}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

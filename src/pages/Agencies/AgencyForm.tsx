@@ -5,6 +5,7 @@ import { createOrganization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface District {
   code: number;
@@ -173,11 +174,11 @@ const AgencyForm: React.FC = () => {
     console.log("Current state PINcode:", value);
   };
 
-    useEffect(() => {
-      if (gstNumber) {
-        setFormData((prev) => ({ ...prev, gstNumber: gstNumber }));
-      }
-    }, [gstNumber]);
+  useEffect(() => {
+    if (gstNumber) {
+      setFormData((prev) => ({ ...prev, gstNumber: gstNumber }));
+    }
+  }, [gstNumber]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -195,9 +196,9 @@ const AgencyForm: React.FC = () => {
       };
 
       await createOrganization(agencyData);
-      toast.success('Agency created successfully',{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.success('Agency created successfully', {
+        autoClose: 1000,
+        hideProgressBar: true
       });
 
       navigate("/agencies", {
@@ -205,9 +206,9 @@ const AgencyForm: React.FC = () => {
       });
 
     } catch (error) {
-      toast.error('Failed to create agency',{
-        autoClose:1000,
-        hideProgressBar:true,
+      toast.error('Failed to create agency', {
+        autoClose: 1000,
+        hideProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -240,17 +241,15 @@ const AgencyForm: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center mb-6">
         <button
           onClick={() =>
-            navigate("/agencies", {
-              state: { orgId: orgId },
-            })
+            navigate(-1)
           }
 
-          className="rounded-full hover:bg-gray-200 transition"
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
           Add Agency
@@ -270,7 +269,7 @@ const AgencyForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -285,7 +284,7 @@ const AgencyForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Solar Solutions"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -301,11 +300,11 @@ const AgencyForm: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. SunTech, EcoVolt, SolarMax"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
-                    <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Contact Number <span className="text-red-500">*</span>
             </label>
@@ -324,7 +323,7 @@ const AgencyForm: React.FC = () => {
               placeholder="e.g. 9567023456"
               maxLength={10}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               title="Enter a valid 10-digit mobile number starting with 6-9"
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
@@ -413,7 +412,7 @@ const AgencyForm: React.FC = () => {
               placeholder="e.g. 22AAAAA0000A1Z6"
               maxLength={15}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -428,65 +427,62 @@ const AgencyForm: React.FC = () => {
               onChange={handleChange}
               maxLength={50}
               placeholder="e.g. L01631KA2010PTC096843"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
-            <select
-              name="distrct"
-              id="district"
+            <ReusableDropdown
+              name="district"
               value={districtCode}
-              onChange={handleDistrictChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{districtName || "Select District"}</option>
-              {districts.map((district) => (
-                <option key={district.nameEnglish} value={district.code}>
-                  {district.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              options={[
+                { value: 0, label: districtName || "Select District" },
+                ...districts.map((district) => ({
+                  value: district.code,
+                  label: district.nameEnglish,
+                })),
+              ]}
+              placeholder={districtName || "Select District"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
-            <select
+            <ReusableDropdown
               name="talukaCode"
-              id="taluka"
               value={talukaCode}
-              onChange={handleTalukaChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{talukaName || "Select Taluka"}</option>
-              {talukas.map((taluka) => (
-                <option key={taluka.nameEnglish} value={taluka.code}>
-                  {taluka.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              options={[
+                { value: 0, label: talukaName || "Select Taluka" },
+                ...talukas.map((taluka) => ({
+                  value: taluka.code,
+                  label: taluka.nameEnglish,
+                })),
+              ]}
+              placeholder={talukaName || "Select Taluka"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
-            <select
+            <ReusableDropdown
               name="villageCode"
-              id="village"
               value={villageCode}
-              onChange={handleVillageChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{villageName || "Select Village"}</option>
-              {villages.map((village) => (
-                <option key={village.code} value={village.code}>
-                  {village.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              options={[
+                { value: 0, label: villageName || "Select Village" },
+                ...villages.map((village) => ({
+                  value: village.code,
+                  label: village.nameEnglish,
+                })),
+              ]}
+              placeholder={villageName || "Select Village"}
+              className="w-full"
+            />
           </div>
 
           <div>
@@ -499,7 +495,7 @@ const AgencyForm: React.FC = () => {
               onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -515,7 +511,7 @@ const AgencyForm: React.FC = () => {
               onChange={handleChange}
 
               placeholder="e.g. Flat No, House No, Street Name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -529,31 +525,29 @@ const AgencyForm: React.FC = () => {
               placeholder="e.g. Apartment, Suite, Unit, Building"
               value={formData.addressLine2 || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
-          
+
 
         </div>
 
-        <div className="col-span-2 flex justify-center gap-4 mt-8">
+        <div className="col-span-2 flex justify-center gap-6 mt-8">
           <button
             type="button"
-            onClick={() => navigate("/agencies", {
-              state: { orgId: orgId },
-            })}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Saving...' : 'Save Agency'}
           </button>
         </div>
       </form>

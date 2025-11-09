@@ -45,12 +45,12 @@ export const InstallationForm = () => {
   });
 
   ///////////////////////////////////////////////////////////
-  useEffect(() => {
-    const savedForm = localStorage.getItem('installationFormData');
-    if (savedForm) {
-      setFormData(JSON.parse(savedForm));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const savedForm = localStorage.getItem('installationFormData');
+  //   if (savedForm) {
+  //     setFormData(JSON.parse(savedForm));
+  //   }
+  // }, []);
   ///////////////////////////////////////////////////////////
 
 
@@ -77,7 +77,7 @@ export const InstallationForm = () => {
     }));
 
     ///////////////
-    localStorage.setItem('installationFormData', JSON.stringify(formData));
+    //localStorage.setItem('installationFormData', JSON.stringify(formData));
     //////////////
   };
 

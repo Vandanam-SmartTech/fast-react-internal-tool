@@ -4,7 +4,7 @@ import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConne
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -12,7 +12,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from
 import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
-
+import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/oneDriveService";
+import { Download as DownloadIcon } from "lucide-react";
 
 
 export const SystemSpecifications = () => {
@@ -57,7 +58,7 @@ export const SystemSpecifications = () => {
   const [materialOriginId, setMaterialOriginId] = useState<number | null>(null);
   const [origins, setOrigins] = useState<any[]>([]);
 
-  const [gridTypeId, setGridTypeId] = useState<number | null>(null);
+  const [gridTypeId, setGridTypeId] = useState(1);
   const [grids, setGrids] = useState<any[]>([]);
 
   const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
@@ -95,11 +96,13 @@ export const SystemSpecifications = () => {
 
   const [activeTab, setActiveTab] = useState("System Specifications");
 
-  const [inverterList, setInverterList] = useState([
-    { inverterBrandId: "", inverterSpecId: "", inverterCount: 0 },
-  ]);
-
   const [inverterCapacitiesMap, setInverterCapacitiesMap] = useState<Record<number, any[]>>({});
+
+  const [systemSpecificationId, setSystemSpecificationId] = useState(null);
+  const [secondaryId, setSecondaryId] = useState(null);
+
+  const [documentsMap, setDocumentsMap] = useState<{ [key: number]: any }>({});
+  const [loadingDocs, setLoadingDocs] = useState<{ [key: number]: boolean }>({});
 
 
   const tabs = [
@@ -111,6 +114,8 @@ export const SystemSpecifications = () => {
 
   const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingFabrication, setIsEditingFabrication] = useState(false);
 
 
   const [formData, setFormData] = useState({
@@ -124,7 +129,7 @@ export const SystemSpecifications = () => {
     hasHeavydutyStairs: false,
     //inverterBrandId: null,
     materialOriginId: null,
-    gridTypeId: null,
+    gridTypeId: 1,
     //inverterSpecId: null,
     //inverterCount: 1,
     panelBrandId: null,
@@ -269,10 +274,41 @@ export const SystemSpecifications = () => {
     fetchConnection();
   }, [connectionId]);
 
+
+
   const fetchSavedSpecs = async () => {
     try {
       const data = await getSavedSystemSpecs(connectionId);
-      setSavedSpecs(data);
+      setSavedSpecs(data || []);
+
+      // 🔍 Find the first locked spec (isRunningCopy = false)
+      const lockedSpec = (data || []).find(spec => spec.isRunningCopy === false);
+
+      if (lockedSpec) {
+        console.log("Locked spec found:", lockedSpec);
+        setSystemSpecificationId(lockedSpec.id);
+
+        // 🔄 Fetch secondaryId for that locked spec
+        try {
+          const secondaryData = await getSecondaryId(lockedSpec.id);
+
+          // handle both array or object responses
+          const secondaryIdValue = Array.isArray(secondaryData)
+            ? secondaryData[0]?.id
+            : secondaryData?.id;
+
+          if (secondaryIdValue) {
+            setSecondaryId(secondaryIdValue);
+            console.log("Fetched secondaryId:", secondaryIdValue);
+          } else {
+            console.warn("No valid secondaryId found in response:", secondaryData);
+          }
+        } catch (secondaryErr) {
+          console.error("Error fetching secondaryId:", secondaryErr);
+        }
+      } else {
+        console.log("No locked (isRunningCopy=false) spec found.");
+      }
     } catch (err) {
       console.error("Error fetching saved specs", err);
     }
@@ -304,24 +340,63 @@ export const SystemSpecifications = () => {
     fetchGrids();
   }, []);
 
+  // useEffect(() => {
+  //   const loadInverterBrands = async () => {
+
+  //       setInverters([]);
+  //       setInverterBrandId(null);
+  //       setInverterCapacities([]);
+  //       setInverterSpecId(null);
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         inverterBrandId: null,
+  //         inverterSpecId: null
+  //       }));
+
+
+  //     if (phaseTypeId !== null && gridTypeId !== null) {
+  //       try {
+  //         const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+  //         setInverters([...data]);
+  //       } catch (error) {
+  //         console.error("Failed to fetch inverter brands:", error);
+  //         setInverters([]);
+  //       } finally {
+  //         setIsPrefilling(false);
+  //       }
+  //     }
+  //   };
+
+  //   loadInverterBrands();
+  // }, [phaseTypeId, gridTypeId]);
+
   useEffect(() => {
     const loadInverterBrands = async () => {
-      if (!isPrefilling) {
-        setInverters([]);
-        setInverterBrandId(null);
-        setInverterCapacities([]);
-        setInverterSpecId(null);
-        setFormData((prev) => ({
+
+      setInverters([]);
+      setInverterCapacities([]);
+      setFormData((prev) => {
+
+        const updatedInverters = (prev.inverters || []).map((inv) => ({
+          ...inv,
+          inverterBrandId: null,
+          inverterSpecId: null,
+        }));
+        return {
           ...prev,
           inverterBrandId: null,
-          inverterSpecId: null
-        }));
-      }
+          inverterSpecId: null,
+          inverters: updatedInverters,
+        };
+      });
+
+
+      setInverterCapacitiesMap({});
 
       if (phaseTypeId !== null && gridTypeId !== null) {
         try {
           const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-          setInverters([...data]);
+          setInverters(Array.isArray(data) ? data : []);
         } catch (error) {
           console.error("Failed to fetch inverter brands:", error);
           setInverters([]);
@@ -337,14 +412,15 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     const loadInverterBrandCapacities = async () => {
-      if (!isPrefilling) {
-        setInverterCapacities([]);
-        setInverterSpecId(null);
-        setFormData((prev) => ({
-          ...prev,
-          inverterSpecId: null
-        }));
-      }
+
+      setInverterCapacities([]);
+
+      setInverterSpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        inverterSpecId: null
+      }));
+
 
       if (inverterBrandId !== null && gridTypeId !== null) {
         try {
@@ -396,16 +472,16 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     const loadPanelBrandCapacities = async () => {
-      if (!isPrefilling) {
-        setPanelCapacities([]);
-        setSystemCapacityKw(null);
-        setFormData((prev) => ({
-          ...prev,
-          systemCapacityKw: null
-        }));
-      }
 
-      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null && materialOriginId !==null) {
+      setPanelCapacities([]);
+      setSystemCapacityKw(null);
+      setFormData((prev) => ({
+        ...prev,
+        systemCapacityKw: null
+      }));
+
+
+      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null && materialOriginId !== null) {
         try {
           const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
           setPanelCapacities([...data]);
@@ -422,26 +498,36 @@ export const SystemSpecifications = () => {
   }, [phaseTypeId, panelSpecId, materialOriginId]);
 
 
+
   useEffect(() => {
     const loadBatteryBrands = async () => {
-      const data = await fetchBatteryBrands();
-      if (data) setBatteryBrands(data);
+      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
+        const data = await fetchBatteryBrands();
+        if (data) setBatteryBrands(data);
+      } else {
+
+        setBatteryBrands([]);
+        setBatteryBrandId(null);
+        setBatterySpecId(null);
+        setBatteryCapacities([]);
+        setFormData((prev) => ({
+          ...prev,
+          batteryBrandId: null,
+          batterySpecId: null,
+        }));
+      }
     };
 
     loadBatteryBrands();
-  }, []);
+  }, [formData.gridTypeId]);
 
   useEffect(() => {
-
-    if (!isPrefilling) {
-      setBatteryCapacities([]);
-      setBatterySpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        batterySpecId: null
-      }));
-    }
-
+    setBatteryCapacities([]);
+    setBatterySpecId(null);
+    setFormData((prev) => ({
+      ...prev,
+      batterySpecId: null
+    }));
     if (batteryBrandId !== null) {
       const loadBatteryCapacities = async () => {
         try {
@@ -460,32 +546,51 @@ export const SystemSpecifications = () => {
   }, [batteryBrandId, gridTypeId]);
 
 
+  // useEffect(() => {
+  //   if (phaseTypeId !== null && !materialOriginId) {
+  //     const newMaterialOriginId = phaseTypeId === 1 ? 1 : 2;
+  //     setMaterialOriginId(newMaterialOriginId);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       materialOriginId: newMaterialOriginId,
+  //     }));
+  //   }
+  // }, [phaseTypeId, materialOriginId]);
+
+
+
+
   const handleInverterChange = async (index, field, value) => {
-    const updatedInverters = [...formData.inverters];
+    const updatedInverters = [...(formData.inverters || [])];
+    // Ensure the row exists
+    if (!updatedInverters[index]) updatedInverters[index] = {};
+
     updatedInverters[index][field] = value;
 
-    // Reset dependent fields
+    // If brand changed, reset spec and fetch capacities for that row
     if (field === "inverterBrandId") {
       updatedInverters[index].inverterSpecId = null;
 
-      // Fetch capacities for this brand and store it in map
       if (value !== null) {
         try {
-          const capacities = await fetchInverterBrandCapacities(value);
+          // capacities for the particular brand (and implicitly for current gridTypeId)
+          const capacities = await fetchInverterBrandCapacities(value, gridTypeId);
           setInverterCapacitiesMap((prev) => ({
             ...prev,
-            [index]: capacities,
+            [index]: Array.isArray(capacities) ? capacities : [],
           }));
         } catch (error) {
           console.error("Failed to fetch inverter capacities for brand:", error);
           setInverterCapacitiesMap((prev) => ({ ...prev, [index]: [] }));
         }
       } else {
+        // brand cleared -> clear capacities for that row
         setInverterCapacitiesMap((prev) => ({ ...prev, [index]: [] }));
       }
     }
 
-    setFormData({ ...formData, inverters: updatedInverters });
+    // If gridTypeId changes elsewhere, the effect above will already have reset per-row fields.
+    setFormData((prev) => ({ ...prev, inverters: updatedInverters }));
   };
 
 
@@ -555,7 +660,7 @@ export const SystemSpecifications = () => {
 
   const handleSaveSpecs = async () => {
     try {
-      // Basic validation: at least one inverter must have brand and spec
+
       if (
         !formData.inverters ||
         formData.inverters.length === 0 ||
@@ -572,11 +677,12 @@ export const SystemSpecifications = () => {
 
       setIsSubmitting(true);
 
-      // 1️⃣ Save the System Specs first
       const systemResponse = await saveSystemSpecs({
         ...formData,
+        installationSpaceType:
+          formData.installationSpaceType?.trim() === "" ? null : formData.installationSpaceType,
+        batteryCount: formData.batterySpecId ? 1 : null,
         connectionId,
-        specSourceId: 2,
         panelSpecsId: formData.panelSpecId,
         batterySpecsId: formData.batterySpecId,
         orgId,
@@ -588,7 +694,6 @@ export const SystemSpecifications = () => {
 
       const systemSpecsId = systemResponse.id;
 
-      // 2️⃣ Build inverter list from formData
       const inverterList = formData.inverters.map((inv) => ({
         systemSpecsId,
         inverterSpecId: inv.inverterSpecId,
@@ -597,12 +702,11 @@ export const SystemSpecifications = () => {
 
       console.log("Inverter list to save:", inverterList);
 
-      // 3️⃣ Save inverters
       const inverterResponse = await saveInverterSpecs(inverterList);
 
       console.log("Inverter specs saved:", inverterResponse);
 
-      // 4️⃣ Refresh UI
+
       await fetchSavedSpecs();
 
       toast.success("System Specification details saved successfully!", {
@@ -758,6 +862,7 @@ export const SystemSpecifications = () => {
     setPanelSpecId(spec.panelSpecsId);
     setBatteryBrandId(spec.batteryBrandId);
     setBatterySpecId(spec.batterySpecsId);
+    setSystemCapacityKw(spec.systemCapacityKw);
 
     console.log("Selected spec:", spec);
     console.log("Loaded inverters:", inverterList);
@@ -776,39 +881,26 @@ export const SystemSpecifications = () => {
     }));
   }, [formData.systemCost, formData.fabricationCost]);
 
-  // useEffect(() => {
-  //   if (savedSpecs.length === 1) {
-  //     handleSelectSpec(savedSpecs[0]);
-  //     setIsFormOpen(true);
-  //   } else if (savedSpecs.length === 0) {
-  //     setIsFormOpen(true);
-  //   } else {
-  //     setIsFormOpen(false);
-  //   }
-  // }, [savedSpecs]);
-
   useEffect(() => {
-  if (savedSpecs.length === 0) {
-    // No specs saved, open empty form
-    setIsFormOpen(true);
-  } else if (savedSpecs.length === 1) {
-    // Only one spec, auto-select it
-    handleSelectSpec(savedSpecs[0]);
-    setSelectedSpecId(savedSpecs[0].id);
-    setIsFormOpen(true);
-  } else {
-    // Multiple specs, try to select the first editable one
-    const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
-    if (firstEditable) {
-      handleSelectSpec(firstEditable);
-      setSelectedSpecId(firstEditable.id);
+    if (savedSpecs.length === 0) {
+      setIsFormOpen(true);
+    } else if (savedSpecs.length === 1) {
+      handleSelectSpec(savedSpecs[0]);
+      setSelectedSpecId(savedSpecs[0].id);
       setIsFormOpen(true);
     } else {
-      // No editable spec found, keep form closed
-      setIsFormOpen(false);
+
+      const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
+      if (firstEditable) {
+        handleSelectSpec(firstEditable);
+        setSelectedSpecId(firstEditable.id);
+        setIsFormOpen(true);
+      } else {
+
+        setIsFormOpen(false);
+      }
     }
-  }
-}, [savedSpecs]);
+  }, [savedSpecs]);
 
 
 
@@ -833,25 +925,74 @@ export const SystemSpecifications = () => {
   };
 
 
+  // useEffect(() => {
+  //   const fetchPriceDetails = async () => {
+  //     if (formData.systemCapacityKw && formData.panelSpecId) {
+  //       try {
+  //         const response = await getPriceDetails({
+  //           panelSpecsId: formData.panelSpecId ?? "",
+  //           systemCapacityKw: formData.systemCapacityKw ?? "",
+  //           inverterSpecsId: formData.inverterSpecId ?? "",
+  //           batterySpecsId: formData.batterySpecId ?? "",
+  //           inverterCount: 1,
+  //           batteryCount: 1,
+  //         });
+
+  //         if (response) {
+  //           setFormData((prev: any) => ({
+  //             ...prev,
+  //             systemCost: response.systemCost || 0,
+  //             fabricationCost: response.fabricationCost || 0,
+  //             totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+  //           }));
+  //         }
+  //       } catch (err) {
+  //         console.error("Failed to fetch price details", err);
+  //       }
+  //     } else {
+  //       setFormData((prev: any) => ({
+  //         ...prev,
+  //         systemCost: 0,
+  //         fabricationCost: 0,
+  //         totalCost: 0,
+  //       }));
+  //     }
+  //   };
+
+  //   fetchPriceDetails();
+  // }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
+
   useEffect(() => {
     const fetchPriceDetails = async () => {
+
+      if (priceAlreadySetFromCustomerData) return;
+
       if (formData.systemCapacityKw && formData.panelSpecId) {
         try {
-          const response = await getPriceDetails({
-            panelSpecsId: formData.panelSpecId ?? "",
-            systemCapacityKw: formData.systemCapacityKw ?? "",
-            //inverterSpecsId: formData.inverterSpecId ?? "",
-            batterySpecsId: formData.batterySpecId ?? "",
-            //inverterCount: 1,
+          const payload = {
+            systemCapacityKw: formData.systemCapacityKw,
+            panelSpecsId: formData.panelSpecId,
+            batterySpecsId: formData.batterySpecId,
             batteryCount: 1,
-          });
+            inverters: (formData.inverters || [])
+              .filter((inv) => inv.inverterSpecId && inv.inverterCount > 0)
+              .map((inv) => ({
+                inverterSpecsId: inv.inverterSpecId,
+                inverterCount: inv.inverterCount,
+              })),
+          };
+
+          console.log("Sending payload to getPriceDetails:", payload);
+
+          const response = await getPriceDetails(payload);
 
           if (response) {
             setFormData((prev: any) => ({
               ...prev,
               systemCost: response.systemCost || 0,
               fabricationCost: response.fabricationCost || 0,
-              totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+              totalCost:
+                (response.systemCost || 0) + (response.fabricationCost || 0),
             }));
           }
         } catch (err) {
@@ -868,10 +1009,13 @@ export const SystemSpecifications = () => {
     };
 
     fetchPriceDetails();
-  }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
-
-
-
+  }, [
+    formData.systemCapacityKw,
+    formData.panelSpecId,
+    formData.inverters,
+    formData.batterySpecId,
+    priceAlreadySetFromCustomerData,
+  ]);
 
 
   const handleGenerateQuotation = async () => {
@@ -887,17 +1031,6 @@ export const SystemSpecifications = () => {
 
       const pdfBlob = await generateQuotationPDF(selectedSpecId);
       console.log('PDF Blob size:', pdfBlob.size);
-
-      // const fileName = `Quotation_${govIdName}`;
-      // const pdfFile = new File([pdfBlob], `${fileName}.pdf`, { type: "application/pdf" });
-
-
-      // try {
-      //   await uploadDocuments(connectionId, fileName, [pdfFile]);
-      //   console.log("PDF uploaded to OneDrive successfully");
-      // } catch (uploadError) {
-      //   console.error("Error uploading to OneDrive:", uploadError);
-      // }
 
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -942,6 +1075,58 @@ export const SystemSpecifications = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchLockedSpecsDocs = async () => {
+      const lockedSpecs = savedSpecs.filter((spec) => !spec.isRunningCopy);
+      if (lockedSpecs.length === 0) return;
+
+      for (const spec of lockedSpecs) {
+        try {
+          setLoadingDocs((prev) => ({ ...prev, [spec.id]: true }));
+
+          // Step 1: Get secondaryId using systemSpecificationId
+          const secondaryResponse = await getSecondaryId(spec.id);
+          const secondaryId = secondaryResponse?.id || secondaryResponse?.[0]?.id;
+          if (!secondaryId) continue;
+
+          // Step 2: Fetch document by documentType & documentNumber
+          const documentResponse = await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
+            spec.connectionId,
+            "Unsigned Quotation",
+            secondaryId
+          );
+
+          if (Array.isArray(documentResponse) && documentResponse.length > 0) {
+            setDocumentsMap((prev) => ({ ...prev, [spec.id]: documentResponse[0] }));
+          }
+        } catch (err) {
+          console.error(`Error fetching document for specId ${spec.id}:`, err);
+        } finally {
+          setLoadingDocs((prev) => ({ ...prev, [spec.id]: false }));
+        }
+      }
+    };
+
+    if (savedSpecs?.length > 0) fetchLockedSpecsDocs();
+  }, [savedSpecs]);
+
+  // ✅ Download handler
+  const handleDownload = async (id: number, fileName: string) => {
+    try {
+      const blob = await downloadDocumentById(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading document:", err);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -950,9 +1135,6 @@ export const SystemSpecifications = () => {
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
-
-
-
 
       <div className="flex items-center gap-2">
         <button
@@ -1108,61 +1290,96 @@ export const SystemSpecifications = () => {
         <div className="border-b border-gray-200 mb-4" />
 
         {savedSpecs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {savedSpecs.map((spec) => {
-              const isEditable = spec.isRunningCopy;
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    {savedSpecs.map((spec) => {
+      const isEditable = spec.isRunningCopy;
+      const document = documentsMap[spec.id];
+      const isLoadingDoc = loadingDocs[spec.id];
 
-              return (
-                <div
-                  key={spec.id}
-                  onClick={() => {
-            if (!isEditable) return; // ✅ prevent click on locked spec
+      return (
+        <div
+          key={spec.id}
+          onClick={() => {
+            if (!isEditable) return;
             handleSelectSpec(spec);
             setIsFormOpen(true);
           }}
-                  className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
-            ${isEditable
-                      ? "bg-green-50 border-green-400 hover:shadow-lg"
-                      : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
-                    }
+          className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+            ${
+              isEditable
+                ? "bg-green-50 border-green-400 hover:shadow-lg"
+                : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
+            }
             ${selectedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
           `}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-bold text-gray-800">
-                      {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
-                    </h3>
+        >
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-bold text-gray-800">
+              {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
+            </h3>
 
-                    {/* ✅ Status badge */}
-                    <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
-                        }`}
-                    >
-                      {isEditable ? "Editable" : "Locked"}
-                    </span>
-                  </div>
-
-                  {/* ✅ Handle list of inverters */}
-                  {spec.inverters && spec.inverters.length > 0 ? (
-                    spec.inverters.map((inv, index) => (
-                      <p key={index} className="text-sm font-medium text-gray-700 mb-1">
-                        Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
-                  )}
-
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
-                    <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-                    <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
-                  </div>
-                </div>
-              );
-            })}
+            <span
+              className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+              }`}
+            >
+              {isEditable ? "Editable" : "Locked"}
+            </span>
           </div>
-        )}
 
+          {/* ✅ Handle list of inverters */}
+          {spec.inverters && spec.inverters.length > 0 ? (
+            spec.inverters.map((inv, index) => (
+              <p key={index} className="text-sm font-medium text-gray-700 mb-1">
+                Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
+              </p>
+            ))
+          ) : (
+            <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
+          )}
+
+          <div className="flex justify-between text-sm text-gray-600 mt-2">
+            <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
+            <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+          </div>
+
+          {/* 📄 Show document for locked specs */}
+          {!isEditable && (
+            <div className="mt-4 bg-white border rounded-md p-2 shadow-sm">
+              {isLoadingDoc ? (
+                <p className="text-sm text-gray-500">Loading document...</p>
+              ) : document ? (
+                <div className="flex justify-between items-center">
+                  <div className="max-w-[70%]">
+                    <p
+                      className="text-sm font-medium text-gray-700 truncate"
+                      title={document.fileName}
+                    >
+                      {document.fileName}
+                    </p>
+                    <p className="text-xs text-gray-500">Generated by: {document.uploadedBy}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(document.id, document.fileName);
+                    }}
+                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
+                    title="Download Document"
+                  >
+                    <DownloadIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No document found</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
 
 
 
@@ -1580,10 +1797,14 @@ export const SystemSpecifications = () => {
                     <div className="flex items-center border rounded-md shadow-sm bg-white">
                       <button
                         type="button"
+                        disabled={(inv.inverterCount ?? 1) <= 1}
                         onClick={() =>
-                          handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 0) - 1, 0))
+                          handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
                         }
-                        className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-red-500 rounded-l-md transition"
+                        className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
+                          ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                          : "text-gray-600 hover:text-white hover:bg-red-500"
+                          }`}
                       >
                         −
                       </button>
@@ -1593,22 +1814,24 @@ export const SystemSpecifications = () => {
                         name="inverterCount"
                         inputMode="numeric"
                         value={inv.inverterCount ?? 1}
-                        onChange={(e) =>
-                          handleInverterChange(index, "inverterCount", Number(e.target.value))
-                        }
+                        onChange={(e) => {
+                          const value = Math.max(Number(e.target.value) || 1, 1);
+                          handleInverterChange(index, "inverterCount", value);
+                        }}
                         className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
 
                       <button
                         type="button"
                         onClick={() =>
-                          handleInverterChange(index, "inverterCount", (inv.inverterCount || 0) + 1)
+                          handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
                         }
                         className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
                       >
                         +
                       </button>
                     </div>
+
                   </div>
                 </div>
               ))}
@@ -1768,13 +1991,20 @@ export const SystemSpecifications = () => {
                 <input
                   type="text"
                   name="systemCost"
-                  value={formatIndianNumber(formData.systemCost)}
-                  onChange={(e) =>
+                  value={
+                    isEditing
+                      ? formData.systemCost // raw while typing
+                      : formatIndianNumber(formData.systemCost) // formatted otherwise
+                  }
+                  onFocus={() => setIsEditing(true)}
+                  onBlur={() => setIsEditing(false)}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
                     setFormData({
                       ...formData,
-                      systemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-                    })
-                  }
+                      systemCost: rawValue,
+                    });
+                  }}
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
@@ -1786,13 +2016,20 @@ export const SystemSpecifications = () => {
                 <input
                   type="text"
                   name="fabricationCost"
-                  value={formatIndianNumber(formData.fabricationCost)}
-                  onChange={(e) =>
+                  value={
+                    isEditingFabrication
+                      ? formData.fabricationCost // raw while editing
+                      : formatIndianNumber(formData.fabricationCost) // formatted on blur
+                  }
+                  onFocus={() => setIsEditingFabrication(true)}
+                  onBlur={() => setIsEditingFabrication(false)}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
                     setFormData({
                       ...formData,
-                      fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-                    })
-                  }
+                      fabricationCost: rawValue,
+                    });
+                  }}
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
@@ -1841,7 +2078,7 @@ export const SystemSpecifications = () => {
                 userInfo?.role === "ROLE_AGENCY_ADMIN" ||
                 userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
                   <button
-                    type="submit"
+                    type="button"
                     onClick={handleGenerateQuotation}
                     disabled={!selectedSpecId || isLoading}
                     className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"

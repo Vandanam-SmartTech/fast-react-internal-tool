@@ -5,6 +5,7 @@ import { saveUser } from '../../services/jwtService';
 import { Organization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { toast } from 'react-toastify';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 const UserFormManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -274,7 +275,7 @@ const UserFormManagement: React.FC = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center mb-6">
         <button
           onClick={() => navigate('/user-management')}
           className="p-2 rounded-full hover:bg-gray-200 transition"
@@ -609,59 +610,60 @@ const UserFormManagement: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               District <span className="text-red-500">*</span>
             </label>
-            <select
+            <ReusableDropdown
               name="district"
               value={districtCode}
-              onChange={handleDistrictChange}
-              required
-              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <option value={0}>{districtName || "Select District"}</option>
-              {districts.map((district) => (
-                <option key={district.nameEnglish} value={district.code}>
-                  {district.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              options={[
+                { value: 0, label: districtName || "Select District" },
+                ...districts.map((district) => ({
+                  value: district.code,
+                  label: district.nameEnglish,
+                })),
+              ]}
+              placeholder={districtName || "Select District"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Taluka <span className="text-red-500">*</span>
             </label>
-            <select
+            <ReusableDropdown
               name="talukaCode"
               value={talukaCode}
-              onChange={handleTalukaChange}
-              required
-              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <option value={0}>{talukaName || "Select Taluka"}</option>
-              {talukas.map((taluka) => (
-                <option key={taluka.nameEnglish} value={taluka.code}>
-                  {taluka.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              options={[
+                { value: 0, label: talukaName || "Select Taluka" },
+                ...talukas.map((taluka) => ({
+                  value: taluka.code,
+                  label: taluka.nameEnglish,
+                })),
+              ]}
+              placeholder={talukaName || "Select Taluka"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Village
             </label>
-            <select
+            <ReusableDropdown
               name="villageCode"
               value={villageCode}
-              onChange={handleVillageChange}
-              className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <option value={0}>{villageName || "Select Village"}</option>
-              {villages.map((village) => (
-                <option key={village.code} value={village.code}>
-                  {village.nameEnglish}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              options={[
+                { value: 0, label: villageName || "Select Village" },
+                ...villages.map((village) => ({
+                  value: village.code,
+                  label: village.nameEnglish,
+                })),
+              ]}
+              placeholder={villageName || "Select Village"}
+              className="w-full"
+            />
           </div>
 
           <div>
@@ -726,14 +728,14 @@ const UserFormManagement: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/user-management')}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
             {loading ? 'Saving User' : 'Save User'}

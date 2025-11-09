@@ -61,6 +61,32 @@ export const fetchUploadedDocuments = async (connectionId: string) => {
   }
 };
 
+export const fetchUploadedDocumentByDocumentTypeAndDocumentNumber = async (
+  connectionId: string,
+  documentType?: string,
+  documentNumber?: string
+) => {
+  try {
+    const onedriveAPI = getOneDriveAPI();
+
+    const response = await onedriveAPI.get(
+      `/api/document-manager/documents/${connectionId}`,
+      {
+        params: {
+          documentType,
+          documentNumber,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Failed to fetch documents:", error);
+    throw error;
+  }
+};
+
+
 export const fetchUploadedFilesBySession = async (
   connectionId: string,
   session: SessionName

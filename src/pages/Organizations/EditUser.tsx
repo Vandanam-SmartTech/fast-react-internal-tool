@@ -6,6 +6,7 @@ import { fetchOrganizations, Organization } from '../../services/organizationSer
 import { toast } from 'react-toastify';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 const EditUser: React.FC = () => {
     //const { id } = useParams();
@@ -234,29 +235,29 @@ const EditUser: React.FC = () => {
     };
 
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
 
-  setDialogType("confirm");
-  setDialogMessage("Do you want to update the user details?");
-  setDialogAction(() => async () => {
-    setLoading(true);
-    try {
-      const userData = { ...formData };
-      await updateUser(userId, userData);
-      toast.success("User updated successfully", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      navigate("/user-management");
-    } catch (error) {
-      toast.error("Failed to update user");
-    } finally {
-      setLoading(false);
-    }
-  });
-  setDialogOpen(true);
-};
+        setDialogType("confirm");
+        setDialogMessage("Do you want to update the user details?");
+        setDialogAction(() => async () => {
+            setLoading(true);
+            try {
+                const userData = { ...formData };
+                await updateUser(userId, userData);
+                toast.success("User updated successfully", {
+                    autoClose: 1000,
+                    hideProgressBar: true,
+                });
+                navigate("/user-management");
+            } catch (error) {
+                toast.error("Failed to update user");
+            } finally {
+                setLoading(false);
+            }
+        });
+        setDialogOpen(true);
+    };
 
 
 
@@ -269,39 +270,39 @@ const handleSubmit = (e: React.FormEvent) => {
         setConfirmEmailAddress(e.target.value.trim());
     };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+        }));
 
-    if (name === 'emailAddress' && value === '') {
-      setConfirmEmailAddress('');
-    }
+        if (name === 'emailAddress' && value === '') {
+            setConfirmEmailAddress('');
+        }
 
-    if (name === 'contactNumber' && value === '') {
-      setConfirmContactNumber('');
-    }
+        if (name === 'contactNumber' && value === '') {
+            setConfirmContactNumber('');
+        }
 
-    if (name === 'contactNumber') {
-      if (value !== confirmContactNumber) {
-        setConfirmContactNumber('');
+        if (name === 'contactNumber') {
+            if (value !== confirmContactNumber) {
+                setConfirmContactNumber('');
 
-      }
+            }
 
-    }
+        }
 
-    if (name === 'emailAddress') {
-      if (value !== confirmEmailAddress) {
-        setConfirmEmailAddress('');
+        if (name === 'emailAddress') {
+            if (value !== confirmEmailAddress) {
+                setConfirmEmailAddress('');
 
-      }
+            }
 
-    }
+        }
 
-  };
+    };
 
 
     return (
@@ -553,9 +554,9 @@ const handleSubmit = (e: React.FormEvent) => {
                             Email Address <span className="text-red-500">*</span>
                         </label>
 
-                    
+
                         <input
-                            type={ showEmail ? "text" : "password"}
+                            type={showEmail ? "text" : "password"}
                             name="emailAddress"
                             value={formData.emailAddress}
                             onChange={(e) => {
@@ -642,59 +643,60 @@ const handleSubmit = (e: React.FormEvent) => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             District <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <ReusableDropdown
                             name="district"
                             value={districtCode}
-                            onChange={handleDistrictChange}
-                            required
-                            className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value={0}>{districtName || "Select District"}</option>
-                            {districts.map((district) => (
-                                <option key={district.nameEnglish} value={district.code}>
-                                    {district.nameEnglish}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                            options={[
+                                { value: 0, label: districtName || "Select District" },
+                                ...districts.map((district) => ({
+                                    value: district.code,
+                                    label: district.nameEnglish,
+                                })),
+                            ]}
+                            placeholder={districtName || "Select District"}
+                            className="w-full"
+                        />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Taluka <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <ReusableDropdown
                             name="talukaCode"
                             value={talukaCode}
-                            onChange={handleTalukaChange}
-                            required
-                            className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value={0}>{talukaName || "Select Taluka"}</option>
-                            {talukas.map((taluka) => (
-                                <option key={taluka.nameEnglish} value={taluka.code}>
-                                    {taluka.nameEnglish}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                            options={[
+                                { value: 0, label: talukaName || "Select Taluka" },
+                                ...talukas.map((taluka) => ({
+                                    value: taluka.code,
+                                    label: taluka.nameEnglish,
+                                })),
+                            ]}
+                            placeholder={talukaName || "Select Taluka"}
+                            className="w-full"
+                        />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Village
                         </label>
-                        <select
+                        <ReusableDropdown
                             name="villageCode"
                             value={villageCode}
-                            onChange={handleVillageChange}
-                            className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value={0}>{villageName || "Select Village"}</option>
-                            {villages.map((village) => (
-                                <option key={village.code} value={village.code}>
-                                    {village.nameEnglish}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                            options={[
+                                { value: 0, label: villageName || "Select Village" },
+                                ...villages.map((village) => ({
+                                    value: village.code,
+                                    label: village.nameEnglish,
+                                })),
+                            ]}
+                            placeholder={villageName || "Select Village"}
+                            className="w-full"
+                        />
                     </div>
 
                     <div>
@@ -759,14 +761,14 @@ const handleSubmit = (e: React.FormEvent) => {
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                        className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                     >
                         <Save className="h-4 w-4" />
                         {loading ? 'Updating User' : 'Update User'}
@@ -774,65 +776,65 @@ const handleSubmit = (e: React.FormEvent) => {
                 </div>
             </form>
 
-                    <Dialog
-                      open={dialogOpen}
-                      onClose={() => setDialogOpen(false)}
-                      aria-labelledby="alert-dialog-title"
-                      aria-describedby="alert-dialog-description"
-                      maxWidth="xs"
-                      fullWidth
-                    >
-                      <DialogTitle id="alert-dialog-title">
-                        {dialogType === "success" && "Success"}
-                        {dialogType === "error" && "Error"}
-                        {dialogType === "confirm" && "Confirm"}
-                      </DialogTitle>
-                      <DialogContent dividers>
-                        <Alert
-                          severity={
+            <Dialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {dialogType === "success" && "Success"}
+                    {dialogType === "error" && "Error"}
+                    {dialogType === "confirm" && "Confirm"}
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Alert
+                        severity={
                             dialogType === "success"
-                              ? "success"
-                              : dialogType === "error"
-                                ? "error"
-                                : "info"
-                          }
-                        >
-                          {dialogMessage}
-                        </Alert>
-                      </DialogContent>
-                      <DialogActions>
-                        {dialogType === "confirm" ? (
-                          <>
+                                ? "success"
+                                : dialogType === "error"
+                                    ? "error"
+                                    : "info"
+                        }
+                    >
+                        {dialogMessage}
+                    </Alert>
+                </DialogContent>
+                <DialogActions>
+                    {dialogType === "confirm" ? (
+                        <>
                             <Button
-                              onClick={() => {
-                                setDialogOpen(false);
-                              }}
+                                onClick={() => {
+                                    setDialogOpen(false);
+                                }}
                             >
-                              No
+                                No
                             </Button>
                             <Button
-                              onClick={() => {
+                                onClick={() => {
+                                    setDialogOpen(false);
+                                    if (dialogAction) dialogAction();
+                                }}
+                                autoFocus
+                            >
+                                Yes
+                            </Button>
+                        </>
+                    ) : (
+                        <Button
+                            onClick={() => {
                                 setDialogOpen(false);
                                 if (dialogAction) dialogAction();
-                              }}
-                              autoFocus
-                            >
-                              Yes
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            onClick={() => {
-                              setDialogOpen(false);
-                              if (dialogAction) dialogAction();
                             }}
                             autoFocus
-                          >
+                        >
                             OK
-                          </Button>
-                        )}
-                      </DialogActions>
-                    </Dialog>
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

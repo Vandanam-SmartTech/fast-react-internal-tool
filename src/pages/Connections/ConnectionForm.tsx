@@ -316,17 +316,17 @@ export const ConnectionForm = () => {
   };
 
   ///////////////////////////////////////////////////////////
-  useEffect(() => {
-    const savedForm = localStorage.getItem('connectionFormData');
-    const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
-    if (savedForm) {
-      setFormData(JSON.parse(savedForm));
-    }
+  // useEffect(() => {
+  //   const savedForm = localStorage.getItem('connectionFormData');
+  //   const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
+  //   if (savedForm) {
+  //     setFormData(JSON.parse(savedForm));
+  //   }
 
-    if (savedConfirmConsumerNumber) {
-      setConfirmConsumerNumber(savedConfirmConsumerNumber);
-    }
-  }, []);
+  //   if (savedConfirmConsumerNumber) {
+  //     setConfirmConsumerNumber(savedConfirmConsumerNumber);
+  //   }
+  // }, []);
   ///////////////////////////////////////////////////////////
 
 
@@ -520,14 +520,14 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     }));
 
     // Save to localStorage
-    setTimeout(() => {
-      localStorage.setItem("connectionFormData", JSON.stringify({
-        ...formData,
-        [name]: value,
-        phaseTypeId: isHT ? 2 : 1,
-        ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-      }));
-    }, 0);
+    // setTimeout(() => {
+    //   localStorage.setItem("connectionFormData", JSON.stringify({
+    //     ...formData,
+    //     [name]: value,
+    //     phaseTypeId: isHT ? 2 : 1,
+    //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+    //   }));
+    // }, 0);
 
     return; 
   }
@@ -540,13 +540,13 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   }));
 
 
-  setTimeout(() => {
-    localStorage.setItem("connectionFormData", JSON.stringify({
-      ...formData,
-      [name]: value,
-      ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-    }));
-  }, 0);
+  // setTimeout(() => {
+  //   localStorage.setItem("connectionFormData", JSON.stringify({
+  //     ...formData,
+  //     [name]: value,
+  //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+  //   }));
+  // }, 0);
 };
 
 

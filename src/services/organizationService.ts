@@ -463,3 +463,14 @@ export const getPackageById = async (id: number): Promise<Package> => {
   }
 };
 
+export const fetchParentOrgDetails = async (agencyId: number) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(`/api/organizations/parentDetails/${agencyId}`);
+    return response.data; // returns the JSON object
+  } catch (error: any) {
+    console.error("Error fetching parent organization details:", error);
+    throw error;
+  }
+};
+

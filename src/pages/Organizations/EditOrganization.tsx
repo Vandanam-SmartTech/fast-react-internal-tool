@@ -6,6 +6,7 @@ import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } fr
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface District {
   code: number;
@@ -40,6 +41,7 @@ const EditOrganization: React.FC = () => {
     gstNumber: '',
     govtRegNumber: '',
     logoUrl: '',
+    emailAddress: '',
   });
 
   const [districts, setDistricts] = useState<District[]>([]);
@@ -200,46 +202,46 @@ const EditOrganization: React.FC = () => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // ✅ Ask for confirmation before submitting
-  setDialogType("confirm");
-  setDialogMessage("Do you want to update this organization?");
-  setDialogAction(() => async () => {
-    setLoading(true);
-    try {
-      const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
+    // ✅ Ask for confirmation before submitting
+    setDialogType("confirm");
+    setDialogMessage("Do you want to update this organization?");
+    setDialogAction(() => async () => {
+      setLoading(true);
+      try {
+        const userId = userClaims?.id || userClaims?.user_id || userClaims?.userId;
 
-      const orgData = {
-        ...formData,
-        createdBy: userId,
-        pinCode: formData.pinCode
-      };
+        const orgData = {
+          ...formData,
+          createdBy: userId,
+          pinCode: formData.pinCode
+        };
 
-      console.log('User ID:', userId);
-      console.log('Updating organization with data:', orgData);
+        console.log('User ID:', userId);
+        console.log('Updating organization with data:', orgData);
 
-      await updateOrganization(parseInt(organizationId), orgData);
+        await updateOrganization(parseInt(organizationId), orgData);
 
-      toast.success('Organization updated successfully', {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
+        toast.success('Organization updated successfully', {
+          autoClose: 1000,
+          hideProgressBar: true,
+        });
 
-      navigate('/organization-view', {
-        state: { orgId: organizationId }
-      });
+        navigate('/organization-view', {
+          state: { orgId: organizationId }
+        });
 
-    } catch (error) {
-      toast.error('Failed to update organization');
-    } finally {
-      setLoading(false);
-    }
-  });
+      } catch (error) {
+        toast.error('Failed to update organization');
+      } finally {
+        setLoading(false);
+      }
+    });
 
-  // ✅ Open the confirmation dialog
-  setDialogOpen(true);
-};
+    // ✅ Open the confirmation dialog
+    setDialogOpen(true);
+  };
 
 
 
@@ -269,10 +271,10 @@ const EditOrganization: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center mb-6">
         <button
-          onClick={() => navigate('/organizations')}
-          className="rounded-full hover:bg-gray-200 transition"
+          onClick={() => navigate(-1)}
+          className="p-2 rounded-full hover:bg-gray-200 transition"
         >
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
@@ -295,7 +297,7 @@ const EditOrganization: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -310,7 +312,7 @@ const EditOrganization: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Solar Solutions"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -326,7 +328,7 @@ const EditOrganization: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. SunTech, EcoVolt, SolarMax"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -338,25 +340,190 @@ const EditOrganization: React.FC = () => {
               type="text"
               name="contactNumber"
               value={formData.contactNumber}
-              onChange={handleChange}
-              placeholder="9567023456"
-              maxLength={15}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[6-9][0-9]*$/.test(value) || value === "") {
+                  if (value.length <= 10) {
+                    handleChange(e);
+                  }
+                }
+              }}
+              placeholder="e.g. 9567023456"
+              maxLength={10}
+              required
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              title="Enter a valid 10-digit mobile number starting with 6-9"
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
             />
+            {formData.contactNumber?.length > 0 &&
+              !/^[6-9]{1}[0-9]{0,9}$/.test(formData.contactNumber) && (
+                <p className="text-red-600 text-sm mt-1">
+                  Enter a valid 10-digit mobile number starting with 6-9
+                </p>
+              )}          
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              GST Number
+              Email Address <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="emailAddress"
+              value={formData.emailAddress}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (
+                  value === "" ||
+                  /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                    value
+                  )
+                ) {
+                  handleChange(e);
+                } else {
+                  handleChange(e);
+                }
+              }}
+              placeholder="e.g. johndoe@example.com"
+              maxLength={50}
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+
+            {/* Error messages */}
+            {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email must start with a letter or number
+              </p>
+            )}
+
+            {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot contain consecutive dots
+              </p>
+            )}
+
+            {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+              <p className="text-red-600 text-sm mt-1">
+                Email cannot end with a dot before @
+              </p>
+            )}
+
+            {formData.emailAddress &&
+              !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                formData.emailAddress
+              ) &&
+              !/\.\./.test(formData.emailAddress) &&
+              !/\.@/.test(formData.emailAddress) &&
+              /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+                <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              GST Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="gstNumber"
               value={formData.gstNumber || ''}
               onChange={handleChange}
+              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+              title="GSTIN must be in format: 22AAAAA0000A1Z6"
               placeholder="e.g. 22AAAAA0000A1Z6"
-              maxLength={20}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={15}
+              required
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Government Registration Number
+            </label>
+            <input
+              type="text"
+              name="govtRegNumber"
+              value={formData.govtRegNumber || ''}
+              onChange={handleChange}
+              maxLength={50}
+              placeholder="e.g. L01631KA2010PTC096843"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
+            <ReusableDropdown
+              name="district"
+              value={districtCode}
+              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              options={[
+                { value: 0, label: districtName || "Select District" },
+                ...districts.map((district) => ({
+                  value: district.code,
+                  label: district.nameEnglish,
+                })),
+              ]}
+              placeholder={districtName || "Select District"}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
+            <ReusableDropdown
+              name="talukaCode"
+              value={talukaCode}
+              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              options={[
+                { value: 0, label: talukaName || "Select Taluka" },
+                ...talukas.map((taluka) => ({
+                  value: taluka.code,
+                  label: taluka.nameEnglish,
+                })),
+              ]}
+              placeholder={talukaName || "Select Taluka"}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
+            <ReusableDropdown
+              name="villageCode"
+              value={villageCode}
+              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              options={[
+                { value: 0, label: villageName || "Select Village" },
+                ...villages.map((village) => ({
+                  value: village.code,
+                  label: village.nameEnglish,
+                })),
+              ]}
+              placeholder={villageName || "Select Village"}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              id="pinCode"
+              name="pinCode"
+              value={formData.pinCode}
+              onChange={handlepinCodeChange}
+              placeholder="e.g. 416000"
+              required
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -373,7 +540,7 @@ const EditOrganization: React.FC = () => {
               placeholder="e.g. Flat No, House No, Street Name"
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
@@ -387,95 +554,11 @@ const EditOrganization: React.FC = () => {
               value={formData.addressLine2 || ''}
               onChange={handleChange}
               placeholder="e.g. Apartment, Suite, Unit, Building"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
-            <select
-              name="distrct"
-              id="district"
-              value={districtCode}
-              onChange={handleDistrictChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{districtName || "Select District"}</option>
-              {districts.map((district) => (
-                <option key={district.nameEnglish} value={district.code}>
-                  {district.nameEnglish}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
-            <select
-              name="talukaCode"
-              id="taluka"
-              value={talukaCode}
-              onChange={handleTalukaChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{talukaName || "Select Taluka"}</option>
-              {talukas.map((taluka) => (
-                <option key={taluka.nameEnglish} value={taluka.code}>
-                  {taluka.nameEnglish}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
-            <select
-              name="villageCode"
-              id="village"
-              value={villageCode}
-              onChange={handleVillageChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={0}>{villageName || "Select Village"}</option>
-              {villages.map((village) => (
-                <option key={village.code} value={village.code}>
-                  {village.nameEnglish}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              id="pinCode"
-              name="pinCode"
-              value={formData.pinCode}
-              onChange={handlepinCodeChange}
-              placeholder="e.g. 416000"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
-            </label>
-            <input
-              type="text"
-              name="govtRegNumber"
-              value={formData.govtRegNumber || ''}
-              onChange={handleChange}
-              maxLength={50}
-              placeholder="e.g. L01631KA2010PTC096843"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        
 
         </div>
 
@@ -483,23 +566,23 @@ const EditOrganization: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/organizations')}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Updating' : 'Update'}
+            {loading ? 'Updating' : 'Update Organization'}
           </button>
         </div>
 
       </form>
 
-            <Dialog
+      <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         aria-labelledby="alert-dialog-title"

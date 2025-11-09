@@ -5,7 +5,7 @@ import { checkMobileNumberExists, checkEmailAddressExists } from '../../services
 import { fetchClaims } from '../../services/jwtService'
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg } from "../../services/organizationService";
+import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg, fetchParentOrgDetails } from "../../services/organizationService";
 import { useUser } from "../../contexts/UserContext";
 import ReusableDropdown from "../../components/ReusableDropdown";
 
@@ -33,7 +33,6 @@ export const CustomerForm = () => {
   const handleToggleEmail = () => setShowEmail(!showEmail);
 
   const [activeTab, setActiveTab] = useState("Customer Details");
-  const envLabel = import.meta.env.VITE_ENV_LABEL;
 
   const [navigateAfterClose, setNavigateAfterClose] = useState(false);
   const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
@@ -82,24 +81,24 @@ export const CustomerForm = () => {
 
 
   ///////////////////////////////////////////////////////////
-  useEffect(() => {
-    const savedFormData = localStorage.getItem("customerFormData");
-    const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
-    const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
+  // useEffect(() => {
+  //   const savedFormData = localStorage.getItem("customerFormData");
+  //   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
+  //   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
 
-    if (savedFormData) {
-      setFormData(JSON.parse(savedFormData));
-    }
+  //   if (savedFormData) {
+  //     setFormData(JSON.parse(savedFormData));
+  //   }
 
-    if (savedConfirmMobile) {
-      setConfirmMobileNumber(savedConfirmMobile);
-    }
+  //   if (savedConfirmMobile) {
+  //     setConfirmMobileNumber(savedConfirmMobile);
+  //   }
 
-    if (savedConfirmEmail) {
-      setConfirmEmailAddress(savedConfirmEmail);
-    }
+  //   if (savedConfirmEmail) {
+  //     setConfirmEmailAddress(savedConfirmEmail);
+  //   }
 
-  }, []);
+  // }, []);
 
   ///////////////////////////////////////////////////////////
 
@@ -198,10 +197,57 @@ export const CustomerForm = () => {
   }, [selectedOrg]);
 
   useEffect(() => {
-    if (selectedOrg?.role === "ROLE_ORG_STAFF") {
-      setRepresentativeType("organization");
+  const getParentOrg = async (agencyId: number) => {
+    try {
+      const data = await fetchParentOrgDetails(agencyId);
+      setOrganizationId(Number(data.id));
+    } catch (error) {
+      console.error("Error loading parent organization:", error);
     }
-  }, [selectedOrg]);
+  };
+
+  if (!selectedOrg?.role) return;
+
+  if (
+    [
+      "ROLE_AGENCY_STAFF",
+      "ROLE_AGENCY_REPRESENTATIVE",
+      "ROLE_AGENCY_ADMIN",
+    ].includes(selectedOrg.role)
+  ) {
+    if (selectedOrg.orgId) {
+      setAgencyId(Number(selectedOrg.orgId));
+      getParentOrg(Number(selectedOrg.orgId));
+    }
+  } else if (
+    [
+      "ROLE_ORG_STAFF",
+      "ROLE_ORG_REPRESENTATIVE",
+      "ROLE_ORG_ADMIN",
+    ].includes(selectedOrg.role)
+  ) {
+    if (selectedOrg.orgId) {
+      setOrganizationId(Number(selectedOrg.orgId));
+    }
+  }
+}, [selectedOrg]);
+
+useEffect(() => {
+  if (selectedOrg?.role === "ROLE_ORG_STAFF") {
+    setRepresentativeType("organization");
+  } else if (selectedOrg?.role === "ROLE_AGENCY_STAFF") {
+    setRepresentativeType("agency");
+    setAgencyId(Number(selectedOrg?.orgId)); 
+  }
+  else if(selectedOrg?.role === "ROLE_AGENCY_ADMIN") {
+    setRepresentativeType("agency");
+    setAgencyId(Number(selectedOrg?.orgId));
+  }
+  if(selectedOrg?.role === "ROLE_AGENCY_REPRESENTTAIVE"){
+    setAgencyId(Number(selectedOrg?.orgId));
+  }
+}, [selectedOrg]);
+
 
 
   useEffect(() => {
@@ -278,7 +324,7 @@ export const CustomerForm = () => {
     }
 
     setFormData(updatedFormData);
-    localStorage.setItem('customerFormData', JSON.stringify(updatedFormData));
+    // localStorage.setItem('customerFormData', JSON.stringify(updatedFormData));
 
 
     if (name === 'mobileNumber') {
@@ -502,7 +548,7 @@ export const CustomerForm = () => {
 
 
             {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
-              selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && (<div className="col-span-2 w-full">
+              selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" &&  selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" &&(<div className="col-span-2 w-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
                   Select Referrer User Type <span className="text-red-500">*</span>
                 </label>
@@ -561,7 +607,7 @@ export const CustomerForm = () => {
                   </div>
                 )}
 
-
+                {selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Select Agency
@@ -583,6 +629,7 @@ export const CustomerForm = () => {
                     className="mt-1"
                   />
                 </div>
+                )}
 
 
                 <div>
