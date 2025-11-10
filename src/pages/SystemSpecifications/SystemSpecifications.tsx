@@ -439,63 +439,68 @@ export const SystemSpecifications = () => {
   }, [inverterBrandId, gridTypeId]);
 
 
+useEffect(() => {
+  const loadPanelBrands = async () => {
+    if (!materialOriginId) return;
+
+    setPanels([]);
+    setPanelSpecId(null);
+    setPanelCapacities([]);
+    setSystemCapacityKw(null);
+    setFormData((prev) => ({
+      ...prev,
+      panelSpecId: null,
+      systemCapacityKw: null,
+    }));
+
+    try {
+      const data = await fetchPanelBrands(Number(materialOriginId));
+      setPanels([...data]);
+    } catch (error) {
+      console.error("Failed to fetch panel brands:", error);
+      setPanels([]);
+    }
+  };
+
+  loadPanelBrands();
+}, [materialOriginId]);
+
+
+
+
+
   useEffect(() => {
-    const loadPanelBrands = async () => {
-      if (!isPrefilling) {
-        setPanels([]);
-        setPanelSpecId(null);
-        setPanelCapacities([]);
-        setSystemCapacityKw(null);
-        setFormData((prev) => ({
-          ...prev,
-          panelSpecId: null,
-          systemCapacityKw: null
-        }));
-      }
+  const loadPanelBrandCapacities = async () => {
+    if (
+      phaseTypeId === null ||
+      panelSpecId === null ||
+      avgMonthlyConsumption === null ||
+      materialOriginId === null
+    ) {
+      return;
+    }
 
-      if (materialOriginId) {
-        try {
-          const data = await fetchPanelBrands(Number(materialOriginId));
-          setPanels([...data]);
-        } catch (error) {
-          console.error("Failed to fetch panel brands:", error);
-          setPanels([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      }
-    };
-
-    loadPanelBrands();
-  }, [materialOriginId]);
-
-
-  useEffect(() => {
-    const loadPanelBrandCapacities = async () => {
-
+    if (!formData.systemCapacityKw) {
       setPanelCapacities([]);
       setSystemCapacityKw(null);
       setFormData((prev) => ({
         ...prev,
-        systemCapacityKw: null
+        systemCapacityKw: null,
       }));
+    }
 
+    try {
+      const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
+      setPanelCapacities([...data]);
+    } catch (error) {
+      console.error("Failed to fetch panel brand capacities:", error);
+      setPanelCapacities([]);
+    }
+  };
 
-      if (phaseTypeId !== null && panelSpecId !== null && avgMonthlyConsumption !== null && materialOriginId !== null) {
-        try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
-          setPanelCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch panel brand capacities:", error);
-          setPanelCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      }
-    };
+  loadPanelBrandCapacities();
+}, [phaseTypeId, panelSpecId, materialOriginId]);
 
-    loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId, materialOriginId]);
 
 
 
@@ -862,7 +867,6 @@ export const SystemSpecifications = () => {
     setPanelSpecId(spec.panelSpecsId);
     setBatteryBrandId(spec.batteryBrandId);
     setBatterySpecId(spec.batterySpecsId);
-    setSystemCapacityKw(spec.systemCapacityKw);
 
     console.log("Selected spec:", spec);
     console.log("Loaded inverters:", inverterList);
@@ -921,7 +925,10 @@ export const SystemSpecifications = () => {
     setFormData(updatedFormData);
     setIsCustomSpecs(true);
     setIsSpecsSaved(false);
+    
+    if (priceAlreadySetFromCustomerData) {
     setPriceAlreadySetFromCustomerData(false);
+  }
   };
 
 
@@ -962,60 +969,72 @@ export const SystemSpecifications = () => {
   //   fetchPriceDetails();
   // }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
 
-  useEffect(() => {
-    const fetchPriceDetails = async () => {
+useEffect(() => {
+  const fetchPriceDetails = async () => {
+    // 🚫 Skip fetching if we’re showing saved (customer) prices
+    if (priceAlreadySetFromCustomerData) return;
 
-      if (priceAlreadySetFromCustomerData) return;
+    // ✅ Check if there’s valid input to fetch price
+    const hasValidSystem =
+      !!formData.systemCapacityKw || !!formData.panelSpecId;
+    const hasValidBattery = !!formData.batterySpecId;
+    const validInverters = (formData.inverters || []).filter(
+      (inv) => inv.inverterSpecId && inv.inverterCount > 0
+    );
 
-      if (formData.systemCapacityKw && formData.panelSpecId) {
-        try {
-          const payload = {
-            systemCapacityKw: formData.systemCapacityKw,
-            panelSpecsId: formData.panelSpecId,
-            batterySpecsId: formData.batterySpecId,
-            batteryCount: 1,
-            inverters: (formData.inverters || [])
-              .filter((inv) => inv.inverterSpecId && inv.inverterCount > 0)
-              .map((inv) => ({
-                inverterSpecsId: inv.inverterSpecId,
-                inverterCount: inv.inverterCount,
-              })),
-          };
+    const hasValidInverters = validInverters.length > 0;
 
-          console.log("Sending payload to getPriceDetails:", payload);
+    if (!hasValidSystem && !hasValidBattery && !hasValidInverters) {
+      setFormData((prev) => ({
+        ...prev,
+        systemCost: 0,
+        fabricationCost: 0,
+        totalCost: 0,
+      }));
+      return;
+    }
 
-          const response = await getPriceDetails(payload);
+    try {
+      const payload = {
+        systemCapacityKw: formData.systemCapacityKw || 0,
+        panelSpecsId: formData.panelSpecId,
+        batterySpecsId: formData.batterySpecId,
+        batteryCount: hasValidBattery ? 1 : 0,
+        inverters: validInverters.map((inv) => ({
+          inverterSpecsId: inv.inverterSpecId,
+          inverterCount: inv.inverterCount,
+        })),
+      };
 
-          if (response) {
-            setFormData((prev: any) => ({
-              ...prev,
-              systemCost: response.systemCost || 0,
-              fabricationCost: response.fabricationCost || 0,
-              totalCost:
-                (response.systemCost || 0) + (response.fabricationCost || 0),
-            }));
-          }
-        } catch (err) {
-          console.error("Failed to fetch price details", err);
-        }
-      } else {
-        setFormData((prev: any) => ({
+      console.log("Sending payload to getPriceDetails:", payload);
+
+      const response = await getPriceDetails(payload);
+
+      if (response) {
+        setFormData((prev) => ({
           ...prev,
-          systemCost: 0,
-          fabricationCost: 0,
-          totalCost: 0,
+          systemCost: response.systemCost || 0,
+          fabricationCost: response.fabricationCost || 0,
+          totalCost:
+            (response.systemCost || 0) + (response.fabricationCost || 0),
         }));
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch price details", err);
+    }
+  };
 
-    fetchPriceDetails();
-  }, [
-    formData.systemCapacityKw,
-    formData.panelSpecId,
-    formData.inverters,
-    formData.batterySpecId,
-    priceAlreadySetFromCustomerData,
-  ]);
+  fetchPriceDetails();
+}, [
+  formData.systemCapacityKw,
+  formData.panelSpecId,
+  formData.inverters,
+  formData.batterySpecId,
+  priceAlreadySetFromCustomerData, // include this dependency
+]);
+
+
+
 
 
   const handleGenerateQuotation = async () => {

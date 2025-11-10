@@ -471,7 +471,7 @@ const ListOfConsumers: React.FC = () => {
                 leftIcon={<Plus className="w-4 h-4" />}
                 className="whitespace-nowrap"
               >
-               Add New Connection
+                Add New Connection
               </Button>
             </div>
             {consumer.connections.map((connection, index) => (

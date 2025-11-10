@@ -64,7 +64,7 @@ export const fetchUploadedDocuments = async (connectionId: string) => {
 export const fetchUploadedDocumentByDocumentTypeAndDocumentNumber = async (
   connectionId: string,
   documentType?: string,
-  documentNumber?: string
+  secondaryId?: string
 ) => {
   try {
     const onedriveAPI = getOneDriveAPI();
@@ -74,7 +74,7 @@ export const fetchUploadedDocumentByDocumentTypeAndDocumentNumber = async (
       {
         params: {
           documentType,
-          documentNumber,
+          secondaryId,
         },
       }
     );

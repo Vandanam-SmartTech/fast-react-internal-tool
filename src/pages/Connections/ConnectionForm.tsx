@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
