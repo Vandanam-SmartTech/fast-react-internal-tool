@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypesNames, fetchConsumerNumber, getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
 import { checkSystemSpecificationsExists } from "../../services/quotationService";
 import { useLocation } from "react-router-dom";
-import { fetchUploadedFilesBySession, downloadDocumentById, uploadDocuments } from "../../services/oneDriveService";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from "react-toastify";
@@ -53,22 +52,6 @@ export const ViewConnection = () => {
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
-  // const sessionMap = {
-  //   Aadhar: "Aadhaar Card",
-  //   Passbook: "Bank Passbook",
-  //   Electricity: "Electricity Bill",
-  // } as const;
-
-  // type SessionKey = keyof typeof sessionMap;
-  // type SessionName = (typeof sessionMap)[SessionKey];
-
-  // const [sessionFiles, setSessionFiles] = useState<{
-  //   [key in SessionKey]?: File[];
-  // }>({});
-  // const [uploadedFiles, setUploadedFiles] = useState<{
-  //   [key in SessionKey]?: UploadedFile[];
-  // }>({});
-
   const tabs = [
     "Customer Details",
     "Connection Details",
@@ -77,7 +60,6 @@ export const ViewConnection = () => {
   ];
 
 
-  // ⬇️ Move this function outside useEffect so it can be reused
   const fetchConnection = async () => {
     if (!customerId || !connectionId) {
       console.error("Customer ID or Connection ID not found!");
@@ -99,109 +81,14 @@ export const ViewConnection = () => {
     }
   };
 
-  // Keep your useEffect clean
+
   useEffect(() => {
     fetchConnection();
   }, [customerId, connectionId]);
 
-
-
-
-  // useEffect(() => {
-  //   if (modalOpen) {
-  //     fetchAndSetUploadedFiles();
-  //   }
-  // }, [modalOpen]);
-
   const handleMessageBoxClose = () => {
     setMessageBoxOpen(false);
   };
-
-
-
-  // const fetchAndSetUploadedFiles = async () => {
-  //   const connectionId = location.state?.connectionId;
-
-  //   const fileMap: { [key in SessionKey]?: UploadedFile[] } = {};
-
-
-  //   const sessionIdentifierMap: Record<SessionKey, string> = {
-  //     Aadhar: "AadhaarCard",
-  //     Passbook: "BankPassbook",
-  //     Electricity: "EBill",
-  //   };
-
-  //   await Promise.all(
-  //     (Object.entries(sessionMap) as [SessionKey, SessionName][]).map(
-  //       async ([key]) => {
-  //         const backendSessionName = `${sessionIdentifierMap[key]}_${govIdName}`;
-  //         const files = await fetchUploadedFilesBySession(connectionId, backendSessionName);
-  //         fileMap[key] = files;
-  //       }
-  //     )
-  //   );
-
-  //   setUploadedFiles(fileMap);
-  // };
-
-
-
-
-  // const handleSingleFileUpload = async (files: File[]) => {
-  //   if (!files || files.length === 0) {
-  //     toast.error("Please select files to upload.", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   try {
-  //     const connectionId = location.state?.connectionId;
-
-  //     const sessionIdentifierMap: Record<SessionKey, string> = {
-  //       Aadhar: "AadhaarCard",
-  //       Passbook: "BankPassbook",
-  //       Electricity: "EBill",
-  //     };
-
-  //     const backendSessionName = `${sessionIdentifierMap[activeDocTab]}_${govIdName}`;
-
-  //     const result = await uploadDocuments(connectionId, backendSessionName, files);
-
-  //     toast.success(`${sessionMap[activeDocTab]} uploaded successfully`, {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //     await fetchAndSetUploadedFiles();
-  //     setSessionFiles((prev) => ({ ...prev, [activeDocTab]: [] }));
-  //   } catch (error: any) {
-  //     toast.error(`${sessionMap[activeDocTab]} upload failed: ${error.response?.data?.message || error.message}`, {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // const handleDownload = async (fileId: string, fileName: string) => {
-  //   try {
-  //     const blob = await downloadDocumentById(fileId);
-  //     const url = window.URL.createObjectURL(blob);
-
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = fileName;
-  //     a.click();
-
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     console.error("Download failed:", error);
-  //     alert("Failed to download file.");
-  //   }
-  // };
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -247,36 +134,6 @@ export const ViewConnection = () => {
   const getSpaceTypeName = (id: number) => {
     return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
   };
-
-  // const handleOnboardClick = async () => {
-  //   if (!connection?.id) return;
-
-  //   try {
-  //     const exists = await checkSystemSpecificationsExists(connection.id);
-
-  //     if (!exists) {
-
-  //       setDialogType("confirm");
-  //       setDialogMessage(
-  //         "System Specification details are not saved for this consumer, do you want to save?"
-  //       );
-  //       setDialogAction(() => handleSaveSpecs);
-  //       setDialogOpen(true);
-  //       return;
-  //     }
-
-  //     setDialogType("confirm");
-  //     setDialogMessage("Do you want to onboard the consumer?");
-  //     setDialogAction(() => handleYes);
-  //     setDialogOpen(true);
-
-  //   } catch (error) {
-  //     console.error("Error checking system specifications:", error);
-  //     setMessageBoxContent("Failed to verify system specification details.");
-  //     setMessageBoxSeverity("error");
-  //     setMessageBoxOpen(true);
-  //   }
-  // };
 
   const handleOnboardClick = async () => {
     if (!connection?.id) return;
@@ -394,7 +251,6 @@ export const ViewConnection = () => {
       <div className="col-span-1 md:col-span-2 w-full max-w-4xl mx-auto overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
-          {/* Connector Line: between the first and last icon only */}
           <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
           <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
@@ -714,14 +570,7 @@ export const ViewConnection = () => {
             <span>Add New Installation</span>
           </button>
 
-          {/* Upload/View Documents Button */}
-          {/* <button
-      onClick={() => setModalOpen(true)}
-      className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2"
-    >
-      <FileUp className="w-4 h-4" />
-      <span>Upload/View Documents</span>
-    </button> */}
+
 
           {/* Get Recommendation Button */}
           <button
@@ -741,135 +590,6 @@ export const ViewConnection = () => {
           </button>
         </div>
       </div>
-
-
-
-
-      {/* Document Upload Modal */}
-
-      {/*{modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-300">
-            <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-              Upload Required Documents
-            </h3>
-
- 
-            <div className="flex justify-around mb-4">
-              {(Object.keys(sessionMap) as SessionKey[]).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveDocTab(key)}
-                  className={`px-4 py-2 rounded-t ${activeDocTab === key
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                    }`}
-                >
-                  {sessionMap[key]}
-                </button>
-              ))}
-            </div>
-
-     
-            <div>
-              <label className="block font-medium text-gray-700 mb-1">
-                Upload {sessionMap[activeDocTab]} File(s)
-              </label>
-              <div className="flex items-center gap-2 mb-2">
-                <input
-                  type="file"
-                  id="fileUpload"
-                  className="hidden"
-                  multiple
-                  onChange={(e) => {
-                    const newFiles = Array.from(e.target.files || []);
-                    setSessionFiles((prev) => {
-                      const existing = prev[activeDocTab] || [];
-                      const updated = [...existing];
-                      newFiles.forEach((file) => {
-                        if (!existing.find((f) => f.name === file.name)) {
-                          updated.push(file);
-                        }
-                      });
-                      return { ...prev, [activeDocTab]: updated };
-                    });
-                    e.target.value = "";
-                  }}
-                />
-
-                <label
-                  htmlFor="fileUpload"
-                  className="cursor-pointer text-sm py-2 px-4 bg-blue-600 text-white rounded-full hover:bg-blue-700"
-                >
-                  Choose Files
-                </label>
-              </div>
-
- 
-              {sessionFiles[activeDocTab]?.length > 0 && (
-                <ul className="text-sm text-gray-700 mb-4">
-                  {sessionFiles[activeDocTab].map((file, idx) => (
-                    <li
-                      key={file.name + idx}
-                      className="flex justify-between items-center border px-2 py-1 rounded mb-1 bg-gray-50"
-                    >
-                      <span className="truncate max-w-[80%]">{file.name}</span>
-                      <button
-                        onClick={() => {
-                          setSessionFiles((prev) => {
-                            const updated = (prev[activeDocTab] || []).filter(
-                              (_, index) => index !== idx
-                            );
-                            return { ...prev, [activeDocTab]: updated };
-                          });
-                        }}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-
-              {uploadedFiles[activeDocTab]?.length > 0 && (
-                <div className="text-sm text-green-600 mb-4 space-y-1">
-                  {uploadedFiles[activeDocTab].map((file) => (
-                    <div key={file.fileId} className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDownload(file.fileId, file.fileName)}
-                        className="underline text-left text-green-600 hover:text-green-900"
-                      >
-                        {file.fileName}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleSingleFileUpload(sessionFiles[activeDocTab] || [])}
-                disabled={isLoading || !(sessionFiles[activeDocTab]?.length > 0)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-              >
-                {isLoading ? "Uploading..." : `Upload ${sessionMap[activeDocTab]}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
-
-
 
 
       {(userInfo?.role === "ROLE_ORG_ADMIN" ||

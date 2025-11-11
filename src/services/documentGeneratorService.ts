@@ -2,17 +2,17 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 import { getConfig } from '../config';
 
-export const getDocumentAPI = () => {
+export const getDocGeneratorAPI = () => {
   const { VITE_DOCGENERATOR_API } = getConfig();
 
-  const documentAPI = axios.create({
+  const docGeneratorAPI = axios.create({
     baseURL: VITE_DOCGENERATOR_API,
     headers: {
       'Content-Type': 'application/json',
     },
   });
 
-  documentAPI.interceptors.request.use((config) => {
+  docGeneratorAPI.interceptors.request.use((config) => {
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -20,7 +20,7 @@ export const getDocumentAPI = () => {
     return config;
   });
 
-  return documentAPI;
+  return docGeneratorAPI;
 };
 
 export const fetchPdf = async (
@@ -28,7 +28,7 @@ export const fetchPdf = async (
   docName: string,
   quotedTotal?: number
 ): Promise<Blob> => {
-  const documentAPI = getDocumentAPI();
+  const docGeneratorAPI = getDocGeneratorAPI();
 
   const endpointMap: Record<string, string> = {
     "WCR": `/api/pdf/wcrUndertakingAdhar/${id}?download=true`,
@@ -48,7 +48,7 @@ export const fetchPdf = async (
   try {
     if (docName === "Consumer Vendor Agreement") {
       // POST request with body
-      const response = await documentAPI.post(
+      const response = await docGeneratorAPI.post(
         endpoint,
         { quotedTotal }, // request body
         {
@@ -59,7 +59,7 @@ export const fetchPdf = async (
       return response.data;
     } else {
       // GET for all other documents
-      const response = await documentAPI.get(endpoint, {
+      const response = await docGeneratorAPI.get(endpoint, {
         responseType: "blob",
         headers: { Accept: "application/pdf" },
       });

@@ -2,15 +2,15 @@ import axios from 'axios';
 import { getConfig } from '../config';
 import { fetchClaims } from './jwtService';
 
-export const getOneDriveAPI = () => {
+export const getDocManagerAPI = () => {
   const { VITE_DOCMANAGER_API } = getConfig();
 
-  const oneDriveAPI = axios.create({
+  const docManagerAPI = axios.create({
     baseURL: VITE_DOCMANAGER_API,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-  oneDriveAPI.interceptors.request.use((config) => {
+  docManagerAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem('jwtToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -18,7 +18,7 @@ export const getOneDriveAPI = () => {
     return config;
   });
 
-  return oneDriveAPI;
+  return docManagerAPI;
 };
 
 // Local types for helper endpoints
@@ -35,14 +35,14 @@ export const uploadDocuments = async (
   file: File
 ) => {
   try {
-    const onedriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
 
     const formData = new FormData();
     formData.append('connectionId', connectionId);
     formData.append('documentType', documentType);
     formData.append('documentData', file);
 
-    const response = await onedriveAPI.post('/api/document-manager/documents/', formData);
+    const response = await docManagerAPI.post('/api/document-manager/documents/', formData);
     return response.data;
   } catch (error: any) {
     console.error('Error uploading document:', error);
@@ -52,8 +52,8 @@ export const uploadDocuments = async (
 
 export const fetchUploadedDocuments = async (connectionId: string) => {
   try {
-    const onedriveAPI = getOneDriveAPI();
-    const response = await onedriveAPI.get(`/api/document-manager/documents/data/${connectionId}`);
+    const docManagerAPI = getDocManagerAPI();
+    const response = await docManagerAPI.get(`/api/document-manager/documents/data/${connectionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Failed to fetch documents:', error);
@@ -67,9 +67,9 @@ export const fetchUploadedDocumentByDocumentTypeAndDocumentNumber = async (
   secondaryId?: string
 ) => {
   try {
-    const onedriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
 
-    const response = await onedriveAPI.get(
+    const response = await docManagerAPI.get(
       `/api/document-manager/documents/${connectionId}`,
       {
         params: {
@@ -86,31 +86,9 @@ export const fetchUploadedDocumentByDocumentTypeAndDocumentNumber = async (
   }
 };
 
-
-export const fetchUploadedFilesBySession = async (
-  connectionId: string,
-  session: SessionName
-): Promise<UploadedFile[]> => {
-  const oneDriveAPI = getOneDriveAPI();
-  try {
-    const response = await oneDriveAPI.get(`/api/onedrive/metadata/${connectionId}/${session}`);
-
-    const files = response.data?.data || [];
-
-    return files.map((file: any) => ({
-      fileId: file.fileId,
-      fileName: file.fileName,
-      filePath: file.filePath,
-    }));
-  } catch (error) {
-    console.error(`Error fetching files for ${session}`, error);
-    return [];
-  }
-};
-
 export const downloadDocumentById = async (id: number): Promise<Blob> => {
-  const oneDriveAPI = getOneDriveAPI();
-  const response = await oneDriveAPI.get(`/api/document-manager/documents/download/${id}`, {
+  const docManagerAPI = getDocManagerAPI();
+  const response = await docManagerAPI.get(`/api/document-manager/documents/download/${id}`, {
     responseType: 'blob',
   });
 
@@ -119,8 +97,8 @@ export const downloadDocumentById = async (id: number): Promise<Blob> => {
 
 export const deleteDocumentById = async (id:number): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
-    await oneDriveAPI.delete(`/api/document-manager/documents/delete/${id}`);
+    const docManagerAPI = getDocManagerAPI();
+    await docManagerAPI.delete(`/api/document-manager/documents/delete/${id}`);
   } catch (error: any) {
     console.error('Failed to delete document:', error);
     throw error;
@@ -129,13 +107,13 @@ export const deleteDocumentById = async (id:number): Promise<void> => {
 
 export const updateDocumentById = async (id:number, file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const formData = new FormData();
 
     formData.append("fileId", id);
     formData.append("fileData", file);
 
-    await oneDriveAPI.put(`/api/document-manager/documents/update/${id}`, formData);
+    await docManagerAPI.put(`/api/document-manager/documents/update/${id}`, formData);
   } catch (error: any) {
     console.error("Failed to update document:", error);
     throw error;
@@ -144,14 +122,14 @@ export const updateDocumentById = async (id:number, file: File): Promise<void> =
 
 export const uploadUserSignature = async (file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await oneDriveAPI.post(`/api/document-manager/user-media/${userId}/signature`, formData, {
+    await docManagerAPI.post(`/api/document-manager/user-media/${userId}/signature`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -164,11 +142,11 @@ export const uploadUserSignature = async (file: File): Promise<void> => {
 
 export const getUserSignature = async (): Promise<string | null> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
-    const res = await oneDriveAPI.get(
+    const res = await docManagerAPI.get(
       `/api/document-manager/user-media/${userId}/signature`,
       { responseType: "blob" }
     );
@@ -183,14 +161,14 @@ export const getUserSignature = async (): Promise<string | null> => {
 
 export const editUserSignature = async (file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await oneDriveAPI.put(
+    await docManagerAPI.put(
       `/api/document-manager/user-media/${userId}/signature`,
       formData,
       {
@@ -207,11 +185,11 @@ export const editUserSignature = async (file: File): Promise<void> => {
 
 export const deleteUserSignaturePhoto = async (): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
-    await oneDriveAPI.delete(`/api/document-manager/user-media/${userId}`, {
+    await docManagerAPI.delete(`/api/document-manager/user-media/${userId}`, {
       params: { type: "SIGNATURE" },
     });
 
@@ -224,14 +202,14 @@ export const deleteUserSignaturePhoto = async (): Promise<void> => {
 
 export const uploadUserProfilePhoto = async (file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await oneDriveAPI.post(`/api/document-manager/user-media/${userId}/profile`, formData, {
+    await docManagerAPI.post(`/api/document-manager/user-media/${userId}/profile`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -244,11 +222,11 @@ export const uploadUserProfilePhoto = async (file: File): Promise<void> => {
 
 export const getUserProfilePhoto = async (): Promise<string | null> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
-    const res = await oneDriveAPI.get(
+    const res = await docManagerAPI.get(
       `/api/document-manager/user-media/${userId}/profile`,
       { responseType: "blob" }
     );
@@ -263,14 +241,14 @@ export const getUserProfilePhoto = async (): Promise<string | null> => {
 
 export const editUserProfilePhoto = async (file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await oneDriveAPI.put(
+    await docManagerAPI.put(
       `/api/document-manager/user-media/${userId}/profile`,
       formData,
       {
@@ -287,12 +265,12 @@ export const editUserProfilePhoto = async (file: File): Promise<void> => {
 
 export const deleteUserProfilePhoto = async (): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
     const claims = await fetchClaims();
     const userId = claims.id;
 
     // Add ?type=PROFILE (or lowercase "profile" if your MediaTypes enum handles it case-insensitively)
-    await oneDriveAPI.delete(`/api/document-manager/user-media/${userId}`, {
+    await docManagerAPI.delete(`/api/document-manager/user-media/${userId}`, {
       params: { type: "PROFILE" },
     });
 
@@ -307,12 +285,12 @@ export const deleteUserProfilePhoto = async (): Promise<void> => {
 
 export const uploadOrganizationImage = async (orgId: number, file: File): Promise<void> => {
   try {
-    const oneDriveAPI = getOneDriveAPI();
+    const docManagerAPI = getDocManagerAPI();
 
     const formData = new FormData();
     formData.append("file", file);
 
-    await oneDriveAPI.post(`/api/document-manager/organization-media/${orgId}/logo`, formData, {
+    await docManagerAPI.post(`/api/document-manager/organization-media/${orgId}/logo`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

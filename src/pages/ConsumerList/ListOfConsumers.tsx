@@ -113,7 +113,6 @@ const ListOfConsumers: React.FC = () => {
         if (res?.length) {
           setAgencies(res);
         } else {
-
           loadConsumers(0);
         }
       });
@@ -147,7 +146,6 @@ const ListOfConsumers: React.FC = () => {
         setUsers([]);
       }
     };
-
     loadUsers();
   }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
 

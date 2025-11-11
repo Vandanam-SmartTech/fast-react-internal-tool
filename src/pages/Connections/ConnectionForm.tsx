@@ -991,7 +991,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                   name="avgMonthlyConsumption"
                   value={formData.avgMonthlyConsumption}
                   onChange={(e) => {
-                    // allow only digits, no leading zeros
                     const val = e.target.value;
                     if (/^[1-9][0-9]*$/.test(val) || val === "") {
                       handleChange(e);

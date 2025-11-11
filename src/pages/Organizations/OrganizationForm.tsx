@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { createOrganization } from '../../services/organizationService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
-import { uploadOrganizationImage } from '../../services/oneDriveService';
+import { uploadOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
 import Cropper from "react-easy-crop";

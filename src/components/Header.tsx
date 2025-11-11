@@ -7,7 +7,7 @@ import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
 import { Loader2 } from 'lucide-react';
-import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/oneDriveService';
+import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

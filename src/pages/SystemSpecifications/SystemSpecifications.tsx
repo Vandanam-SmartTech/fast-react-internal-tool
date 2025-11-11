@@ -12,7 +12,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from
 import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
-import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/oneDriveService";
+import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/documentManagerService";
 import { Download as DownloadIcon } from "lucide-react";
 
 
