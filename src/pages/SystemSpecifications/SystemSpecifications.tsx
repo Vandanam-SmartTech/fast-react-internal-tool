@@ -520,6 +520,9 @@ export const SystemSpecifications = () => {
   }, [formData.gridTypeId]);
 
   useEffect(() => {
+
+    if (isPrefilling) return;
+    
     setBatteryCapacities([]);
     setBatterySpecId(null);
     setFormData((prev) => ({
@@ -841,7 +844,6 @@ const handleSelectSpec = async (spec) => {
   setIsPrefilling(true);
   setSelectedSpecId(spec.id);
 
-  // ✅ Build inverter list safely
   const inverterList = (spec.inverters || []).map((inv) => ({
     inverterBrandId: inv.inverterBrandId,
     inverterBrandName: inv.inverterBrandName,
@@ -853,27 +855,25 @@ const handleSelectSpec = async (spec) => {
     gridTypeId: inv.gridTypeId,
   }));
 
-  // ✅ Prefill inverter capacities (wait for all async calls)
   const capacitiesMap = {};
-  await Promise.all(
-    inverterList.map(async (inv, i) => {
-      if (inv.inverterBrandId) {
-        try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
-          capacitiesMap[i] = capacities;
-        } catch {
-          capacitiesMap[i] = [];
-        }
-      } else {
+  for (let i = 0; i < inverterList.length; i++) {
+    const inv = inverterList[i];
+    if (inv.inverterBrandId) {
+      try {
+        const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+        capacitiesMap[i] = capacities;
+      } catch {
         capacitiesMap[i] = [];
       }
-    })
-  );
+    } else {
+      capacitiesMap[i] = [];
+    }
+  }
 
-  // ✅ Determine grid type (from first inverter if exists)
+  setInverterCapacitiesMap(capacitiesMap);
+
   const gridType = inverterList.length > 0 ? inverterList[0].gridTypeId : spec.gridTypeId;
 
-  // ✅ Single batched form update — ensures consistency
   setFormData((prev) => ({
     ...prev,
     installationSpaceType: spec.installationSpaceType,
@@ -893,19 +893,14 @@ const handleSelectSpec = async (spec) => {
     inverters: inverterList,
   }));
 
-  // ✅ Now set dependent dropdown state after formData update
-  setInverterCapacitiesMap(capacitiesMap);
   setMaterialOriginId(spec.materialOriginId);
   setGridTypeId(gridType);
   setPanelSpecId(spec.panelSpecsId);
   setBatteryBrandId(spec.batteryBrandId);
   setBatterySpecId(spec.batterySpecsId);
+
   setPriceAlreadySetFromCustomerData(true);
   setIsPrefilling(false);
-
-  console.log("✅ Selected spec:", spec);
-  console.log("✅ Loaded inverters:", inverterList);
-  console.log("✅ Prefilled capacities map:", capacitiesMap);
 };
 
 
@@ -919,29 +914,29 @@ const handleSelectSpec = async (spec) => {
     }));
   }, [formData.systemCost, formData.fabricationCost]);
 
-  useEffect(() => {
-  const prefill = async () => {
+useEffect(() => {
+  const autoSelectSpec = async () => {
     if (savedSpecs.length === 0) {
       setIsFormOpen(true);
       return;
     }
 
     if (savedSpecs.length === 1) {
-      await handleSelectSpec(savedSpecs[0]);
+      await handleSelectSpec(savedSpecs[0]);  // ✅ wait for it
       setIsFormOpen(true);
       return;
     }
 
-    const firstEditable = savedSpecs.find((spec) => spec.isRunningCopy);
+    const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
     if (firstEditable) {
-      await handleSelectSpec(firstEditable);
+      await handleSelectSpec(firstEditable); // ✅ wait for async prefill
       setIsFormOpen(true);
     } else {
       setIsFormOpen(false);
     }
   };
 
-  prefill();
+  autoSelectSpec(); // run async function properly
 }, [savedSpecs]);
 
 
@@ -1259,39 +1254,6 @@ const handleSelectSpec = async (spec) => {
           </div>
         </div>
       </div>
-
-
-      {isFetchingRecommendations && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
-          <div className="flex flex-col items-center space-y-4">
-            <svg
-              className="animate-spin h-10 w-10 text-blue-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              ></path>
-            </svg>
-            <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
-          </div>
-        </div>
-      )}
-
-
-
-
 
       <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
