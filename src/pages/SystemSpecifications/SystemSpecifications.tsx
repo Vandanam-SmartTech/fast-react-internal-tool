@@ -1145,7 +1145,7 @@ export const SystemSpecifications = () => {
     if (savedSpecs?.length > 0) fetchLockedSpecsDocs();
   }, [savedSpecs]);
 
-  // ✅ Download handler
+
   const handleDownload = async (id: number, fileName: string) => {
     try {
       const blob = await downloadDocumentById(id);
