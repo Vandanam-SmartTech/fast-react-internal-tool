@@ -216,7 +216,7 @@ const Login = () => {
                   SolarPro
                 </h1>
                 <p className="text-secondary-700 dark:text-secondary-300 text-sm sm:text-base">
-                  Sign in to access your solar management dashboard
+                  Log in to manage your solar journey
                 </p>
               </div>
 
@@ -273,10 +273,6 @@ const Login = () => {
                   }))}
                   placeholder="Select Role & Organization"
                 />
-
-
-
-
 
                 <div className="flex gap-3">
                   <Button
@@ -349,7 +345,7 @@ const Login = () => {
                   loading={loading}
                   leftIcon={!loading && <Sun className="h-4 w-4" />}
                 >
-                  {!loading && 'Sign In'}
+                  {!loading && 'Log In'}
                 </Button>
 
               </form>

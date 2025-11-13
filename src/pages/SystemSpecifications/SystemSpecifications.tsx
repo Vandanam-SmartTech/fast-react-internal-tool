@@ -14,6 +14,8 @@ import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeI
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/documentManagerService";
 import { Download as DownloadIcon } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 export const SystemSpecifications = () => {
@@ -104,6 +106,12 @@ export const SystemSpecifications = () => {
   const [documentsMap, setDocumentsMap] = useState<{ [key: number]: any }>({});
   const [loadingDocs, setLoadingDocs] = useState<{ [key: number]: boolean }>({});
 
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+
+  const [showDatePickModal, setShowDatePickModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+
 
   const tabs = [
     "Customer Details",
@@ -141,32 +149,6 @@ export const SystemSpecifications = () => {
       { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
     ],
   });
-
-  const defaultFormData = {
-    systemCost: 0,
-    fabricationCost: 0,
-    totalCost: 0,
-    installationSpaceType: "",
-    installationStructureType: "Static",
-    hasWaterSprinkler: false,
-    hasHeavydutyRamp: false,
-    hasHeavydutyStairs: false,
-    //inverterBrandId: null,
-    materialOriginId: null,
-    gridTypeId: null,
-    //inverterSpecId: null,
-    //inverterCount: 1,
-    panelBrandId: null,
-    panelSpecId: null,
-    batteryBrandId: null,
-    batterySpecId: null,
-    systemCapacityKw: null,
-    inverters: [
-      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
-    ],
-  };
-
-
 
   const connectionId = location.state?.connectionId;
   const consumerId = location.state?.consumerId;
@@ -273,6 +255,17 @@ export const SystemSpecifications = () => {
 
     fetchConnection();
   }, [connectionId]);
+
+  useEffect(() => {
+    if (phaseTypeId === 1) {
+      setMaterialOriginId(1);
+      setFormData((prev) => ({ ...prev, materialOriginId: 1 }));
+    } else if (phaseTypeId === 2) {
+      setMaterialOriginId(2);
+      setFormData((prev) => ({ ...prev, materialOriginId: 2 }));
+    }
+  }, [phaseTypeId]);
+
 
 
 
@@ -439,67 +432,67 @@ export const SystemSpecifications = () => {
   }, [inverterBrandId, gridTypeId]);
 
 
-useEffect(() => {
-  const loadPanelBrands = async () => {
-    if (!materialOriginId) return;
+  useEffect(() => {
+    const loadPanelBrands = async () => {
+      if (!materialOriginId) return;
 
-    setPanels([]);
-    setPanelSpecId(null);
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
-    setFormData((prev) => ({
-      ...prev,
-      panelSpecId: null,
-      systemCapacityKw: null,
-    }));
-
-    try {
-      const data = await fetchPanelBrands(Number(materialOriginId));
-      setPanels([...data]);
-    } catch (error) {
-      console.error("Failed to fetch panel brands:", error);
       setPanels([]);
-    }
-  };
+      setPanelSpecId(null);
+      setPanelCapacities([]);
+      setSystemCapacityKw(null);
+      setFormData((prev) => ({
+        ...prev,
+        panelSpecId: null,
+        systemCapacityKw: null,
+      }));
 
-  loadPanelBrands();
-}, [materialOriginId]);
+      try {
+        const data = await fetchPanelBrands(Number(materialOriginId));
+        setPanels([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brands:", error);
+        setPanels([]);
+      }
+    };
+
+    loadPanelBrands();
+  }, [materialOriginId]);
 
 
 
 
 
   useEffect(() => {
-  const loadPanelBrandCapacities = async () => {
-    if (
-      phaseTypeId === null ||
-      panelSpecId === null ||
-      avgMonthlyConsumption === null ||
-      materialOriginId === null
-    ) {
-      return;
-    }
+    const loadPanelBrandCapacities = async () => {
+      if (
+        phaseTypeId === null ||
+        panelSpecId === null ||
+        avgMonthlyConsumption === null ||
+        materialOriginId === null
+      ) {
+        return;
+      }
 
-    if (!formData.systemCapacityKw) {
-      setPanelCapacities([]);
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        systemCapacityKw: null,
-      }));
-    }
+      if (!formData.systemCapacityKw) {
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          systemCapacityKw: null,
+        }));
+      }
 
-    try {
-      const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
-      setPanelCapacities([...data]);
-    } catch (error) {
-      console.error("Failed to fetch panel brand capacities:", error);
-      setPanelCapacities([]);
-    }
-  };
+      try {
+        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
+        setPanelCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brand capacities:", error);
+        setPanelCapacities([]);
+      }
+    };
 
-  loadPanelBrandCapacities();
-}, [phaseTypeId, panelSpecId, materialOriginId]);
+    loadPanelBrandCapacities();
+  }, [phaseTypeId, panelSpecId, materialOriginId]);
 
 
 
@@ -596,24 +589,61 @@ useEffect(() => {
 
     // If gridTypeId changes elsewhere, the effect above will already have reset per-row fields.
     setFormData((prev) => ({ ...prev, inverters: updatedInverters }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
 
 
 
   const addNewInverter = () => {
-    setFormData({
-      ...formData,
-      inverters: [
-        ...formData.inverters,
-        { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
-      ],
-    });
+    const newInverter = {
+      inverterBrandId: null,
+      inverterSpecId: null,
+      inverterCount: 1,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      inverters: [...(prev.inverters || []), newInverter],
+    }));
+
+    // also maintain a matching entry in inverterCapacitiesMap
+    setInverterCapacitiesMap((prev) => ({
+      ...prev,
+      [formData.inverters?.length || 0]: [], // initialize empty for new row
+    }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
 
+
   const removeInverter = (index) => {
-    const updated = formData.inverters.filter((_, i) => i !== index);
-    setFormData({ ...formData, inverters: updated });
+    setFormData((prev) => {
+      const updated = (prev.inverters || []).filter((_, i) => i !== index);
+      return { ...prev, inverters: updated };
+    });
+
+    setInverterCapacitiesMap((prev) => {
+      const updatedMap = { ...prev };
+      delete updatedMap[index];
+      // Re-index remaining capacities so that map stays in sync with inverters
+      const reIndexed = Object.keys(updatedMap).reduce((acc, key) => {
+        const newIndex = key > index ? key - 1 : key;
+        acc[newIndex] = updatedMap[key];
+        return acc;
+      }, {});
+      return reIndexed;
+    });
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
+
 
 
 
@@ -925,10 +955,10 @@ useEffect(() => {
     setFormData(updatedFormData);
     setIsCustomSpecs(true);
     setIsSpecsSaved(false);
-    
+
     if (priceAlreadySetFromCustomerData) {
-    setPriceAlreadySetFromCustomerData(false);
-  }
+      setPriceAlreadySetFromCustomerData(false);
+    }
   };
 
 
@@ -969,107 +999,93 @@ useEffect(() => {
   //   fetchPriceDetails();
   // }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
 
-useEffect(() => {
-  const fetchPriceDetails = async () => {
-    // 🚫 Skip fetching if we’re showing saved (customer) prices
-    if (priceAlreadySetFromCustomerData) return;
+  const priceInputsKey = JSON.stringify({
+    systemCapacityKw: formData.systemCapacityKw,
+    panelSpecId: formData.panelSpecId,
+    batterySpecId: formData.batterySpecId,
+    inverters: formData.inverters,
+  });
 
-    // ✅ Check if there’s valid input to fetch price
-    const hasValidSystem =
-      !!formData.systemCapacityKw || !!formData.panelSpecId;
-    const hasValidBattery = !!formData.batterySpecId;
-    const validInverters = (formData.inverters || []).filter(
-      (inv) => inv.inverterSpecId && inv.inverterCount > 0
-    );
 
-    const hasValidInverters = validInverters.length > 0;
+  useEffect(() => {
+    const fetchPriceDetails = async () => {
+      if (priceAlreadySetFromCustomerData && fetchTrigger === 0) return;
 
-    if (!hasValidSystem && !hasValidBattery && !hasValidInverters) {
-      setFormData((prev) => ({
-        ...prev,
-        systemCost: 0,
-        fabricationCost: 0,
-        totalCost: 0,
-      }));
-      return;
-    }
+      const hasValidSystem = !!formData.systemCapacityKw || !!formData.panelSpecId;
+      const hasValidBattery = !!formData.batterySpecId;
+      const validInverters = (formData.inverters || []).filter(
+        (inv) => inv.inverterSpecId && inv.inverterCount > 0
+      );
 
-    try {
-      const payload = {
-        systemCapacityKw: formData.systemCapacityKw || 0,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        batteryCount: hasValidBattery ? 1 : 0,
-        inverters: validInverters.map((inv) => ({
-          inverterSpecsId: inv.inverterSpecId,
-          inverterCount: inv.inverterCount,
-        })),
-      };
-
-      console.log("Sending payload to getPriceDetails:", payload);
-
-      const response = await getPriceDetails(payload);
-
-      if (response) {
+      if (!hasValidSystem && !hasValidBattery && validInverters.length === 0) {
         setFormData((prev) => ({
           ...prev,
-          systemCost: response.systemCost || 0,
-          fabricationCost: response.fabricationCost || 0,
-          totalCost:
-            (response.systemCost || 0) + (response.fabricationCost || 0),
+          systemCost: 0,
+          fabricationCost: 0,
+          totalCost: 0,
         }));
+        return;
       }
-    } catch (err) {
-      console.error("Failed to fetch price details", err);
-    }
-  };
 
-  fetchPriceDetails();
-}, [
-  formData.systemCapacityKw,
-  formData.panelSpecId,
-  formData.inverters,
-  formData.batterySpecId,
-  priceAlreadySetFromCustomerData, // include this dependency
-]);
+      try {
+        const response = await getPriceDetails({
+          systemCapacityKw: formData.systemCapacityKw,
+          panelSpecsId: formData.panelSpecId,
+          batterySpecsId: formData.batterySpecId,
+          batteryCount: hasValidBattery ? 1 : 0,
+          inverters: validInverters.map((inv) => ({
+            inverterSpecsId: inv.inverterSpecId,
+            inverterCount: inv.inverterCount,
+          })),
+        });
+
+        console.log("Fetched price details:", response);
+
+        if (response) {
+          setFormData((prev) => ({
+            ...prev,
+            systemCost: response.systemCost || 0,
+            fabricationCost: response.fabricationCost || 0,
+            totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch price details", err);
+      }
+    };
+
+    fetchPriceDetails();
+  }, [priceInputsKey, fetchTrigger]);
 
 
 
 
 
-  const handleGenerateQuotation = async () => {
-    if (!selectedSpecId) {
-      console.error("Spec ID is missing");
-      return;
-    }
 
-    setIsLoading(true);
+  const handleGenerateQuotation = async (date) => {
+  if (!selectedSpecId || !date) return;
 
-    try {
-      console.log("Fetching Quotation PDF for Spec ID:", selectedSpecId);
+  setIsLoading(true);
+  try {
+    const pdfBlob = await generateQuotationPDF(selectedSpecId, date);
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `quotation_${govIdName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(pdfUrl);
 
-      const pdfBlob = await generateQuotationPDF(selectedSpecId);
-      console.log('PDF Blob size:', pdfBlob.size);
+    await fetchSavedSpecs();
+  } catch (error) {
+    console.error("Error generating quotation PDF:", error);
+  } finally {
+    setIsLoading(false);
+    setSelectedDate(null);
+  }
+};
 
-
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = `quotation_${govIdName}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(pdfUrl);
-
-      console.log("Quotation PDF downloaded successfully");
-      await fetchSavedSpecs();
-
-    } catch (error) {
-      console.error("Error generating quotation PDF:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
 
 
@@ -1309,96 +1325,94 @@ useEffect(() => {
         <div className="border-b border-gray-200 mb-4" />
 
         {savedSpecs.length > 0 && (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    {savedSpecs.map((spec) => {
-      const isEditable = spec.isRunningCopy;
-      const document = documentsMap[spec.id];
-      const isLoadingDoc = loadingDocs[spec.id];
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {savedSpecs.map((spec) => {
+              const isEditable = spec.isRunningCopy;
+              const document = documentsMap[spec.id];
+              const isLoadingDoc = loadingDocs[spec.id];
 
-      return (
-        <div
-          key={spec.id}
-          onClick={() => {
-            if (!isEditable) return;
-            handleSelectSpec(spec);
-            setIsFormOpen(true);
-          }}
-          className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
-            ${
-              isEditable
-                ? "bg-green-50 border-green-400 hover:shadow-lg"
-                : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
-            }
+              return (
+                <div
+                  key={spec.id}
+                  onClick={() => {
+                    if (!isEditable) return;
+                    handleSelectSpec(spec);
+                    setIsFormOpen(true);
+                  }}
+                  className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+            ${isEditable
+                      ? "bg-green-50 border-green-400 hover:shadow-lg"
+                      : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
+                    }
             ${selectedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
           `}
-        >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-gray-800">
-              {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
-            </h3>
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold text-gray-800">
+                      {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
+                    </h3>
 
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
-              }`}
-            >
-              {isEditable ? "Editable" : "Locked"}
-            </span>
-          </div>
-
-          {/* ✅ Handle list of inverters */}
-          {spec.inverters && spec.inverters.length > 0 ? (
-            spec.inverters.map((inv, index) => (
-              <p key={index} className="text-sm font-medium text-gray-700 mb-1">
-                Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
-              </p>
-            ))
-          ) : (
-            <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
-          )}
-
-          <div className="flex justify-between text-sm text-gray-600 mt-2">
-            <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-            <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
-          </div>
-
-          {/* 📄 Show document for locked specs */}
-          {!isEditable && (
-            <div className="mt-4 bg-white border rounded-md p-2 shadow-sm">
-              {isLoadingDoc ? (
-                <p className="text-sm text-gray-500">Loading document...</p>
-              ) : document ? (
-                <div className="flex justify-between items-center">
-                  <div className="max-w-[70%]">
-                    <p
-                      className="text-sm font-medium text-gray-700 truncate"
-                      title={document.fileName}
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                        }`}
                     >
-                      {document.fileName}
-                    </p>
-                    <p className="text-xs text-gray-500">Generated by: {document.uploadedBy}</p>
+                      {isEditable ? "Editable" : "Locked"}
+                    </span>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownload(document.id, document.fileName);
-                    }}
-                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
-                    title="Download Document"
-                  >
-                    <DownloadIcon className="w-5 h-5" />
-                  </button>
+
+                  {/* ✅ Handle list of inverters */}
+                  {spec.inverters && spec.inverters.length > 0 ? (
+                    spec.inverters.map((inv, index) => (
+                      <p key={index} className="text-sm font-medium text-gray-700 mb-1">
+                        Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
+                  )}
+
+                  <div className="flex justify-between text-sm text-gray-600 mt-2">
+                    <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
+                    <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                  </div>
+
+                  {/* 📄 Show document for locked specs */}
+                  {!isEditable && (
+                    <div className="mt-4 bg-white border rounded-md p-2 shadow-sm">
+                      {isLoadingDoc ? (
+                        <p className="text-sm text-gray-500">Loading document...</p>
+                      ) : document ? (
+                        <div className="flex justify-between items-center">
+                          <div className="max-w-[70%]">
+                            <p
+                              className="text-sm font-medium text-gray-700 truncate"
+                              title={document.fileName}
+                            >
+                              {document.fileName}
+                            </p>
+                            <p className="text-xs text-gray-500">Generated by: {document.uploadedBy}</p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(document.id, document.fileName);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
+                            title="Download Document"
+                          >
+                            <DownloadIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No document found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic">No document found</p>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    })}
-  </div>
-)}
+              );
+            })}
+          </div>
+        )}
 
 
 
@@ -2009,6 +2023,7 @@ useEffect(() => {
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   name="systemCost"
                   value={
                     isEditing
@@ -2034,6 +2049,7 @@ useEffect(() => {
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   name="fabricationCost"
                   value={
                     isEditingFabrication
@@ -2094,17 +2110,71 @@ useEffect(() => {
                 </button>)} */}
 
               {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
-                  <button
-                    type="button"
-                    onClick={handleGenerateQuotation}
-                    disabled={!selectedSpecId || isLoading}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Generating..." : "Generate & Save Quotation"}
-                  </button>
-                )}
+  userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+  userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+  <>
+    <button
+      type="button"
+      onClick={() => setShowDatePickModal(true)}
+      disabled={!selectedSpecId || isLoading}
+      className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {isLoading ? "Generating..." : "Generate & Save Quotation"}
+    </button>
+
+    {/* Modal */}
+    {showDatePickModal && (
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">
+            Select Quotation Date
+          </h2>
+
+          {/* Native HTML Date Picker */}
+          <input
+            type="date"
+            value={
+              selectedDate
+                ? selectedDate.toISOString().split("T")[0]
+                : ""
+            }
+            onChange={(e) => {
+              const picked = e.target.value ? new Date(e.target.value) : null;
+              setSelectedDate(picked);
+            }}
+            className="border px-3 py-2 rounded w-full"
+          />
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => setShowDatePickModal(false)}
+              className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={() => {
+                if (selectedDate) {
+                  setShowDatePickModal(false); // close modal first
+                  // slight delay to ensure modal close before API call
+                  setTimeout(() => {
+                    handleGenerateQuotation(selectedDate);
+                  }, 300);
+                }
+              }}
+              disabled={!selectedDate || isLoading}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? "Generating..." : "Confirm & Generate"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+)}
+
             </div>
           </div>
 

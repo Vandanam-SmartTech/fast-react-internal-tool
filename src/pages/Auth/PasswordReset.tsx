@@ -101,7 +101,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
               <div>
       <h3 className="text-xl font-semibold text-gray-700 mb-1">Reset Password</h3>
-      <p className="text-sm text-gray-500 mb-2">
+      <p className="text-sm text-gray-600 mb-2">
         Enter your email or phone number. We'll send you a verification code to respective email to reset your password.
       </p>
     </div>

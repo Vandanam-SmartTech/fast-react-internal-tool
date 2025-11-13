@@ -24,18 +24,45 @@ export const getQuotationAPI = () => {
   return quotationAPI;
 };
 
-export const generateQuotationPDF = async (selectedSpecId: number): Promise<Blob> => {
+// export const generateQuotationPDF = async (selectedSpecId: number): Promise<Blob> => {
+//   const quotationAPI = getQuotationAPI();
+//   try {
+//     if (!selectedSpecId) {
+//       throw new Error("Spec ID is missing");
+//     }
+
+//     const response = await quotationAPI.get(`/api/quotation-details/generate-pdf/${selectedSpecId}`, {
+//       responseType: 'blob', 
+//     });
+
+//     return response.data; 
+//   } catch (error) {
+//     console.error("API Error:", error);
+//     throw new Error("Failed to generate PDF from server");
+//   }
+// };
+
+
+export const generateQuotationPDF = async (selectedSpecId: number, quotationGeneratedDate: Date): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
   try {
-    if (!selectedSpecId) {
-      throw new Error("Spec ID is missing");
-    }
+    if (!selectedSpecId) throw new Error("Spec ID is missing");
 
-    const response = await quotationAPI.get(`/api/quotation-details/generate-pdf/${selectedSpecId}`, {
-      responseType: 'blob', 
-    });
+    // Format date as dd/MM/yyyy
+    const day = String(quotationGeneratedDate.getDate()).padStart(2, "0");
+    const month = String(quotationGeneratedDate.getMonth() + 1).padStart(2, "0");
+    const year = quotationGeneratedDate.getFullYear();
+    const formattedDate = `${day}/${month}/${year}`;
 
-    return response.data; 
+    const response = await quotationAPI.get(
+      `/api/quotation-details/generate-pdf/${selectedSpecId}`,
+      {
+        responseType: "blob",
+        params: { quotationGeneratedDate: formattedDate },
+      }
+    );
+
+    return response.data;
   } catch (error) {
     console.error("API Error:", error);
     throw new Error("Failed to generate PDF from server");
@@ -234,7 +261,7 @@ export const saveSystemSpecs = async (requestData: any): Promise<any> => {
   }
 
   try {
-    const response = await quotationAPI.post(`/api/system-specs`, requestData);
+    const response = await quotationAPI.post(`/api/system-specs/create`, requestData);
     return response.data;
   } catch (error) {
     console.error("Error saving system specs:", error);
@@ -547,7 +574,7 @@ export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> 
   }
 
   try {
-    const response = await quotationAPI.get(`/api/system-specs/by-connection/${connectionId}`);
+    const response = await quotationAPI.get(`/api/connection-system-specs/by-connection/${connectionId}`);
     return response.data; 
   } catch (error) {
     console.error("Error fetching saved system specs:", error);

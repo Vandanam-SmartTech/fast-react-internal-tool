@@ -309,8 +309,8 @@ const EditUser: React.FC = () => {
         <div className="p-6 max-w-4xl mx-auto">
             <div className="flex items-center gap-4 mb-6">
                 <button
-                    onClick={() => navigate('/user-management')}
-                    className="p-1 rounded-full hover:bg-gray-200 transition"
+                    onClick={() => navigate(-1)}
+                    className="p-2 rounded-full hover:bg-gray-200 transition"
                 >
                     <ArrowLeft className="h-6 w-6 text-gray-700" />
                 </button>

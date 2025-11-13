@@ -95,7 +95,7 @@ export default function MaterialForm() {
         // Auto-update total whenever rooftop or ground changes
         if (name !== "reInstalledCapacityTotal") {
           const total = rooftop + ground;
-          updated.reInstalledCapacityTotal = total.toFixed(2); 
+          updated.reInstalledCapacityTotal = total.toFixed(2);
         }
 
         return updated;
@@ -605,6 +605,19 @@ export default function MaterialForm() {
                     onChange={handleChange}
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
+
+                  {/*<input
+                    type="date"
+                    name="dateOfInstallation"
+                    value={
+                      formData.dateOfInstallation
+                        ? formData.dateOfInstallation.split("/").reverse().join("-")
+                        : ""
+                    }
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />*/}
+
                 </div>
 
                 <div>

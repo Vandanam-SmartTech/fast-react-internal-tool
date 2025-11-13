@@ -71,10 +71,10 @@ export default function GenerateDocuments() {
 
   const [quotedTotals, setQuotedTotals] = useState<Record<string, number | ''>>({});
 
-
-
-
   const connectionId = consumer?.id?.toString();
+
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const userRoleFromLocalStorage = userInfo?.role;
 
 
   const documentSteps: DocumentStep[] = [
@@ -180,6 +180,19 @@ export default function GenerateDocuments() {
     },
   ];
 
+  // Filter steps based on role
+  let visibleSteps = documentSteps;
+
+  if (
+    userRoleFromLocalStorage === "ROLE_OR_REPRESENTATIVE" ||
+    userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE"
+  ) {
+    visibleSteps = documentSteps.filter(
+      (step) => step.title === "Identity & Financial Documents"
+    );
+  }
+
+
 
   const loadDocuments = useCallback(async () => {
     try {
@@ -204,7 +217,7 @@ export default function GenerateDocuments() {
   }, [connectionId, loadDocuments]);
 
 
-  const handleDownload = async (id:number, fileName: string) => {
+  const handleDownload = async (id: number, fileName: string) => {
     try {
       const blob = await downloadDocumentById(id);
       const url = window.URL.createObjectURL(blob);
@@ -217,9 +230,9 @@ export default function GenerateDocuments() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
-      toast.error("Failed to download file",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to download file", {
+        autoClose: 1000,
+        hideProgressBar: true
       })
     }
   };
@@ -232,9 +245,9 @@ export default function GenerateDocuments() {
     if (doc === "Consumer Vendor Agreement") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before generating.",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.error("Please enter a valid quoted total amount before generating.", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
         return;
       }
@@ -253,9 +266,9 @@ export default function GenerateDocuments() {
       document.body.removeChild(a);
     } catch (err) {
       console.error("Generate error:", err);
-      toast.error("Failed to generate document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to generate document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
     } finally {
       setLoadingGenerateDoc(null);
@@ -270,9 +283,9 @@ export default function GenerateDocuments() {
     if (doc === "Consumer Vendor Agreement") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before previewing.",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.error("Please enter a valid quoted total amount before previewing.", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
         return;
       }
@@ -285,9 +298,9 @@ export default function GenerateDocuments() {
       window.open(url, "_blank");
     } catch (err) {
       console.error("Preview error:", err);
-      toast.error("Failed to preview document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to preview document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
     } finally {
       setLoadingPreviewDoc(null);
@@ -353,7 +366,7 @@ export default function GenerateDocuments() {
 
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error("Document Upload Failed!", { autoClose: 1000,hideProgressBar: true });
+      toast.error("Document Upload Failed!", { autoClose: 1000, hideProgressBar: true });
     } finally {
       setLoadingUploadDoc(null);
     }
@@ -384,7 +397,7 @@ export default function GenerateDocuments() {
     });
   };
 
-  const handleDeleteDocument = async (id:number, documentType: string) => {
+  const handleDeleteDocument = async (id: number, documentType: string) => {
     try {
 
       await deleteDocumentById(id);
@@ -401,9 +414,9 @@ export default function GenerateDocuments() {
 
     } catch (error) {
       console.error("Delete failed", error);
-      toast.error("Failed to delete document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to delete document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
       await loadDocuments();
     }
@@ -414,7 +427,7 @@ export default function GenerateDocuments() {
     setReplaceFiles((prev) => ({ ...prev, [docId]: file }));
   };
 
-  const handleUpdateDocument = async (id:number) => {
+  const handleUpdateDocument = async (id: number) => {
     const file = replaceFiles[id];
     if (!file) return;
     try {
@@ -426,14 +439,14 @@ export default function GenerateDocuments() {
       await loadDocuments();
     } catch (error) {
       console.error("Update failed", error);
-      toast.error("Failed to update document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to update document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
-    }finally {
-    // Stop spinner
-    setLoadingUploadDoc(null);
-  }
+    } finally {
+      // Stop spinner
+      setLoadingUploadDoc(null);
+    }
   };
 
   const getStepStatus = (step: DocumentStep) => {
@@ -472,6 +485,10 @@ export default function GenerateDocuments() {
     }
   };
 
+  const isRepresentative =
+  userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+  userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE";
+
   const totalSteps = documentSteps.length;
   // Overall documents progress across all steps
   const totalDocs = documentSteps.reduce((sum, step) => sum + step.documents.length, 0);
@@ -499,17 +516,27 @@ export default function GenerateDocuments() {
 
   // Render step content - reusable for both mobile and desktop
   const renderStepContent = (step: DocumentStep, contentId?: string) => (
-    <div 
-      id={contentId || `step-content-${step.id}`} 
-      className="bg-white border border-gray-200 shadow-sm rounded-lg" 
+    <div
+      id={contentId || `step-content-${step.id}`}
+      className="bg-white border border-gray-200 shadow-sm rounded-lg"
       aria-expanded={expandedSteps.has(step.id)}
     >
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Step {step.id}: {step.title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          {userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+            userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE"
+            ? step.title
+            : `Step ${step.id}: ${step.title}`}
+        </h2>
         <p className="text-sm text-gray-600">Upload, generate, and manage documents for this step.</p>
       </div>
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        <div
+        className={`grid gap-4 ${
+          isRepresentative ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+        }`}
+      >
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div> */}
           {step.documents.map((docDef) => (
             <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center space-x-3 mb-3">
@@ -830,7 +857,7 @@ export default function GenerateDocuments() {
       )}
 
       {/* Progress Bar */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
+      {(!(userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Overall Progress</span>
           <span className="text-sm text-gray-600" aria-live="polite">{completedDocs}/{totalDocs} · {progressPercent}%</span>
@@ -838,85 +865,147 @@ export default function GenerateDocuments() {
         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
           <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-      </div>
+      </div>)}
 
-      {/* Vertical Stepper Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Stepper */}
-        <aside className="lg:col-span-4">
-          <nav aria-label="Document steps" className="space-y-2">
-            {documentSteps.map((step) => {
-              const status = getStepStatus(step);
-              const totalRequired = step.documents.length;
-              const uploadedCount = step.documents.reduce((count, doc) => {
-                const isUploaded = uploadedDocuments[doc.name] && uploadedDocuments[doc.name].length > 0;
-                return count + (isUploaded ? 1 : 0);
-              }, 0);
-              const base = 'w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500';
-              const variant =
-                status === 'completed'
-                  ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                  : status === 'in_progress'
-                    ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                    : 'bg-white border-gray-200 hover:bg-gray-50';
-              return (
-                <div key={step.id} className="space-y-2">
-                  <button
-                    type="button"
-                    className={`${base} ${variant}`}
-                    onClick={() => { 
-                      setCurrentStep(step.id); 
-                      toggleStepExpansion(step.id);
-                    }}
-                    onKeyDown={(e) => { 
-                      if (e.key === 'Enter' || e.key === ' ') { 
-                        e.preventDefault(); 
-                        setCurrentStep(step.id); 
-                        toggleStepExpansion(step.id);
-                      } 
-                    }}
-                    aria-current={currentStep === step.id ? 'step' : undefined}
-                    aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
-                    aria-expanded={expandedSteps.has(step.id)}
-                  >
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
-                      {getStepIcon(step)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
-                        {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
-                      </div>
-                      {uploadedCount === 0 && (
-                        <p className="text-xs text-gray-600">{totalRequired} document{totalRequired !== 1 ? 's' : ''} required</p>
-                      )}
-                      {uploadedCount > 0 && uploadedCount < totalRequired && (
-                        <p className="text-xs text-yellow-700">{uploadedCount} of {totalRequired} documents uploaded</p>
-                      )}
-                      {uploadedCount === totalRequired && (
-                        <p className="text-xs text-green-700">All documents uploaded</p>
-                      )}
-                    </div>
-                  </button>
-                  {/* Mobile: Show step content inline below button when expanded */}
-                  {expandedSteps.has(step.id) && (
-                    <div id={`step-content-mobile-${step.id}`} className="lg:hidden">
-                      {renderStepContent(step, `step-content-mobile-${step.id}`)}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </aside>
 
-        {/* Right: Active Step Content (Desktop only) */}
-        <section className="hidden lg:block lg:col-span-8">
-          {(() => {
-            const activeStep = documentSteps.find((s) => s.id === currentStep) || documentSteps[0];
-            return renderStepContent(activeStep);
-          })()}
-        </section>
+        {(() => {
+          const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+          const userRoleFromLocalStorage = userInfo?.role;
+
+          const isRepresentative =
+            userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+            userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE";
+
+          // Filter visible steps
+          let visibleSteps = documentSteps;
+          if (isRepresentative) {
+            visibleSteps = documentSteps.filter(
+              (step) => step.title === "Identity & Financial Documents"
+            );
+          }
+
+          if (isRepresentative) {
+            // 👇 Directly show documents (hide sidebar)
+            const identityStep = visibleSteps[0];
+            return (
+              <section className="col-span-12">
+                {renderStepContent(identityStep)}
+              </section>
+            );
+          }
+
+          // 👇 Regular layout (sidebar + right section)
+          return (
+            <>
+              <aside className="lg:col-span-4">
+                <nav aria-label="Document steps" className="space-y-2">
+                  {visibleSteps.map((step) => {
+                    const status = getStepStatus(step);
+                    const totalRequired = step.documents.length;
+                    const uploadedCount = step.documents.reduce((count, doc) => {
+                      const isUploaded =
+                        uploadedDocuments[doc.name] &&
+                        uploadedDocuments[doc.name].length > 0;
+                      return count + (isUploaded ? 1 : 0);
+                    }, 0);
+
+                    const base =
+                      "w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500";
+                    const variant =
+                      status === "completed"
+                        ? "bg-green-50 border-green-200 hover:bg-green-100"
+                        : status === "in_progress"
+                          ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+                          : "bg-white border-gray-200 hover:bg-gray-50";
+
+                    return (
+                      <div key={step.id} className="space-y-2">
+                        <button
+                          type="button"
+                          className={`${base} ${variant}`}
+                          onClick={() => {
+                            setCurrentStep(step.id);
+                            toggleStepExpansion(step.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setCurrentStep(step.id);
+                              toggleStepExpansion(step.id);
+                            }
+                          }}
+                          aria-current={currentStep === step.id ? "step" : undefined}
+                          aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
+                          aria-expanded={expandedSteps.has(step.id)}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(
+                              step
+                            )}`}
+                          >
+                            {getStepIcon(step)}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-semibold text-gray-900">
+                                Step {step.id}: {step.title}
+                              </h3>
+                              {status === "completed" && (
+                                <CheckCircle
+                                  className="w-4 h-4 text-green-600"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </div>
+
+                            {uploadedCount === 0 && (
+                              <p className="text-xs text-gray-600">
+                                {totalRequired} document
+                                {totalRequired !== 1 ? "s" : ""} required
+                              </p>
+                            )}
+                            {uploadedCount > 0 && uploadedCount < totalRequired && (
+                              <p className="text-xs text-yellow-700">
+                                {uploadedCount} of {totalRequired} documents uploaded
+                              </p>
+                            )}
+                            {uploadedCount === totalRequired && (
+                              <p className="text-xs text-green-700">
+                                All documents uploaded
+                              </p>
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Mobile: Show step content inline below button when expanded */}
+                        {expandedSteps.has(step.id) && (
+                          <div
+                            id={`step-content-mobile-${step.id}`}
+                            className="lg:hidden"
+                          >
+                            {renderStepContent(step, `step-content-mobile-${step.id}`)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </nav>
+              </aside>
+
+              {/* Right: Active Step Content (Desktop only) */}
+              <section className="hidden lg:block lg:col-span-8">
+                {(() => {
+                  const activeStep =
+                    documentSteps.find((s) => s.id === currentStep) ||
+                    documentSteps[0];
+                  return renderStepContent(activeStep);
+                })()}
+              </section>
+            </>
+          );
+        })()}
 
         <Dialog
           open={dialogOpen}
