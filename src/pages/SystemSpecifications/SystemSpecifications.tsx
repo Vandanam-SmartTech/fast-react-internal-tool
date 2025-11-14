@@ -751,7 +751,6 @@ export const SystemSpecifications = () => {
     console.log("Prefilled capacities map:", capacitiesMap);
 
     setPriceAlreadySetFromCustomerData(true);
-    setTimeout(() => setIsPrefilling(false), 0);
 
   };
 
