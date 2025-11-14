@@ -60,7 +60,7 @@ export const SystemSpecifications = () => {
   const [materialOriginId, setMaterialOriginId] = useState<number | null>(null);
   const [origins, setOrigins] = useState<any[]>([]);
 
-  const [gridTypeId, setGridTypeId] = useState(1);
+  const [gridTypeId, setGridTypeId] = useState<number | null>(null);
   const [grids, setGrids] = useState<any[]>([]);
 
   const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
@@ -140,7 +140,7 @@ export const SystemSpecifications = () => {
     hasHeavydutyStairs: false,
     //inverterBrandId: null,
     materialOriginId: null,
-    gridTypeId: 1,
+    gridTypeId: null,
     //inverterSpecId: null,
     //inverterCount: 1,
     panelBrandId: null,
@@ -259,15 +259,15 @@ export const SystemSpecifications = () => {
     fetchConnection();
   }, [connectionId]);
 
-  useEffect(() => {
-    if (phaseTypeId === 1) {
-      setMaterialOriginId(1);
-      setFormData((prev) => ({ ...prev, materialOriginId: 1 }));
-    } else if (phaseTypeId === 2) {
-      setMaterialOriginId(2);
-      setFormData((prev) => ({ ...prev, materialOriginId: 2 }));
-    }
-  }, [phaseTypeId]);
+  // useEffect(() => {
+  //   if (phaseTypeId === 1) {
+  //     setMaterialOriginId(1);
+  //     setFormData((prev) => ({ ...prev, materialOriginId: 1 }));
+  //   } else if (phaseTypeId === 2) {
+  //     setMaterialOriginId(2);
+  //     setFormData((prev) => ({ ...prev, materialOriginId: 2 }));
+  //   }
+  // }, [phaseTypeId]);
 
 
 
