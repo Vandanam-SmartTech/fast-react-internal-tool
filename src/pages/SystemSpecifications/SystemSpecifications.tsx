@@ -318,32 +318,44 @@ export const SystemSpecifications = () => {
 
 
 
-  useEffect(() => {
-    const fetchOrigins = async () => {
+useEffect(() => {
+  const fetchOrigins = async () => {
+    try {
       const data = await getMaterialOrigins();
-      if (data) setOrigins(data);
-    };
+      setOrigins(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch material origins:", error);
+      setOrigins([]);
+    }
+  };
 
-    fetchOrigins();
-  }, []);
+  fetchOrigins();
+}, []);
 
-  useEffect(() => {
-    const fetchGrids = async () => {
+
+useEffect(() => {
+  const fetchGrids = async () => {
+    try {
       const data = await getGridTypes();
-      if (data) setGrids(data);
-    };
+      setGrids(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch grid types:", error);
+      setGrids([]);
+    }
+  };
 
-    fetchGrids();
-  }, []);
+  fetchGrids();
+}, []);
+
 
 
   useEffect(() => {
-    const loadInverterBrands = async () => {
-
+  const loadInverterBrands = async () => {
+    // If not pre-filling, clear dependent fields first (because user changed phase/grid)
+    if (!isPrefilling) {
       setInverters([]);
       setInverterCapacities([]);
       setFormData((prev) => {
-
         const updatedInverters = (prev.inverters || []).map((inv) => ({
           ...inv,
           inverterBrandId: null,
@@ -356,166 +368,201 @@ export const SystemSpecifications = () => {
           inverters: updatedInverters,
         };
       });
-
-
       setInverterCapacitiesMap({});
+    } else {
+      // while pre-filling we do not reset form fields — but allow fetching options
+      setInverterCapacities([]); // keep capacity list empty initially
+    }
 
-      if (phaseTypeId !== null && gridTypeId !== null) {
-        try {
-          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-          setInverters(Array.isArray(data) ? data : []);
-        } catch (error) {
-          console.error("Failed to fetch inverter brands:", error);
-          setInverters([]);
-        } finally {
-          setIsPrefilling(false);
-        }
+    if (phaseTypeId !== null && gridTypeId !== null) {
+      try {
+        const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+        setInverters(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch inverter brands:", error);
+        setInverters([]);
       }
-    };
+    } else {
+      // no fetch possible — keep empty if not pre-filling
+      if (!isPrefilling) {
+        setInverters([]);
+      }
+    }
+  };
 
-    loadInverterBrands();
-  }, [phaseTypeId, gridTypeId]);
+  loadInverterBrands();
+}, [phaseTypeId, gridTypeId]); // keep same deps
+
 
 
   useEffect(() => {
-    const loadInverterBrandCapacities = async () => {
-
+  const loadInverterBrandCapacities = async () => {
+    // Reset capacities & spec only when user changes brand (i.e., not during prefill)
+    if (!isPrefilling) {
       setInverterCapacities([]);
-
       setInverterSpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        inverterSpecId: null
-      }));
+      setFormData((prev) => ({ ...prev, inverterSpecId: null }));
+    } else {
+      // while pre-filling, don't clear the spec (we want what prefill sets)
+      setInverterCapacities([]);
+    }
 
+    if (!inverterBrandId || !gridTypeId) {
+      return;
+    }
 
-      if (inverterBrandId !== null && gridTypeId !== null) {
-        try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId);
-          setInverterCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch inverter brand capacities:", error);
-          setInverterCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      }
-    };
+    try {
+      const data = await fetchInverterBrandCapacities(inverterBrandId);
+      setInverterCapacities(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch inverter brand capacities:", error);
+      setInverterCapacities([]);
+    }
+  };
 
-    loadInverterBrandCapacities();
-  }, [inverterBrandId, gridTypeId]);
+  loadInverterBrandCapacities();
+}, [inverterBrandId, gridTypeId]);
+
 
 
   useEffect(() => {
-    const loadPanelBrands = async () => {
-      if (!materialOriginId) return;
+  const loadPanelBrands = async () => {
+    if (!materialOriginId) {
+      // clear if user cleared origin (but skip clearing if prefill is happening)
+      if (!isPrefilling) {
+        setPanels([]);
+        setPanelSpecId(null);
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({ ...prev, panelSpecId: null, systemCapacityKw: null }));
+      }
+      return;
+    }
 
+    // When user changes origin, clear dependents; skip clearing during prefill
+    if (!isPrefilling) {
       setPanels([]);
       setPanelSpecId(null);
       setPanelCapacities([]);
       setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        panelSpecId: null,
-        systemCapacityKw: null,
-      }));
-
-      try {
-        const data = await fetchPanelBrands(Number(materialOriginId));
-        setPanels([...data]);
-      } catch (error) {
-        console.error("Failed to fetch panel brands:", error);
-        setPanels([]);
-      }
-    };
-
-    loadPanelBrands();
-  }, [materialOriginId]);
-
-
-
-
-
-  useEffect(() => {
-    const loadPanelBrandCapacities = async () => {
-      if (
-        phaseTypeId === null ||
-        panelSpecId === null ||
-        avgMonthlyConsumption === null ||
-        materialOriginId === null
-      ) {
-        return;
-      }
-
-      if (!formData.systemCapacityKw) {
-        setPanelCapacities([]);
-        setSystemCapacityKw(null);
-        setFormData((prev) => ({
-          ...prev,
-          systemCapacityKw: null,
-        }));
-      }
-
-      try {
-        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
-        setPanelCapacities([...data]);
-      } catch (error) {
-        console.error("Failed to fetch panel brand capacities:", error);
-        setPanelCapacities([]);
-      }
-    };
-
-    loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId, materialOriginId]);
-
-
-
-
-  useEffect(() => {
-    const loadBatteryBrands = async () => {
-      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
-        const data = await fetchBatteryBrands();
-        if (data) setBatteryBrands(data);
-      } else {
-
-        setBatteryBrands([]);
-        setBatteryBrandId(null);
-        setBatterySpecId(null);
-        setBatteryCapacities([]);
-        setFormData((prev) => ({
-          ...prev,
-          batteryBrandId: null,
-          batterySpecId: null,
-        }));
-      }
-    };
-
-    loadBatteryBrands();
-  }, [formData.gridTypeId]);
-
-  useEffect(() => {
-    setBatteryCapacities([]);
-    setBatterySpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      batterySpecId: null
-    }));
-    if (batteryBrandId !== null) {
-      const loadBatteryCapacities = async () => {
-        try {
-          const data = await fetchBatteryBrandCapacities(batteryBrandId);
-          setBatteryCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch battery brand capacities:", error);
-          setBatteryCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      };
-
-      loadBatteryCapacities();
+      setFormData((prev) => ({ ...prev, panelSpecId: null, systemCapacityKw: null }));
     }
-  }, [batteryBrandId, gridTypeId]);
+
+    try {
+      const data = await fetchPanelBrands(Number(materialOriginId));
+      setPanels(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch panel brands:", error);
+      setPanels([]);
+    }
+  };
+
+  loadPanelBrands();
+}, [materialOriginId]);
+
+
+
+
+
+
+  useEffect(() => {
+  const loadPanelBrandCapacities = async () => {
+    // Guard: any required value missing -> reset capacities and exit (unless prefill)
+    if (
+      phaseTypeId == null ||
+      panelSpecId == null ||
+      avgMonthlyConsumption == null ||
+      materialOriginId == null
+    ) {
+      if (!isPrefilling) setPanelCapacities([]);
+      return;
+    }
+
+    // Reset capacities when user changes panel/phase; skip clearing systemCapacity during prefill
+    if (!isPrefilling) {
+      setPanelCapacities([]);
+      if (!formData.systemCapacityKw) {
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({ ...prev, systemCapacityKw: null }));
+      }
+    } else {
+      // during prefill we still clear panel capacities before fetching options
+      setPanelCapacities([]);
+    }
+
+    try {
+      const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
+      setPanelCapacities(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch panel brand capacities:", error);
+      setPanelCapacities([]);
+    }
+  };
+
+  loadPanelBrandCapacities();
+}, [phaseTypeId, panelSpecId, materialOriginId, avgMonthlyConsumption]);
+
+
+
+
+
+  useEffect(() => {
+  const loadBatteryBrands = async () => {
+    // When grid type requires battery
+    if (gridTypeId === 2 || gridTypeId === 3) {
+      try {
+        const data = await fetchBatteryBrands();
+        setBatteryBrands(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch battery brands:", error);
+        setBatteryBrands([]);
+      }
+      return;
+    }
+
+    // When grid type doesn't require battery -> clear if NOT pre-filling
+    if (!isPrefilling) {
+      setBatteryBrands([]);
+      setBatteryBrandId(null);
+      setBatterySpecId(null);
+      setBatteryCapacities([]);
+      setFormData((prev) => ({ ...prev, batteryBrandId: null, batterySpecId: null }));
+    } else {
+      // if pre-filling, do not clear batteryBrandId/spec — keep what's being prefilled
+      setBatteryBrands([]);
+    }
+  };
+
+  loadBatteryBrands();
+}, [gridTypeId]); // switched to gridTypeId for clarity
+
+
+  useEffect(() => {
+  const loadBatteryCapacities = async () => {
+    if (!isPrefilling) {
+      setBatteryCapacities([]);
+      setBatterySpecId(null);
+      setFormData((prev) => ({ ...prev, batterySpecId: null }));
+    } else {
+      setBatteryCapacities([]);
+    }
+
+    if (!batteryBrandId || !gridTypeId) {
+      return;
+    }
+
+    try {
+      const data = await fetchBatteryBrandCapacities(batteryBrandId);
+      setBatteryCapacities(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch battery brand capacities:", error);
+      setBatteryCapacities([]);
+    }
+  };
+
+  loadBatteryCapacities();
+}, [batteryBrandId, gridTypeId]);
+
 
 
 
@@ -689,71 +736,84 @@ export const SystemSpecifications = () => {
 
 
   const handleSelectSpec = async (spec) => {
-    setIsPrefilling(true);
-    setSelectedSpecId(spec.id);
-    console.log("selectedSpecId:", selectedSpecId);
+  // Begin prefill mode
+  setIsPrefilling(true);
 
-    const inverterList = (spec.inverters || []).map((inv) => ({
-      inverterBrandId: inv.inverterBrandId,
-      inverterBrandName: inv.inverterBrandName,
-      inverterSpecId: inv.inverterSpecId,
-      inverterCount: inv.inverterCount || 1,
-      inverterCapacity: inv.inverterCapacity,
-      inverterWarrantyMonths: inv.inverterWarrantyMonths,
-      almmModelNumber: inv.almmModelNumber,
-      gridTypeId: inv.gridTypeId,
-    }));
+  // set selected id immediately
+  setSelectedSpecId(spec.id);
 
-    const capacitiesMap = {};
-    for (let i = 0; i < inverterList.length; i++) {
-      const inv = inverterList[i];
-      if (inv.inverterBrandId) {
-        try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
-          capacitiesMap[i] = capacities;
-        } catch (error) {
-          capacitiesMap[i] = [];
-        }
-      } else {
-        capacitiesMap[i] = [];
+  // Build inverter list (no side effects)
+  const inverterList = (spec.inverters || []).map((inv) => ({
+    inverterBrandId: inv.inverterBrandId ?? null,
+    inverterBrandName: inv.inverterBrandName ?? "",
+    inverterSpecId: inv.inverterSpecId ?? null,
+    inverterCount: inv.inverterCount || 1,
+    inverterCapacity: inv.inverterCapacity ?? null,
+    inverterWarrantyMonths: inv.inverterWarrantyMonths ?? null,
+    almmModelNumber: inv.almmModelNumber ?? "",
+    gridTypeId: inv.gridTypeId ?? spec.gridTypeId ?? gridTypeId,
+  }));
+
+  // Fetch capacities in parallel
+  const capacitiesMap = {};
+  await Promise.all(
+    inverterList.map(async (inv, idx) => {
+      if (!inv.inverterBrandId) {
+        capacitiesMap[idx] = [];
+        return;
       }
-    }
+      try {
+        const data = await fetchInverterBrandCapacities(inv.inverterBrandId);
+        capacitiesMap[idx] = Array.isArray(data) ? data : [];
+      } catch (err) {
+        capacitiesMap[idx] = [];
+      }
+    })
+  );
 
-    setInverterCapacitiesMap(capacitiesMap);
+  // Set capacities map
+  setInverterCapacitiesMap(capacitiesMap);
 
-    setFormData((prev) => ({
-      ...prev,
-      installationSpaceType: spec.installationSpaceType,
-      installationStructureType: spec.installationStructureType,
-      systemCost: spec.systemCost || 0,
-      fabricationCost: spec.fabricationCost || 0,
-      totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
-      hasWaterSprinkler: spec.hasWaterSprinkler,
-      hasHeavydutyRamp: spec.hasHeavydutyRamp,
-      hasHeavydutyStairs: spec.hasHeavydutyStairs,
-      panelSpecId: spec.panelSpecsId,
-      materialOriginId: spec.materialOriginId,
-      gridTypeId: spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId,
-      batteryBrandId: spec.batteryBrandId,
-      batterySpecId: spec.batterySpecsId,
-      systemCapacityKw: spec.systemCapacityKw,
-      inverters: inverterList,
-    }));
+  // Decide detected grid type (from first inverter or spec fallback)
+  const detectedGridType = inverterList.length > 0
+    ? inverterList[0].gridTypeId
+    : spec.gridTypeId ?? gridTypeId;
 
-    setMaterialOriginId(spec.materialOriginId);
-    setGridTypeId(spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId);
-    setPanelSpecId(spec.panelSpecsId);
-    setBatteryBrandId(spec.batteryBrandId);
-    setBatterySpecId(spec.batterySpecsId);
+  // Update formData once (atomic)
+  setFormData((prev) => ({
+    ...prev,
+    installationSpaceType: spec.installationSpaceType ?? prev.installationSpaceType,
+    installationStructureType: spec.installationStructureType ?? prev.installationStructureType,
+    systemCost: spec.systemCost ?? 0,
+    fabricationCost: spec.fabricationCost ?? 0,
+    totalCost: (spec.systemCost ?? 0) + (spec.fabricationCost ?? 0),
+    hasWaterSprinkler: !!spec.hasWaterSprinkler,
+    hasHeavydutyRamp: !!spec.hasHeavydutyRamp,
+    hasHeavydutyStairs: !!spec.hasHeavydutyStairs,
+    panelSpecId: spec.panelSpecsId ?? null,
+    materialOriginId: spec.materialOriginId ?? null,
+    gridTypeId: detectedGridType,
+    batteryBrandId: spec.batteryBrandId ?? null,
+    batterySpecId: spec.batterySpecsId ?? null,
+    systemCapacityKw: spec.systemCapacityKw ?? null,
+    inverters: inverterList,
+  }));
 
-    console.log("Selected spec:", spec);
-    console.log("Loaded inverters:", inverterList);
-    console.log("Prefilled capacities map:", capacitiesMap);
+  // Update individual dependent states (these will trigger fetch effects)
+  setMaterialOriginId(spec.materialOriginId ?? null);
+  setGridTypeId(detectedGridType);
+  setPanelSpecId(spec.panelSpecsId ?? null);
+  setBatteryBrandId(spec.batteryBrandId ?? null);
+  setBatterySpecId(spec.batterySpecsId ?? null);
 
-    setPriceAlreadySetFromCustomerData(true);
-    setTimeout(() => setIsPrefilling(false), 0);
+  // allow React to flush the queued state updates before leaving prefill mode
+  // this reduces risk of race conditions in production
+  await Promise.resolve();
+  setIsPrefilling(false);
 
-  };
+  // mark that pricing is from saved spec (so price effect may skip if needed)
+  setPriceAlreadySetFromCustomerData(true);
+};
 
 
 
