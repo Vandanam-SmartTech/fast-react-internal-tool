@@ -320,45 +320,30 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     const fetchOrigins = async () => {
-      try {
-        const data = await getMaterialOrigins();
-        setOrigins(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch material origins:", error);
-        setOrigins([]);
-      }
+      const data = await getMaterialOrigins();
+      if (data) setOrigins(data);
     };
 
     fetchOrigins();
   }, []);
 
-
   useEffect(() => {
     const fetchGrids = async () => {
-      try {
-        const data = await getGridTypes();
-        setGrids(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch grid types:", error);
-        setGrids([]);
-      }
+      const data = await getGridTypes();
+      if (data) setGrids(data);
     };
 
     fetchGrids();
   }, []);
 
 
-
   useEffect(() => {
-    // 🚫 Do NOT run this effect while prefilling
-    if (isPrefilling) return;
-
     const loadInverterBrands = async () => {
 
-      // Reset dependent fields only when user changes dropdowns — NOT during prefill
       setInverters([]);
       setInverterCapacities([]);
       setFormData((prev) => {
+
         const updatedInverters = (prev.inverters || []).map((inv) => ({
           ...inv,
           inverterBrandId: null,
@@ -372,6 +357,7 @@ export const SystemSpecifications = () => {
         };
       });
 
+
       setInverterCapacitiesMap({});
 
       if (phaseTypeId !== null && gridTypeId !== null) {
@@ -381,42 +367,38 @@ export const SystemSpecifications = () => {
         } catch (error) {
           console.error("Failed to fetch inverter brands:", error);
           setInverters([]);
+        } finally {
+          setIsPrefilling(false);
         }
-        // ❌ removed: setIsPrefilling(false)
       }
     };
 
     loadInverterBrands();
-  }, [phaseTypeId, gridTypeId, isPrefilling]); // include isPrefilling
-
+  }, [phaseTypeId, gridTypeId]);
 
 
   useEffect(() => {
     const loadInverterBrandCapacities = async () => {
-      // Reset capacities list
+
       setInverterCapacities([]);
 
-      // Reset spec id in all places (form + local state)
       setInverterSpecId(null);
       setFormData((prev) => ({
         ...prev,
-        inverterSpecId: null,
+        inverterSpecId: null
       }));
 
-      // Only fetch when both values are valid
-      if (!inverterBrandId || !gridTypeId) {
-        return;
-      }
 
-      try {
-        const data = await fetchInverterBrandCapacities(inverterBrandId);
-
-        setInverterCapacities(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch inverter brand capacities:", error);
-        setInverterCapacities([]);
-      } finally {
-        setIsPrefilling(false);
+      if (inverterBrandId !== null && gridTypeId !== null) {
+        try {
+          const data = await fetchInverterBrandCapacities(inverterBrandId);
+          setInverterCapacities([...data]);
+        } catch (error) {
+          console.error("Failed to fetch inverter brand capacities:", error);
+          setInverterCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
       }
     };
 
@@ -424,159 +406,116 @@ export const SystemSpecifications = () => {
   }, [inverterBrandId, gridTypeId]);
 
 
+  useEffect(() => {
+    const loadPanelBrands = async () => {
+      if (!materialOriginId) return;
 
-useEffect(() => {
-  const loadPanelBrands = async () => {
-    // If material origin is not selected, just reset and stop
-    if (!materialOriginId) {
       setPanels([]);
       setPanelSpecId(null);
       setPanelCapacities([]);
       setSystemCapacityKw(null);
-
       setFormData((prev) => ({
         ...prev,
         panelSpecId: null,
         systemCapacityKw: null,
       }));
-      return;
-    }
 
-    // Reset before fetching
-    setPanels([]);
-    setPanelSpecId(null);
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
+      try {
+        const data = await fetchPanelBrands(Number(materialOriginId));
+        setPanels([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brands:", error);
+        setPanels([]);
+      }
+    };
 
-    setFormData((prev) => ({
-      ...prev,
-      panelSpecId: null,
-      systemCapacityKw: null,
-    }));
+    loadPanelBrands();
+  }, [materialOriginId]);
 
-    try {
-      const data = await fetchPanelBrands(Number(materialOriginId));
-      setPanels(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch panel brands:", error);
-      setPanels([]);
-    }
-  };
 
-  loadPanelBrands();
-}, [materialOriginId]);
+
 
 
   useEffect(() => {
-  const loadPanelBrandCapacities = async () => {
-    // Guard clause: if ANY required dependency is missing, reset and stop
-    if (
-      !phaseTypeId ||
-      !panelSpecId ||
-      !materialOriginId ||
-      avgMonthlyConsumption == null
-    ) {
-      setPanelCapacities([]);
-      return;
-    }
+    const loadPanelBrandCapacities = async () => {
+      if (
+        phaseTypeId === null ||
+        panelSpecId === null ||
+        avgMonthlyConsumption === null ||
+        materialOriginId === null
+      ) {
+        return;
+      }
 
-    // Reset capacities whenever panel brand or phase changes
-    setPanelCapacities([]);
+      if (!formData.systemCapacityKw) {
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          systemCapacityKw: null,
+        }));
+      }
 
-    // If system capacity is not yet calculated, reset it
-    if (!formData.systemCapacityKw) {
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        systemCapacityKw: null,
-      }));
-    }
+      try {
+        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
+        setPanelCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brand capacities:", error);
+        setPanelCapacities([]);
+      }
+    };
 
-    try {
-      const data = await fetchPanelBrandCapacities(
-        phaseTypeId,
-        panelSpecId
-      );
-
-      setPanelCapacities(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch panel brand capacities:", error);
-      setPanelCapacities([]);
-    }
-  };
-
-  loadPanelBrandCapacities();
-}, [phaseTypeId, panelSpecId, materialOriginId, avgMonthlyConsumption]);
+    loadPanelBrandCapacities();
+  }, [phaseTypeId, panelSpecId, materialOriginId]);
 
 
 
 
   useEffect(() => {
     const loadBatteryBrands = async () => {
-      const gridType = formData.gridTypeId;
+      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
+        const data = await fetchBatteryBrands();
+        if (data) setBatteryBrands(data);
+      } else {
 
-      // CASE 1: If grid type is NOT hybrid/off-grid → clear all battery fields
-      if (gridType !== 2 && gridType !== 3) {
         setBatteryBrands([]);
         setBatteryBrandId(null);
         setBatterySpecId(null);
         setBatteryCapacities([]);
-
         setFormData((prev) => ({
           ...prev,
           batteryBrandId: null,
           batterySpecId: null,
         }));
-
-        return; // stop execution
-      }
-
-      // CASE 2: gridType === 2 or 3 → fetch battery brands
-      try {
-        const data = await fetchBatteryBrands();
-        setBatteryBrands(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch battery brands:", error);
-        setBatteryBrands([]);
-      } finally {
-        setIsPrefilling(false);
       }
     };
 
     loadBatteryBrands();
   }, [formData.gridTypeId]);
 
-
   useEffect(() => {
-    // Reset spec and capacities every time brand or grid type changes
     setBatteryCapacities([]);
     setBatterySpecId(null);
-
     setFormData((prev) => ({
       ...prev,
-      batterySpecId: null,
+      batterySpecId: null
     }));
+    if (batteryBrandId !== null) {
+      const loadBatteryCapacities = async () => {
+        try {
+          const data = await fetchBatteryBrandCapacities(batteryBrandId);
+          setBatteryCapacities([...data]);
+        } catch (error) {
+          console.error("Failed to fetch battery brand capacities:", error);
+          setBatteryCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      };
 
-    // ❌ If brand is null OR grid type is null → do not fetch
-    if (!batteryBrandId || !gridTypeId) {
-      return;
+      loadBatteryCapacities();
     }
-
-    const loadBatteryCapacities = async () => {
-      try {
-        const data = await fetchBatteryBrandCapacities(batteryBrandId);
-        setBatteryCapacities(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch battery brand capacities:", error);
-        setBatteryCapacities([]);
-      } finally {
-        setIsPrefilling(false);
-      }
-    };
-
-    loadBatteryCapacities();
   }, [batteryBrandId, gridTypeId]);
-
 
 
 
@@ -750,82 +689,72 @@ useEffect(() => {
 
 
   const handleSelectSpec = async (spec) => {
-  setIsPrefilling(true);
+    setIsPrefilling(true);
+    setSelectedSpecId(spec.id);
+    console.log("selectedSpecId:", selectedSpecId);
 
-  // Always set selectedSpecId correctly before using it
-  setSelectedSpecId(spec.id);
+    const inverterList = (spec.inverters || []).map((inv) => ({
+      inverterBrandId: inv.inverterBrandId,
+      inverterBrandName: inv.inverterBrandName,
+      inverterSpecId: inv.inverterSpecId,
+      inverterCount: inv.inverterCount || 1,
+      inverterCapacity: inv.inverterCapacity,
+      inverterWarrantyMonths: inv.inverterWarrantyMonths,
+      almmModelNumber: inv.almmModelNumber,
+      gridTypeId: inv.gridTypeId,
+    }));
 
-  // Prepare inverter list
-  const inverterList = (spec.inverters || []).map((inv) => ({
-    inverterBrandId: inv.inverterBrandId,
-    inverterBrandName: inv.inverterBrandName,
-    inverterSpecId: inv.inverterSpecId,
-    inverterCount: inv.inverterCount || 1,
-    inverterCapacity: inv.inverterCapacity,
-    inverterWarrantyMonths: inv.inverterWarrantyMonths,
-    almmModelNumber: inv.almmModelNumber,
-    gridTypeId: inv.gridTypeId,
-  }));
-
-  // Build capacities map in parallel (faster + safer)
-  const capacitiesMap = {};
-
-  await Promise.all(
-    inverterList.map(async (inv, index) => {
-      if (!inv.inverterBrandId) {
-        capacitiesMap[index] = [];
-        return;
+    const capacitiesMap = {};
+    for (let i = 0; i < inverterList.length; i++) {
+      const inv = inverterList[i];
+      if (inv.inverterBrandId) {
+        try {
+          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+          capacitiesMap[i] = capacities;
+        } catch (error) {
+          capacitiesMap[i] = [];
+        }
+      } else {
+        capacitiesMap[i] = [];
       }
+    }
 
-      try {
-        const data = await fetchInverterBrandCapacities(inv.inverterBrandId);
-        capacitiesMap[index] = Array.isArray(data) ? data : [];
-      } catch (err) {
-        capacitiesMap[index] = [];
-      }
-    })
-  );
+    setInverterCapacitiesMap(capacitiesMap);
 
-  // Update inverter capacity map once
-  setInverterCapacitiesMap(capacitiesMap);
+    setFormData((prev) => ({
+      ...prev,
+      installationSpaceType: spec.installationSpaceType,
+      installationStructureType: spec.installationStructureType,
+      systemCost: spec.systemCost || 0,
+      fabricationCost: spec.fabricationCost || 0,
+      totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
+      hasWaterSprinkler: spec.hasWaterSprinkler,
+      hasHeavydutyRamp: spec.hasHeavydutyRamp,
+      hasHeavydutyStairs: spec.hasHeavydutyStairs,
+      panelSpecId: spec.panelSpecsId,
+      materialOriginId: spec.materialOriginId,
+      gridTypeId: spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId,
+      batteryBrandId: spec.batteryBrandId,
+      batterySpecId: spec.batterySpecsId,
+      systemCapacityKw: spec.systemCapacityKw,
+      inverters: inverterList,
+    }));
 
-  // Auto-select grid type from first inverter fallback
-  const detectedGridType =
-    inverterList.length > 0 ? inverterList[0].gridTypeId : spec.gridTypeId;
+    setMaterialOriginId(spec.materialOriginId);
+    setGridTypeId(spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId);
+    setPanelSpecId(spec.panelSpecsId);
+    setBatteryBrandId(spec.batteryBrandId);
+    setBatterySpecId(spec.batterySpecsId);
 
-  // Update formData safely
-  setFormData((prev) => ({
-    ...prev,
-    installationSpaceType: spec.installationSpaceType,
-    installationStructureType: spec.installationStructureType,
-    systemCost: spec.systemCost || 0,
-    fabricationCost: spec.fabricationCost || 0,
-    totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
-    hasWaterSprinkler: spec.hasWaterSprinkler,
-    hasHeavydutyRamp: spec.hasHeavydutyRamp,
-    hasHeavydutyStairs: spec.hasHeavydutyStairs,
-    panelSpecId: spec.panelSpecsId,
-    materialOriginId: spec.materialOriginId,
-    gridTypeId: detectedGridType,
-    batteryBrandId: spec.batteryBrandId ?? null,
-    batterySpecId: spec.batterySpecsId ?? null,
-    systemCapacityKw: spec.systemCapacityKw,
-    inverters: inverterList,
-  }));
+    console.log("Selected spec:", spec);
+    console.log("Loaded inverters:", inverterList);
+    console.log("Prefilled capacities map:", capacitiesMap);
 
-  // Update dependent states only once
-  setMaterialOriginId(spec.materialOriginId);
-  setGridTypeId(detectedGridType);
-  setPanelSpecId(spec.panelSpecsId);
-  setBatteryBrandId(spec.batteryBrandId ?? null);
-  setBatterySpecId(spec.batterySpecsId ?? null);
+    setPriceAlreadySetFromCustomerData(true);
+    setTimeout(() => setIsPrefilling(false), 0);
 
-  console.log("Selected spec:", spec);
-  console.log("Loaded inverters:", inverterList);
-  console.log("Prefilled capacities map:", capacitiesMap);
+  };
 
-  setPriceAlreadySetFromCustomerData(true);
-};
 
 
 
@@ -1226,7 +1155,7 @@ useEffect(() => {
 
                   onClick={() => {
                     handleSelectSpec(spec);
-                    setActiveLoadedSpecId(spec.id);
+                    setActiveLoadedSpecId(spec.id);  
 
                     if (spec.isRunningCopy) {
                       setSelectedSpecId(spec.id);
