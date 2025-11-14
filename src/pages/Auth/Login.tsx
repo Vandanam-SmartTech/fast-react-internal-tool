@@ -216,7 +216,7 @@ const Login = () => {
                   SolarPro
                 </h1>
                 <p className="text-secondary-700 dark:text-secondary-300 text-sm sm:text-base">
-                  Log in to manage your solar journey...
+                  Log in to manage your solar journey
                 </p>
               </div>
 
