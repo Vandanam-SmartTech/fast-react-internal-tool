@@ -806,10 +806,14 @@ useEffect(() => {
   setBatteryBrandId(spec.batteryBrandId ?? null);
   setBatterySpecId(spec.batterySpecsId ?? null);
 
+<<<<<<< HEAD
   // allow React to flush the queued state updates before leaving prefill mode
   // this reduces risk of race conditions in production
   await Promise.resolve();
   setIsPrefilling(false);
+=======
+    setPriceAlreadySetFromCustomerData(true);
+>>>>>>> a5ccd575fbc6cb2ec34b4b8ffc5066ca3df9cacd
 
   // mark that pricing is from saved spec (so price effect may skip if needed)
   setPriceAlreadySetFromCustomerData(true);
