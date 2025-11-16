@@ -492,30 +492,36 @@ export const SystemSpecifications = () => {
 
     loadBatteryBrands();
   }, [formData.gridTypeId]);
+  
 
   useEffect(() => {
+  if (!isPrefilling) {
     setBatteryCapacities([]);
     setBatterySpecId(null);
     setFormData((prev) => ({
       ...prev,
       batterySpecId: null
     }));
-    if (batteryBrandId !== null) {
-      const loadBatteryCapacities = async () => {
-        try {
-          const data = await fetchBatteryBrandCapacities(batteryBrandId);
-          setBatteryCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch battery brand capacities:", error);
-          setBatteryCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      };
+  }
 
-      loadBatteryCapacities();
-    }
-  }, [batteryBrandId, gridTypeId]);
+  if (batteryBrandId !== null) {
+    const loadBatteryCapacities = async () => {
+      try {
+        const data = await fetchBatteryBrandCapacities(batteryBrandId);
+        setBatteryCapacities([...data]);
+      } catch (error) {
+        setBatteryCapacities([]);
+      } finally {
+        // ☑ End prefilling AFTER capacities load
+        setIsPrefilling(false);
+      }
+    };
+
+    loadBatteryCapacities();
+  }
+
+}, [batteryBrandId, gridTypeId]);
+
 
 
 
