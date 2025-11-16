@@ -472,27 +472,32 @@ export const SystemSpecifications = () => {
 
 
   useEffect(() => {
-    const loadBatteryBrands = async () => {
-      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
-        const data = await fetchBatteryBrands();
-        if (data) setBatteryBrands(data);
-      } else {
+  const loadBatteryBrands = async () => {
+    if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
+      const data = await fetchBatteryBrands();
+      if (data) setBatteryBrands(data);
+    } else {
 
-        setBatteryBrands([]);
-        setBatteryBrandId(null);
-        setBatterySpecId(null);
-        setBatteryCapacities([]);
-        setFormData((prev) => ({
-          ...prev,
-          batteryBrandId: null,
-          batterySpecId: null,
-        }));
-      }
-    };
+      // ⛔ DON’T RESET during PREFILL
+      if (isPrefilling) return;
 
-    loadBatteryBrands();
-  }, [formData.gridTypeId]);
-  
+      // ✅ RESET only in normal user editing
+      setBatteryBrands([]);
+      setBatteryBrandId(null);
+      setBatterySpecId(null);
+      setBatteryCapacities([]);
+      setFormData((prev) => ({
+        ...prev,
+        batteryBrandId: null,
+        batterySpecId: null,
+      }));
+    }
+  };
+
+  loadBatteryBrands();
+}, [formData.gridTypeId, isPrefilling]);
+
+
 
   useEffect(() => {
   if (!isPrefilling) {
