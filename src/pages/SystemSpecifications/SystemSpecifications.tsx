@@ -688,70 +688,78 @@ export const SystemSpecifications = () => {
   };
 
 
-  const handleSelectSpec = async (spec) => {
-    setIsPrefilling(true);
-    setSelectedSpecId(spec.id);
-    console.log("selectedSpecId:", selectedSpecId);
+const handleSelectSpec = async (spec) => {
+  setIsPrefilling(true);
+  setSelectedSpecId(spec.id);
 
-    const inverterList = (spec.inverters || []).map((inv) => ({
-      inverterBrandId: inv.inverterBrandId,
-      inverterBrandName: inv.inverterBrandName,
-      inverterSpecId: inv.inverterSpecId,
-      inverterCount: inv.inverterCount || 1,
-      inverterCapacity: inv.inverterCapacity,
-      inverterWarrantyMonths: inv.inverterWarrantyMonths,
-      almmModelNumber: inv.almmModelNumber,
-      gridTypeId: inv.gridTypeId,
-    }));
+  // STEP 1: Extract common fields FIRST
+  const initialGridTypeId =
+    spec.inverters?.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId;
 
-    const capacitiesMap = {};
-    for (let i = 0; i < inverterList.length; i++) {
-      const inv = inverterList[i];
-      if (inv.inverterBrandId) {
-        try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
-          capacitiesMap[i] = capacities;
-        } catch (error) {
-          capacitiesMap[i] = [];
-        }
-      } else {
+  const initialMaterialOriginId = spec.materialOriginId;
+
+  // Set them immediately
+  setGridTypeId(initialGridTypeId);
+  setMaterialOriginId(initialMaterialOriginId);
+
+  // STEP 2: Build inverter list
+  const inverterList = (spec.inverters || []).map((inv) => ({
+    inverterBrandId: inv.inverterBrandId,
+    inverterBrandName: inv.inverterBrandName,
+    inverterSpecId: inv.inverterSpecId,
+    inverterCount: inv.inverterCount || 1,
+    inverterCapacity: inv.inverterCapacity,
+    inverterWarrantyMonths: inv.inverterWarrantyMonths,
+    almmModelNumber: inv.almmModelNumber,
+    gridTypeId: inv.gridTypeId,
+  }));
+
+  // STEP 3: Fetch capacities for each inverter
+  const capacitiesMap = {};
+  for (let i = 0; i < inverterList.length; i++) {
+    const inv = inverterList[i];
+
+    if (inv.inverterBrandId) {
+      try {
+        const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+        capacitiesMap[i] = capacities;
+      } catch (error) {
         capacitiesMap[i] = [];
       }
+    } else {
+      capacitiesMap[i] = [];
     }
+  }
 
-    setInverterCapacitiesMap(capacitiesMap);
+  setInverterCapacitiesMap(capacitiesMap);
 
-    setFormData((prev) => ({
-      ...prev,
-      installationSpaceType: spec.installationSpaceType,
-      installationStructureType: spec.installationStructureType,
-      systemCost: spec.systemCost || 0,
-      fabricationCost: spec.fabricationCost || 0,
-      totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
-      hasWaterSprinkler: spec.hasWaterSprinkler,
-      hasHeavydutyRamp: spec.hasHeavydutyRamp,
-      hasHeavydutyStairs: spec.hasHeavydutyStairs,
-      panelSpecId: spec.panelSpecsId,
-      materialOriginId: spec.materialOriginId,
-      gridTypeId: spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId,
-      batteryBrandId: spec.batteryBrandId,
-      batterySpecId: spec.batterySpecsId,
-      systemCapacityKw: spec.systemCapacityKw,
-      inverters: inverterList,
-    }));
+  // STEP 4: Then set all form data
+  setFormData((prev) => ({
+    ...prev,
+    installationSpaceType: spec.installationSpaceType,
+    installationStructureType: spec.installationStructureType,
+    systemCost: spec.systemCost || 0,
+    fabricationCost: spec.fabricationCost || 0,
+    totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
+    hasWaterSprinkler: spec.hasWaterSprinkler,
+    hasHeavydutyRamp: spec.hasHeavydutyRamp,
+    hasHeavydutyStairs: spec.hasHeavydutyStairs,
+    panelSpecId: spec.panelSpecsId,
+    materialOriginId: initialMaterialOriginId, // safe
+    gridTypeId: initialGridTypeId,            // safe
+    batteryBrandId: spec.batteryBrandId,
+    batterySpecId: spec.batterySpecsId,
+    systemCapacityKw: spec.systemCapacityKw,
+    inverters: inverterList,
+  }));
 
-    setMaterialOriginId(spec.materialOriginId);
-    setGridTypeId(spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId);
-    setPanelSpecId(spec.panelSpecsId);
-    setBatteryBrandId(spec.batteryBrandId);
-    setBatterySpecId(spec.batterySpecsId);
+  setPanelSpecId(spec.panelSpecsId);
+  setBatteryBrandId(spec.batteryBrandId);
+  setBatterySpecId(spec.batterySpecsId);
 
-    console.log("Selected spec:", spec);
-    console.log("Loaded inverters:", inverterList);
-    console.log("Prefilled capacities map:", capacitiesMap);
+  setPriceAlreadySetFromCustomerData(true);
+};
 
-    setPriceAlreadySetFromCustomerData(true);
-  };
 
 
 
