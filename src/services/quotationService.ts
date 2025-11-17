@@ -296,6 +296,21 @@ export const saveInverterSpecs = async (requestData: any | any[]): Promise<any> 
   }
 };
 
+export const savePipeSpecs = async (requestData: any | any[]): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  // ✅ Ensure it's always sent as an array
+  const payload = Array.isArray(requestData) ? requestData : [requestData];
+
+  try {
+    const response = await quotationAPI.post(`/api/system-spec-pipes/replace`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving pipe specs:", error);
+    throw new Error("Failed to save pipe specs.");
+  }
+};
+
 
 
 export const saveInverterSpecPackage = async (requestData: any): Promise<any> => {
@@ -607,6 +622,24 @@ export const getSecondaryId = async (systemSpecificationId: number): Promise<any
   } catch (error) {
     console.error("Error fetching secondary Id:", error);
     return []; 
+  }
+};
+
+export const fetchPipeSpecification = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get("/api/pipe-specs");
+    console.log("Pipe specs:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch pipe specs.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching pipe specs:", error);
+    return null;
   }
 };
 
