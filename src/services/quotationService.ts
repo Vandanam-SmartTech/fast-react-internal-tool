@@ -303,7 +303,7 @@ export const savePipeSpecs = async (requestData: any | any[]): Promise<any> => {
   const payload = Array.isArray(requestData) ? requestData : [requestData];
 
   try {
-    const response = await quotationAPI.post(`/api/system-spec-pipes/replace`, payload);
+    const response = await quotationAPI.post(`/api/system-spec-pipes/create`, payload);
     return response.data;
   } catch (error) {
     console.error("Error saving pipe specs:", error);
@@ -640,6 +640,18 @@ export const fetchPipeSpecification = async (): Promise<any[] | null> => {
     });
     console.error("Error fetching pipe specs:", error);
     return null;
+  }
+};
+
+export const deleteSpecAPI = async (specId: any) => {
+  try {
+    const quotationAPI = getQuotationAPI();
+    const response = await quotationAPI.delete(
+      `/api/connection-system-specs/${specId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
   }
 };
 

@@ -4,7 +4,8 @@ import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConne
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId, fetchPipeSpecification, savePipeSpecs
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId,
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -12,7 +13,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from
 import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
-import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/documentManagerService";
+import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
 import { Download as DownloadIcon } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -736,21 +737,6 @@ export const SystemSpecifications = () => {
         return;
       }
 
-      // Pipe validation (MANDATORY only when hasHeavydutyRamp = true)
-      if (formData.hasHeavydutyRamp) {
-        if (
-          !formData.pipes ||
-          formData.pipes.length === 0 ||
-          formData.pipes.some((p) => !p.pipeSpecId)
-        ) {
-          toast.error(
-            "Please select Pipe Specification when Heavy Duty Ramp is enabled.",
-            { autoClose: 1500, hideProgressBar: true }
-          );
-          return;
-        }
-      }
-
       // ---------------------- SAVE SYSTEM SPECS ------------------------------
 
       setIsSubmitting(true);
@@ -788,12 +774,15 @@ export const SystemSpecifications = () => {
 
       // ---------------------- SAVE PIPE SPECS ------------------------------
 
-      if (formData.hasHeavydutyRamp) {
-        const pipeList = formData.pipes.map((pipe) => ({
-          systemSpecsId,
-          pipeSpecId: pipe.pipeSpecId,
-          pipeCount: pipe.pipeCount || 1,
-        }));
+      // Save pipes if they exist, regardless of Heavy Duty Ramp checkbox
+      if (formData.pipes && formData.pipes.length > 0 && formData.pipes.some((p) => p.pipeSpecId)) {
+        const pipeList = formData.pipes
+          .filter((pipe) => pipe.pipeSpecId) // Only save pipes with valid spec IDs
+          .map((pipe) => ({
+            systemSpecsId,
+            pipeSpecId: pipe.pipeSpecId,
+            pipeCount: pipe.pipeCount || 1,
+          }));
 
         console.log("Pipe list to save:", pipeList);
 
@@ -956,18 +945,8 @@ export const SystemSpecifications = () => {
       [name]: newValue,
     };
 
-    // Handle pipes when Heavy Duty Ramp checkbox changes
-    if (name === "hasHeavydutyRamp") {
-      if (!checked) {
-        // Reset pipes when unchecked
-        updatedFormData.pipes = [{ pipeSpecId: null, pipeCount: 1 }];
-      } else {
-        // Ensure at least one pipe entry when checked
-        if (!updatedFormData.pipes || updatedFormData.pipes.length === 0) {
-          updatedFormData.pipes = [{ pipeSpecId: null, pipeCount: 1 }];
-        }
-      }
-    }
+    // Pipe details are now independent of Heavy Duty Ramp checkbox
+    // No special handling needed when hasHeavydutyRamp changes
 
     updatedFormData.totalCost =
       (Number(updatedFormData.systemCost) || 0) +
@@ -1077,6 +1056,47 @@ export const SystemSpecifications = () => {
       setSelectedDate(null);
     }
   };
+
+  const handleDeleteSpec = (specId: number, documentId?: number) => {
+    setDialogType("confirm");
+    setDialogMessage("Are you sure you want to delete this specification?");
+    setDialogAction(() => () => confirmDeleteSpec(specId, documentId));
+    setDialogOpen(true);
+  };
+
+
+
+  const confirmDeleteSpec = async (specId: number, documentId?: number) => {
+    try {
+      await deleteSpecAPI(specId);
+
+      // delete the related document also
+      if (documentId) {
+        await deleteDocumentById(documentId);
+      }
+
+      toast.success("Specification deleted successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      setDialogOpen(false);
+
+      await fetchSavedSpecs();
+
+    } catch (err) {
+      toast.error("Failed to delete specification!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      setDialogOpen(false);
+    }
+  };
+
+
+
+
 
 
 
@@ -1318,7 +1338,14 @@ export const SystemSpecifications = () => {
 
         {savedSpecs.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {savedSpecs.map((spec) => {
+
+            {/* Always show isRunningCopy=true first */}
+            {([...savedSpecs].sort((a, b) => {
+              if (a.isRunningCopy && !b.isRunningCopy) return -1;
+              if (!a.isRunningCopy && b.isRunningCopy) return 1;
+              return 0;
+            })).map((spec) => {
+
               const isEditable = spec.isRunningCopy;
               const document = documentsMap[spec.id];
               const isLoadingDoc = loadingDocs[spec.id];
@@ -1336,51 +1363,62 @@ export const SystemSpecifications = () => {
 
                     setIsFormOpen(true);
                   }}
-
-                  className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+                  className={`relative cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
             ${isEditable
                       ? "bg-green-50 border-green-400 hover:shadow-lg"
-                      : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
-                    }
-           ${activeLoadedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
-
-          `}
+                      : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"}
+            ${activeLoadedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}`}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-bold text-gray-800">
+                    <h3 className="text-lg font-bold text-gray-800 flex-1 pr-2">
                       {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
                     </h3>
 
-                    <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
-                        }`}
-                    >
-                      {isEditable ? "Editable" : "Locked"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                          }`}
+                      >
+                        {isEditable ? "Editable" : "Locked"}
+                      </span>
+
+                      {!isEditable && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSpec(spec.id, document?.id);
+                          }}
+                          className="text-red-600 hover:text-red-800 p-1 transition"
+                          title="Delete Spec"
+                        >
+                          ❌
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {spec.inverters && spec.inverters.length > 0 ? (
                     spec.inverters.map((inv, index) => (
                       <p key={index} className="text-sm font-medium text-gray-700 mb-1">
-                        Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
+                        Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW ×{" "}
+                        {inv.inverterCount}
                       </p>
                     ))
                   ) : (
                     <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
                   )}
 
-                  {spec.inverters?.some(inv => inv.gridTypeName === "Hybrid") && (
+                  {spec.inverters?.some((inv) => inv.gridTypeName === "Hybrid") && (
                     <p className="text-sm font-medium text-gray-700 mt-2">
                       Battery: {spec.batteryBrandName} – {spec.batteryCapacityKw} kW
                     </p>
                   )}
-                  
 
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
-                    <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-                    <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
+                  <div className="mt-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Total Cost: ₹{((spec.systemCost || 0) + (spec.fabricationCost || 0)).toLocaleString("en-IN")}
+                    </span>
                   </div>
-
 
                   {!isEditable && (
                     <div className="mt-4 bg-white border rounded-md p-2 shadow-sm">
@@ -1395,8 +1433,11 @@ export const SystemSpecifications = () => {
                             >
                               {document.fileName}
                             </p>
-                            <p className="text-xs text-gray-500">Generated by: {document.uploadedBy}</p>
+                            <p className="text-xs text-gray-500">
+                              Generated by: {document.uploadedBy}
+                            </p>
                           </div>
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1685,8 +1726,8 @@ export const SystemSpecifications = () => {
                     formData.inverters?.some((inv) => !inv.inverterSpecId) ?? false
                   }
                   className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.inverters?.some((inv) => !inv.inverterSpecId)
-                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
                 >
                   + Add Another Inverter
@@ -1882,111 +1923,110 @@ export const SystemSpecifications = () => {
             </div>
           </div>
 
-          {formData.hasHeavydutyRamp && (
-            <div className="md:col-span-2">
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-semibold text-gray-800">Pipe Details</h3>
-                  <button
-                    type="button"
-                    onClick={addNewPipe}
-                    disabled={
-                      formData.pipes?.some((pipe) => !pipe.pipeSpecId) ?? false
-                    }
-                    className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.pipeSpecId)
-                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                  >
-                    + Add Another Pipe
-                  </button>
-                </div>
+          <div className="md:col-span-2">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-base font-semibold text-gray-800">Pipe Details</h3>
+                <button
+                  type="button"
+                  onClick={addNewPipe}
+                  disabled={
+                    formData.pipes?.some((pipe) => !pipe.pipeSpecId) ?? false
+                  }
+                  className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.pipeSpecId)
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                >
+                  + Add Another Pipe
+                </button>
+              </div>
 
-                {formData.pipes.map((pipe, index) => (
-                  <div
-                    key={index}
-                    className="md:col-span-2 grid grid-cols-12 items-center gap-6 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
-                  >
-                    {formData.pipes.length > 1 && (
+              {formData.pipes.map((pipe, index) => (
+                <div
+                  key={index}
+                  className="md:col-span-2 grid grid-cols-12 items-center gap-6 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                >
+                  {formData.pipes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePipe(index)}
+                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                    >
+                      ✕
+                    </button>
+                  )}
+
+                  {/* LEFT EMPTY SPACE (2 columns) */}
+                  <div className="hidden md:block md:col-span-2"></div>
+
+                  {/* Pipe Specification - 5 columns */}
+                  <div className="col-span-12 md:col-span-6">
+                    <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
+                    <ReusableDropdown
+                      name="pipeSpecId"
+                      value={pipe.pipeSpecId ?? ""}
+                      onChange={(val) =>
+                        handlePipeChange(index, "pipeSpecId", val === "" ? null : Number(val))
+                      }
+                      options={pipes.map((p) => ({
+                        value: p.id,
+                        label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
+                      }))}
+
+                      placeholder="Select Pipe Specification"
+                    />
+                  </div>
+
+                  {/* Pipe Count - 3 columns */}
+                  <div className="col-span-12 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">Count</label>
+                    <div className="flex items-center border rounded-md shadow-sm bg-white">
                       <button
                         type="button"
-                        onClick={() => removePipe(index)}
-                        className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                      >
-                        ✕
-                      </button>
-                    )}
-
-                    {/* LEFT EMPTY SPACE (2 columns) */}
-                    <div className="hidden md:block md:col-span-2"></div>
-
-                    {/* Pipe Specification - 5 columns */}
-                    <div className="col-span-12 md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
-                      <ReusableDropdown
-                        name="pipeSpecId"
-                        value={pipe.pipeSpecId ?? ""}
-                        onChange={(val) =>
-                          handlePipeChange(index, "pipeSpecId", val === "" ? null : Number(val))
+                        disabled={(pipe.pipeCount ?? 1) <= 1}
+                        onClick={() =>
+                          handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
                         }
-                        options={pipes.map((p) => ({
-                          value: p.id,
-                          label: `${p.pipeBrandName} (${p.widthMm}*${p.heightMm})`,
-                        }))}
-                        placeholder="Select Pipe Specification"
+                        className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
+                          ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                          : "text-gray-600 hover:text-white hover:bg-red-500"
+                          }`}
+                      >
+                        −
+                      </button>
+
+                      <input
+                        type="text"
+                        name="pipeCount"
+                        inputMode="numeric"
+                        value={pipe.pipeCount ?? 1}
+                        onChange={(e) => {
+                          const value = Math.max(Number(e.target.value) || 1, 1);
+                          handlePipeChange(index, "pipeCount", value);
+                        }}
+                        className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
+                        }
+                        className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                      >
+                        +
+                      </button>
                     </div>
-
-                    {/* Pipe Count - 3 columns */}
-                    <div className="col-span-12 md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Count</label>
-                      <div className="flex items-center border rounded-md shadow-sm bg-white">
-                        <button
-                          type="button"
-                          disabled={(pipe.pipeCount ?? 1) <= 1}
-                          onClick={() =>
-                            handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
-                          }
-                          className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
-                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
-                              : "text-gray-600 hover:text-white hover:bg-red-500"
-                            }`}
-                        >
-                          −
-                        </button>
-
-                        <input
-                          type="text"
-                          name="pipeCount"
-                          inputMode="numeric"
-                          value={pipe.pipeCount ?? 1}
-                          onChange={(e) => {
-                            const value = Math.max(Number(e.target.value) || 1, 1);
-                            handlePipeChange(index, "pipeCount", value);
-                          }}
-                          className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
-                          }
-                          className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* RIGHT EMPTY SPACE (2 columns) */}
-                    <div className="hidden md:block md:col-span-2"></div>
                   </div>
-                ))}
 
-              </div>
+                  {/* RIGHT EMPTY SPACE (2 columns) */}
+                  <div className="hidden md:block md:col-span-2"></div>
+                </div>
+              ))}
+
             </div>
-          )}
+          </div>
 
 
           <div className="col-span-full space-y-6 mt-6">
@@ -2101,7 +2141,17 @@ export const SystemSpecifications = () => {
                   <>
                     <button
                       type="button"
-                      onClick={() => setShowDatePickModal(true)}
+                      onClick={() => {
+                        // Check if maximum limit of 5 quotations is reached
+                        if (savedSpecs.length >= 6) {
+                          setDialogType("error");
+                          setDialogMessage("You have reached the maximum limit of 5 quotations. Please delete an existing quotation to create a new one.");
+                          setDialogAction(null);
+                          setDialogOpen(true);
+                          return;
+                        }
+                        setShowDatePickModal(true);
+                      }}
                       disabled={!selectedSpecId || isLoading}
                       className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
