@@ -751,8 +751,7 @@ export const SystemSpecifications = () => {
         connectionId,
         panelSpecsId: formData.panelSpecId,
         batterySpecsId: formData.batterySpecId,
-        orgId,
-        agencyId,
+        orgId: agencyId ?? orgId,
         isRunningCopy: true,
       });
 
@@ -836,6 +835,9 @@ export const SystemSpecifications = () => {
 
     const initialMaterialOriginId = spec.materialOriginId;
 
+    setBatteryBrandId(spec.batteryBrandId || null);
+    setBatterySpecId(spec.batterySpecsId || null);
+
     // Set them immediately
     setGridTypeId(initialGridTypeId);
     setMaterialOriginId(initialMaterialOriginId);
@@ -899,11 +901,13 @@ export const SystemSpecifications = () => {
     }));
 
     setPanelSpecId(spec.panelSpecsId);
-    setBatteryBrandId(spec.batteryBrandId);
-    setBatterySpecId(spec.batterySpecsId);
+    // setBatteryBrandId(spec.batteryBrandId);
+    // setBatterySpecId(spec.batterySpecsId);
 
     setPriceAlreadySetFromCustomerData(true);
   };
+
+
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -1027,11 +1031,6 @@ export const SystemSpecifications = () => {
 
     fetchPriceDetails();
   }, [priceInputsKey, fetchTrigger]);
-
-
-
-
-
 
   const handleGenerateQuotation = async (date) => {
     if (!selectedSpecId || !date) return;
@@ -1343,6 +1342,11 @@ export const SystemSpecifications = () => {
             {([...savedSpecs].sort((a, b) => {
               if (a.isRunningCopy && !b.isRunningCopy) return -1;
               if (!a.isRunningCopy && b.isRunningCopy) return 1;
+
+              if (!a.isRunningCopy && !b.isRunningCopy) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+              }
+
               return 0;
             })).map((spec) => {
 
@@ -2116,8 +2120,9 @@ export const SystemSpecifications = () => {
                 onClick={handleSaveButtonClick}
                 disabled={isSubmitting}
                 className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
-    ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+    bg-blue-600 hover:bg-blue-700
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+    disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isSubmitting ? "Saving..." : "Save System Specs"}
               </button>
