@@ -15,7 +15,6 @@ import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeI
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
 import { Download as DownloadIcon } from "lucide-react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 
@@ -129,11 +128,8 @@ export const SystemSpecifications = () => {
     hasWaterSprinkler: false,
     hasHeavydutyRamp: false,
     hasHeavydutyStairs: false,
-    //inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
-    //inverterSpecId: null,
-    //inverterCount: 1,
     panelBrandId: null,
     panelSpecId: null,
     batteryBrandId: null,
@@ -2055,11 +2051,17 @@ export const SystemSpecifications = () => {
                   type="text"
                   inputMode="numeric"
                   name="systemCost"
+                  // value={
+                  //   isEditing
+                  //     ? formData.systemCost 
+                  //     : formatIndianNumber(formData.systemCost) 
+                  // }
                   value={
                     isEditing
-                      ? formData.systemCost // raw while typing
-                      : formatIndianNumber(formData.systemCost) // formatted otherwise
+                      ? (formData.systemCost === 0 ? "" : String(formData.systemCost))
+                      : formatIndianNumber(formData.systemCost)
                   }
+
                   onFocus={() => setIsEditing(true)}
                   onBlur={() => setIsEditing(false)}
                   onChange={(e) => {
@@ -2070,6 +2072,7 @@ export const SystemSpecifications = () => {
                     });
                   }}
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Solar System Cost"
                 />
               </div>
 
@@ -2081,11 +2084,17 @@ export const SystemSpecifications = () => {
                   type="text"
                   inputMode="numeric"
                   name="fabricationCost"
+                  // value={
+                  //   isEditingFabrication
+                  //     ? formData.fabricationCost 
+                  //     : formatIndianNumber(formData.fabricationCost) 
+                  // }
                   value={
-                    isEditingFabrication
-                      ? formData.fabricationCost // raw while editing
-                      : formatIndianNumber(formData.fabricationCost) // formatted on blur
+                    isEditing
+                      ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
+                      : formatIndianNumber(formData.fabricationCost)
                   }
+
                   onFocus={() => setIsEditingFabrication(true)}
                   onBlur={() => setIsEditingFabrication(false)}
                   onChange={(e) => {
@@ -2096,6 +2105,7 @@ export const SystemSpecifications = () => {
                     });
                   }}
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Fabrication Cost"
                 />
               </div>
 
@@ -2109,6 +2119,7 @@ export const SystemSpecifications = () => {
                   value={formatIndianNumber(formData.totalCost)}
                   readOnly
                   className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Total Cost"
                 />
               </div>
             </div>

@@ -767,6 +767,20 @@ export const updateModule = async (connectionId: number, data: Record<string, an
   }
 };
 
+export const checkIsConnectionOnboarded = async (
+  connectionId: number
+): Promise<boolean> => {
+  const crsAPI = getCrsAPI();
+  try {
+    const { data } = await crsAPI.get(`/api/connections/is-onboarded/${connectionId}`);
+    return data === true;
+  } catch (error) {
+    console.error("Error checking is connection onboarded:", error);
+    return false;
+  }
+};
+
+
 
 
 

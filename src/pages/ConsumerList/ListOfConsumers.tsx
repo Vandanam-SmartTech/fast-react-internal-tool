@@ -41,6 +41,7 @@ const ListOfConsumers: React.FC = () => {
   const [agencies, setAgencies] = useState<Organization[]>([]);
   const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -80,6 +81,8 @@ const ListOfConsumers: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching claims or organizations:", error);
+      } finally {
+        setIsInitialized(true);
       }
     };
 
@@ -104,6 +107,8 @@ const ListOfConsumers: React.FC = () => {
   }, [selectedOrgId]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (userInfo?.role === "ROLE_ORG_ADMIN") {
 
       setSelectedOrgId(userInfo.orgId);
@@ -117,7 +122,7 @@ const ListOfConsumers: React.FC = () => {
         }
       });
     }
-  }, []);
+  }, [isInitialized]);
 
 
   useEffect(() => {
@@ -150,13 +155,19 @@ const ListOfConsumers: React.FC = () => {
   }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (selectedUserId !== null) {
       loadConsumers(0);
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, isInitialized]);
 
 
   const loadConsumers = async (page: number) => {
+    if (!isInitialized) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -302,27 +313,32 @@ const ListOfConsumers: React.FC = () => {
 
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     loadConsumers(currentPage);
-  }, [currentPage]);
+  }, [currentPage, isInitialized]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
 
     loadConsumers(0);
-  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId]);
+  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
 
 
 
 
   useEffect(() => {
     const handleOrgChange = () => {
+      if (!isInitialized) return;
       setCurrentPage(0);
       loadConsumers(0);
     };
 
     window.addEventListener('organizationChanged', handleOrgChange);
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
-  }, []);
+  }, [isInitialized]);
 
   const renderPagination = () => {
     if (searchQuery.trim() !== "") return null;
