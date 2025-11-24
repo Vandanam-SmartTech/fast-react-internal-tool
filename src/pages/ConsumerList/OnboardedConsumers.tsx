@@ -41,6 +41,7 @@ const OnboardedConsumers: React.FC = () => {
   const [agencies, setAgencies] = useState<{ id: Number; name: string }[]>([]);
   const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -81,6 +82,10 @@ const OnboardedConsumers: React.FC = () => {
 
 
   const loadOnboardedConsumers = async (page: number) => {
+    if (!isInitialized) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -142,6 +147,8 @@ const OnboardedConsumers: React.FC = () => {
 
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     // Clear any pending timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -218,7 +225,7 @@ const OnboardedConsumers: React.FC = () => {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
+  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole, isInitialized]);
 
 
   // useEffect(() => {
@@ -306,6 +313,8 @@ const OnboardedConsumers: React.FC = () => {
         }
       } catch (error) {
         console.error("Error fetching claims or organizations:", error);
+      } finally {
+        setIsInitialized(true);
       }
     };
 
@@ -330,6 +339,8 @@ const OnboardedConsumers: React.FC = () => {
   }, [selectedOrgId]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (userInfo?.role === "ROLE_ORG_ADMIN") {
 
       setSelectedOrgId(userInfo.orgId);
@@ -344,7 +355,7 @@ const OnboardedConsumers: React.FC = () => {
         }
       });
     }
-  }, []);
+  }, [isInitialized]);
 
 
   useEffect(() => {
@@ -379,26 +390,31 @@ const OnboardedConsumers: React.FC = () => {
   }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
 
     loadOnboardedConsumers(0);
-  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId]);
+  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     loadOnboardedConsumers(currentPage);
-  }, [currentPage]);
+  }, [currentPage, isInitialized]);
 
 
 
   useEffect(() => {
     const handleOrgChange = () => {
+      if (!isInitialized) return;
       setCurrentPage(0);
       loadOnboardedConsumers(0);
     };
 
     window.addEventListener('organizationChanged', handleOrgChange);
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
-  }, []);
+  }, [isInitialized]);
 
 
 

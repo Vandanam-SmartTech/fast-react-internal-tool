@@ -5,6 +5,7 @@ import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById } from "../../services/documentManagerService";
+import { checkIsConnectionOnboarded, fetchModule, fetchInverter, fetchInstallation } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from 'react-toastify';
 import { formatFileName } from "../../utils/formatFileName";
@@ -68,13 +69,43 @@ export default function GenerateDocuments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
+  const [materialDataDialogOpen, setMaterialDataDialogOpen] = useState(false);
+  const [pendingDocAction, setPendingDocAction] = useState<{ type: 'generate' | 'preview', doc: string } | null>(null);
 
   const [quotedTotals, setQuotedTotals] = useState<Record<string, number | ''>>({});
+  const [isConnectionOnboarded, setIsConnectionOnboarded] = useState<boolean>(false);
 
   const connectionId = consumer?.id?.toString();
 
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
+
+  // Documents that require material data (module, inverter, installation)
+  const documentsRequiringMaterialData = [
+    "Net Agreement",
+    "WCR",
+    "Annexure-I",
+    "RTS Declaration",
+    "Earthing Report",
+    "Vendor Feasibility"
+  ];
+
+  // Check if material data exists
+  const checkMaterialDataExists = async (connectionId: number): Promise<boolean> => {
+    try {
+      const [module, inverter, installation] = await Promise.all([
+        fetchModule(connectionId),
+        fetchInverter(connectionId),
+        fetchInstallation(connectionId)
+      ]);
+
+      // Return true only if all three exist (not null)
+      return module !== null && inverter !== null && installation !== null;
+    } catch (error) {
+      console.error("Error checking material data:", error);
+      return false;
+    }
+  };
 
 
   const documentSteps: DocumentStep[] = [
@@ -216,6 +247,22 @@ export default function GenerateDocuments() {
     }
   }, [connectionId, loadDocuments]);
 
+  useEffect(() => {
+    const checkOnboardedStatus = async () => {
+      if (consumer?.id) {
+        try {
+          const isOnboarded = await checkIsConnectionOnboarded(consumer.id);
+          setIsConnectionOnboarded(isOnboarded);
+        } catch (error) {
+          console.error("Error checking connection onboarded status:", error);
+          setIsConnectionOnboarded(false);
+        }
+      }
+    };
+
+    checkOnboardedStatus();
+  }, [consumer?.id]);
+
 
   const handleDownload = async (id: number, fileName: string) => {
     try {
@@ -238,7 +285,7 @@ export default function GenerateDocuments() {
   };
 
 
-  const handleGenerate = async (doc: string) => {
+  const proceedWithGenerate = async (doc: string) => {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
@@ -275,8 +322,24 @@ export default function GenerateDocuments() {
     }
   };
 
+  const handleGenerate = async (doc: string) => {
+    if (!consumer?.id) return;
 
-  const handlePreview = async (doc: string) => {
+    // Check if this document requires material data
+    if (documentsRequiringMaterialData.includes(doc)) {
+      const hasMaterialData = await checkMaterialDataExists(consumer.id);
+      if (!hasMaterialData) {
+        setPendingDocAction({ type: 'generate', doc });
+        setMaterialDataDialogOpen(true);
+        return;
+      }
+    }
+
+    await proceedWithGenerate(doc);
+  };
+
+
+  const proceedWithPreview = async (doc: string) => {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
@@ -305,6 +368,22 @@ export default function GenerateDocuments() {
     } finally {
       setLoadingPreviewDoc(null);
     }
+  };
+
+  const handlePreview = async (doc: string) => {
+    if (!consumer?.id) return;
+
+    // Check if this document requires material data
+    if (documentsRequiringMaterialData.includes(doc)) {
+      const hasMaterialData = await checkMaterialDataExists(consumer.id);
+      if (!hasMaterialData) {
+        setPendingDocAction({ type: 'preview', doc });
+        setMaterialDataDialogOpen(true);
+        return;
+      }
+    }
+
+    await proceedWithPreview(doc);
   };
 
 
@@ -919,25 +998,34 @@ export default function GenerateDocuments() {
                           ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
                           : "bg-white border-gray-200 hover:bg-gray-50";
 
+                    const isStepDisabled = step.id >= 3 && !isConnectionOnboarded;
+                    const disabledClasses = isStepDisabled ? "opacity-50 cursor-not-allowed" : "";
+
                     return (
                       <div key={step.id} className="space-y-2">
                         <button
                           type="button"
-                          className={`${base} ${variant}`}
+                          className={`${base} ${variant} ${disabledClasses}`}
                           onClick={() => {
-                            setCurrentStep(step.id);
-                            toggleStepExpansion(step.id);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
+                            if (!isStepDisabled) {
                               setCurrentStep(step.id);
                               toggleStepExpansion(step.id);
                             }
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              if (!isStepDisabled) {
+                                setCurrentStep(step.id);
+                                toggleStepExpansion(step.id);
+                              }
+                            }
+                          }}
+                          disabled={isStepDisabled}
                           aria-current={currentStep === step.id ? "step" : undefined}
                           aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
                           aria-expanded={expandedSteps.has(step.id)}
+                          title={isStepDisabled ? "This step is disabled. Connection must be onboarded to access steps 3 and above." : undefined}
                         >
                           <div
                             className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(
@@ -1000,6 +1088,31 @@ export default function GenerateDocuments() {
                   const activeStep =
                     documentSteps.find((s) => s.id === currentStep) ||
                     documentSteps[0];
+                  const isActiveStepDisabled = activeStep.id >= 3 && !isConnectionOnboarded;
+                  
+                  if (isActiveStepDisabled) {
+                    // If the active step is disabled, show step 1 or 2 instead
+                    const fallbackStep = documentSteps.find((s) => s.id < 3) || documentSteps[0];
+                    return (
+                      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+                        <div className="text-center py-8">
+                          <p className="text-gray-600 mb-4">
+                            This step is disabled. Connection must be onboarded to access steps 3 and above.
+                          </p>
+                          <button
+                            onClick={() => {
+                              setCurrentStep(fallbackStep.id);
+                              toggleStepExpansion(fallbackStep.id);
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          >
+                            Go to Step {fallbackStep.id}: {fallbackStep.title}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
                   return renderStepContent(activeStep);
                 })()}
               </section>
@@ -1032,6 +1145,58 @@ export default function GenerateDocuments() {
                 if (dialogAction) dialogAction();
               }}
               autoFocus
+            >
+              Yes
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={materialDataDialogOpen}
+          onClose={() => {
+            setMaterialDataDialogOpen(false);
+            setPendingDocAction(null);
+          }}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Material Details Required</DialogTitle>
+          <DialogContent dividers>
+            <Alert severity="warning">
+              If you want the document to have complete data, you can fill in the material details. Do you want to fill them in?
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={async () => {
+                setMaterialDataDialogOpen(false);
+                const action = pendingDocAction;
+                setPendingDocAction(null);
+                // Proceed with the action even without material data
+                if (action) {
+                  if (action.type === 'generate') {
+                    await proceedWithGenerate(action.doc);
+                  } else if (action.type === 'preview') {
+                    await proceedWithPreview(action.doc);
+                  }
+                }
+              }}
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => {
+                setMaterialDataDialogOpen(false);
+                if (consumer?.id) {
+                  navigate("/material-form", {
+                    state: { consumer, connectionId: consumer.id },
+                  });
+                }
+                setPendingDocAction(null);
+              }}
+              autoFocus
+              variant="contained"
+              color="primary"
             >
               Yes
             </Button>
