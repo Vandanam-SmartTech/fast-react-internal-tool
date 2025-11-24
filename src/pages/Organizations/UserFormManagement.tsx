@@ -229,10 +229,16 @@ const UserFormManagement: React.FC = () => {
       };
 
       await saveUser(userData);
-      toast.success(`User added successfully`);
+      toast.success(`User added successfully`,{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
       navigate('/user-management');
     } catch (error) {
-      toast.error(`Failed to add user`);
+      toast.error(`Failed to add user`,{
+        autoClose: 1000,
+        hideProgressBar: true
+      });
     } finally {
       setLoading(false);
     }
