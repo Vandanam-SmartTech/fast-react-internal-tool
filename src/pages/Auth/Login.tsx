@@ -278,6 +278,7 @@ const Login = () => {
                   <Button
                     variant="outline"
                     onClick={() => {
+                      localStorage.removeItem("jwtToken");
                       setShowOrgSelection(false);
                       setSelectedRole('');
                       setError('');

@@ -456,97 +456,97 @@ export const ConnectionForm = () => {
 
 
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
 
-  if (name === "isDiscomConsumer" && value === "No") {
-    setConfirmConsumerNumber("");
-  }
+    if (name === "isDiscomConsumer" && value === "No") {
+      setConfirmConsumerNumber("");
+    }
 
-  if (name === 'consumerId' && value === '') {
-    setConfirmConsumerNumber('');
-  }
-
-  if (name === 'consumerId') {
-    if (value !== confirmConsumerNumber) {
+    if (name === 'consumerId' && value === '') {
       setConfirmConsumerNumber('');
     }
 
-    checkConsumerNumberExists(value).then((exists) => {
-      setConsumerNumberExists(exists);
-      if (exists) {
+    if (name === 'consumerId') {
+      if (value !== confirmConsumerNumber) {
         setConfirmConsumerNumber('');
       }
-    });
-  }
 
-  // Real-time validation
-  if (name === 'consumerId') {
-    if (value === '') {
-      setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
-    } else {
-      validateFieldOnChange('consumerNumber', value);
+      checkConsumerNumberExists(value).then((exists) => {
+        setConsumerNumberExists(exists);
+        if (exists) {
+          setConfirmConsumerNumber('');
+        }
+      });
     }
-  } else if (name === 'gstIn') {
-    validateFieldOnChange('gstIn', value);
-  } else if (name === 'billedTo') {
-    validateFieldOnChange('billedTo', value);
-  } else if (name === 'addressLine1') {
-    validateFieldOnChange('addressLine1', value);
-  } else if (name === 'addressLine2') {
-    validateFieldOnChange('addressLine2', value);
-  } else if (name === 'avgMonthlyConsumption') {
-    validateFieldOnChange('avgMonthlyConsumption', value);
-  } else if (name === 'latitude') {
-    validateFieldOnChange('latitude', value);
-  } else if (name === 'longitude') {
-    validateFieldOnChange('longitude', value);
-  } else if (name === 'discomId') {
-    validateFieldOnChange('discomId', value);
-  } else if (name === 'pinCode') {
-    validateFieldOnChange('pinCode', value);
-  }
 
-  if (name === "connectionTypeId") {
-    const selectedType = connectionTypes.find(type => type.id === Number(value));
-    const isHT = selectedType?.nameEn?.toLowerCase().includes("ht");
+    // Real-time validation
+    if (name === 'consumerId') {
+      if (value === '') {
+        setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
+      } else {
+        validateFieldOnChange('consumerNumber', value);
+      }
+    } else if (name === 'gstIn') {
+      validateFieldOnChange('gstIn', value);
+    } else if (name === 'billedTo') {
+      validateFieldOnChange('billedTo', value);
+    } else if (name === 'addressLine1') {
+      validateFieldOnChange('addressLine1', value);
+    } else if (name === 'addressLine2') {
+      validateFieldOnChange('addressLine2', value);
+    } else if (name === 'avgMonthlyConsumption') {
+      validateFieldOnChange('avgMonthlyConsumption', value);
+    } else if (name === 'latitude') {
+      validateFieldOnChange('latitude', value);
+    } else if (name === 'longitude') {
+      validateFieldOnChange('longitude', value);
+    } else if (name === 'discomId') {
+      validateFieldOnChange('discomId', value);
+    } else if (name === 'pinCode') {
+      validateFieldOnChange('pinCode', value);
+    }
+
+    if (name === "connectionTypeId") {
+      const selectedType = connectionTypes.find(type => type.id === Number(value));
+      const isHT = selectedType?.nameEn?.toLowerCase().includes("ht");
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        phaseTypeId: isHT ? 2 : 1,
+        ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+      }));
+
+      // Save to localStorage
+      // setTimeout(() => {
+      //   localStorage.setItem("connectionFormData", JSON.stringify({
+      //     ...formData,
+      //     [name]: value,
+      //     phaseTypeId: isHT ? 2 : 1,
+      //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+      //   }));
+      // }, 0);
+
+      return;
+    }
+
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      phaseTypeId: isHT ? 2 : 1, 
       ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
     }));
 
-    // Save to localStorage
+
     // setTimeout(() => {
     //   localStorage.setItem("connectionFormData", JSON.stringify({
     //     ...formData,
     //     [name]: value,
-    //     phaseTypeId: isHT ? 2 : 1,
     //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
     //   }));
     // }, 0);
-
-    return; 
-  }
-
-
-  setFormData((prev) => ({
-    ...prev,
-    [name]: value,
-    ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-  }));
-
-
-  // setTimeout(() => {
-  //   localStorage.setItem("connectionFormData", JSON.stringify({
-  //     ...formData,
-  //     [name]: value,
-  //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-  //   }));
-  // }, 0);
-};
+  };
 
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -948,6 +948,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     value: type.id,
                     label: type.nameEn,
                   }))}
+                  required={formData.isDiscomConsumer === "Yes"}    // <-- add this
+                  disabled={formData.isDiscomConsumer === "No"}
                 />
               </div>
 
@@ -1137,9 +1139,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                 </select> */}
 
                 <ReusableDropdown
-                  name="district"
+                  name="districtCode"
                   value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  onChange={(val) => handleDistrictChange({ target: { name: "districtCode", value: val } })}
                   options={[
                     { value: 0, label: districtName || "Select District" },
                     ...districts.map((district) => ({
@@ -1148,6 +1150,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     })),
                   ]}
                   placeholder={districtName || "Select District"}
+                  required
                   className="w-full"
                 />
 
@@ -1183,6 +1186,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     })),
                   ]}
                   placeholder={talukaName || "Select Taluka"}
+                  required
                   className="w-full"
                 />
 
@@ -1216,6 +1220,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                       label: village.nameEnglish,
                     })),
                   ]}
+                  required
                   placeholder={villageName || "Select Village"}
                   className="w-full"
                 />
@@ -1270,6 +1275,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     value: type.id,
                     label: type.nameEn,
                   }))}
+                  required
                 />
 
               </div>

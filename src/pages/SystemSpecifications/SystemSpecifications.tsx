@@ -1090,12 +1090,6 @@ export const SystemSpecifications = () => {
   };
 
 
-
-
-
-
-
-
   const handlePreview = async () => {
     setIsPreviewLoading(true);
     try {
@@ -1779,7 +1773,7 @@ export const SystemSpecifications = () => {
                         value: spec.id,
                         label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
                       }))}
-                      disabled={!inv.inverterBrandId || !formData.systemCapacityKw}
+                      disabled={!inv.inverterBrandId}
                       placeholder="Select Inverter Spec"
                     />
 
