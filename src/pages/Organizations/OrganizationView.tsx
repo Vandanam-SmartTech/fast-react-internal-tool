@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase } from 'lucide-react';
 import { getOrganizationById, fetchAllUsersByOrgId } from '../../services/organizationService';
+import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
 
 interface OrganizationUser {
@@ -28,13 +29,25 @@ const OrganizationView: React.FC = () => {
   const [orgUsers, setOrgUsers] = useState<OrganizationUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [organizationLogo, setOrganizationLogo] = useState<string | null>(null);
 
   useEffect(() => {
     if (orgId) {
       loadOrganization(parseInt(orgId));
       loadUsersByOrg(orgId);
+      fetchLogo(parseInt(orgId));
     }
   }, [orgId]);
+
+  const fetchLogo = async (orgId: number) => {
+    try {
+      const imageUrl = await fetchOrganizationImage(orgId);
+      setOrganizationLogo(imageUrl);
+    } catch (error) {
+      console.error("Failed to fetch organization logo:", error);
+      setOrganizationLogo(null);
+    }
+  };
 
   const loadOrganization = async (orgId: number) => {
     try {
@@ -93,8 +106,12 @@ const OrganizationView: React.FC = () => {
         >
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
+        {organizationLogo ? (
+          <img src={organizationLogo} alt="Organization Logo" className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white" />
+        ) : (
+          isAgency ? <Building2 className="h-6 w-6 text-blue-600" /> : <Building className="h-6 w-6 text-blue-600" />
+        )}
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {isAgency ? <Building2 className="h-6 w-6" /> : <Building className="h-6 w-6" />}
           {isAgency ? 'Agency Details' : 'Organization Details'}
         </h1>
         <button

@@ -1065,10 +1065,11 @@ export const SystemSpecifications = () => {
     try {
       await deleteSpecAPI(specId);
 
-      // delete the related document also
       if (documentId) {
         await deleteDocumentById(documentId);
       }
+
+      await fetchSavedSpecs();
 
       toast.success("Specification deleted successfully!", {
         autoClose: 1000,
@@ -1077,7 +1078,7 @@ export const SystemSpecifications = () => {
 
       setDialogOpen(false);
 
-      await fetchSavedSpecs();
+      
 
     } catch (err) {
       toast.error("Failed to delete specification!", {
@@ -1678,10 +1679,25 @@ export const SystemSpecifications = () => {
                   target: { name: "panelSpecId", value: selectedId },
                 } as any);
               }}
-              options={panels.map((panel) => ({
-                value: panel.panelSpecId,
-                label: `${panel.brandShortname} - (${panel.ratedWattageW} W) - (${panel.modelNumber})`,
-              }))}
+              // options={panels.map((panel) => ({
+              //   value: panel.panelSpecId,
+              //   label: `${panel.brandShortname} - (${panel.ratedWattageW} W) - (${panel.modelNumber})`,
+              // }))}
+              options={panels.map((panel) => {
+                const parts = [
+                  panel.brandShortname || null,
+                  panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
+                  panel.modelNumber ? `(${panel.modelNumber})` : null
+                ];
+
+                const label = parts.filter(Boolean).join(" - ");
+
+                return {
+                  value: panel.panelSpecId,
+                  label,
+                };
+              })}
+
               placeholder="Select PV System Brand"
               className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
             />
@@ -1769,10 +1785,25 @@ export const SystemSpecifications = () => {
                       onChange={(val) =>
                         handleInverterChange(index, "inverterSpecId", val === "" ? null : Number(val))
                       }
-                      options={(inverterCapacitiesMap[index] || []).map((spec) => ({
-                        value: spec.id,
-                        label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
-                      }))}
+                      // options={(inverterCapacitiesMap[index] || []).map((spec) => ({
+                      //   value: spec.id,
+                      //   label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
+                      // }))}
+                      options={(inverterCapacitiesMap[index] || []).map((spec) => {
+                        const parts = [
+                          spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
+                          spec.productWarrantyMonths ? `(${spec.productWarrantyMonths} months)` : null,
+                          spec.almmModelNumber ? `(${spec.almmModelNumber})` : null
+                        ];
+
+                        const label = parts.filter(Boolean).join(" - ");
+
+                        return {
+                          value: spec.id,
+                          label,
+                        };
+                      })}
+
                       disabled={!inv.inverterBrandId}
                       placeholder="Select Inverter Spec"
                     />
@@ -1866,10 +1897,27 @@ export const SystemSpecifications = () => {
                       target: { name: "batterySpecId", value: selectedId },
                     });
                   }}
-                  options={batteryCapacities.map((batteryCapacity) => ({
-                    value: batteryCapacity.id,
-                    label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
-                  }))}
+                  // options={batteryCapacities.map((batteryCapacity) => ({
+                  //   value: batteryCapacity.id,
+                  //   label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
+                  // }))}
+                  options={batteryCapacities.map((b) => {
+                    const parts = [
+                      b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
+                      b.voltage ? `${b.voltage} V` : null,
+                      b.modelNumber || null,
+                      b.warrantyMonths ? `(${b.warrantyMonths} months)` : null
+                    ];
+
+                    // Filter out null/empty values and join with " - "
+                    const label = parts.filter(Boolean).join(" - ");
+
+                    return {
+                      value: b.id,
+                      label,
+                    };
+                  })}
+
                   placeholder="Select Battery Capacity"
                   className="mt-1"
                 />

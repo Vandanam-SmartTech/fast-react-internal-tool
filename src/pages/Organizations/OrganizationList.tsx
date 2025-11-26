@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw } from 'lucide-react';
 import { fetchOrganizationsInPagination, deleteOrganization, Organization } from '../../services/organizationService';
+import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
 import { Button } from '../../components/ui';
 
@@ -14,6 +15,7 @@ const OrganizationList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalElements, setTotalElements] = useState<number>(0);
+  const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +41,19 @@ const OrganizationList: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    organizations.forEach(async (org) => {
+      if (org.id && !organizationLogos.has(org.id)) {
+        try {
+          const imageUrl = await fetchOrganizationImage(org.id);
+          setOrganizationLogos(prevLogos => new Map(prevLogos).set(org.id!, imageUrl));
+        } catch (error) {
+          console.error(`Failed to fetch logo for organization ${org.id}:`, error);
+        }
+      }
+    });
+  }, [organizations, organizationLogos]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -132,10 +147,16 @@ const OrganizationList: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this organization?')) {
       try {
         await deleteOrganization(id);
-        toast.success('Organization deleted successfully');
+        toast.success('Organization deleted successfully',{
+          autoClose:1000,
+          hideProgressBar:true,
+        });
         loadOrganizations(currentPage);
       } catch (error) {
-        toast.error('Failed to delete organization');
+        toast.error('Failed to delete organization',{
+          autoClose:1000,
+          hideProgressBar:true,
+        });
       }
     }
     setOpenDropdown(null);
@@ -233,7 +254,16 @@ const OrganizationList: React.FC = () => {
               <div className="p-4 sm:p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Building className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    {organizationLogos.has(org.id!) && (
+                      <img
+                        src={organizationLogos.get(org.id!)}
+                        alt={`${org.name} logo`}
+                        className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+                      />
+                    )}
+                    {!organizationLogos.has(org.id!) && (
+                      <Building className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    )}
                     <h3 className="font-semibold text-gray-900 truncate" title={org.name}>
                       {org.name}
                     </h3>
