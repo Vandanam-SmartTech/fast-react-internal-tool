@@ -838,7 +838,7 @@ export const EditConnection = () => {
                   )}
                 </label>
                 <input
-                  type="text"
+                  type="password"
                   inputMode="numeric"
                   name="consumerId"
                   value={formData.consumerId}
