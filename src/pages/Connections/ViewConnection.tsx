@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchInstallationSpaceTypesNames, fetchConsumerNumber, getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
-import { checkSystemSpecificationsExists } from "../../services/quotationService";
+import { fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
 import { useLocation } from "react-router-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -24,15 +23,7 @@ export const ViewConnection = () => {
   const navigate = useNavigate();
   const [govIdName, setGovIdName] = useState("");
 
-
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [aadharFile, setAadharFile] = useState<File | null>(null);
-  const [passbookFile, setPassbookFile] = useState<File | null>(null);
-  const [billFile, setBillFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("Connection Details");
-  const [activeDocTab, setActiveDocTab] = useState<SessionKey>("Aadhar");
 
 
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
@@ -60,31 +51,57 @@ export const ViewConnection = () => {
   ];
 
 
-  const fetchConnection = async () => {
-    if (!customerId || !connectionId) {
-      console.error("Customer ID or Connection ID not found!");
-      return;
-    }
+  // const fetchConnection = async () => {
+  //   if (!customerId || !connectionId) {
+  //     console.error("Customer ID or Connection ID not found!");
+  //     return;
+  //   }
 
-    const data = await fetchConsumerNumber(customerId);
-    if (Array.isArray(data) && data.length > 0) {
-      const selectedConnection = data.find(conn => conn.id === Number(connectionId));
-      if (selectedConnection) {
-        setConnection(selectedConnection);
-      } else {
-        console.warn("No matching connection found for given connectionId.");
-        setConnection(null);
-      }
+  //   const data = await fetchConsumerNumber(customerId);
+  //   if (Array.isArray(data) && data.length > 0) {
+  //     const selectedConnection = data.find(conn => conn.id === Number(connectionId));
+  //     if (selectedConnection) {
+  //       setConnection(selectedConnection);
+  //     } else {
+  //       console.warn("No matching connection found for given connectionId.");
+  //       setConnection(null);
+  //     }
+  //   } else {
+  //     console.warn("No connections found for customer.");
+  //     setConnection(null);
+  //   }
+  // };
+
+
+  // useEffect(() => {
+  //   fetchConnection();
+  // }, [customerId, connectionId]);
+
+  const fetchConnection = async () => {
+  if (!connectionId) {
+    console.error("Connection ID not found!");
+    return;
+  }
+
+  try {
+    const data = await getConnectionByConnectionId(Number(connectionId));
+
+    if (data) {
+      setConnection(data);
     } else {
-      console.warn("No connections found for customer.");
+      console.warn("No connection found for given connectionId.");
       setConnection(null);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching connection:", error);
+    setConnection(null);
+  }
+};
 
+useEffect(() => {
+  fetchConnection();
+}, [connectionId]);
 
-  useEffect(() => {
-    fetchConnection();
-  }, [customerId, connectionId]);
 
   const handleMessageBoxClose = () => {
     setMessageBoxOpen(false);

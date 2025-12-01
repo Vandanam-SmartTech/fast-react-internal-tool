@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw } from 'lucide-react';
 import { fetchOrganizationsInPagination, deleteOrganization, Organization } from '../../services/organizationService';
 import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
 import { Button } from '../../components/ui';
+import { croppedImgForLogo } from '../../utils/croppedImageForLogo';
+import { uploadOrganizationImage } from '../../services/documentManagerService';
+import { ZoomIn, ZoomOut, RotateCcw, Crop } from "lucide-react";
+import Cropper from "react-easy-crop";
+import { X } from "lucide-react";
+
 
 const OrganizationList: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -16,6 +22,22 @@ const OrganizationList: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalElements, setTotalElements] = useState<number>(0);
   const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
+
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [createdOrgId, setCreatedOrgId] = useState<number | null>(null);
+
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,15 +67,12 @@ const OrganizationList: React.FC = () => {
   useEffect(() => {
     organizations.forEach(async (org) => {
       if (org.id && !organizationLogos.has(org.id)) {
-        try {
-          const imageUrl = await fetchOrganizationImage(org.id);
-          setOrganizationLogos(prevLogos => new Map(prevLogos).set(org.id!, imageUrl));
-        } catch (error) {
-          console.error(`Failed to fetch logo for organization ${org.id}:`, error);
-        }
+        const imageUrl = await fetchOrganizationImage(org.id);
+        setOrganizationLogos(prev => new Map(prev).set(org.id!, imageUrl));
       }
     });
   }, [organizations, organizationLogos]);
+
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -67,6 +86,107 @@ const OrganizationList: React.FC = () => {
         org.gstNumber?.toLowerCase().includes(term.toLowerCase())
       );
       setFilteredOrganizations(filtered);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result as string);
+        setShowImageModal(false);
+        setShowCropModal(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+  const handleCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  // reset crop
+  const handleCropReset = () => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setCroppedAreaPixels(null);
+  };
+
+
+  // crop and upload combined
+  const handleCropAndUpload = async () => {
+    if (!imageSrc || !croppedAreaPixels || !createdOrgId) return;
+
+    setIsProcessing(true);
+
+    try {
+      const croppedBlob = await croppedImgForLogo(imageSrc, croppedAreaPixels, rotation, 768, 325);
+      const croppedFile = new File([croppedBlob], "logo.png", { type: "image/png" });
+      setSelectedFile(croppedFile);
+
+      await uploadOrganizationImage(createdOrgId, croppedFile);
+
+      toast.success("Logo uploaded successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      // ✅ Close crop modal
+      setShowCropModal(false);
+
+      // ⬇️ **CALL THIS TO REFRESH LOGOS**
+      await loadOrganizations(currentPage);
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload logo", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+
+  // final upload
+  const handleImageUpload = async () => {
+    if (!selectedFile || !createdOrgId) return;
+    setUploadLoading(true);
+    try {
+      await uploadOrganizationImage(createdOrgId, selectedFile);
+      toast.success("Logo uploaded successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+      navigate("/organizations");
+    } catch (error) {
+      toast.error("Failed to upload logo", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleChooseAnotherImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result);
+        setCroppedAreaPixels(null);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -147,15 +267,15 @@ const OrganizationList: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this organization?')) {
       try {
         await deleteOrganization(id);
-        toast.success('Organization deleted successfully',{
-          autoClose:1000,
-          hideProgressBar:true,
+        toast.success('Organization deleted successfully', {
+          autoClose: 1000,
+          hideProgressBar: true,
         });
         loadOrganizations(currentPage);
       } catch (error) {
-        toast.error('Failed to delete organization',{
-          autoClose:1000,
-          hideProgressBar:true,
+        toast.error('Failed to delete organization', {
+          autoClose: 1000,
+          hideProgressBar: true,
         });
       }
     }
@@ -253,21 +373,29 @@ const OrganizationList: React.FC = () => {
               {/* Card Header */}
               <div className="p-4 sm:p-5">
                 <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {organizationLogos.has(org.id!) && (
+                  <div
+                    className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                    onClick={() => {
+                      setCreatedOrgId(org.id);
+                      setShowImageModal(true);
+                    }}
+                  >
+                    {organizationLogos.has(org.id!) ? (
                       <img
                         src={organizationLogos.get(org.id!)}
                         alt={`${org.name} logo`}
                         className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
                       />
-                    )}
-                    {!organizationLogos.has(org.id!) && (
+                    ) : (
                       <Building className="h-5 w-5 text-blue-600 flex-shrink-0" />
                     )}
-                    <h3 className="font-semibold text-gray-900 truncate" title={org.name}>
+
+                    <h3 className="font-semibold text-gray-900 truncate">
                       {org.name}
                     </h3>
                   </div>
+
+
 
                   {/* Dropdown Menu */}
                   <div className="relative flex-shrink-0">
@@ -378,7 +506,7 @@ const OrganizationList: React.FC = () => {
                   <button
                     onClick={() =>
                       navigate("/agencies", {
-                        state: { orgId: org.id, gstNumber:org.gstNumber }
+                        state: { orgId: org.id, gstNumber: org.gstNumber }
                       })
                     }
 
@@ -403,6 +531,110 @@ const OrganizationList: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
+            <h2 className="text-lg font-semibold mb-4 text-center">Upload Organization Logo</h2>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="w-full mb-4 border border-gray-300 p-2 rounded-md"
+            />
+          </div>
+        </div>
+      )}
+
+
+      {showCropModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">Crop Logo</h3>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowCropModal(false)}
+                className="p-1 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+
+            <div className="p-4 flex flex-col gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-1">
+                  Adjust the crop area. Final output will be <b>768×325px</b>.
+                </p>
+              </div>
+
+              <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  rotation={rotation}
+                  aspect={768 / 325}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onRotationChange={setRotation}
+                  onCropComplete={handleCropComplete}
+                  objectFit="contain"
+                  showGrid={true}
+                  cropSize={{ width: 300, height: 127 }}
+                />
+              </div>
+
+              {/* ✅ Choose another image option */}
+              <div className="flex justify-center">
+                <label className="cursor-pointer text-blue-600 text-sm font-medium hover:underline">
+                  Choose Another Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleChooseAnotherImage}
+                  />
+                </label>
+              </div>
+
+              <div className="flex justify-center gap-3">
+                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
+                  <ZoomOut className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
+                  <ZoomIn className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+              <Button
+                onClick={handleCropReset}
+                variant="outline"
+                size="sm"
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+              >
+                Reset
+              </Button>
+
+              <Button
+                onClick={handleCropAndUpload}
+                size="sm"
+                leftIcon={!loading && <Crop className="w-4 h-4" />}
+                loading={isProcessing}
+                disabled={!croppedAreaPixels}
+              >
+                {isProcessing ? "Uploading..." : "Save & Upload"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

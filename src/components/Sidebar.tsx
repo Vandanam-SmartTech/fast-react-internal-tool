@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const goToOrganizations = () => navigate("/organizations");
   const goToAdminManagement = () => navigate("/admin-management");
   const goToUserManagement = () => navigate("/user-management");
-  const goToPackageManagement = () => navigate("package-management");
+  const goToProductManagement = () => navigate("product-management");
 
 
 const handleHomeClick = async () => {
@@ -173,7 +173,7 @@ const handleHomeClick = async () => {
           const restrictedPages = [
             "/admin-management",
             "/user-management",
-            "/package-management"
+            "/product-management"
           ];
           const dashboardPages = [
             "/org-admin-dashboard",
@@ -407,16 +407,16 @@ const handleHomeClick = async () => {
                 </button>
               )}
 
-              {/* {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
                 <button
-                  onClick={goToPackageManagement}
-                  className={`nav-link w-full justify-start ${isActive("/package-management") ? "nav-link-active" : "nav-link-inactive"
+                  onClick={goToProductManagement}
+                  className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
                     }`}
                 >
                   <Package size={20} />
-                  <span>Package Management</span>
+                  <span>Product Management</span>
                 </button>
-              )} */}
+              )} 
 
             </nav>
 

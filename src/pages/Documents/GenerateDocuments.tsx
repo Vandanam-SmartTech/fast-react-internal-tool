@@ -87,7 +87,8 @@ export default function GenerateDocuments() {
     "Annexure-I",
     "RTS Declaration",
     "Earthing Report",
-    "Vendor Feasibility"
+    "Vendor Feasibility",
+    "Consumer Vendor Agreement"
   ];
 
   // Check if material data exists

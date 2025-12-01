@@ -6,7 +6,7 @@ import { sendOtpToEmail } from '../../services/otpService';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../contexts/UserContext';
 import { Logo } from '../../components/ui';
-
+import { toast } from 'react-toastify';
 
 
 const PasswordReset: React.FC = () => {
@@ -46,6 +46,14 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       resendTime,
     },
   });
+
+  toast.success(
+      'If the user is registered, an email has been sent.',
+      {
+        autoClose: 1000,
+        hideProgressBar: true,
+      }
+    );
 
   try {
     const userEmail = await validateUser(emailInput);

@@ -655,6 +655,165 @@ export const deleteSpecAPI = async (specId: any) => {
   }
 };
 
+export const addBatteryBrand = async (data: any): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post("/api/battery-brands", data);
+    console.log("Battery brand added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to add battery brand.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding battery brand:", error);
+    return null;
+  }
+};
+
+export const addBatterySpec = async (
+  brandId: number,
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/battery-specs?brandId=${brandId}`,
+      data
+    );
+
+    console.log("Battery spec added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to add battery specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding battery spec:", error);
+    return null;
+  }
+};
+
+export const addInverterBrand = async (data: any): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post("/api/inverter-brands", data);
+    console.log("Inverter brand added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to add inverter brand.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding inverter brand:", error);
+    return null;
+  }
+};
+
+export const addInverterSpec = async (
+  brandId: number,
+  phaseTypeId: number,
+  gridTypeId: number,
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/inverter-specs?brandId=${brandId}&phaseTypeId=${phaseTypeId}&gridTypeId=${gridTypeId}`,
+      data
+    );
+
+    console.log("Inverter spec added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to add inverter specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding inverter spec:", error);
+    return null;
+  }
+};
+
+export const addPanelBrand = async (data: any): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post("/api/panel-brands", data);
+    console.log("Panel brand added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to add panel brand.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding panel brand:", error);
+    return null;
+  }
+};
+
+export const addPanelSpec = async (
+  brandId: number,
+  typeId: number,
+  materialOriginId: number,
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/panel-specs?brandId=${brandId}&typeId=${typeId}&materialOriginId=${materialOriginId}`,
+      data
+    );
+
+    console.log("Panel spec added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to add panel specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding panel spec:", error);
+    return null;
+  }
+};
+
+export const addPanelType = async (data: any): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post("/api/panel-types", data);
+    console.log("Panel type added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to add panel type.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error adding panel type:", error);
+    return null;
+  }
+};
+
+
+
+
+
+
+
 
 
 
