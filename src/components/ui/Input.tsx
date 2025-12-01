@@ -66,9 +66,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className="flex items-center justify-center h-5 w-5  dark:hover:text-secondary-300 transition-colors"
       >
         {showPassword ? (
-          <FaEyeSlash className="h-4 w-4" />
-        ) : (
           <FaEye className="h-4 w-4" />
+        ) : (
+          <FaEyeSlash className="h-4 w-4" />
         )}
       </button>
     ) : (

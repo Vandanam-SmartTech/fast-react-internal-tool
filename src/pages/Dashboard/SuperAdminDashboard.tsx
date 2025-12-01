@@ -53,14 +53,6 @@ const SuperAdminDashboard: React.FC = () => {
 
   const dashboardItems = [
     {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-8 w-8 text-primary-600" />,
-      path: '/manage-customers',
-      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-      // requiresOrg: true
-    },
-    {
       title: 'Manage Organizations',
       description: 'List, View, Add, Update organizations',
       icon: <Building className="h-8 w-8 text-success-600" />,
@@ -82,13 +74,21 @@ const SuperAdminDashboard: React.FC = () => {
       path: '/user-management',
       color: 'bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700'
     },
-    {
+     {
       title: 'Manage Roles',
       description: 'List, View, Add new roles',
       icon: <Shield className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
     },
+    {
+      title: 'Manage Customers',
+      description: 'List, View, Add, Update customers',
+      icon: <Users className="h-8 w-8 text-primary-600" />,
+      path: '/manage-customers',
+      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+      // requiresOrg: true
+    }
     // {
     //   title: 'User Organization Roles',
     //   description: 'Manage user roles across organizations',

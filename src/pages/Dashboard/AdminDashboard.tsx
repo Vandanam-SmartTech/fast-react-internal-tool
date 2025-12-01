@@ -54,15 +54,6 @@ const AdminDashboard: React.FC = () => {
     },
 
     {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-8 w-8 text-primary-600" />,
-      path: '/manage-customers',
-      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-      // requiresOrg: true
-    },
-
-    {
       title: 'Manage Users',
       description: 'Search, List, View, Add, Update users',
       icon: <UserCog className="h-8 w-8 text-error-600" />,
@@ -76,6 +67,14 @@ const AdminDashboard: React.FC = () => {
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
     },
+    {
+      title: 'Manage Customers',
+      description: 'List, View, Add, Update customers',
+      icon: <Users className="h-8 w-8 text-primary-600" />,
+      path: '/manage-customers',
+      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+      // requiresOrg: true
+    }
   ];
 
   const quickActions = [

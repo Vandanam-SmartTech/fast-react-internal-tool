@@ -51,13 +51,7 @@ const AgencyAdminDashboard: React.FC = () => {
 
 
   const dashboardItems = [
-    {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-12 w-12 text-blue-600" />,
-      path: '/manage-customers',
-      color: 'bg-blue-50 hover:bg-blue-100'
-    },
+    
     {
       title: 'My Agency',
       description: 'View, Update my agency',
@@ -72,6 +66,13 @@ const AgencyAdminDashboard: React.FC = () => {
       icon: <UserCog className="h-12 w-12 text-orange-600" />,
       path: '/user-management',
       color: 'bg-orange-50 hover:bg-orange-100'
+    },
+    {
+      title: 'Manage Customers',
+      description: 'List, View, Add, Update customers',
+      icon: <Users className="h-12 w-12 text-blue-600" />,
+      path: '/manage-customers',
+      color: 'bg-blue-50 hover:bg-blue-100'
     },
     // {
     //   title: 'User Agency Roles',

@@ -540,20 +540,32 @@ const OrganizationList: React.FC = () => {
         </div>
       )}
 
-      {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px]">
-            <h2 className="text-lg font-semibold mb-4 text-center">Upload Organization Logo</h2>
+{showImageModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] relative">
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="w-full mb-4 border border-gray-300 p-2 rounded-md"
-            />
-          </div>
-        </div>
-      )}
+      {/* Close (X) Button */}
+      <button
+        onClick={() => setShowImageModal(false)}
+        className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition"
+      >
+        <X className="w-5 h-5 text-gray-600" />
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4 text-center">
+        Upload Organization Logo
+      </h2>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="w-full mb-4 border border-gray-300 p-2 rounded-md"
+      />
+    </div>
+  </div>
+)}
+
 
 
       {showCropModal && (
