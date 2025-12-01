@@ -452,13 +452,13 @@ const OrganizationForm: React.FC = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
+    <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center mb-6">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
           Add New Organization
@@ -610,7 +610,7 @@ const OrganizationForm: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              GST Number
+              GST Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -638,7 +638,7 @@ const OrganizationForm: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
+              Government Registration Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -753,7 +753,7 @@ const OrganizationForm: React.FC = () => {
 
         </div>
 
-        <div className="col-span-2 flex justify-center gap-6 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate(-1)}

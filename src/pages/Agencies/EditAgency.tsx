@@ -23,6 +23,49 @@ interface Village {
   pinCode: string;
 }
 
+const validationRules = {
+  gstNumber: {
+    pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    message: "GSTIN must be in format: 22AAAAA0000A1Z6"
+  },
+
+  addressLine: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  pinCode: {
+    pattern: /^[0-9]{6}$/,
+    message: "Pincode must be exactly 6 digits (0-9)"
+  }
+};
+
+const validateField = (fieldName: string, value: string | number): { isValid: boolean; message: string } => {
+  const rule = validationRules[fieldName as keyof typeof validationRules];
+  if (!rule) return { isValid: true, message: "" };
+
+  if (fieldName === 'gstNumber') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'addressLine1' || fieldName === 'addressLine2') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'pinCode') {
+    if (!value) return { isValid: false, message: "pinCode is required" }; // Required field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  return { isValid: true, message: "" };
+};
+
 const EditAgency: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -61,6 +104,8 @@ const EditAgency: React.FC = () => {
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { userClaims } = useUser();
 
@@ -219,6 +264,54 @@ const EditAgency: React.FC = () => {
     console.log("Current state PINcode:", value);
   };
 
+  const validateForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+
+    if (!formData.addressLine1) {
+      errors.push("Address Line 1 is required");
+    } else {
+      const addressValidation = validateField('addressLine1', formData.addressLine1);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (formData.addressLine2) {
+      const addressValidation = validateField('addressLine2', formData.addressLine2);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+
+    if (formData.gstNumber) {
+      const gstNumberValidation = validateField('gstNumber', formData.gstNumber);
+      if (!gstNumberValidation.isValid) {
+        errors.push(gstNumberValidation.message);
+      }
+    }
+
+    if (!formData.pinCode) {
+      errors.push("PIN Code is required");
+    } else {
+      const pinCodeValidation = validateField('pinCode', formData.pinCode);
+      if (!pinCodeValidation.isValid) {
+        errors.push(pinCodeValidation.message);
+      }
+    }
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  const validateFieldOnChange = (fieldName: string, value: string | number) => {
+    const validation = validateField(fieldName, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: validation.message
+    }));
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,11 +371,12 @@ const EditAgency: React.FC = () => {
         ...prev,
         [name]: value,
       }));
+      validateFieldOnChange(name, value);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
+    <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center mb-6">
         <button
           onClick={() =>
@@ -446,20 +540,30 @@ const EditAgency: React.FC = () => {
             <input
               type="text"
               name="gstNumber"
-              value={formData.gstNumber || ''}
-              onChange={handleChange}
-              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-              title="GSTIN must be in format: 22AAAAA0000A1Z6"
-              placeholder="e.g. 22AAAAA0000A1Z6"
+              value={formData.gstNumber}
+              onChange={(e) =>
+                handleChange({
+                  target: {
+                    name: "gstNumber",
+                    value: e.target.value.toUpperCase()
+                  }
+                } as React.ChangeEvent<HTMLInputElement>)
+              }
               maxLength={15}
-              required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              placeholder="e.g. 22AAAAA0000A1Z6"
+              className={`w-full px-3 py-2.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+                }`}
             />
+
+            {fieldErrors.gstNumber && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.gstNumber}</p>
+            )}
+
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
+              Government Registration Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"

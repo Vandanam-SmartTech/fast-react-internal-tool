@@ -189,7 +189,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
         const result = await deleteUser(userId);
 
         if (result.success) {
-          toast.success(result.message || "User deactivated successfully", {
+          toast.success("User deactivated successfully", {
             autoClose: 1000,
             hideProgressBar: true,
           });
@@ -203,7 +203,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
             await loadUsersByOrg(userInfo?.orgId);
           }
         } else {
-          toast.error(result.message || "Failed to deactivate user");
+          toast.error("Failed to deactivate user");
         }
       } catch (error) {
         toast.error("An error occurred while deactivating the user");

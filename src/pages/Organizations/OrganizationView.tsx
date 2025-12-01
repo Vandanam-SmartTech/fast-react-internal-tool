@@ -109,10 +109,10 @@ const OrganizationView: React.FC = () => {
         {organizationLogo ? (
           <img src={organizationLogo} alt="Organization Logo" className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white" />
         ) : (
-          isAgency ? <Building2 className="h-6 w-6 text-blue-600" /> : <Building className="h-6 w-6 text-blue-600" />
+          <Building className="h-6 w-6 text-blue-600" />
         )}
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {isAgency ? 'Agency Details' : 'Organization Details'}
+          Organization Details
         </h1>
         <button
           onClick={() =>

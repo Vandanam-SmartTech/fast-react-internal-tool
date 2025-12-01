@@ -9,7 +9,7 @@ import { croppedImgForLogo } from '../../utils/croppedImageForLogo';
 import { uploadOrganizationImage } from '../../services/documentManagerService';
 import { ZoomIn, ZoomOut, RotateCcw, Crop } from "lucide-react";
 import Cropper from "react-easy-crop";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
 
 
 const OrganizationList: React.FC = () => {
@@ -380,21 +380,27 @@ const OrganizationList: React.FC = () => {
                       setShowImageModal(true);
                     }}
                   >
-                    {organizationLogos.has(org.id!) ? (
-                      <img
-                        src={organizationLogos.get(org.id!)}
-                        alt={`${org.name} logo`}
-                        className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
-                      />
-                    ) : (
-                      <Building className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    )}
+                    <div className="relative group h-12 w-12">
+                      {organizationLogos.has(org.id!) ? (
+                        <img
+                          src={organizationLogos.get(org.id!)}
+                          alt={`${org.name} logo`}
+                          className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
+                          <Building className="h-6 w-6 text-blue-600" />
+                        </div>
+                      )}
 
-                    <h3 className="font-semibold text-gray-900 truncate">
-                      {org.name}
-                    </h3>
+                      {/* Camera overlay */}
+                      <div className="absolute inset-0 rounded-full bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+
+                    <h3 className="font-semibold text-gray-900 truncate">{org.name}</h3>
                   </div>
-
 
 
                   {/* Dropdown Menu */}
