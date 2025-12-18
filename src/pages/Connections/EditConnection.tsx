@@ -137,7 +137,6 @@ export const EditConnection = () => {
 
   const customerId = location.state?.customerId || null;
   const connectionId = location.state?.connectionId;
-  const consumerId = location.state?.consumerId;
 
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
   const [originalConsumerNumber, setOriginalConsumerNumber] = useState("");
@@ -151,12 +150,10 @@ export const EditConnection = () => {
   const [addressTypes, setAddressTypes] = useState<{ id: number; nameEn: string }[]>([]);
   const [correctionTypes, setCorrectionTypes] = useState<{ id: number; nameEn: string; nameMr?: string }[]>([]);
 
-  const [correctionTypeMap, setCorrectionTypeMap] = useState<Record<string, number>>({});
-  const [reverseCorrectionTypeMap, setReverseCorrectionTypeMap] = useState<Record<number, string>>({});
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -169,8 +166,6 @@ export const EditConnection = () => {
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
-  const [showConsumerNumber, setShowConsumerNumber] = useState(false);
-  const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
   const [showMapPreview, setShowMapPreview] = useState(false);
 

@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById } from '../../services/customerRequisitionService';
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
-  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId,
+  fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
   fetchPipeSpecification, savePipeSpecs, deleteSpecAPI
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
@@ -22,16 +22,15 @@ export const SystemSpecifications = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [showCostDetails, setShowCostDetails] = useState(false);
-  const [isSpecsSaved, setIsSpecsSaved] = useState(false);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [, setIsSpecsSaved] = useState(false);
+  const [, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [isCustomSpecs, setIsCustomSpecs] = useState(false);
+  const [, setIsCustomSpecs] = useState(false);
   const [govIdName, setGovIdName] = useState("");
   const [orgId, setOrgId] = useState<number | null>(null);
   const [agencyId, setAgencyId] = useState<number | null>(null);
-  const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
+  const [isFetchingRecommendations, ] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
@@ -40,7 +39,7 @@ export const SystemSpecifications = () => {
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
   const [isSpaceListOpen, setIsSpaceListOpen] = useState(false);
-  const [connectionDetails, setConnectionDetails] = useState<any>(null);
+  const [, setConnectionDetails] = useState<any>(null);
 
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
   const [avgMonthlyConsumption, setAvgMonthlyConsumption] = useState<number | null>(null);
@@ -51,27 +50,28 @@ export const SystemSpecifications = () => {
   const [gridTypeId, setGridTypeId] = useState<number | null>(null);
   const [grids, setGrids] = useState<any[]>([]);
 
-  const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
+  const [inverterBrandId, ] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
-  const [inverterSpecId, setInverterSpecId] = useState<number | null>(null);
+  const [orgInverterSpecId, setOrgInverterSpecId] = useState<number | null>(null);
   const [inverterCapacities, setInverterCapacities] = useState<any[]>([]);
 
-  const [panelBrandId, setPanelBrandId] = useState<number | null>(null);
   const [panels, setPanels] = useState<any[]>([]);
 
-  const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
+
+  const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
   const [panelCapacities, setPanelCapacities] = useState([]);
 
-  const [systemCapacityKw, setSystemCapacityKw] = useState<number | null>(null);
+  const [, setSystemCapacityKw] = useState<number | null>(null);
 
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
 
-  const [pipeSpecId, setPipeSpecId] = useState<number | null>(null);
+  const [orgPipeSpecId, setOrgPipeSpecId] = useState<number | null>(null);
   const [pipes, setPipes] = useState<any[]>([]);
 
-  const [batterySpecId, setBatterySpecId] = useState<number | null>(null);
+
+  const [orgBatterySpecId, setOrgBatterySpecId] = useState<number | null>(null);
   const [batteryCapacities, setBatteryCapacities] = useState([]);
 
   const [savedSpecs, setSavedSpecs] = useState([]);
@@ -103,9 +103,6 @@ export const SystemSpecifications = () => {
 
   const [activeLoadedSpecId, setActiveLoadedSpecId] = useState(null);
 
-
-
-
   const tabs = [
     "Customer Details",
     "Connection Details",
@@ -131,15 +128,15 @@ export const SystemSpecifications = () => {
     materialOriginId: null,
     gridTypeId: null,
     panelBrandId: null,
-    panelSpecId: null,
+    orgPanelSpecId: null,
     batteryBrandId: null,
-    batterySpecId: null,
+    orgBatterySpecId: null,
     systemCapacityKw: null,
     inverters: [
-      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
+      { inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 },
     ],
     pipes: [
-      { pipeSpecId: null, pipeCount: 1 },
+      { orgPipeSpecId: null, pipeCount: 1 },
     ],
   });
 
@@ -337,12 +334,12 @@ export const SystemSpecifications = () => {
         const updatedInverters = (prev.inverters || []).map((inv) => ({
           ...inv,
           inverterBrandId: null,
-          inverterSpecId: null,
+          orgInverterSpecId: null,
         }));
         return {
           ...prev,
           inverterBrandId: null,
-          inverterSpecId: null,
+          orgInverterSpecId: null,
           inverters: updatedInverters,
         };
       });
@@ -350,9 +347,9 @@ export const SystemSpecifications = () => {
 
       setInverterCapacitiesMap({});
 
-      if (phaseTypeId !== null && gridTypeId !== null) {
+      if (phaseTypeId !== null && gridTypeId !== null && orgId !==null) {
         try {
-          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
+          const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
           setInverters(Array.isArray(data) ? data : []);
         } catch (error) {
           console.error("Failed to fetch inverter brands:", error);
@@ -364,7 +361,7 @@ export const SystemSpecifications = () => {
     };
 
     loadInverterBrands();
-  }, [phaseTypeId, gridTypeId]);
+  }, [phaseTypeId, gridTypeId, orgId]);
 
 
   useEffect(() => {
@@ -372,16 +369,16 @@ export const SystemSpecifications = () => {
 
       setInverterCapacities([]);
 
-      setInverterSpecId(null);
+      setOrgInverterSpecId(null);
       setFormData((prev) => ({
         ...prev,
-        inverterSpecId: null
+        orgInverterSpecId: null
       }));
 
 
-      if (inverterBrandId !== null && gridTypeId !== null) {
+      if (inverterBrandId !== null && gridTypeId !== null && orgId !== null && phaseTypeId !== null) {
         try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId);
+          const data = await fetchInverterBrandCapacities(inverterBrandId, orgId, phaseTypeId, gridTypeId );
           setInverterCapacities([...data]);
         } catch (error) {
           console.error("Failed to fetch inverter brand capacities:", error);
@@ -393,44 +390,71 @@ export const SystemSpecifications = () => {
     };
 
     loadInverterBrandCapacities();
-  }, [inverterBrandId, gridTypeId]);
+  }, [inverterBrandId, gridTypeId, orgId, phaseTypeId]);
 
+
+  // useEffect(() => {
+  //   const loadPanelBrands = async () => {
+  //     if (!materialOriginId) return;
+
+  //     setPanels([]);
+  //     setPanelSpecId(null);
+  //     setPanelCapacities([]);
+  //     setSystemCapacityKw(null);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       panelSpecId: null,
+  //       systemCapacityKw: null,
+  //     }));
+
+  //     try {
+  //       const data = await fetchPanelBrands(Number(materialOriginId));
+  //       setPanels([...data]);
+  //     } catch (error) {
+  //       console.error("Failed to fetch panel brands:", error);
+  //       setPanels([]);
+  //     }
+  //   };
+
+  //   loadPanelBrands();
+  // }, [materialOriginId]);
 
   useEffect(() => {
-    const loadPanelBrands = async () => {
-      if (!materialOriginId) return;
+  const loadPanelBrands = async () => {
+    if (!materialOriginId || !orgId) return;
 
+    // reset dependent state
+    setPanels([]);
+    setOrgPanelSpecId(null);
+    setPanelCapacities([]);
+    setSystemCapacityKw(null);
+    setFormData((prev) => ({
+      ...prev,
+      orgPanelSpecId: null,
+      systemCapacityKw: null,
+    }));
+
+    try {
+      const data = await fetchPanelSpecsByOrg(
+        Number(materialOriginId),
+        Number(orgId)
+      );
+      setPanels(data);
+    } catch (error) {
+      console.error("Failed to fetch panel brands:", error);
       setPanels([]);
-      setPanelSpecId(null);
-      setPanelCapacities([]);
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        panelSpecId: null,
-        systemCapacityKw: null,
-      }));
+    }
+  };
 
-      try {
-        const data = await fetchPanelBrands(Number(materialOriginId));
-        setPanels([...data]);
-      } catch (error) {
-        console.error("Failed to fetch panel brands:", error);
-        setPanels([]);
-      }
-    };
-
-    loadPanelBrands();
-  }, [materialOriginId]);
-
-
-
+  loadPanelBrands();
+}, [materialOriginId, orgId]);   // ✅ include orgId
 
 
   useEffect(() => {
     const loadPanelBrandCapacities = async () => {
       if (
         phaseTypeId === null ||
-        panelSpecId === null ||
+        orgPanelSpecId === null ||
         avgMonthlyConsumption === null ||
         materialOriginId === null
       ) {
@@ -447,7 +471,7 @@ export const SystemSpecifications = () => {
       }
 
       try {
-        const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
+        const data = await fetchPanelBrandCapacities(phaseTypeId, orgPanelSpecId);
         setPanelCapacities([...data]);
       } catch (error) {
         console.error("Failed to fetch panel brand capacities:", error);
@@ -456,67 +480,77 @@ export const SystemSpecifications = () => {
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId, materialOriginId]);
+  }, [phaseTypeId, orgPanelSpecId, materialOriginId]);
 
 
 
 
-  useEffect(() => {
-    const loadBatteryBrands = async () => {
-      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
-        const data = await fetchBatteryBrands();
-        if (data) setBatteryBrands(data);
-      } else {
+useEffect(() => {
+  const loadBatteryBrands = async () => {
+    if (!orgId) return;
 
-        setBatteryBrands([]);
-        setBatteryBrandId(null);
-        setBatterySpecId(null);
-        setBatteryCapacities([]);
-        setFormData((prev) => ({
-          ...prev,
-          batteryBrandId: null,
-          batterySpecId: null,
-        }));
-      }
-    };
-
-    loadBatteryBrands();
-  }, [formData.gridTypeId]);
-
-  useEffect(() => {
-    setBatteryCapacities([]);
-    setBatterySpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      batterySpecId: null
-    }));
-    if (batteryBrandId !== null) {
-      const loadBatteryCapacities = async () => {
-        try {
-          const data = await fetchBatteryBrandCapacities(batteryBrandId);
-          setBatteryCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch battery brand capacities:", error);
-          setBatteryCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      };
-
-      loadBatteryCapacities();
+    if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
+      const data = await fetchBatteryBrands(Number(orgId));
+      if (data) setBatteryBrands(data);
+    } else {
+      // reset battery-related state
+      setBatteryBrands([]);
+      setBatteryBrandId(null);
+      setOrgBatterySpecId(null);
+      setBatteryCapacities([]);
+      setFormData((prev) => ({
+        ...prev,
+        batteryBrandId: null,
+        orgBatterySpecId: null,
+      }));
     }
-  }, [batteryBrandId, gridTypeId]);
+  };
 
-  useEffect(() => {
-    const loadPipeSpecs = async () => {
-      const data = await fetchPipeSpecification();
-      if (data) {
-        setPipes(data);
+  loadBatteryBrands();
+}, [formData.gridTypeId, orgId]);   // ✅ add orgId
+
+
+useEffect(() => {
+  // reset dependent state
+  setBatteryCapacities([]);
+  setOrgBatterySpecId(null);
+  setFormData((prev) => ({
+    ...prev,
+    orgBatterySpecId: null,
+  }));
+
+  if (batteryBrandId !== null && orgId) {
+    const loadBatteryCapacities = async () => {
+      try {
+        const data = await fetchBatteryBrandCapacities(
+          Number(batteryBrandId),
+          Number(orgId)
+        );
+        setBatteryCapacities(data);
+      } catch (error) {
+        console.error("Failed to fetch battery brand capacities:", error);
+        setBatteryCapacities([]);
+      } finally {
+        setIsPrefilling(false);
       }
     };
 
+    loadBatteryCapacities();
+  }
+}, [batteryBrandId, gridTypeId, orgId]);   // ✅ add orgId
+
+
+useEffect(() => {
+  const loadPipeSpecs = async () => {
+    const data = await fetchPipeSpecification(Number(orgId));
+    setPipes(data);
+  };
+
+  if (orgId) {
     loadPipeSpecs();
-  }, []);
+  }
+}, [orgId]);
+
 
 
 
@@ -529,12 +563,12 @@ export const SystemSpecifications = () => {
 
     // If brand changed, reset spec and fetch capacities for that row
     if (field === "inverterBrandId") {
-      updatedInverters[index].inverterSpecId = null;
+      updatedInverters[index].orgInverterSpecId = null;
 
       if (value !== null) {
         try {
           // capacities for the particular brand (and implicitly for current gridTypeId)
-          const capacities = await fetchInverterBrandCapacities(value, gridTypeId);
+          const capacities = await fetchInverterBrandCapacities(value, Number(orgId), Number(phaseTypeId), Number(gridTypeId));
           setInverterCapacitiesMap((prev) => ({
             ...prev,
             [index]: Array.isArray(capacities) ? capacities : [],
@@ -562,7 +596,7 @@ export const SystemSpecifications = () => {
   const addNewInverter = () => {
     const newInverter = {
       inverterBrandId: null,
-      inverterSpecId: null,
+      orgInverterSpecId: null,
       inverterCount: 1,
     };
 
@@ -609,7 +643,7 @@ export const SystemSpecifications = () => {
   const handlePipeChange = (index: number, field: string, value: any) => {
     const updatedPipes = [...(formData.pipes || [])];
     // Ensure the row exists
-    if (!updatedPipes[index]) updatedPipes[index] = { pipeSpecId: null, pipeCount: 1 };
+    if (!updatedPipes[index]) updatedPipes[index] = { orgPipeSpecId: null, pipeCount: 1 };
 
     (updatedPipes[index] as any)[field] = value;
 
@@ -622,7 +656,7 @@ export const SystemSpecifications = () => {
 
   const addNewPipe = () => {
     const newPipe = {
-      pipeSpecId: null,
+      orgPipeSpecId: null,
       pipeCount: 1,
     };
 
@@ -723,7 +757,7 @@ export const SystemSpecifications = () => {
         !formData.inverters ||
         formData.inverters.length === 0 ||
         formData.inverters.some(
-          (inv) => !inv.inverterBrandId || !inv.inverterSpecId
+          (inv) => !inv.inverterBrandId || !inv.orgInverterSpecId
         )
       ) {
         toast.error(
@@ -743,10 +777,10 @@ export const SystemSpecifications = () => {
           formData.installationSpaceType?.trim() === ""
             ? null
             : formData.installationSpaceType,
-        batteryCount: formData.batterySpecId ? 1 : null,
+        batteryCount: formData.orgBatterySpecId ? 1 : null,
         connectionId,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
+        orgPanelSpecId: formData.orgPanelSpecId,
+        orgBatterySpecId: formData.orgBatterySpecId,
         orgId: agencyId ?? orgId,
         isRunningCopy: true,
       });
@@ -759,7 +793,7 @@ export const SystemSpecifications = () => {
 
       const inverterList = formData.inverters.map((inv) => ({
         systemSpecsId,
-        inverterSpecId: inv.inverterSpecId,
+        orgInverterSpecId: inv.orgInverterSpecId,
         inverterCount: inv.inverterCount || 1,
       }));
 
@@ -770,12 +804,12 @@ export const SystemSpecifications = () => {
       // ---------------------- SAVE PIPE SPECS ------------------------------
 
       // Save pipes if they exist, regardless of Heavy Duty Ramp checkbox
-      if (formData.pipes && formData.pipes.length > 0 && formData.pipes.some((p) => p.pipeSpecId)) {
+      if (formData.pipes && formData.pipes.length > 0 && formData.pipes.some((p) => p.orgPipeSpecId)) {
         const pipeList = formData.pipes
-          .filter((pipe) => pipe.pipeSpecId) // Only save pipes with valid spec IDs
+          .filter((pipe) => pipe.orgPipeSpecId) // Only save pipes with valid spec IDs
           .map((pipe) => ({
             systemSpecsId,
-            pipeSpecId: pipe.pipeSpecId,
+            orgPipeSpecId: pipe.orgPipeSpecId,
             pipeCount: pipe.pipeCount || 1,
           }));
 
@@ -832,7 +866,7 @@ export const SystemSpecifications = () => {
     const initialMaterialOriginId = spec.materialOriginId;
 
     setBatteryBrandId(spec.batteryBrandId || null);
-    setBatterySpecId(spec.batterySpecsId || null);
+    setOrgBatterySpecId(spec.orgBatterySpecId || null);
 
     // Set them immediately
     setGridTypeId(initialGridTypeId);
@@ -842,7 +876,7 @@ export const SystemSpecifications = () => {
     const inverterList = (spec.inverters || []).map((inv) => ({
       inverterBrandId: inv.inverterBrandId,
       inverterBrandName: inv.inverterBrandName,
-      inverterSpecId: inv.inverterSpecId,
+      orgInverterSpecId: inv.orgInverterSpecId,
       inverterCount: inv.inverterCount || 1,
       inverterCapacity: inv.inverterCapacity,
       inverterWarrantyMonths: inv.inverterWarrantyMonths,
@@ -857,7 +891,7 @@ export const SystemSpecifications = () => {
 
       if (inv.inverterBrandId) {
         try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId,Number(orgId),Number(phaseTypeId),Number(gridTypeId));
           capacitiesMap[i] = capacities;
         } catch (error) {
           capacitiesMap[i] = [];
@@ -871,7 +905,7 @@ export const SystemSpecifications = () => {
 
     // STEP 4: Build pipe list if available
     const pipeList = (spec.pipes || []).map((pipe) => ({
-      pipeSpecId: pipe.pipeSpecId,
+      orgPipeSpecId: pipe.orgPipeSpecId,
       pipeCount: pipe.pipeCount || 1,
     }));
 
@@ -886,17 +920,17 @@ export const SystemSpecifications = () => {
       hasWaterSprinkler: spec.hasWaterSprinkler,
       hasHeavydutyRamp: spec.hasHeavydutyRamp,
       hasHeavydutyStairs: spec.hasHeavydutyStairs,
-      panelSpecId: spec.panelSpecsId,
+      orgPanelSpecId: spec.orgPanelSpecId,
       materialOriginId: initialMaterialOriginId, // safe
       gridTypeId: initialGridTypeId,            // safe
       batteryBrandId: spec.batteryBrandId,
-      batterySpecId: spec.batterySpecsId,
+      orgBatterySpecId: spec.orgBatterySpecId,
       systemCapacityKw: spec.systemCapacityKw,
       inverters: inverterList,
-      pipes: pipeList.length > 0 ? pipeList : [{ pipeSpecId: null, pipeCount: 1 }],
+      pipes: pipeList.length > 0 ? pipeList : [{ orgPipeSpecId: null, pipeCount: 1 }],
     }));
 
-    setPanelSpecId(spec.panelSpecsId);
+    setOrgPanelSpecId(spec.orgPanelSpecId);
     // setBatteryBrandId(spec.batteryBrandId);
     // setBatterySpecId(spec.batterySpecsId);
 
@@ -964,8 +998,8 @@ export const SystemSpecifications = () => {
 
   const priceInputsKey = JSON.stringify({
     systemCapacityKw: formData.systemCapacityKw,
-    panelSpecId: formData.panelSpecId,
-    batterySpecId: formData.batterySpecId,
+    orgPanelSpecId: formData.orgPanelSpecId,
+    orgBatterySpecId: formData.orgBatterySpecId,
     inverters: formData.inverters,
     pipes: formData.pipes,
   });
@@ -975,16 +1009,16 @@ export const SystemSpecifications = () => {
     const fetchPriceDetails = async () => {
       if (priceAlreadySetFromCustomerData && fetchTrigger === 0) return;
 
-      const hasValidSystem = !!formData.systemCapacityKw || !!formData.panelSpecId;
-      const hasValidBattery = !!formData.batterySpecId;
+      const hasValidSystem = !!formData.systemCapacityKw || !!formData.orgPanelSpecId;
+      const hasValidBattery = !!formData.orgBatterySpecId;
       const validInverters = (formData.inverters || []).filter(
-        (inv) => inv.inverterSpecId && inv.inverterCount > 0
+        (inv) => inv.orgInverterSpecId && inv.inverterCount > 0
       );
       const validPipes = (formData.pipes || []).filter(
-        (pipe) => pipe.pipeSpecId && pipe.pipeCount > 0
+        (pipe) => pipe.orgPipeSpecId && pipe.pipeCount > 0
       );
 
-      if (!hasValidSystem && !hasValidBattery && validInverters.length === 0 && validPipes === 0) {
+      if (!hasValidSystem && !hasValidBattery && validInverters.length === 0 && validPipes.length === 0) {
         setFormData((prev) => ({
           ...prev,
           systemCost: 0,
@@ -997,15 +1031,15 @@ export const SystemSpecifications = () => {
       try {
         const response = await getPriceDetails({
           systemCapacityKw: formData.systemCapacityKw,
-          panelSpecsId: formData.panelSpecId,
-          batterySpecsId: formData.batterySpecId,
+          orgPanelSpecId: formData.orgPanelSpecId,
+          orgBatterySpecId: formData.orgBatterySpecId,
           batteryCount: hasValidBattery ? 1 : 0,
           inverters: validInverters.map((inv) => ({
-            inverterSpecsId: inv.inverterSpecId,
+            orgInverterSpecId: inv.orgInverterSpecId,
             inverterCount: inv.inverterCount,
           })),
           pipes: validPipes.map((pipe) => ({
-            pipeSpecId: pipe.pipeSpecId,
+            orgPipeSpecId: pipe.orgPipeSpecId,
             pipeCount: pipe.pipeCount
           }))
         });
@@ -1670,13 +1704,13 @@ export const SystemSpecifications = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
             <ReusableDropdown
-              name="panelSpecId"
-              value={formData.panelSpecId ?? ""}
+              name="orgPanelSpecId"
+              value={formData.orgPanelSpecId ?? ""}
               onChange={(val) => {
                 const selectedId = val === "" ? null : Number(val);
-                setPanelSpecId(selectedId);
+                setOrgPanelSpecId(selectedId);
                 handleChange({
-                  target: { name: "panelSpecId", value: selectedId },
+                  target: { name: "orgPanelSpecId", value: selectedId },
                 } as any);
               }}
               // options={panels.map((panel) => ({
@@ -1685,7 +1719,7 @@ export const SystemSpecifications = () => {
               // }))}
               options={panels.map((panel) => {
                 const parts = [
-                  panel.brandShortname || null,
+                  panel.panelBrandName || null,
                   panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
                   panel.modelNumber ? `(${panel.modelNumber})` : null
                 ];
@@ -1693,7 +1727,7 @@ export const SystemSpecifications = () => {
                 const label = parts.filter(Boolean).join(" - ");
 
                 return {
-                  value: panel.panelSpecId,
+                  value: panel.id,
                   label,
                 };
               })}
@@ -1721,7 +1755,7 @@ export const SystemSpecifications = () => {
                 label: `${panelCapacity} kW`,
               }))}
               placeholder="Select PV System Capacity"
-              className={`mt-1 ${!materialOriginId || !panelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+              className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
             />
           </div>
 
@@ -1733,9 +1767,9 @@ export const SystemSpecifications = () => {
                   type="button"
                   onClick={addNewInverter}
                   disabled={
-                    formData.inverters?.some((inv) => !inv.inverterSpecId) ?? false
+                    formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false
                   }
-                  className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.inverters?.some((inv) => !inv.inverterSpecId)
+                  className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
@@ -1769,7 +1803,7 @@ export const SystemSpecifications = () => {
                         handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
                       }
                       options={inverters.map((inv) => ({
-                        value: inv.id,
+                        value: inv.inverterBrandId,
                         label: inv.inverterBrandName,
                       }))}
                       placeholder="Select Inverter Brand"
@@ -1780,10 +1814,10 @@ export const SystemSpecifications = () => {
                   <div className="col-span-12 md:col-span-5">
                     <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
                     <ReusableDropdown
-                      name="inverterSpecId"
-                      value={inv.inverterSpecId ?? ""}
+                      name="orgInverterSpecId"
+                      value={inv.orgInverterSpecId ?? ""}
                       onChange={(val) =>
-                        handleInverterChange(index, "inverterSpecId", val === "" ? null : Number(val))
+                        handleInverterChange(index, "orgInverterSpecId", val === "" ? null : Number(val))
                       }
                       // options={(inverterCapacitiesMap[index] || []).map((spec) => ({
                       //   value: spec.id,
@@ -1876,7 +1910,7 @@ export const SystemSpecifications = () => {
                     });
                   }}
                   options={batteryBrands.map((batteryBrand) => ({
-                    value: batteryBrand.id,
+                    value: batteryBrand.brandId,
                     label: batteryBrand.brandName,
                   }))}
                   placeholder="Select Battery Brand"
@@ -1888,13 +1922,13 @@ export const SystemSpecifications = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
                 <ReusableDropdown
-                  name="batterySpecId"
-                  value={formData.batterySpecId ?? ""}
+                  name="orgBatterySpecId"
+                  value={formData.orgBatterySpecId ?? ""}
                   onChange={(val) => {
                     const selectedId = val === "" ? null : Number(val);
-                    setBatterySpecId(selectedId);
+                    setOrgBatterySpecId(selectedId);
                     handleChange({
-                      target: { name: "batterySpecId", value: selectedId },
+                      target: { name: "orgBatterySpecId", value: selectedId },
                     });
                   }}
                   // options={batteryCapacities.map((batteryCapacity) => ({
@@ -1973,9 +2007,9 @@ export const SystemSpecifications = () => {
                   type="button"
                   onClick={addNewPipe}
                   disabled={
-                    formData.pipes?.some((pipe) => !pipe.pipeSpecId) ?? false
+                    formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false
                   }
-                  className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.pipeSpecId)
+                  className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
@@ -2006,10 +2040,10 @@ export const SystemSpecifications = () => {
                   <div className="col-span-12 md:col-span-6">
                     <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
                     <ReusableDropdown
-                      name="pipeSpecId"
-                      value={pipe.pipeSpecId ?? ""}
+                      name="orgPipeSpecId"
+                      value={pipe.orgPipeSpecId ?? ""}
                       onChange={(val) =>
-                        handlePipeChange(index, "pipeSpecId", val === "" ? null : Number(val))
+                        handlePipeChange(index, "orgPipeSpecId", val === "" ? null : Number(val))
                       }
                       options={pipes.map((p) => ({
                         value: p.id,

@@ -6,13 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
 import ReusableDropdown from "../../components/ReusableDropdown";
-
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, } from "@heroicons/react/24/solid";
 
 interface District {
   code: number;
@@ -147,7 +141,7 @@ export const ConnectionForm = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -163,11 +157,9 @@ export const ConnectionForm = () => {
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
 
-  const [showConsumerNumber, setShowConsumerNumber] = useState(false);
-  const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-  const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
+  const [, setNavigateAfterClose] = useState(false);
+  const [, setCreatedConnectionId] = useState<number | null>(null);
 
   const [showMapPreview, setShowMapPreview] = useState(false);
 
@@ -195,13 +187,15 @@ export const ConnectionForm = () => {
     villageCode: 0,
     pinCode: "",
     isNameCorrection: "No",
-    correctionTypeId: null,
+    correctionTypeId: null as number | null,
     avgMonthlyConsumption: "",
     discomId: "",
     isActive: true,
     isOnboardedCustomers: false,
+    correctionType: "",
   });
 
+  const numberFields = ["connectionTypeId", "addressTypeId", "villageCode", "phaseTypeId", "discomId"];
 
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -313,20 +307,6 @@ export const ConnectionForm = () => {
       [fieldName]: validation.message
     }));
   };
-
-  ///////////////////////////////////////////////////////////
-  // useEffect(() => {
-  //   const savedForm = localStorage.getItem('connectionFormData');
-  //   const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
-  //   if (savedForm) {
-  //     setFormData(JSON.parse(savedForm));
-  //   }
-
-  //   if (savedConfirmConsumerNumber) {
-  //     setConfirmConsumerNumber(savedConfirmConsumerNumber);
-  //   }
-  // }, []);
-  ///////////////////////////////////////////////////////////
 
 
   useEffect(() => {
@@ -513,44 +493,25 @@ export const ConnectionForm = () => {
 
       setFormData((prev) => ({
         ...prev,
-        [name]: value,
+        [name]: Number(value),   // FIX HERE
         phaseTypeId: isHT ? 2 : 1,
-        ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
       }));
-
-      // Save to localStorage
-      // setTimeout(() => {
-      //   localStorage.setItem("connectionFormData", JSON.stringify({
-      //     ...formData,
-      //     [name]: value,
-      //     phaseTypeId: isHT ? 2 : 1,
-      //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-      //   }));
-      // }, 0);
 
       return;
     }
 
-
+    // Generic state update (supports string + number)
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: numberFields.includes(name) ? Number(value) : value,
       ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
     }));
 
-
-    // setTimeout(() => {
-    //   localStorage.setItem("connectionFormData", JSON.stringify({
-    //     ...formData,
-    //     [name]: value,
-    //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-    //   }));
-    // }, 0);
   };
 
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleDistrictChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
@@ -566,8 +527,8 @@ export const ConnectionForm = () => {
     }));
   };
 
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleTalukaChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
 
     setVillageCode(0);
@@ -581,8 +542,8 @@ export const ConnectionForm = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleVillageChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     const selectedVillage = villages.find((village) => village.code === value);
 
     if (selectedVillage) {
@@ -658,7 +619,6 @@ export const ConnectionForm = () => {
       gstIn: formData.gstIn.trim() === "" ? null : formData.gstIn.trim(),
       latitude: formData.latitude,
       longitude: formData.longitude,
-
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
       addressLine2: formData.addressLine2,
@@ -1141,7 +1101,7 @@ export const ConnectionForm = () => {
                 <ReusableDropdown
                   name="districtCode"
                   value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "districtCode", value: val } })}
+                  onChange={(val) => handleDistrictChange(Number(val))}
                   options={[
                     { value: 0, label: districtName || "Select District" },
                     ...districts.map((district) => ({
@@ -1177,7 +1137,7 @@ export const ConnectionForm = () => {
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  onChange={(val) => handleTalukaChange(Number(val))}
                   options={[
                     { value: 0, label: talukaName || "Select Taluka" },
                     ...talukas.map((taluka) => ({
@@ -1212,7 +1172,7 @@ export const ConnectionForm = () => {
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  onChange={(val) => handleVillageChange(Number(val))}
                   options={[
                     { value: 0, label: villageName || "Select Village" },
                     ...villages.map((village) => ({
@@ -1459,10 +1419,11 @@ export const ConnectionForm = () => {
                     name="correctionTypeId"
                     value={formData.correctionTypeId || ""}
                     onChange={(val) =>
-                      setFormData((prev) => ({
+                      setFormData(prev => ({
                         ...prev,
-                        correctionTypeId: val ? Number(val) : "",
+                        correctionTypeId: val ? Number(val) : null,
                       }))
+
                     }
                     options={[
                       { value: "", label: "Select an option" },

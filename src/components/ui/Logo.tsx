@@ -1,7 +1,7 @@
 import React from 'react';
 import logoImage from '../../assets/Vandanam_SmartTech_Logo.png';
 
-interface LogoProps {
+export interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
   alt?: string;

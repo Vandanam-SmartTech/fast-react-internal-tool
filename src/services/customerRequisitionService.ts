@@ -275,6 +275,17 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
   }
 };
 
+export const getCustomerConnectionInstallationById = async (customerId: number): Promise<any> => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(`/api/view-customer/${customerId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching customer details:', error);
+    return null;
+  }
+};
+
 
 export const getConnectionByConnectionId = async (connectionId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
@@ -779,6 +790,32 @@ export const checkIsConnectionOnboarded = async (
     return false;
   }
 };
+
+export const saveSanctionDetails = async (
+  connectionId: string,
+  sanctionNo: string,
+  sanctionDate: string
+) => {
+  try {
+    const crsAPI = getCrsAPI();
+
+    const payload = {
+      sanctionNo,
+      sanctionDate,
+    };
+
+    const response = await crsAPI.post(`/api/sanction/${connectionId}`, payload);
+
+    console.log("Sanction details saved:", response.data);
+
+    return response.data;
+
+  } catch (err) {
+    console.error("Failed to save sanction details", err);
+    return null;
+  }
+}; 
+
 
 
 

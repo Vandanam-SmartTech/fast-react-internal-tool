@@ -16,8 +16,8 @@ export const InstallationForm = () => {
   const [installationSpaceTypes, setInstallationSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
 
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-  const [createdInstallationId, setCreatedInstallationId] = useState<number | null>(null);
+  const [, setNavigateAfterClose] = useState(false);
+  const [, setCreatedInstallationId] = useState<number | null>(null);
 
 
   const [activeTab, setActiveTab] = useState("Installation Details");

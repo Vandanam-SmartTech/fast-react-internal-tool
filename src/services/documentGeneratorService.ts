@@ -38,6 +38,7 @@ export const fetchPdf = async (
     "Vendor Feasibility": `/api/pdf/vendorFeasibilityController/${id}?download=true`,
     "Net Agreement": `/api/pdf/netAgreementOne/${id}?download=true`,
     "RTS Declaration": `/api/pdf/declarationPage/${id}?download=true`,
+    "Gen Meter Testing Letter": `/api/pdf/genMeterLetter/${id}?download=true`,
   };
 
   const endpoint = endpointMap[docName];

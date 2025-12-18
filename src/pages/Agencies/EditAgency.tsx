@@ -99,7 +99,7 @@ const EditAgency: React.FC = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -116,47 +116,38 @@ const EditAgency: React.FC = () => {
     }
   }, [agencyId]);
 
-  const loadAgency = async (agencyId: number) => {
-    try {
-      const agency = await getOrganizationById(agencyId);
-      setFormData({
-        ...agency,
-        pinCode: agency.pinCode || "",
-      });
+const loadAgency = async (agencyId: number) => {
+  try {
+    const agency = await getOrganizationById(agencyId);
 
-      setDistrictCode(agency.districtCode);
-      setTalukaCode(agency.talukaCode);
-      setVillageCode(agency.villageCode);
-      setPinCode(agency.pinCode || "");
-    } catch (error) {
-      toast.error('Failed to load agency');
-      navigate("/agencies", {
-        state: {
-          orgId: orgId,
-        },
-      });
-    }
-  };
+    setFormData({
+      name: agency.name ?? "",
+      displayName: agency.displayName ?? "",
+      legalName: agency.legalName ?? "",
+      addressLine1: agency.addressLine1 ?? "",
+      addressLine2: agency.addressLine2 ?? "",
+      villageCode: agency.villageCode ?? 0,
+      pinCode: String(agency.pinCode ?? ""),
+      contactNumber: agency.contactNumber ?? "",
+      logoUrl: agency.logoUrl ?? "",
+      parentId: agency.parentId ?? parseInt(orgId!),
+      gstNumber: agency.gstNumber ?? "",
+      govtRegNumber: agency.govtRegNumber ?? "",
+      emailAddress: agency.emailAddress ?? ""
+    });
 
-  // const loadOrganization = async (organizationId: number) => {
-  //   try {
-  //     const org = await getOrganizationById(organizationId);
+    setDistrictCode(agency.districtCode ?? 0);
+    setTalukaCode(agency.talukaCode ?? 0);
+    setVillageCode(agency.villageCode ?? 0);
+    setPinCode(String(agency.pinCode ?? ""));
 
-  //     setFormData({
-  //       ...org,
-  //       pinCode: org.pinCode || "", 
-  //     });
-
-  //     setDistrictCode(org.districtCode);
-  //     setTalukaCode(org.talukaCode);
-  //     setVillageCode(org.villageCode);
-  //     setPinCode(org.pinCode || "");
-
-  //   } catch (error) {
-  //     toast.error('Failed to load organization');
-  //     navigate('/organizations');
-  //   }
-  // };
+  } catch (error) {
+    toast.error("Failed to load agency");
+    navigate("/agencies", {
+      state: { orgId },
+    });
+  }
+};
 
   useEffect(() => {
     const fetchDistrictsData = async () => {
@@ -210,8 +201,8 @@ const EditAgency: React.FC = () => {
     fetchVillagesData();
   }, [talukaCode]);
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleDistrictChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
@@ -227,8 +218,8 @@ const EditAgency: React.FC = () => {
     }));
   };
 
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleTalukaChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
 
     setVillageCode(0);
@@ -242,8 +233,8 @@ const EditAgency: React.FC = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleVillageChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     const selectedVillage = villages.find((village) => village.code === value);
 
     if (selectedVillage) {
@@ -264,45 +255,6 @@ const EditAgency: React.FC = () => {
     console.log("Current state PINcode:", value);
   };
 
-  const validateForm = (): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-
-
-    if (!formData.addressLine1) {
-      errors.push("Address Line 1 is required");
-    } else {
-      const addressValidation = validateField('addressLine1', formData.addressLine1);
-      if (!addressValidation.isValid) {
-        errors.push(addressValidation.message);
-      }
-    }
-
-    if (formData.addressLine2) {
-      const addressValidation = validateField('addressLine2', formData.addressLine2);
-      if (!addressValidation.isValid) {
-        errors.push(addressValidation.message);
-      }
-    }
-
-
-    if (formData.gstNumber) {
-      const gstNumberValidation = validateField('gstNumber', formData.gstNumber);
-      if (!gstNumberValidation.isValid) {
-        errors.push(gstNumberValidation.message);
-      }
-    }
-
-    if (!formData.pinCode) {
-      errors.push("PIN Code is required");
-    } else {
-      const pinCodeValidation = validateField('pinCode', formData.pinCode);
-      if (!pinCodeValidation.isValid) {
-        errors.push(pinCodeValidation.message);
-      }
-    }
-
-    return { isValid: errors.length === 0, errors };
-  };
 
   const validateFieldOnChange = (fieldName: string, value: string | number) => {
     const validation = validateField(fieldName, value);
@@ -330,7 +282,7 @@ const EditAgency: React.FC = () => {
         ...formData,
         parentId: parseInt(orgId!),
         createdBy: userId,
-        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
+        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : undefined,
       };
 
       await updateOrganization(parseInt(agencyId), agencyData);
@@ -581,7 +533,7 @@ const EditAgency: React.FC = () => {
             <ReusableDropdown
               name="district"
               value={districtCode}
-              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              onChange={(val) => handleDistrictChange(Number(val))}
               options={[
                 { value: 0, label: districtName || "Select District" },
                 ...districts.map((district) => ({
@@ -599,7 +551,7 @@ const EditAgency: React.FC = () => {
             <ReusableDropdown
               name="talukaCode"
               value={talukaCode}
-              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              onChange={(val) => handleTalukaChange(Number(val))}
               options={[
                 { value: 0, label: talukaName || "Select Taluka" },
                 ...talukas.map((taluka) => ({
@@ -617,7 +569,7 @@ const EditAgency: React.FC = () => {
             <ReusableDropdown
               name="villageCode"
               value={villageCode}
-              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              onChange={(val) => handleVillageChange(Number(val))}
               options={[
                 { value: 0, label: villageName || "Select Village" },
                 ...villages.map((village) => ({

@@ -4,6 +4,7 @@ import { fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCusto
 import { useLocation } from "react-router-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
+import { checkFinalQuotationExists } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { useUser } from "../../contexts/UserContext";
 import {
@@ -21,7 +22,7 @@ export const ViewConnection = () => {
   const customerId = location.state?.customerId;
   const connectionId = location.state?.connectionId;
   const navigate = useNavigate();
-  const [govIdName, setGovIdName] = useState("");
+  const [, setGovIdName] = useState("");
 
   const [activeTab, setActiveTab] = useState("Connection Details");
 
@@ -51,56 +52,30 @@ export const ViewConnection = () => {
   ];
 
 
-  // const fetchConnection = async () => {
-  //   if (!customerId || !connectionId) {
-  //     console.error("Customer ID or Connection ID not found!");
-  //     return;
-  //   }
-
-  //   const data = await fetchConsumerNumber(customerId);
-  //   if (Array.isArray(data) && data.length > 0) {
-  //     const selectedConnection = data.find(conn => conn.id === Number(connectionId));
-  //     if (selectedConnection) {
-  //       setConnection(selectedConnection);
-  //     } else {
-  //       console.warn("No matching connection found for given connectionId.");
-  //       setConnection(null);
-  //     }
-  //   } else {
-  //     console.warn("No connections found for customer.");
-  //     setConnection(null);
-  //   }
-  // };
-
-
-  // useEffect(() => {
-  //   fetchConnection();
-  // }, [customerId, connectionId]);
-
   const fetchConnection = async () => {
-  if (!connectionId) {
-    console.error("Connection ID not found!");
-    return;
-  }
+    if (!connectionId) {
+      console.error("Connection ID not found!");
+      return;
+    }
 
-  try {
-    const data = await getConnectionByConnectionId(Number(connectionId));
+    try {
+      const data = await getConnectionByConnectionId(Number(connectionId));
 
-    if (data) {
-      setConnection(data);
-    } else {
-      console.warn("No connection found for given connectionId.");
+      if (data) {
+        setConnection(data);
+      } else {
+        console.warn("No connection found for given connectionId.");
+        setConnection(null);
+      }
+    } catch (error) {
+      console.error("Error fetching connection:", error);
       setConnection(null);
     }
-  } catch (error) {
-    console.error("Error fetching connection:", error);
-    setConnection(null);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchConnection();
-}, [connectionId]);
+  useEffect(() => {
+    fetchConnection();
+  }, [connectionId]);
 
 
   const handleMessageBoxClose = () => {
@@ -152,14 +127,55 @@ useEffect(() => {
     return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
   };
 
+  // const handleOnboardClick = async () => {
+  //   if (!connection?.id) return;
+
+  //   try {
+  //     setDialogType("confirm");
+  //     setDialogMessage("Do you want to onboard the consumer?");
+  //     setDialogAction(() => handleYes);
+  //     setDialogOpen(true);
+  //   } catch (error) {
+  //     console.error("Error during onboarding:", error);
+  //     setMessageBoxContent("Failed to start onboarding process.");
+  //     setMessageBoxSeverity("error");
+  //     setMessageBoxOpen(true);
+  //   }
+  // };
+
   const handleOnboardClick = async () => {
     if (!connection?.id) return;
 
     try {
+      const exists = await checkFinalQuotationExists(connection.id);
+
+      // ❌ Final quotation NOT given
+      if (!exists) {
+        setDialogType("confirm");
+        setDialogMessage(
+          "Final Quotation is not given to this consumer. Do you want to give final quotation?"
+        );
+
+        setDialogAction(() => () => {
+          navigate(`/system-specifications`, {
+            state: {
+              connectionId: connection.id,
+              consumerId: connection.consumerId,
+              customerId: connection.customerId,
+            },
+          });
+        });
+
+        setDialogOpen(true);
+        return;
+      }
+
+      // ✅ Final quotation exists → continue onboarding
       setDialogType("confirm");
       setDialogMessage("Do you want to onboard the consumer?");
       setDialogAction(() => handleYes);
       setDialogOpen(true);
+
     } catch (error) {
       console.error("Error during onboarding:", error);
       setMessageBoxContent("Failed to start onboarding process.");
@@ -167,6 +183,7 @@ useEffect(() => {
       setMessageBoxOpen(true);
     }
   };
+
 
 
   const handleSaveSpecs = () => {
@@ -680,6 +697,7 @@ useEffect(() => {
               >
                 Yes
               </Button>
+
             </>
           ) : (
             <Button

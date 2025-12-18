@@ -63,81 +63,81 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const goToProductManagement = () => navigate("product-management");
 
 
-const handleHomeClick = async () => {
-  try {
-    if (!userClaims) {
-      navigate("/login");
-      return;
-    }
-
-    // Super Admin shortcut
-    if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-      navigate("/super-admin-dashboard");
-      return;
-    }
-
-    const selectedOrgStr = localStorage.getItem("selectedOrg");
-    if (!selectedOrgStr) {
-      navigate("/login");
-      return;
-    }
-
-    let selectedOrg;
+  const handleHomeClick = async () => {
     try {
-      selectedOrg = JSON.parse(selectedOrgStr);
-    } catch {
-      console.error("Invalid selectedOrg format in localStorage");
-      localStorage.removeItem("selectedOrg");
-      navigate("/login");
-      return;
-    }
+      if (!userClaims) {
+        navigate("/login");
+        return;
+      }
 
-    const orgData = userClaims.org_roles?.[selectedOrg.orgId];
-    if (!orgData) {
-      alert("Invalid organization selection.");
-      localStorage.removeItem("selectedOrg");
-      navigate("/login");
-      return;
-    }
+      // Super Admin shortcut
+      if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        navigate("/super-admin-dashboard");
+        return;
+      }
 
-    // Validate role
-    let role = selectedOrg.role;
-    if (!role || !orgData.roles.includes(role)) {
-      // If multiple roles, pick the first or show selection
-      role = orgData.roles[0];
-      localStorage.setItem(
-        "selectedOrg",
-        JSON.stringify({ orgId: selectedOrg.orgId, orgName: orgData.org_name, role })
-      );
-    }
+      const selectedOrgStr = localStorage.getItem("selectedOrg");
+      if (!selectedOrgStr) {
+        navigate("/login");
+        return;
+      }
 
-    // Navigate based on role
-    switch (role) {
-      case "ROLE_ORG_ADMIN":
-        navigate("/org-admin-dashboard");
-        break;
-      case "ROLE_AGENCY_ADMIN":
-        navigate("/agency-admin-dashboard");
-        break;
-      case "ROLE_ORG_STAFF":
-      case "ROLE_AGENCY_STAFF":
-        navigate("/staff-dashboard");
-        break;
-      case "ROLE_ORG_REPRESENTATIVE":
-      case "ROLE_AGENCY_REPRESENTATIVE":
-        navigate("/representative-dashboard");
-        break;
-      default:
-        alert("Unauthorized role.");
+      let selectedOrg;
+      try {
+        selectedOrg = JSON.parse(selectedOrgStr);
+      } catch {
+        console.error("Invalid selectedOrg format in localStorage");
         localStorage.removeItem("selectedOrg");
         navigate("/login");
+        return;
+      }
+
+      const orgData = userClaims.org_roles?.[selectedOrg.orgId];
+      if (!orgData) {
+        alert("Invalid organization selection.");
+        localStorage.removeItem("selectedOrg");
+        navigate("/login");
+        return;
+      }
+
+      // Validate role
+      let role = selectedOrg.role;
+      if (!role || !orgData.roles.includes(role)) {
+        // If multiple roles, pick the first or show selection
+        role = orgData.roles[0];
+        localStorage.setItem(
+          "selectedOrg",
+          JSON.stringify({ orgId: selectedOrg.orgId, orgName: orgData.org_name, role })
+        );
+      }
+
+      // Navigate based on role
+      switch (role) {
+        case "ROLE_ORG_ADMIN":
+          navigate("/org-admin-dashboard");
+          break;
+        case "ROLE_AGENCY_ADMIN":
+          navigate("/agency-admin-dashboard");
+          break;
+        case "ROLE_ORG_STAFF":
+        case "ROLE_AGENCY_STAFF":
+          navigate("/staff-dashboard");
+          break;
+        case "ROLE_ORG_REPRESENTATIVE":
+        case "ROLE_AGENCY_REPRESENTATIVE":
+          navigate("/representative-dashboard");
+          break;
+        default:
+          alert("Unauthorized role.");
+          localStorage.removeItem("selectedOrg");
+          navigate("/login");
+      }
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      alert("Error determining user role.");
+      navigate("/login");
     }
-  } catch (error) {
-    console.error("Error fetching claims:", error);
-    alert("Error determining user role.");
-    navigate("/login");
-  }
-};
+  };
 
 
 
@@ -407,7 +407,7 @@ const handleHomeClick = async () => {
                 </button>
               )}
 
-               {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
                 <button
                   onClick={goToProductManagement}
                   className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"

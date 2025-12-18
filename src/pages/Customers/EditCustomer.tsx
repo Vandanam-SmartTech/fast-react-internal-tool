@@ -23,7 +23,7 @@ export const EditCustomer = () => {
   });
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
-  const [existingCustomer, setExistingCustomer] = useState(false);
+  const [, setExistingCustomer] = useState(false);
   const customerId = location.state?.customerId;
   const [activeTab] = useState("Customer Details");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,11 +31,11 @@ export const EditCustomer = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
-  const [showMobile, setShowMobile] = useState(false);
-  const handleToggleMobile = () => setShowMobile(!showMobile);
+  const [showMobile, ] = useState(false);
 
-  const [showEmail, setShowEmail] = useState(false);
-  const handleToggleEmail = () => setShowEmail(!showEmail);
+
+  const [showEmail, ] = useState(false);
+
 
   const [originalMobile, setOriginalMobile] = useState("");
   const [mobileExists, setMobileExists] = useState(false);

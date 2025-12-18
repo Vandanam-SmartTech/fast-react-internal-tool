@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building, Building2, UserCog, UserPlus, BarChart3, Calendar, Clock, Shield } from 'lucide-react';
+import { Users, Building, Building2, UserCog, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
 
@@ -77,29 +77,29 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
-  const quickActions = [
-    {
-      title: 'Add Customer',
-      description: 'Create a new customer record',
-      icon: <UserPlus className="h-5 w-5" />,
-      path: '/customer-form',
-      variant: 'primary' as const
-    },
-    {
-      title: 'View Reports',
-      description: 'Access analytics and reports',
-      icon: <BarChart3 className="h-5 w-5" />,
-      path: '/analytics',
-      variant: 'secondary' as const
-    },
-    {
-      title: 'Schedule Meeting',
-      description: 'Book appointments and meetings',
-      icon: <Calendar className="h-5 w-5" />,
-      path: '/schedule',
-      variant: 'success' as const
-    }
-  ];
+  // const quickActions = [
+  //   {
+  //     title: 'Add Customer',
+  //     description: 'Create a new customer record',
+  //     icon: <UserPlus className="h-5 w-5" />,
+  //     path: '/customer-form',
+  //     variant: 'primary' as const
+  //   },
+  //   {
+  //     title: 'View Reports',
+  //     description: 'Access analytics and reports',
+  //     icon: <BarChart3 className="h-5 w-5" />,
+  //     path: '/analytics',
+  //     variant: 'secondary' as const
+  //   },
+  //   {
+  //     title: 'Schedule Meeting',
+  //     description: 'Book appointments and meetings',
+  //     icon: <Calendar className="h-5 w-5" />,
+  //     path: '/schedule',
+  //     variant: 'success' as const
+  //   }
+  // ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

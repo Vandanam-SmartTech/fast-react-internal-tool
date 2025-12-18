@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { Users, UserCheck, BarChart3, Calendar, Clock } from 'lucide-react';
+import { Users, UserCheck, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { format, parseISO } from 'date-fns';
-import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import { useUser } from '../../contexts/UserContext';
 
 const StaffDashboard: React.FC = () => {
@@ -16,8 +13,8 @@ const StaffDashboard: React.FC = () => {
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
 
-  const [data, setData] = useState([]);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [, setData] = useState([]);
+  const [, setStatsLoading] = useState(true);
   const navigate = useNavigate();
   const { userClaims } = useUser();
 

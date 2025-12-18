@@ -30,7 +30,7 @@ interface UserClaims {
 interface UserContextType {
   userClaims: UserClaims | null;
   loading: boolean;
-  refreshUserClaims: () => Promise<void>;
+  refreshUserClaims: () => Promise<UserClaims | null>;
   clearUserClaims: () => void;
   selectedOrg: SelectedOrg | null;
   setSelectedOrg: (org: SelectedOrg | null) => void;

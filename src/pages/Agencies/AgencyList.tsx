@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical } from 'lucide-react';
-import { getChildOrganizations, deleteOrganization, Organization, getChildOrganizationsInPagination } from '../../services/organizationService';
+import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
+import { deleteOrganization, Organization, getChildOrganizationsInPagination } from '../../services/organizationService';
 import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
 import { Button } from '../../components/ui';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';
 
 const AgencyList: React.FC = () => {
   const navigate = useNavigate();
@@ -19,9 +20,14 @@ const AgencyList: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalElements, setTotalElements] = useState<number>(0);
+  const [, setTotalElements] = useState<number>(0);
 
   const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (orgId) {
@@ -39,14 +45,14 @@ const AgencyList: React.FC = () => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
 
-    useEffect(() => {
-      agencies.forEach(async (agency) => {
-        if (orgId && !organizationLogos.has(orgId)) {
-          const imageUrl = await fetchOrganizationImage(orgId);
-          setOrganizationLogos(prev => new Map(prev).set(orgId!, imageUrl));
-        }
-      });
-    }, [agencies, organizationLogos]);
+  useEffect(() => {
+    agencies.forEach(async () => {
+      if (orgId && !organizationLogos.has(orgId)) {
+        const imageUrl = await fetchOrganizationImage(orgId);
+        setOrganizationLogos(prev => new Map(prev).set(orgId!, imageUrl));
+      }
+    });
+  }, [agencies, organizationLogos]);
 
 
 
@@ -155,19 +161,33 @@ const AgencyList: React.FC = () => {
     return pages;
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this agency?')) {
+  const handleDelete = (id: number) => {
+    setDialogType("confirm");
+    setDialogMessage("Do you really want to delete this agency?");
+
+    setDialogAction(() => async () => {
+      setLoading(true);
       try {
         await deleteOrganization(id);
-        toast.success('Agency deleted successfully');
-        // Reload agencies for the current page and parent org
+        toast.success("Agency deleted successfully",{
+          autoClose:1000,
+          hideProgressBar:true
+        });
+
         if (orgId) {
           loadAgencies(currentPage, parseInt(orgId));
         }
       } catch (error) {
-        toast.error('Failed to delete agency');
+        toast.error("Failed to delete agency",{
+          autoClose:1000,
+          hideProgressBar:true
+        });
+      } finally {
+        setLoading(false);
       }
-    }
+    });
+
+    setDialogOpen(true);
   };
 
 
@@ -205,7 +225,7 @@ const AgencyList: React.FC = () => {
           <button
             onClick={() =>
               navigate("/agency-form", {
-                state: { orgId: orgId, gstNumber:gstNumber },
+                state: { orgId: orgId, gstNumber: gstNumber },
               })
             }
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
@@ -271,7 +291,14 @@ const AgencyList: React.FC = () => {
 
                     </div>
 
-                    <h3 className="font-semibold text-gray-900 truncate">{agency.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 truncate">{agency.name}</h3>
+                      {agency.isActive ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
                   </div>
 
                   {/* Dropdown Menu */}
@@ -281,7 +308,7 @@ const AgencyList: React.FC = () => {
                         e.stopPropagation();
                         toggleDropdown(agency.id!);
                       }}
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      className="p-3 rounded-full hover:bg-gray-100 transition-colors"
                     >
                       <MoreVertical className="h-4 w-4 text-gray-500" />
                     </button>
@@ -391,6 +418,66 @@ const AgencyList: React.FC = () => {
           {renderPagination()}
         </div>
       )}
+
+            <Dialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+              maxWidth="xs"
+              fullWidth
+            >
+              <DialogTitle id="alert-dialog-title">
+                {dialogType === "success" && "Success"}
+                {dialogType === "error" && "Error"}
+                {dialogType === "confirm" && "Confirm"}
+              </DialogTitle>
+              <DialogContent dividers>
+                <Alert
+                  severity={
+                    dialogType === "success"
+                      ? "success"
+                      : dialogType === "error"
+                        ? "error"
+                        : "info"
+                  }
+                >
+                  {dialogMessage}
+                </Alert>
+              </DialogContent>
+              <DialogActions>
+                {dialogType === "confirm" ? (
+                  <>
+                    <MuiButton
+                      onClick={() => {
+                        setDialogOpen(false);
+                      }}
+                    >
+                      No
+                    </MuiButton>
+                    <MuiButton
+                      onClick={() => {
+                        setDialogOpen(false);
+                        if (dialogAction) dialogAction();
+                      }}
+                      autoFocus
+                    >
+                      Yes
+                    </MuiButton>
+                  </>
+                ) : (
+                  <MuiButton
+                    onClick={() => {
+                      setDialogOpen(false);
+                      if (dialogAction) dialogAction();
+                    }}
+                    autoFocus
+                  >
+                    OK
+                  </MuiButton>
+                )}
+              </DialogActions>
+            </Dialog>
 
     </div>
   );

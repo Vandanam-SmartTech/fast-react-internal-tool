@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames, getCustomerConnectionInstallationById } from "../../services/customerRequisitionService";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid"
 import { Eye, User, Phone, Mail, X, ArrowLeft } from 'lucide-react';
 import { getUserById } from "../../services/jwtService";
@@ -13,7 +13,7 @@ export const ViewCustomer = () => {
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
-  const [activeTab, setActiveTab] = useState("Customer Details");
+  const [activeTab,] = useState("Customer Details");
   const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
@@ -29,78 +29,128 @@ export const ViewCustomer = () => {
     "System Specifications",
   ];
 
+  // useEffect(() => {
+  //   const fetchAllInstallations = async () => {
+  //     if (!connections || connections.length === 0) return;
+
+  //     const newInstallationsMap: Record<string, any[]> = {};
+
+  //     for (const connection of connections) {
+  //       if (!connection.id) continue;
+
+  //       try {
+  //         const data = await getInstallationByConnectionId(Number(connection.id));
+  //         newInstallationsMap[connection.id] = data || [];
+  //       } catch (error) {
+  //         console.log("No installations found for consumer:", connection.id);
+  //         newInstallationsMap[connection.id] = [];
+  //       }
+  //     }
+
+  //     setInstallationsByConsumer(newInstallationsMap);
+  //   };
+
+  //   fetchAllInstallations();
+  // }, [connections]);
+
+  // useEffect(() => {
+  //   const loadSpaceTypes = async () => {
+  //     try {
+  //       const types = await fetchInstallationSpaceTypesNames();
+  //       setSpaceTypes(types);
+  //     } catch (error) {
+  //       console.error("Failed to load space types", error);
+  //     }
+  //   };
+
+  //   loadSpaceTypes();
+  // }, []);
+
+
+  // useEffect(() => {
+  //   console.log("Fetch Consumer Number API is used");
+
+  //   const fetchCustomer = async () => {
+  //     if (customerId) {
+  //       const data = await getCustomerById(Number(customerId));
+  //       setCustomer(data);
+
+  //       if (data?.referredByUserId) {
+  //         const userResponse = await getUserById(data.referredByUserId);
+  //         if (userResponse.data) {
+  //           setReferredByUser(userResponse.data);
+  //         } else {
+  //           setReferredByUser(null);
+  //         }
+  //       }
+  //     }
+  //   };
+
+  //   const fetchConnections = async () => {
+  //     if (customerId) {
+  //       try {
+  //         const data = await fetchConsumerNumber(Number(customerId));
+  //         setConnections(data || []);
+  //       } catch (error) {
+  //         console.log("No connections found for customer:", customerId);
+  //         setConnections([]);
+  //       }
+  //     }
+  //   };
+
+  //   fetchCustomer();
+  //   fetchConnections();
+  // }, [customerId]);
+
   useEffect(() => {
-    const fetchAllInstallations = async () => {
-      if (!connections || connections.length === 0) return;
+  const fetchAllData = async () => {
+    if (!customerId) return;
 
-      const newInstallationsMap: Record<string, any[]> = {};
+    try {
+      const data = await getCustomerConnectionInstallationById(Number(customerId));
 
-      for (const connection of connections) {
-        if (!connection.id) continue;
+      if (!data) return;
 
-        try {
-          const data = await getInstallationByConnectionId(Number(connection.id));
-          newInstallationsMap[connection.id] = data || [];
-        } catch (error) {
-          console.log("No installations found for consumer:", connection.id);
-          newInstallationsMap[connection.id] = [];
-        }
+      // Set Customer details
+      setCustomer(data);
+
+      // Set referred by user if exists
+      if (data.referredByUserId) {
+        const userResponse = await getUserById(data.referredByUserId);
+        setReferredByUser(userResponse?.data || null);
       }
 
-      setInstallationsByConsumer(newInstallationsMap);
-    };
+      // Set all connections directly from response
+      setConnections(data.connections || []);
 
-    fetchAllInstallations();
-  }, [connections]);
+      // Prepare installation map
+      const installationMap: Record<string, any[]> = {};
 
-  useEffect(() => {
-    const loadSpaceTypes = async () => {
-      try {
-        const types = await fetchInstallationSpaceTypesNames();
-        setSpaceTypes(types);
-      } catch (error) {
-        console.error("Failed to load space types", error);
-      }
-    };
+      data.connections?.forEach((conn: any) => {
+        installationMap[conn.connectionId] = conn.installationSpaces || [];
+      });
 
-    loadSpaceTypes();
-  }, []);
+      setInstallationsByConsumer(installationMap);
 
+      // Extract all space types (optional)
+      // const uniqueTypes = [
+      //   ...new Set(
+      //     data.connections
+      //       ?.flatMap((c: any) => c.installationSpaces?.map((s: any) => s.installationSpaceTypeName))
+      //       .filter(Boolean)
+      //   ),
+      // ];
 
-  useEffect(() => {
-    console.log("Fetch Consumer Number API is used");
+      // setSpaceTypes(uniqueTypes);
 
-    const fetchCustomer = async () => {
-      if (customerId) {
-        const data = await getCustomerById(Number(customerId));
-        setCustomer(data);
+    } catch (error) {
+      console.error("Error loading customer + connections + installations", error);
+    }
+  };
 
-        if (data?.referredByUserId) {
-          const userResponse = await getUserById(data.referredByUserId);
-          if (userResponse.data) {
-            setReferredByUser(userResponse.data);
-          } else {
-            setReferredByUser(null);
-          }
-        }
-      }
-    };
+  fetchAllData();
+}, [customerId]);
 
-    const fetchConnections = async () => {
-      if (customerId) {
-        try {
-          const data = await fetchConsumerNumber(Number(customerId));
-          setConnections(data || []);
-        } catch (error) {
-          console.log("No connections found for customer:", customerId);
-          setConnections([]);
-        }
-      }
-    };
-
-    fetchCustomer();
-    fetchConnections();
-  }, [customerId]);
 
 
 
@@ -312,7 +362,7 @@ export const ViewCustomer = () => {
               <div className="space-y-6">
                 {connections.map((connection, index) => (
                   <details
-                    key={connection.id}
+                    key={connection.connectionId}
                     className="group/connection rounded-xl border border-gray-200 bg-white shadow-lg"
                   >
                     <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
@@ -330,9 +380,9 @@ export const ViewCustomer = () => {
                             e.stopPropagation();
                             navigate(`/view-connection`, {
                               state: {
-                                consumerId: connection.consumerId,
+                                consumerId: connection.consumerNumber,
                                 customerId,
-                                connectionId: connection.id,
+                                connectionId: connection.connectionId,
                               },
                             });
                           }}
@@ -370,7 +420,7 @@ export const ViewCustomer = () => {
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.consumerId || "....."}</p>
+                          <p className="mt-1 text-base text-gray-800">{connection.consumerNumber || "....."}</p>
                         </div>
 
                         <div>
@@ -402,7 +452,7 @@ export const ViewCustomer = () => {
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
+                          <p className="mt-1 text-base text-gray-800">{connection.gstNumber || "....."}</p>
                         </div>
 
                         <div>
@@ -443,8 +493,8 @@ export const ViewCustomer = () => {
                           onClick={() =>
                             navigate(`/edit-connection`, {
                               state: {
-                                consumerId: connection.consumerId,
-                                connectionId: connection.id,
+                                consumerId: connection.consumerNumber,
+                                connectionId: connection.connectionId,
                                 customerId: customerId,
                               },
                             })
@@ -458,8 +508,8 @@ export const ViewCustomer = () => {
                           onClick={() =>
                             navigate(`/system-specifications`, {
                               state: {
-                                connectionId: connection.id,
-                                consumerId: connection.consumerId,
+                                connectionId: connection.connectionId,
+                                consumerId: connection.consumerNumber,
                                 customerId,
                               },
                             })
@@ -473,7 +523,7 @@ export const ViewCustomer = () => {
 
 
                       {/* Nested Installations */}
-                      {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
+                      {(installationsByConsumer[connection.connectionId] || []).map((installation, idx) => (
                         <details key={installation.id} className="group/installation bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
                           <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group mt-2 mb-2">
 
@@ -481,7 +531,7 @@ export const ViewCustomer = () => {
                               <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
                                 <HomeModernIcon className="w-4 h-4 text-yellow-600" />
                               </div>
-                              <span className="text-base font-semibold">Installation {idx + 1} - On {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."} ({installation.installationSpaceTitle})</span>
+                              <span className="text-base font-semibold">Installation {idx + 1} - On {installation.installationSpaceTypeName} ({installation.installationSpaceTitle})</span>
                             </div>
                             <svg
                               className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open/installation:rotate-180"
@@ -504,7 +554,7 @@ export const ViewCustomer = () => {
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
                                   <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."}
+                                    {installation.installationSpaceTypeName || "....."}
                                   </p>
                                 </div>
                                 <div>
@@ -573,9 +623,9 @@ export const ViewCustomer = () => {
                                   onClick={() =>
                                     navigate(`/edit-installation`, {
                                       state: {
-                                        installationId: installation.id,
-                                        connectionId: connection.id,
-                                        consumerId: connection.consumerId,
+                                        installationId: installation.installationSpaceId,
+                                        connectionId: connection.connectionId,
+                                        consumerId: connection.consumerNumber,
                                         customerId,
                                       }
                                     })
@@ -592,7 +642,7 @@ export const ViewCustomer = () => {
 
                       <button
                         onClick={() => {
-                          navigate(`/installation-form`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
+                          navigate(`/installation-form`, { state: { connectionId: connection.connectionId, consumerId: connection.consumerNumber, customerId } });
                         }}
                         className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
                       >

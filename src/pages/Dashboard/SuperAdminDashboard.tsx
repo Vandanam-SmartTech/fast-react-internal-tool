@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building, Shield, Users, Building2, UserCog, Settings, Clock, Calendar } from 'lucide-react';
+import { Building, Shield, Users, Building2, UserCog, Clock, Calendar } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import OrganizationSelector from '../../components/OrganizationSelector';
 import { useUser } from '../../contexts/UserContext';
@@ -43,7 +43,7 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  const handleSelectOrg = (orgId: string, orgName: string) => {
+  const handleSelectOrg = (orgId: string) => {
     setShowOrgSelector(false);
     navigate(`/agencies`,{ state: {orgId: orgId}});
   };

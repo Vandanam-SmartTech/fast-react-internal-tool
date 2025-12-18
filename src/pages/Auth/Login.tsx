@@ -7,12 +7,17 @@ import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import bgImage from '../../assets/Solar_Image.jpg';
-import { useUser } from "../../contexts/UserContext";
 import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface OrgRoleData {
   roles: string[];
   org_name: string;
+}
+
+interface RoleOption {
+  orgId: string;
+  orgName: string;
+  role: string;
 }
 
 interface UserClaims {
@@ -31,16 +36,10 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showOrgSelection, setShowOrgSelection] = useState(false);
-  const [roleOptions, setRoleOptions] = useState<[string, OrgRoleData][]>([]);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (userClaims) {
-  //     handleRoleRouting(userClaims);
-  //   }
-  // }, [userClaims]);
 
   useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
@@ -106,23 +105,21 @@ const Login = () => {
       return;
     }
 
-    const roleOptions = orgEntries.flatMap(([orgId, orgData]) =>
+    const options: RoleOption[] = orgEntries.flatMap(([orgId, orgData]) =>
       orgData.roles.map((role: string) => ({
         orgId,
         orgName: orgData.org_name,
-        role
+        role,
       }))
     );
 
-    if (roleOptions.length === 1) {
-      // Only one org-role combination, route directly
-      const { role, orgId, orgName } = roleOptions[0];
+    if (options.length === 1) {
+      const { role, orgId, orgName } = options[0];
       routeByOrgRole(role, orgId, orgName);
       return;
     }
 
-    // Multiple org-role combinations → show dropdown
-    setRoleOptions(roleOptions);
+    setRoleOptions(options);
     setShowOrgSelection(true);
   };
 
@@ -266,13 +263,14 @@ const Login = () => {
 
                 <ReusableDropdown
                   value={selectedRole}
-                  onChange={(val) => setSelectedRole(val)}
+                  onChange={(val) => setSelectedRole(String(val))}
                   options={roleOptions.map(({ orgId, orgName, role }) => ({
                     value: `${role}|${orgId}|${orgName}`,
                     label: `${orgName} (${role.replace("ROLE_", "").replace(/_/g, " ")})`,
                   }))}
                   placeholder="Select Role & Organization"
                 />
+
 
                 <div className="flex gap-3">
                   <Button

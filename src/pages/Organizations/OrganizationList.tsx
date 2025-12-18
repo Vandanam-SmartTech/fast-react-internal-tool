@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { fetchOrganizationsInPagination, deleteOrganization, Organization } from '../../services/organizationService';
 import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ import { uploadOrganizationImage } from '../../services/documentManagerService';
 import { ZoomIn, ZoomOut, RotateCcw, Crop } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { X, Camera } from "lucide-react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';
 
 
 const OrganizationList: React.FC = () => {
@@ -35,6 +36,11 @@ const OrganizationList: React.FC = () => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
 
 
@@ -129,6 +135,17 @@ const OrganizationList: React.FC = () => {
       setSelectedFile(croppedFile);
 
       await uploadOrganizationImage(createdOrgId, croppedFile);
+
+      // Fetch updated logo immediately
+      const updatedUrl = await fetchOrganizationImage(createdOrgId);
+
+      setOrganizationLogos(prev => {
+        const updated = new Map(prev);
+        updated.set(createdOrgId, updatedUrl);
+        return updated;
+      });
+
+
 
       toast.success("Logo uploaded successfully!", {
         autoClose: 1000,
@@ -263,8 +280,13 @@ const OrganizationList: React.FC = () => {
     return pages;
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this organization?')) {
+  const handleDelete = (id: number) => {
+    setDialogType("confirm");
+    setDialogMessage("Do you really want to delete this organization?");
+
+    // Set action that will run when user clicks YES
+    setDialogAction(() => async () => {
+      setLoading(true);
       try {
         await deleteOrganization(id);
         toast.success('Organization deleted successfully', {
@@ -277,10 +299,15 @@ const OrganizationList: React.FC = () => {
           autoClose: 1000,
           hideProgressBar: true,
         });
+      } finally {
+        setLoading(false);
+        setOpenDropdown(null);
       }
-    }
-    setOpenDropdown(null);
+    });
+
+    setDialogOpen(true);
   };
+
 
   const toggleDropdown = (id: number) => {
     setOpenDropdown(openDropdown === id ? null : id);
@@ -399,7 +426,15 @@ const OrganizationList: React.FC = () => {
                       </div>
                     </div>
 
-                    <h3 className="font-semibold text-gray-900 truncate">{org.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 truncate">{org.name}</h3>
+                      {org.isActive ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
+
                   </div>
 
 
@@ -410,7 +445,7 @@ const OrganizationList: React.FC = () => {
                         e.stopPropagation();
                         toggleDropdown(org.id!);
                       }}
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      className="p-3 rounded-full hover:bg-gray-100 transition-colors"
                     >
                       <MoreVertical className="h-4 w-4 text-gray-500" />
                     </button>
@@ -540,31 +575,31 @@ const OrganizationList: React.FC = () => {
         </div>
       )}
 
-{showImageModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] relative">
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] relative">
 
-      {/* Close (X) Button */}
-      <button
-        onClick={() => setShowImageModal(false)}
-        className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition"
-      >
-        <X className="w-5 h-5 text-gray-600" />
-      </button>
+            {/* Close (X) Button */}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 transition"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
 
-      <h2 className="text-lg font-semibold mb-4 text-center">
-        Upload Organization Logo
-      </h2>
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Upload Organization Logo
+            </h2>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="w-full mb-4 border border-gray-300 p-2 rounded-md"
-      />
-    </div>
-  </div>
-)}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="w-full mb-4 border border-gray-300 p-2 rounded-md"
+            />
+          </div>
+        </div>
+      )}
 
 
 
@@ -622,11 +657,11 @@ const OrganizationList: React.FC = () => {
               </div>
 
               <div className="flex justify-center gap-3">
-                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
+                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.05))}>
                   <ZoomOut className="w-4 h-4 text-gray-600" />
                 </button>
                 <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
+                <button onClick={() => setZoom(Math.min(3, zoom + 0.05))}>
                   <ZoomIn className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
@@ -662,6 +697,66 @@ const OrganizationList: React.FC = () => {
           {renderPagination()}
         </div>
       )}
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          {dialogType === "confirm" ? (
+            <>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                }}
+              >
+                No
+              </MuiButton>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                Yes
+              </MuiButton>
+            </>
+          ) : (
+            <MuiButton
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction();
+              }}
+              autoFocus
+            >
+              OK
+            </MuiButton>
+          )}
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

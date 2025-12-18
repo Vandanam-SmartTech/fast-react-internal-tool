@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveCustomer } from "../../services/customerRequisitionService";
 import { checkMobileNumberExists, checkEmailAddressExists } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService'
-import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { fetchOrganizations, fetchUsersByOrgId, fetchAgenciesForOrg, fetchParentOrgDetails } from "../../services/organizationService";
 import { useUser } from "../../contexts/UserContext";
@@ -19,31 +17,26 @@ import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, } from "@heroi
 
 export const CustomerForm = () => {
   const navigate = useNavigate();
-  const [roles, setRoles] = useState<string[]>([]);
 
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [mobileExists, setMobileExists] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
 
-  const [showMobile, setShowMobile] = useState(false);
-  const handleToggleMobile = () => setShowMobile(!showMobile);
+  const [showMobile,] = useState(false);
+  
+  const [showEmail, ] = useState(false);
 
-  const [showEmail, setShowEmail] = useState(false);
-  const handleToggleEmail = () => setShowEmail(!showEmail);
+  const [activeTab, ] = useState("Customer Details");
 
-  const [activeTab, setActiveTab] = useState("Customer Details");
+  const [, setNavigateAfterClose] = useState(false);
+  const [, setCreatedCustomerId] = useState<number | null>(null);
 
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-  const [createdCustomerId, setCreatedCustomerId] = useState<number | null>(null);
-
-  const [organizationName, setOrganizationName] = useState("");
   const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   const [userRole, setUserRole] = useState("");
 
   const [representativeType, setRepresentativeType] = useState(""); // Track selection
-  const [agencyName, setAgencyName] = useState("");
 
 
   const [organizationId, setOrganizationId] = useState<number | "">("");

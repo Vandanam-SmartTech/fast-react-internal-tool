@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { fetchClaims } from '../../services/jwtService';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Users, BarChart3, Calendar, Clock } from 'lucide-react';
+import { UserCheck, Users, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { format, parseISO } from 'date-fns';
 import { useUser } from '../../contexts/UserContext';
 
 const RepresentativeDashboard: React.FC = () => {
@@ -16,18 +13,11 @@ const RepresentativeDashboard: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-  const [data, setData] = useState([]);
+  const [, setData] = useState([]);
   const { userClaims } = useUser();
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [, setStatsLoading] = useState(true);
 
 
-  const goToListOfConsumers = () => {
-    navigate('/list-of-consumers');
-  };
-
-  const goToOnboardedCustomers = () => {
-    navigate('/onboarded-consumers');
-  };
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {

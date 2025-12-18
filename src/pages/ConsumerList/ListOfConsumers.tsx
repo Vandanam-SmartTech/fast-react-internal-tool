@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchConsumersWithConnections, searchCustomers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
@@ -8,7 +8,6 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import { useUser } from "../../contexts/UserContext";
 
 interface Consumer {
   id: number;
@@ -28,7 +27,7 @@ const ListOfConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);
+  const [isLoadingAll, ] = useState<boolean>(false);
 
 
   // refs to handle debounced searching and race conditions

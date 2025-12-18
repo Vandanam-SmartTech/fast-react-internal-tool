@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchOnboardedConsumers, getMaterialsByConnectionId, searchOnboardedConsumers } from "../../services/customerRequisitionService";
+import { fetchOnboardedConsumers, searchOnboardedConsumers } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Mail, Phone, User, Zap, Search, Users, FileText, Package, RefreshCw, Eye, Plus } from "lucide-react";
+import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
-import { useUser } from "../../contexts/UserContext";
 
 interface Consumer {
   id: number;
@@ -28,7 +27,6 @@ const OnboardedConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [materialsMap, setMaterialsMap] = useState<Record<number, boolean>>({});
 
   // refs to handle debounced searching and race conditions
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,12 +44,10 @@ const OnboardedConsumers: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
-
-  const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
 
-  const [isLoadingAll, setIsLoadingAll] = useState<boolean>(false);
+  const [isLoadingAll, ] = useState<boolean>(false);
 
   const handleViewConsumer = (consumer: Consumer) => {
     console.log('Viewing onboarded consumer:', { consumer });
@@ -68,17 +64,6 @@ const OnboardedConsumers: React.FC = () => {
     navigate(`/generate-documents`, { state: { consumer } });
   };
 
-  const handleMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form`, {
-      state: { consumer, connectionId: consumer.id },
-    });
-  };
-
-  const handleViewMaterialDetails = (consumer: Consumer) => {
-    navigate(`/material-form`, {
-      state: { consumer, connectionId: consumer.id },
-    });
-  };
 
 
   const loadOnboardedConsumers = async (page: number) => {

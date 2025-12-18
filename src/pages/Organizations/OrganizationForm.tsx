@@ -843,11 +843,11 @@ const OrganizationForm: React.FC = () => {
               </div>
 
               <div className="flex justify-center gap-3">
-                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
+                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.05))}>
                   <ZoomOut className="w-4 h-4 text-gray-600" />
                 </button>
                 <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
+                <button onClick={() => setZoom(Math.min(3, zoom + 0.05))}>
                   <ZoomIn className="w-4 h-4 text-gray-600" />
                 </button>
               </div>

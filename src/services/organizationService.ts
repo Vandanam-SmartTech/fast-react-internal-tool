@@ -45,6 +45,8 @@ export interface Organization {
   parentId?: number;
   createdBy?: number;
   createdAt?: string;
+  isActive?: boolean;
+  emailAddress?: string;
 }
 
 export const fetchOrganizations = async (): Promise<Organization[]> => {

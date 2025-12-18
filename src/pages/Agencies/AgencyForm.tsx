@@ -29,7 +29,11 @@ const validationRules = {
     message: "GSTIN must be in format: 22AAAAA0000A1Z6"
   },
 
-  addressLine: {
+  addressLine1: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  addressLine2: {
     pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
     message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
   },
@@ -99,7 +103,7 @@ const AgencyForm: React.FC = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -165,8 +169,8 @@ const AgencyForm: React.FC = () => {
     fetchVillagesData();
   }, [talukaCode]);
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleDistrictChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
@@ -182,8 +186,8 @@ const AgencyForm: React.FC = () => {
     }));
   };
 
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleTalukaChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
 
     setVillageCode(0);
@@ -197,8 +201,8 @@ const AgencyForm: React.FC = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleVillageChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     const selectedVillage = villages.find((village) => village.code === value);
 
     if (selectedVillage) {
@@ -225,45 +229,6 @@ const AgencyForm: React.FC = () => {
     }
   }, [gstNumber]);
 
-  const validateForm = (): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-
-
-    if (!formData.addressLine1) {
-      errors.push("Address Line 1 is required");
-    } else {
-      const addressValidation = validateField('addressLine1', formData.addressLine1);
-      if (!addressValidation.isValid) {
-        errors.push(addressValidation.message);
-      }
-    }
-
-    if (formData.addressLine2) {
-      const addressValidation = validateField('addressLine2', formData.addressLine2);
-      if (!addressValidation.isValid) {
-        errors.push(addressValidation.message);
-      }
-    }
-
-
-    if (formData.gstNumber) {
-      const gstNumberValidation = validateField('gstNumber', formData.gstNumber);
-      if (!gstNumberValidation.isValid) {
-        errors.push(gstNumberValidation.message);
-      }
-    }
-
-    if (!formData.pinCode) {
-      errors.push("PIN Code is required");
-    } else {
-      const pinCodeValidation = validateField('pinCode', formData.pinCode);
-      if (!pinCodeValidation.isValid) {
-        errors.push(pinCodeValidation.message);
-      }
-    }
-
-    return { isValid: errors.length === 0, errors };
-  };
 
   const validateFieldOnChange = (fieldName: string, value: string | number) => {
     const validation = validateField(fieldName, value);
@@ -285,7 +250,7 @@ const AgencyForm: React.FC = () => {
         ...formData,
         parentId: parseInt(orgId!),
         createdBy: userId,
-        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
+        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : undefined,
       };
 
       await createOrganization(agencyData);
@@ -295,7 +260,7 @@ const AgencyForm: React.FC = () => {
       });
 
       navigate("/agencies", {
-        state: { orgId: orgId },
+        state: { orgId: orgId, gstNumber:gstNumber },
       });
 
     } catch (error) {
@@ -541,7 +506,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="district"
               value={districtCode}
-              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              onChange={(val) => handleDistrictChange(Number(val))}
               options={[
                 { value: 0, label: districtName || "Select District" },
                 ...districts.map((district) => ({
@@ -559,7 +524,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="talukaCode"
               value={talukaCode}
-              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              onChange={(val) => handleTalukaChange(Number(val))}
               options={[
                 { value: 0, label: talukaName || "Select Taluka" },
                 ...talukas.map((taluka) => ({
@@ -577,7 +542,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="villageCode"
               value={villageCode}
-              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              onChange={(val) => handleVillageChange(Number(val))}
               options={[
                 { value: 0, label: villageName || "Select Village" },
                 ...villages.map((village) => ({
@@ -614,8 +579,11 @@ const AgencyForm: React.FC = () => {
               name="addressLine1"
               value={formData.addressLine1 || ''}
               onChange={handleChange}
-
               placeholder="e.g. Flat No, House No, Street Name"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              required
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
@@ -627,9 +595,11 @@ const AgencyForm: React.FC = () => {
             <input
               type="text"
               name="addressLine2"
-              placeholder="e.g. Apartment, Suite, Unit, Building"
               value={formData.addressLine2 || ''}
               onChange={handleChange}
+              placeholder="e.g. Apartment, Suite, Unit, Building"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>

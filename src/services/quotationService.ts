@@ -113,23 +113,39 @@ export const fetchPanelWattages = async (
 
 
 
-export const fetchInverters = async (
-  phaseType: string,
-  inversionType: string
-): Promise<number[]> => {
+export const fetchAllInverterBrands = async (): Promise<any[] | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get(`/api/inverter/inverterBrands`, {
-      params: {
-        phaseType,
-        gridType: inversionType,
-      },
-    });
-
+    const response = await quotationAPI.get("/api/inverter-brands");
+    console.log("Inverter brands:", response.data);
     return response.data;
-  } catch (error) {
-    console.error('API Error:', error);
-    throw new Error('Failed to fetch inverter wattages from server');
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch inverter brands.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching inverter brands:", error);
+    return null;
+  }
+};
+
+export const fetchAllPipeBrands = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get("/api/pipe-brands");
+    console.log("Pipe brands:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch pipe brands.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching pipe brands:", error);
+    return null;
   }
 };
 
@@ -347,6 +363,22 @@ export const updateSystemSpecs = async (id: number, requestData: any): Promise<a
   }
 };
 
+export const updateSelectedBatterySpec = async (selectedBatterySpecId: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!selectedBatterySpecId) {
+    throw new Error("Selected battery spec Id is missing for update!");
+  }
+
+  try {
+    const response = await quotationAPI.put(`/api/org-battery-specs/${selectedBatterySpecId}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating selected battery specs:", error);
+    throw new Error("Failed to update selected battery specs.");
+  }
+};
+
 export const updateInverterSpecs = async (id: number, requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 
@@ -374,21 +406,59 @@ export const updateInverterSpecs = async (id: number, requestData: any): Promise
 };
 
 
-export const checkSystemSpecificationsExists = async (
+export const checkFinalQuotationExists = async (
   connectionId: string
 ): Promise<boolean> => {
   const quotationAPI = getQuotationAPI();
+
   try {
-    const response = await quotationAPI.get('/api/connectionId-exist', {
-      params: { connectionId },
-    });
+    const response = await quotationAPI.get(
+      `/api/final-quotation/exists/${connectionId}`
+    );
 
     return response.data === true;
   } catch (error) {
-    console.error('Error checking system specifications available for connectionId:', error);
+    console.error(
+      'Error checking final quotation existence for connectionId:',
+      error
+    );
     return false;
   }
 };
+
+export const fetchSelectedBatterySpecs = async (
+  orgId: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.get(
+      `/api/org-battery-specs/org/${orgId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching selected battery specs", error);
+    return [];
+  }
+};
+
+export const fetchSelectedPanelSpecs = async (
+  orgId: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.get(
+      `/api/org-battery-specs/org/${orgId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching selected battery specs", error);
+    return [];
+  }
+};
+
+
 
 export const fetchBatteryWattages = async (
   batteryBrand: string
@@ -460,15 +530,16 @@ export const getGridTypes = async (): Promise<any[] | null> => {
 
 export const fetchInverterBrands = async (
   phaseTypeId: number,
-  gridTypeId: number
+  gridTypeId: number,
+  orgId: number
 ): Promise<any[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching inverters...");
-    console.log("Request params:", { phaseTypeId, gridTypeId });
+    console.log("Request params:", { phaseTypeId, gridTypeId, orgId });
 
-    const response = await quotationAPI.get(`/api/inverter-brands/by-grid-phase`, {
-      params: { phaseTypeId, gridTypeId },
+    const response = await quotationAPI.get(`/api/org-inverter-specs/brands`, {
+      params: { phaseTypeId, gridTypeId, orgId },
     });
 
     return response.data; 
@@ -480,7 +551,10 @@ export const fetchInverterBrands = async (
 
 
 export const fetchInverterBrandCapacities = async (
-  inverterBrandId: number
+  inverterBrandId: number,
+  orgId: number,
+  phaseTypeId: number,
+  gridTypeId: number,
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -489,9 +563,12 @@ export const fetchInverterBrandCapacities = async (
       inverterBrandId
     });
 
-    const response = await quotationAPI.get(`/api/inverter-specs/capacities`, {
+    const response = await quotationAPI.get(`/api/org-inverter-specs`, {
       params: {
-        inverterBrandId
+        inverterBrandId,
+        orgId,
+        phaseTypeId,
+        gridTypeId
       },
     });
 
@@ -499,6 +576,52 @@ export const fetchInverterBrandCapacities = async (
   } catch (error) {
     console.error('API Error:', error);
     throw new Error('Failed to fetch inverter brand capacities from server');
+  }
+};
+
+export const fetchInverterSpecsByBrand = async (
+  inverterBrandId: number
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching inverter specs...");
+    console.log("Request params:", {
+      inverterBrandId
+    });
+
+    const response = await quotationAPI.get(`/api/inverter-specs/specs-by-brand`, {
+      params: {
+        brandId: inverterBrandId
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch inverter brand specs from server');
+  }
+};
+
+export const fetchPipeSpecsByBrand = async (
+  pipeBrandId: number
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching pipe specs...");
+    console.log("Request params:", {
+      pipeBrandId
+    });
+
+    const response = await quotationAPI.get(`/api/pipe-specs/by-brand`, {
+      params: {
+        pipeBrandId: pipeBrandId
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw new Error('Failed to fetch pipe brand specs from server');
   }
 };
 
@@ -521,18 +644,38 @@ export const fetchPanelBrands = async (
   }
 };
 
+export const fetchPanelSpecsByOrg = async (
+  materialOriginId: number,
+  orgId: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching panels...");
+    console.log("Request params:", { materialOriginId, orgId });
+
+    const response = await quotationAPI.get(`/api/org-panel-specs/org/material-origin`, {
+      params: { materialOriginId, orgId },
+    });
+
+    return response.data; 
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch panel brands from server");
+  }
+};
+
 export const fetchPanelBrandCapacities = async (
   phaseTypeId: number,
-  panelSpecId: number
+  orgPanelSpecId: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching panel brand capacities...");
 
-    const response = await quotationAPI.get("/api/panel-specs/pv-capacity", {
+    const response = await quotationAPI.get("/api/org-panel-specs/pv-capacity", {
       params: {
         phaseTypeId,
-        panelSpecId
+        orgPanelSpecId
       },
     });
 
@@ -543,10 +686,18 @@ export const fetchPanelBrandCapacities = async (
   }
 };
 
-export const fetchBatteryBrands = async (): Promise<any[] | null> => {
+export const fetchBatteryBrands = async (
+  orgId: number
+): Promise<any[] | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.get("/api/battery-brands");
+    const response = await quotationAPI.get(
+      "/api/org-battery-specs/brands",
+      {
+        params: { orgId },   // ✅ pass orgId
+      }
+    );
+
     console.log("Battery brands:", response.data);
     return response.data;
   } catch (error: any) {
@@ -561,16 +712,43 @@ export const fetchBatteryBrands = async (): Promise<any[] | null> => {
   }
 };
 
+export const fetchAllBatteryBrands = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get(
+      "/api/battery-brands"
+    );
+
+    console.log("Battery brands:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch battery brands.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching battery brands:", error);
+    return null;
+  }
+};
+
+
+
+
+
 export const fetchBatteryBrandCapacities = async (
-  batteryBrandId: number
+  batteryBrandId: number,
+  orgId: number
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching battery brand capacities...");
 
-    const response = await quotationAPI.get("/api/battery-specs/brands", {
+    const response = await quotationAPI.get("/api/org-battery-specs/specs", {
       params: {
-        batteryBrandId
+        brandId: batteryBrandId,
+        orgId
       },
     });
 
@@ -580,6 +758,110 @@ export const fetchBatteryBrandCapacities = async (
     throw new Error("Failed to fetch battery brand capacities from server");
   }
 };
+
+export const fetchBatterySpecs = async (
+  batteryBrandId: number,
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching battery brand capacities...");
+
+    const response = await quotationAPI.get("/api/battery-specs/brands", {
+      params: {
+        batteryBrandId,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch battery brand capacities from server");
+  }
+};
+
+export const updateBatteryBrand = async (brandId: string, updatedName: string) => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/battery-brands/${brandId}`, {
+      brandName: updatedName,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to update brand name");
+    return null;
+  }
+};
+
+export const updatePanelBrand = async (panelBrandId: number, updatedBrandFullname: string, updatedBrandShortname: string) => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/panel-brands/${panelBrandId}`, {
+      brandShortname: updatedBrandShortname,
+      brandFullname: updatedBrandFullname
+    });
+
+    return response.data;
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to update brand name");
+    return null;
+  }
+};
+
+export const updateInverterBrand = async (inverterBrandId: number, updatedInverterBrandName: string) => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/inverter-brands/${inverterBrandId}`, {
+      inverterBrandName: updatedInverterBrandName
+    });
+
+    return response.data;
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to update brand name");
+    return null;
+  }
+};
+
+export const updatePipeBrand = async (pipeBrandId: number, updatedPipeName: string) => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/pipe-brands/${pipeBrandId}`, {
+      name: updatedPipeName
+    });
+
+    return response.data;
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to update brand name");
+    return null;
+  }
+};
+
+export const updatePanelType = async (panelTypeId: number, typeName: string, typeDescription: string, typicalEfficiency: string, yearIntroduced: string) => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/panel-types/${panelTypeId}`, {
+      typeName: typeName,
+      typeDescription: typeDescription,
+      typicalEfficiency: Number(typicalEfficiency),  
+      yearIntroduced: Number(yearIntroduced),
+    });
+
+    return response.data;
+  } catch (error: any) {
+    toast.error("Failed to update brand name",{
+      autoClose:1000,
+      hideProgressBar:true
+    });
+    return null;
+  }
+};
+
+
 
 export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> => {
   const quotationAPI = getQuotationAPI();
@@ -625,23 +907,38 @@ export const getSecondaryId = async (systemSpecificationId: number): Promise<any
   }
 };
 
-export const fetchPipeSpecification = async (): Promise<any[] | null> => {
+export const fetchPipeSpecification = async (
+  orgId: number
+): Promise<any[]> => {
   const quotationAPI = getQuotationAPI();
+
   try {
-    const response = await quotationAPI.get("/api/pipe-specs");
+    const response = await quotationAPI.get<any[]>(
+      "/api/org-pipe-specs",
+      {
+        params: { orgId },
+      }
+    );
+
     console.log("Pipe specs:", response.data);
     return response.data;
+
   } catch (error: any) {
     const message =
-      error.response?.data?.message || "Failed to fetch pipe specs.";
+      error?.response?.data?.message || "Failed to fetch pipe specs.";
+
     toast.error(message, {
       autoClose: 1000,
       hideProgressBar: true,
     });
+
     console.error("Error fetching pipe specs:", error);
-    return null;
+
+    return []; // ✅ ALWAYS return fallback
   }
 };
+
+
 
 export const deleteSpecAPI = async (specId: any) => {
   try {
@@ -698,6 +995,40 @@ export const addBatterySpec = async (
   }
 };
 
+export const updateBatterySpec = async (
+  specId: number,
+  brandId: number,
+  data: any
+): Promise<any | null> => {
+
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(
+      `/api/battery-specs/${specId}?brandId=${brandId}`,
+      data
+    );
+
+    console.log("Battery spec updated:", response.data);
+    return response.data;
+
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to update battery specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error updating battery spec:", error);
+    return null;
+  }
+};
+
+
+
 export const addInverterBrand = async (data: any): Promise<any | null> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -716,33 +1047,24 @@ export const addInverterBrand = async (data: any): Promise<any | null> => {
   }
 };
 
-export const addInverterSpec = async (
-  brandId: number,
-  phaseTypeId: number,
-  gridTypeId: number,
-  data: any
-): Promise<any | null> => {
+export const addPipeBrand = async (data: any): Promise<any | null> => {
   const quotationAPI = getQuotationAPI();
   try {
-    const response = await quotationAPI.post(
-      `/api/inverter-specs?brandId=${brandId}&phaseTypeId=${phaseTypeId}&gridTypeId=${gridTypeId}`,
-      data
-    );
-
-    console.log("Inverter spec added:", response.data);
+    const response = await quotationAPI.post("/api/pipe-brands", data);
+    console.log("Pipe brand added:", response.data);
     return response.data;
   } catch (error: any) {
     const message =
-      error.response?.data?.message ||
-      "Failed to add inverter specification.";
+      error.response?.data?.message || "Failed to add pipe brand.";
     toast.error(message, {
       autoClose: 1000,
       hideProgressBar: true,
     });
-    console.error("Error adding inverter spec:", error);
+    console.error("Error adding pipe brand:", error);
     return null;
   }
 };
+
 
 export const addPanelBrand = async (data: any): Promise<any | null> => {
   const quotationAPI = getQuotationAPI();
@@ -764,31 +1086,97 @@ export const addPanelBrand = async (data: any): Promise<any | null> => {
 
 export const addPanelSpec = async (
   brandId: number,
-  typeId: number,
-  materialOriginId: number,
   data: any
 ): Promise<any | null> => {
   const quotationAPI = getQuotationAPI();
+
   try {
     const response = await quotationAPI.post(
-      `/api/panel-specs?brandId=${brandId}&typeId=${typeId}&materialOriginId=${materialOriginId}`,
+      `/api/panel-specs?brandId=${brandId}`,
       data
     );
 
     console.log("Panel spec added:", response.data);
     return response.data;
+
   } catch (error: any) {
     const message =
       error.response?.data?.message ||
       "Failed to add panel specification.";
+
     toast.error(message, {
       autoClose: 1000,
       hideProgressBar: true,
     });
+
     console.error("Error adding panel spec:", error);
     return null;
   }
 };
+
+export const addInverterSpec = async (
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(
+      `/api/inverter-specs`,
+      data
+    );
+
+    console.log("Inverter spec added:", response.data);
+    return response.data;
+
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to add inverter specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error adding inverter spec:", error);
+    return null;
+  }
+};
+
+export const addPipeSpec = async (
+  pipeBrandId: number,
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(
+      `/api/pipe-specs`,
+      data,
+      {
+        params: {
+          brandId: pipeBrandId, // ✅ passed as request param
+        },
+      }
+    );
+
+    console.log("Pipe spec added:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to add pipe specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error adding pipe spec:", error);
+    return null;
+  }
+};
+
 
 export const addPanelType = async (data: any): Promise<any | null> => {
   const quotationAPI = getQuotationAPI();
@@ -804,6 +1192,256 @@ export const addPanelType = async (data: any): Promise<any | null> => {
       hideProgressBar: true,
     });
     console.error("Error adding panel type:", error);
+    return null;
+  }
+};
+
+export const fetchAllPanelBrands = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get("/api/panel-brands");
+    console.log("Panel brands:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch panel brands.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching panel brands:", error);
+    return null;
+  }
+};
+
+export const fetchPanelTypes = async (): Promise<any[] | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get("/api/panel-types");
+    console.log("Panel types:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to fetch panel types.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error fetching panel types:", error);
+    return null;
+  }
+};
+
+export const fetchPanelSpecsByBrand = async (
+  panelBrandId: number
+): Promise<number[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching panel brand capacities...");
+
+    const response = await quotationAPI.get("/api/panel-specs/by-brand", {
+      params: {
+        panelBrandId
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch panel brand capacities from server");
+  }
+};
+
+export const updatePanelSpec = async (
+  panelSpecId: number,
+  data: any
+): Promise<any | null> => {
+
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(
+      `/api/panel-specs/${panelSpecId}`,
+      data
+    );
+
+    console.log("Panel spec updated:", response.data);
+    return response.data;
+
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to update panel specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error updating panel spec:", error);
+    return null;
+  }
+};
+
+export const updateInverterSpec = async (
+  inverterSpecId: number,
+  data: any
+): Promise<any | null> => {
+
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(
+      `/api/inverter-specs/${inverterSpecId}`,
+      data
+    );
+
+    console.log("Inverter spec updated:", response.data);
+    return response.data;
+
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to update inverter specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error updating inverter spec:", error);
+    return null;
+  }
+};
+
+export const updatePipeSpec = async (
+  pipeSpecId: number,
+  pipeBrandId: number,
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(
+      `/api/pipe-specs/${pipeSpecId}`,
+      data,
+      {
+        params: {
+          brandId: pipeBrandId, // ✅ passed as request param
+        },
+      }
+    );
+
+    console.log("Pipe spec updated:", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to update pipe specification.";
+
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+
+    console.error("Error updating pipe spec:", error);
+    return null;
+  }
+};
+
+
+export const addBatterySpecForOrg = async (
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/org-battery-specs`,
+      data
+    );
+
+    console.log("Battery spec selected", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to select battery specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error selecting battery spec:", error);
+    return null;
+  }
+};
+
+export const addPanelSpecForOrg = async (
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/org-panel-specs`,
+      data
+    );
+
+    console.log("Panel spec selected", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to select panel specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error selecting panel spec:", error);
+    return null;
+  }
+};
+
+export const addInverterSpecForOrg = async (
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/org-inverter-specs`,
+      data
+    );
+
+    console.log("Inverter spec selected", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to select inverter specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error selecting inverter spec:", error);
+    return null;
+  }
+};
+
+export const addPipeSpecForOrg = async (
+  data: any
+): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.post(
+      `/api/org-pipe-specs`,
+      data
+    );
+
+    console.log("Pipe spec selected", response.data);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || "Failed to select pipe specification.";
+    toast.error(message, {
+      autoClose: 1000,
+      hideProgressBar: true,
+    });
+    console.error("Error selecting pipe spec:", error);
     return null;
   }
 };

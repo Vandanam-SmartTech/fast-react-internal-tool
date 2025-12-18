@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building2, UserCog, Settings, Calendar, Clock } from 'lucide-react';
+import { Users, Building2, UserCog, Calendar, Clock } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
 import { getParentDetails } from '../../services/organizationService';
 
