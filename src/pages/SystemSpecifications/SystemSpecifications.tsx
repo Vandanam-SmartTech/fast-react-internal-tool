@@ -4,8 +4,8 @@ import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConne
 import {
   generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
-  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
-import { Download as DownloadIcon } from "lucide-react";
+import { Download as DownloadIcon, CheckCircle } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
 
@@ -30,7 +30,7 @@ export const SystemSpecifications = () => {
   const [govIdName, setGovIdName] = useState("");
   const [orgId, setOrgId] = useState<number | null>(null);
   const [agencyId, setAgencyId] = useState<number | null>(null);
-  const [isFetchingRecommendations, ] = useState(false);
+  const [isFetchingRecommendations,] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
@@ -50,7 +50,7 @@ export const SystemSpecifications = () => {
   const [gridTypeId, setGridTypeId] = useState<number | null>(null);
   const [grids, setGrids] = useState<any[]>([]);
 
-  const [inverterBrandId, ] = useState<number | null>(null);
+  const [inverterBrandId,] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
   const [orgInverterSpecId, setOrgInverterSpecId] = useState<number | null>(null);
@@ -347,7 +347,7 @@ export const SystemSpecifications = () => {
 
       setInverterCapacitiesMap({});
 
-      if (phaseTypeId !== null && gridTypeId !== null && orgId !==null) {
+      if (phaseTypeId !== null && gridTypeId !== null && orgId !== null) {
         try {
           const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
           setInverters(Array.isArray(data) ? data : []);
@@ -378,7 +378,7 @@ export const SystemSpecifications = () => {
 
       if (inverterBrandId !== null && gridTypeId !== null && orgId !== null && phaseTypeId !== null) {
         try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId, orgId, phaseTypeId, gridTypeId );
+          const data = await fetchInverterBrandCapacities(inverterBrandId, orgId, phaseTypeId, gridTypeId);
           setInverterCapacities([...data]);
         } catch (error) {
           console.error("Failed to fetch inverter brand capacities:", error);
@@ -392,62 +392,35 @@ export const SystemSpecifications = () => {
     loadInverterBrandCapacities();
   }, [inverterBrandId, gridTypeId, orgId, phaseTypeId]);
 
-
-  // useEffect(() => {
-  //   const loadPanelBrands = async () => {
-  //     if (!materialOriginId) return;
-
-  //     setPanels([]);
-  //     setPanelSpecId(null);
-  //     setPanelCapacities([]);
-  //     setSystemCapacityKw(null);
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       panelSpecId: null,
-  //       systemCapacityKw: null,
-  //     }));
-
-  //     try {
-  //       const data = await fetchPanelBrands(Number(materialOriginId));
-  //       setPanels([...data]);
-  //     } catch (error) {
-  //       console.error("Failed to fetch panel brands:", error);
-  //       setPanels([]);
-  //     }
-  //   };
-
-  //   loadPanelBrands();
-  // }, [materialOriginId]);
-
   useEffect(() => {
-  const loadPanelBrands = async () => {
-    if (!materialOriginId || !orgId) return;
+    const loadPanelBrands = async () => {
+      if (!materialOriginId || !orgId) return;
 
-    // reset dependent state
-    setPanels([]);
-    setOrgPanelSpecId(null);
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
-    setFormData((prev) => ({
-      ...prev,
-      orgPanelSpecId: null,
-      systemCapacityKw: null,
-    }));
-
-    try {
-      const data = await fetchPanelSpecsByOrg(
-        Number(materialOriginId),
-        Number(orgId)
-      );
-      setPanels(data);
-    } catch (error) {
-      console.error("Failed to fetch panel brands:", error);
+      // reset dependent state
       setPanels([]);
-    }
-  };
+      setOrgPanelSpecId(null);
+      setPanelCapacities([]);
+      setSystemCapacityKw(null);
+      setFormData((prev) => ({
+        ...prev,
+        orgPanelSpecId: null,
+        systemCapacityKw: null,
+      }));
 
-  loadPanelBrands();
-}, [materialOriginId, orgId]);   // ✅ include orgId
+      try {
+        const data = await fetchPanelSpecsByOrg(
+          Number(materialOriginId),
+          Number(orgId)
+        );
+        setPanels(data);
+      } catch (error) {
+        console.error("Failed to fetch panel brands:", error);
+        setPanels([]);
+      }
+    };
+
+    loadPanelBrands();
+  }, [materialOriginId, orgId]);   // ✅ include orgId
 
 
   useEffect(() => {
@@ -485,71 +458,71 @@ export const SystemSpecifications = () => {
 
 
 
-useEffect(() => {
-  const loadBatteryBrands = async () => {
-    if (!orgId) return;
+  useEffect(() => {
+    const loadBatteryBrands = async () => {
+      if (!orgId) return;
 
-    if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
-      const data = await fetchBatteryBrands(Number(orgId));
-      if (data) setBatteryBrands(data);
-    } else {
-      // reset battery-related state
-      setBatteryBrands([]);
-      setBatteryBrandId(null);
-      setOrgBatterySpecId(null);
-      setBatteryCapacities([]);
-      setFormData((prev) => ({
-        ...prev,
-        batteryBrandId: null,
-        orgBatterySpecId: null,
-      }));
-    }
-  };
-
-  loadBatteryBrands();
-}, [formData.gridTypeId, orgId]);   // ✅ add orgId
-
-
-useEffect(() => {
-  // reset dependent state
-  setBatteryCapacities([]);
-  setOrgBatterySpecId(null);
-  setFormData((prev) => ({
-    ...prev,
-    orgBatterySpecId: null,
-  }));
-
-  if (batteryBrandId !== null && orgId) {
-    const loadBatteryCapacities = async () => {
-      try {
-        const data = await fetchBatteryBrandCapacities(
-          Number(batteryBrandId),
-          Number(orgId)
-        );
-        setBatteryCapacities(data);
-      } catch (error) {
-        console.error("Failed to fetch battery brand capacities:", error);
+      if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
+        const data = await fetchBatteryBrands(Number(orgId));
+        if (data) setBatteryBrands(data);
+      } else {
+        // reset battery-related state
+        setBatteryBrands([]);
+        setBatteryBrandId(null);
+        setOrgBatterySpecId(null);
         setBatteryCapacities([]);
-      } finally {
-        setIsPrefilling(false);
+        setFormData((prev) => ({
+          ...prev,
+          batteryBrandId: null,
+          orgBatterySpecId: null,
+        }));
       }
     };
 
-    loadBatteryCapacities();
-  }
-}, [batteryBrandId, gridTypeId, orgId]);   // ✅ add orgId
+    loadBatteryBrands();
+  }, [formData.gridTypeId, orgId]);   // ✅ add orgId
 
 
-useEffect(() => {
-  const loadPipeSpecs = async () => {
-    const data = await fetchPipeSpecification(Number(orgId));
-    setPipes(data);
-  };
+  useEffect(() => {
+    // reset dependent state
+    setBatteryCapacities([]);
+    setOrgBatterySpecId(null);
+    setFormData((prev) => ({
+      ...prev,
+      orgBatterySpecId: null,
+    }));
 
-  if (orgId) {
-    loadPipeSpecs();
-  }
-}, [orgId]);
+    if (batteryBrandId !== null && orgId) {
+      const loadBatteryCapacities = async () => {
+        try {
+          const data = await fetchBatteryBrandCapacities(
+            Number(batteryBrandId),
+            Number(orgId)
+          );
+          setBatteryCapacities(data);
+        } catch (error) {
+          console.error("Failed to fetch battery brand capacities:", error);
+          setBatteryCapacities([]);
+        } finally {
+          setIsPrefilling(false);
+        }
+      };
+
+      loadBatteryCapacities();
+    }
+  }, [batteryBrandId, gridTypeId, orgId]);   // ✅ add orgId
+
+
+  useEffect(() => {
+    const loadPipeSpecs = async () => {
+      const data = await fetchPipeSpecification(Number(orgId));
+      setPipes(data);
+    };
+
+    if (orgId) {
+      loadPipeSpecs();
+    }
+  }, [orgId]);
 
 
 
@@ -682,71 +655,6 @@ useEffect(() => {
   };
 
 
-  // const handleSaveSpecs = async () => {
-  //   try {
-
-  //     if (
-  //       !formData.inverters ||
-  //       formData.inverters.length === 0 ||
-  //       formData.inverters.some(
-  //         (inv) => !inv.inverterBrandId || !inv.inverterSpecId
-  //       )
-  //     ) {
-  //       toast.error(
-  //         "Please select at least one Inverter Brand and Specification for all inverters before saving.",
-  //         { autoClose: 1500, hideProgressBar: true }
-  //       );
-  //       return;
-  //     }
-
-  //     setIsSubmitting(true);
-
-  //     const systemResponse = await saveSystemSpecs({
-  //       ...formData,
-  //       installationSpaceType:
-  //         formData.installationSpaceType?.trim() === "" ? null : formData.installationSpaceType,
-  //       batteryCount: formData.batterySpecId ? 1 : null,
-  //       connectionId,
-  //       panelSpecsId: formData.panelSpecId,
-  //       batterySpecsId: formData.batterySpecId,
-  //       orgId,
-  //       agencyId,
-  //       isRunningCopy: true,
-  //     });
-
-  //     console.log("System specs saved:", systemResponse);
-
-  //     const systemSpecsId = systemResponse.id;
-
-  //     const inverterList = formData.inverters.map((inv) => ({
-  //       systemSpecsId,
-  //       inverterSpecId: inv.inverterSpecId,
-  //       inverterCount: inv.inverterCount || 1,
-  //     }));
-
-  //     console.log("Inverter list to save:", inverterList);
-
-  //     const inverterResponse = await saveInverterSpecs(inverterList);
-
-  //     console.log("Inverter specs saved:", inverterResponse);
-
-
-  //     await fetchSavedSpecs();
-
-  //     toast.success("System Specification details saved successfully!", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving specs:", error);
-  //     toast.error("Failed to save system specs or inverter specs.", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
 
   const handleSaveSpecs = async () => {
     try {
@@ -891,7 +799,7 @@ useEffect(() => {
 
       if (inv.inverterBrandId) {
         try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId,Number(orgId),Number(phaseTypeId),Number(gridTypeId));
+          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId, Number(orgId), Number(phaseTypeId), Number(gridTypeId));
           capacitiesMap[i] = capacities;
         } catch (error) {
           capacitiesMap[i] = [];
@@ -1112,7 +1020,7 @@ useEffect(() => {
 
       setDialogOpen(false);
 
-      
+
 
     } catch (err) {
       toast.error("Failed to delete specification!", {
@@ -1203,6 +1111,34 @@ useEffect(() => {
     e.preventDefault();
     console.log("Form Submitted:", formData);
   };
+
+  const handleMarkFinal = async (
+    e: React.MouseEvent,
+    secondaryId: number
+  ) => {
+    e.stopPropagation();
+
+    if (!connectionId) {
+      console.error("connectionId missing");
+      return;
+    }
+
+    try {
+      const payload = {
+        connectionId: connectionId,
+        quotationId: secondaryId, // document-id as quotationId
+      };
+
+      await markQuotationFinal(payload);
+
+      // optional UI feedback
+      toast.success("Quotation marked as final");
+    } catch (error) {
+      console.error("Failed to mark final quotation", error);
+      toast.error("Failed to mark quotation as final");
+    }
+  };
+
 
   return (
     <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
@@ -1467,22 +1403,36 @@ useEffect(() => {
                             </p>
                           </div>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownload(document.id, document.fileName);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
-                            title="Download Document"
-                          >
-                            <DownloadIcon className="w-5 h-5" />
-                          </button>
+                          {/* ACTION ICONS */}
+                          <div className="flex items-center gap-2">
+                            {/* MARK AS FINAL ICON */}
+                            <button
+                              onClick={(e) => handleMarkFinal(e, Number(secondaryId))}
+                              className="text-green-600 hover:text-green-800 p-2 rounded-full transition"
+                              title="Mark this quotation as final"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+
+                            {/* DOWNLOAD ICON */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(document.id, document.fileName);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
+                              title="Download Document"
+                            >
+                              <DownloadIcon className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <p className="text-sm text-gray-500 italic">No document found</p>
                       )}
                     </div>
                   )}
+
                 </div>
               );
             })}

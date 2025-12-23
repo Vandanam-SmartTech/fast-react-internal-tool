@@ -8,6 +8,7 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
+import { connectCustomerSocket, disconnectCustomerSocket } from "../../services/websocket";
 
 interface Consumer {
   id: number;
@@ -221,6 +222,24 @@ const ListOfConsumers: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+  connectCustomerSocket((event) => {
+    if (
+      event === "CUSTOMER_ADDED" ||
+      event === "CONNECTION_ADDED"
+    ) {
+      // Reset pagination and reload list
+      setCurrentPage(0);
+      loadConsumers(0);
+    }
+  });
+
+  return () => {
+    disconnectCustomerSocket();
+  };
+}, [isInitialized]);
+
 
 
   const handleSearch = (searchTerm: string) => {

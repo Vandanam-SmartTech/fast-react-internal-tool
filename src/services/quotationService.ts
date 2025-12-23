@@ -285,6 +285,43 @@ export const saveSystemSpecs = async (requestData: any): Promise<any> => {
   }
 };
 
+export const markQuotationFinal = async (requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!requestData?.connectionId) {
+    throw new Error("connectionId is missing in requestData!");
+  }
+
+  try {
+    const response = await quotationAPI.post(`/api/final-quotation`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error marking the quotation final:", error);
+    throw new Error("Failed to mark quotation final.");
+  }
+};
+
+export const fetchFinalQuotation = async (
+  connectionId: number
+): Promise<{ connectionId: number; quotationId: number }> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!connectionId) {
+    throw new Error("connectionId is required!");
+  }
+
+  try {
+    const response = await quotationAPI.get(
+      `/api/final-quotation/${connectionId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching final quotation:", error);
+    throw error;
+  }
+};
+
+
 export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 

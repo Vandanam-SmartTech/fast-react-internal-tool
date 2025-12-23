@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Building, Building2, UserCog, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
+import { getOrganizationById } from '../../services/organizationService';
+import { toast } from 'react-toastify';
 
 const AdminDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
   const { userClaims } = useUser();
+  const [organization, setOrganization] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [gstNumber, setGstNumber] = useState<string | null>(null);
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
   useEffect(() => {
@@ -33,6 +38,26 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
+    useEffect(() => {
+      if (userInfo.orgId) {
+        loadOrganization(parseInt(userInfo.orgId));
+      }
+    }, [userInfo.orgId]);
+
+   const loadOrganization = async (orgId: number) => {
+  try {
+    const org = await getOrganizationById(orgId);
+    setOrganization(org);
+    setGstNumber(org.gstNumber); // ✅ store gst
+  } catch (error) {
+    toast.error('Failed to load organization');
+    navigate('/organizations');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   const dashboardItems = [
 
     {
@@ -41,7 +66,7 @@ const AdminDashboard: React.FC = () => {
       icon: <Building className="h-8 w-8 text-purple-600" />,
       path: '/organization-view',
       state: { orgId: userInfo?.orgId},
-      color: 'bg-purple-50 hover:bg-purple-100'
+      color: 'bg-purple-50 hover:bg-purple-100',
     },
 
     {
@@ -49,7 +74,10 @@ const AdminDashboard: React.FC = () => {
       description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-8 w-8 text-warning-600" />,
       path: '/agencies',                     
-      state: { orgId: userInfo?.orgId },
+      state: {
+      orgId: userInfo?.orgId,
+      gstNumber: gstNumber // ✅ passed here
+    },
       color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
     },
 

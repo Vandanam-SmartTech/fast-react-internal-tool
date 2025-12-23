@@ -30,7 +30,7 @@ const OrganizationList: React.FC = () => {
   const [createdOrgId, setCreatedOrgId] = useState<number | null>(null);
 
   const [showCropModal, setShowCropModal] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(undefined);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -46,38 +46,42 @@ const OrganizationList: React.FC = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadOrganizations(0);
-  }, []);
 
   useEffect(() => {
     loadOrganizations(currentPage);
   }, [currentPage]);
 
-  const loadOrganizations = async (page: number) => {
-    try {
-      setLoading(true);
-      const data = await fetchOrganizationsInPagination(page);
-      setOrganizations(data.content);
-      setFilteredOrganizations(data.content);
-      setTotalPages(data.totalPages);
-      setTotalElements(data.totalElements);
-      setCurrentPage(data.currentPage);
-    } catch (error) {
-      toast.error('Failed to load organizations');
-    } finally {
-      setLoading(false);
-    }
-  };
+const loadOrganizations = async (page: number) => {
+  try {
+    setLoading(true);
+    const data = await fetchOrganizationsInPagination(page);
 
-  useEffect(() => {
-    organizations.forEach(async (org) => {
-      if (org.id && !organizationLogos.has(org.id)) {
-        const imageUrl = await fetchOrganizationImage(org.id);
-        setOrganizationLogos(prev => new Map(prev).set(org.id!, imageUrl));
-      }
-    });
-  }, [organizations, organizationLogos]);
+    setOrganizations(data.content);
+    setFilteredOrganizations(data.content);
+    setTotalPages(data.totalPages);
+    setTotalElements(data.totalElements);
+    // ❌ remove this
+    // setCurrentPage(data.currentPage);
+  } catch (error) {
+    toast.error('Failed to load organizations');
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  organizations.forEach(async (org) => {
+    if (org.id && !organizationLogos.has(org.id)) {
+      const imageUrl = await fetchOrganizationImage(org.id);
+      setOrganizationLogos(prev => {
+        const updated = new Map(prev);
+        updated.set(org.id!, imageUrl);
+        return updated;
+      });
+    }
+  });
+}, [organizations]);
+
 
 
   const handleSearch = (term: string) => {
@@ -95,19 +99,22 @@ const OrganizationList: React.FC = () => {
     }
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result as string);
-        setShowImageModal(false);
-        setShowCropModal(true);
-      };
-      reader.readAsDataURL(file);
+const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setSelectedFile(file);
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      setImageSrc(reader.result);
+      setShowImageModal(false);
+      setShowCropModal(true);
     }
   };
+  reader.readAsDataURL(file);
+};
 
 
   const handleCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
@@ -170,42 +177,22 @@ const OrganizationList: React.FC = () => {
   };
 
 
+const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  // final upload
-  const handleImageUpload = async () => {
-    if (!selectedFile || !createdOrgId) return;
-    setUploadLoading(true);
-    try {
-      await uploadOrganizationImage(createdOrgId, selectedFile);
-      toast.success("Logo uploaded successfully!", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      navigate("/organizations");
-    } catch (error) {
-      toast.error("Failed to upload logo", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setUploadLoading(false);
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      setImageSrc(reader.result);
+      setCroppedAreaPixels(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
     }
   };
-
-  const handleChooseAnotherImage = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result);
-        setCroppedAreaPixels(null);
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  reader.readAsDataURL(file);
+};
 
   const renderPagination = () => {
     if (searchTerm.trim() !== "") return null;
@@ -407,7 +394,8 @@ const OrganizationList: React.FC = () => {
                       setShowImageModal(true);
                     }}
                   >
-                    <div className="relative group h-12 w-12">
+                    <div className="relative group h-12 w-12 flex-shrink-0">
+
                       {organizationLogos.has(org.id!) ? (
                         <img
                           src={organizationLogos.get(org.id!)}
@@ -427,7 +415,10 @@ const OrganizationList: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 truncate">{org.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate max-w-[140px] sm:max-w-[220px] md:max-w-none">
+  {org.name}
+</h3>
+
                       {org.isActive ? (
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       ) : (

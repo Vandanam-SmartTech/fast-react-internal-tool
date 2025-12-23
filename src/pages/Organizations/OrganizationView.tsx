@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Building, Building2, Users, Shield, UserCheck, Briefcase, CheckCircle, XCircle, MoreVertical, Eye } from 'lucide-react';
+import { ArrowLeft, Edit, Building, Building2, Users, CheckCircle, XCircle, MoreVertical, Eye } from 'lucide-react';
 import { getOrganizationById, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { fetchOrganizationImage } from '../../services/documentManagerService';
 import { toast } from 'react-toastify';
@@ -17,6 +17,7 @@ interface OrganizationUser {
   nameAsPerGovId: string;
   emailAddress: string;
   contactNumber: string;
+  isActive: boolean;
   organizationRoles: Array<{
     organizationId: number;
     organizationName: string;
@@ -38,9 +39,8 @@ const OrganizationView: React.FC = () => {
   const [organizationLogo, setOrganizationLogo] = useState<string | null>(null);
 
   const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [createdOrgId, setCreatedOrgId] = useState<number | null>(null);
+  const [, setSelectedFile] = useState<File | null>(null);
+  const [, setCreatedOrgId] = useState<number | null>(null);
 
   const [showCropModal, setShowCropModal] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -174,42 +174,23 @@ const OrganizationView: React.FC = () => {
   };
 
 
+const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  // final upload
-  const handleImageUpload = async () => {
-    if (!selectedFile || !createdOrgId) return;
-    setUploadLoading(true);
-    try {
-      await uploadOrganizationImage(createdOrgId, selectedFile);
-      toast.success("Logo uploaded successfully!", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-      navigate("/organizations");
-    } catch (error) {
-      toast.error("Failed to upload logo", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-    } finally {
-      setUploadLoading(false);
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      setImageSrc(reader.result);
+      setCroppedAreaPixels(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
     }
   };
+  reader.readAsDataURL(file);
+};
 
-  const handleChooseAnotherImage = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result);
-        setCroppedAreaPixels(null);
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -291,45 +272,45 @@ const OrganizationView: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name (Short Name)</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Name (Short Name)</label>
             <p className="text-gray-900">{organization.name}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Display Name</label>
             <p className="text-gray-900">{organization.displayName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Legal Name</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Legal Name</label>
             <p className="text-gray-900">{organization.legalName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Contact Number</label>
             <p className="text-gray-900">{organization.contactNumber || '-'}</p>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
             <p className="text-gray-900">
               {`${organization.addressLine1}, ${organization.villageName}, ${organization.talukaName}, ${organization.districtName}, ${organization.pinCode}`}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">GST Number</label>
             <p className="text-gray-900">{organization.gstNumber || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Government Registration Number</label>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Government Registration Number</label>
             <p className="text-gray-900">{organization.govtRegNumber || '-'}</p>
           </div>
 
           {organization.createdAt && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
               <p className="text-gray-900">{new Date(organization.createdAt).toLocaleDateString()}</p>
             </div>
           )}

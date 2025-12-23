@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserCheck, Users, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
+import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
 
 const RepresentativeDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -40,71 +41,123 @@ const RepresentativeDashboard: React.FC = () => {
       return () => clearInterval(timeInterval);
     }, []);
 
-useEffect(() => {
-  const selectedOrgStr = localStorage.getItem("selectedOrg");
-  if (!selectedOrgStr) return;
+  const buildCustomerParams = () => {
+    const selectedOrgStr = localStorage.getItem("selectedOrg");
+    if (!selectedOrgStr) return null;
 
-  let selectedOrg;
-  try {
-    selectedOrg = JSON.parse(selectedOrgStr);
-  } catch {
-    console.error("Invalid selectedOrg format in localStorage");
-    return;
-  }
+    const selectedOrg = JSON.parse(selectedOrgStr);
 
-  const params: Record<string, any> = {};
-  if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
-    params.orgId = selectedOrg.orgId;
-    params.userRole = selectedOrg.role
-  } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
-    params.agencyId = selectedOrg.orgId;
-    params.userRole = selectedOrg.role
-  }
+    const params: Record<string, any> = {};
 
-  getCustomerCount(params)
-    .then((actualCount) => {
-      setCount(actualCount);
-      animateCountUp(actualCount, setAnimatedCount);
-    })
-    .catch(console.error);
+    if (
+      selectedOrg.role === "ROLE_ORG_STAFF" ||
+      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
+    ) {
+      params.orgId = selectedOrg.orgId;
+      params.userRole = selectedOrg.role;
+    } else if (
+      selectedOrg.role === "ROLE_AGENCY_STAFF" ||
+      selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
+    ) {
+      params.agencyId = selectedOrg.orgId;
+      params.userRole = selectedOrg.role;
+    }
 
-  getOnboardedCustomerCount(params)
-    .then((actualCount) => {
-      setOnboardedCount(actualCount);
-      animateCountUp(actualCount, setAnimatedOnboardedCount);
-    })
-    .catch(console.error);
+    return params;
+  };
 
 
-  getCustomerStats(params)
-    .then((rawData) => {
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const refreshCustomerCount = async (animate = true) => {
+    try {
+      const params = buildCustomerParams();
+      if (!params) return;
 
-      const filtered = rawData.filter((entry: any) => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= oneYearAgo;
+      const updatedCount = await getCustomerCount(params);
+
+      setCount((prev) => {
+        const previous = prev ?? 0;
+
+        if (animate) {
+          animateCountUp(previous, updatedCount, setAnimatedCount);
+        } else {
+          setAnimatedCount(updatedCount);
+        }
+
+        return updatedCount;
       });
-
-      setData(filtered);
-    })
-    .catch(console.error)
-    .finally(() => setStatsLoading(false));
-}, []);
+    } catch (err) {
+      console.error("Failed to refresh customer count", err);
+    }
+  };
 
 
-  const animateCountUp = (target: number, setDisplay: (val: number) => void) => {
-    let current = 0;
-    const step = Math.max(Math.floor(target / 50), 1);
+
+  useEffect(() => {
+    connectCustomerSocket((event) => {
+      if (event === "CUSTOMER_ADDED") {
+        refreshCustomerCount(true);
+      }
+    });
+
+    return () => {
+      disconnectCustomerSocket();
+    };
+  }, []);
+
+  useEffect(() => {
+    refreshCustomerCount(false);
+
+    const params = buildCustomerParams();
+    if (!params) return;
+
+    getOnboardedCustomerCount(params)
+      .then((actualCount) => {
+        setOnboardedCount(actualCount);
+        setAnimatedOnboardedCount(actualCount);
+      })
+      .catch(console.error);
+
+    getCustomerStats(params)
+      .then((rawData) => {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        const filtered = rawData.filter((entry: any) => {
+          const entryDate = new Date(entry.date);
+          return entryDate >= oneYearAgo;
+        });
+
+        setData(filtered);
+      })
+      .catch(console.error)
+      .finally(() => setStatsLoading(false));
+  }, []);
+
+
+  const animateCountUp = (
+    from: number,
+    to: number,
+    setDisplay: (val: number) => void
+  ) => {
+    let current = from;
+    const diff = to - from;
+
+    if (diff <= 0) {
+      setDisplay(to);
+      return;
+    }
+
+    const step = Math.max(Math.floor(diff / 30), 1);
+
     const interval = setInterval(() => {
       current += step;
-      if (current >= target) {
-        setDisplay(target);
+      if (current >= to) {
+        setDisplay(to);
         clearInterval(interval);
       } else {
         setDisplay(current);
       }
-    }, 5);
+    }, 20);
   };
 
   const handleActivate = (path: string) => navigate(path);
