@@ -7,7 +7,7 @@ import {
   fetchAllPanelBrands, fetchPanelTypes, fetchPanelSpecsByBrand, updatePanelBrand, updatePanelType, updatePanelSpec,
   fetchInverterSpecsByBrand, updateInverterSpec, updateInverterBrand, addInverterSpec, getGridTypes,
   addBatterySpecForOrg, addPanelSpecForOrg, addInverterSpecForOrg, fetchAllPipeBrands, addPipeSpec, fetchPipeSpecsByBrand, addPipeBrand, updatePipeBrand,
-  updatePipeSpec, addPipeSpecForOrg, fetchSelectedBatterySpecs, fetchSelectedPanelSpecs
+  updatePipeSpec, addPipeSpecForOrg, fetchSelectedBatterySpecs, fetchSelectedPanelSpecs, fetchInverterBrandCapacities, fetchPipeSpecification
 } from "../../services/quotationService";
 import { fetchPhaseType } from "../../services/customerRequisitionService";
 import { useUser } from "../../contexts/UserContext";
@@ -82,9 +82,8 @@ const ProductManagement: React.FC = () => {
     warrantyMonths: "",
     modelNumber: "",
     basePrice: "",
-    gstPercentage: "",
     description: "",
-    yearOfManufacturing: "",
+    mfgMonthYear: "",
   });
 
   const openAddSpecForm = (brandId: number) => {
@@ -107,8 +106,7 @@ const ProductManagement: React.FC = () => {
       modelNumber: "",
       description: "",
       basePrice: "",
-      gstPercentage: "",
-      yearOfManufacturing: "",
+      mfgMonthYear: "",
     });
   };
 
@@ -281,9 +279,7 @@ const ProductManagement: React.FC = () => {
       batterySpecsId: selectedSpecId,
       orgId: userInfo.orgId,
       basePrice: newSpec.basePrice,
-      gstPercentage: newSpec.gstPercentage,
-      warrantyMonths: newSpec.warrantyMonths,
-      yearOfManufacturing: newSpec.yearOfManufacturing,
+      mfgMonthYear: newSpec.mfgMonthYear,
     };
 
     const response = await addBatterySpecForOrg(payload);
@@ -327,6 +323,9 @@ const ProductManagement: React.FC = () => {
     loadSelectedBatteries();
   }, [userInfo.orgId]);
 
+  const hasSelectedBatteries = selectedBatterySpecs.length > 0;
+
+
   {/*--------------------------Inverter Operations----------------------------------------*/ }
 
   const [inverterBrands, setInverterBrands] = React.useState<any[]>([]);
@@ -365,7 +364,6 @@ const ProductManagement: React.FC = () => {
       overallEfficiencyPercent: "",
       mpptEfficiencyPercent: "",
       basePrice: "",
-      gstPercentage: "",
       productWarrantyMonths: "",
       yearOfManufacturing: "",
     });
@@ -389,7 +387,6 @@ const ProductManagement: React.FC = () => {
     overallEfficiencyPercent: "",
     mpptEfficiencyPercent: "",
     basePrice: "",
-    gstPercentage: "",
     productWarrantyMonths: "",
     yearOfManufacturing: "",
   });
@@ -553,7 +550,6 @@ const ProductManagement: React.FC = () => {
       inverterSpecsId: selectedInverterSpecId,
       orgId: userInfo.orgId,
       basePrice: newInverterSpec.basePrice,
-      gstPercentage: newInverterSpec.gstPercentage,
       productWarrantyMonths: newInverterSpec.productWarrantyMonths,
       yearOfManufacturing: newInverterSpec.yearOfManufacturing,
     };
@@ -570,6 +566,50 @@ const ProductManagement: React.FC = () => {
       setSelectedInverterSpecId(null);
     }
   };
+
+
+  const [selectedInverterSpecs, setSelectedInverterSpecs] = useState<any[]>([]);
+  const [expandedSelectedInverterBrand, setExpandedSelectedInverterBrand] =
+    useState<number | null>(null);
+
+  const [showSelectedInverterBrands, setShowSelectedInverterBrands] = useState(true);
+
+
+  const groupByInverterBrand = (data: any[]) => {
+    return data.reduce((acc: any, item: any) => {
+      const brandId = item.inverterBrandId;
+
+      if (!acc[brandId]) {
+        acc[brandId] = {
+          inverterBrandId: brandId,
+          inverterBrandName: item.inverterBrandName,
+          selectedInverterSpecs: [],
+        };
+      }
+
+      acc[brandId].selectedInverterSpecs.push(item);
+      return acc;
+    }, {});
+  };
+
+
+  useEffect(() => {
+    if (!userInfo.orgId) return;
+
+    const loadSelectedInverters = async () => {
+      const data = await fetchInverterBrandCapacities(
+        undefined,          // inverterBrandId
+        userInfo.orgId      // orgId
+      );
+      setSelectedInverterSpecs(data);
+    };
+
+    loadSelectedInverters();
+  }, [userInfo.orgId]);
+
+  const hasSelectedInverters = selectedInverterSpecs.length > 0;
+
+
 
 
 
@@ -713,7 +753,6 @@ const ProductManagement: React.FC = () => {
     panelTypeId: "",
     materialOriginId: "",
     basePrice: "",
-    gstPercentage: "",
     annualYieldUnitsPerKw: "",
     openCircuitVolts: "",
     shortCircuitAmps: "",
@@ -740,7 +779,6 @@ const ProductManagement: React.FC = () => {
       panelTypeId: "",
       materialOriginId: "",
       basePrice: "",
-      gstPercentage: "",
       annualYieldUnitsPerKw: "",
       openCircuitVolts: "",
       shortCircuitAmps: "",
@@ -890,7 +928,6 @@ const ProductManagement: React.FC = () => {
       panelSpecsId: selectedPanelSpecId,
       orgId: userInfo.orgId,
       basePrice: newPanelSpec.basePrice,
-      gstPercentage: newPanelSpec.gstPercentage,
     };
 
     const response = await addPanelSpecForOrg(payload);
@@ -911,6 +948,37 @@ const ProductManagement: React.FC = () => {
   //   const updated = await fetchPanelSpecsByBrand(panelBrandId);
   //   setPannelSpecs((prev) => ({ ...prev, [panelBrandId]: updated }));
   // };
+
+
+  const [selectedPanelSpecs, setSelectedPanelSpecs] = useState<any[]>([]);
+  const [expandedSelectedPanelBrand, setExpandedSelectedPanelBrand] = useState<string | null>(null);
+  const [showSelectedPanelBrands, setShowSelectedPanelBrands] = useState(true);
+
+
+  const groupByPanelBrand = (data: any[]) => {
+    return data.reduce((acc: any, item: any) => {
+      if (!acc[item.panelBrandName]) {
+        acc[item.panelBrandName] = {
+          panelBrandId: item.panelBrandId,
+          panelBrandName: item.panelBrandName,
+          selectedPanelSpecs: [],
+        };
+      }
+      acc[item.panelBrandName].selectedPanelSpecs.push(item);
+      return acc;
+    }, {});
+  };
+
+  useEffect(() => {
+    const loadSelectedPanels = async () => {
+      const data = await fetchSelectedPanelSpecs(userInfo.orgId);
+      setSelectedPanelSpecs(data);
+    };
+
+    loadSelectedPanels();
+  }, [userInfo.orgId]);
+
+  const hasSelectedPanels = selectedPanelSpecs.length > 0;
 
   {/*----------------------------------------Pipe Operations----------------------------------------------*/ }
 
@@ -941,7 +1009,6 @@ const ProductManagement: React.FC = () => {
       weightKg: "",
       description: "",
       basePrice: "",
-      gstPercentage: "",
     });
   };
 
@@ -955,7 +1022,6 @@ const ProductManagement: React.FC = () => {
     weightKg: "",
     description: "",
     basePrice: "",
-    gstPercentage: "",
   });
 
   const handleAddPipeBrand = async () => {
@@ -1103,7 +1169,6 @@ const ProductManagement: React.FC = () => {
       pipeSpecsId: selectedPipeSpecId,
       orgId: userInfo.orgId,
       basePrice: newPipeSpec.basePrice,
-      gstPercentage: newPipeSpec.gstPercentage,
     };
 
     const response = await addPipeSpecForOrg(payload);
@@ -1118,6 +1183,37 @@ const ProductManagement: React.FC = () => {
       setSelectedPipeSpecId(null);
     }
   };
+
+  const [selectedPipeSpecs, setSelectedPipeSpecs] = useState<any[]>([]);
+  const [expandedSelectedPipeBrand, setExpandedSelectedPipeBrand] = useState<string | null>(null);
+  const [showSelectedPipeBrands, setShowSelectedPipeBrands] = useState(true);
+
+
+  const groupByPipeBrand = (data: any[]) => {
+    return data.reduce((acc: any, item: any) => {
+      if (!acc[item.pipeBrandName]) {
+        acc[item.pipeBrandName] = {
+          pipeBrandId: item.pipeBrandId,
+          pipeBrandName: item.pipeBrandName,
+          selectedPipeSpecs: [],
+        };
+      }
+      acc[item.pipeBrandName].selectedPipeSpecs.push(item);
+      return acc;
+    }, {});
+  };
+
+  useEffect(() => {
+    const loadSelectedPipes = async () => {
+      const data = await fetchPipeSpecification(userInfo.orgId);
+      setSelectedPipeSpecs(data);
+    };
+
+    loadSelectedPipes();
+  }, [userInfo.orgId]);
+
+  const hasSelectedPipes = selectedPipeSpecs.length > 0;
+  {/*------------------------------------------------------------------------------------------------------------------*/ }
 
   return (
 
@@ -1214,11 +1310,11 @@ const ProductManagement: React.FC = () => {
 
         <div className="mt-4 space-y-4">
 
-          { isOrgAdmin && (<div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+          {isOrgAdmin && (<div className="mt-6 p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
             {/* HEADER */}
             <div
-              className="flex items-center justify-between mb-4 cursor-pointer pr-2"
+              className="flex items-center justify-between mb-2 cursor-pointer pr-2"
               onClick={() => setShowSelectedBrands(!showSelectedBrands)}
             >
               <h2 className="text-lg font-semibold">
@@ -1243,82 +1339,89 @@ const ProductManagement: React.FC = () => {
 
 
             {showSelectedBrands && (
-              <div className="border rounded-lg">
-                {Object.values(groupByBrand(selectedBatterySpecs)).map(
-                  (brand: any) => (
-                    <div key={brand.brandId} className="border-b">
+              hasSelectedBatteries ? (
+                <div className="border rounded-lg">
+                  {Object.values(groupByBrand(selectedBatterySpecs)).map(
+                    (brand: any) => (
+                      <div key={brand.brandId} className="border-b">
 
-                      {/* BRAND HEADER */}
-                      <div
-                        className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
-                        onClick={() =>
-                          setExpandedSelectedBrand(
-                            expandedSelectedBrand === brand.brandId
-                              ? null
-                              : brand.brandId
-                          )
-                        }
-                      >
-                        <h3 className="font-semibold text-lg">
-                          {brand.brandName}
-                        </h3>
+                        {/* BRAND HEADER */}
+                        <div
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                          onClick={() =>
+                            setExpandedSelectedBrand(
+                              expandedSelectedBrand === brand.brandId
+                                ? null
+                                : brand.brandId
+                            )
+                          }
+                        >
+                          <h3 className="font-semibold text-lg">
+                            {brand.brandName}
+                          </h3>
 
-                        <span className="text-primary-600 text-sm">
-                          {expandedSelectedBrand === brand.brandId
-                            ? "Hide Specs"
-                            : "View Specs"}
-                        </span>
-                      </div>
-
-                      {/* SPECS TABLE */}
-                      {expandedSelectedBrand === brand.brandId && (
-                        <div className="p-4 bg-gray-50">
-                          <table className="min-w-full text-left mb-4 border rounded bg-white">
-                            <thead className="bg-gray-200">
-                              <tr>
-                                <th className="p-2 border">Wattage</th>
-                                <th className="p-2 border">Voltage</th>
-                                <th className="p-2 border">Base Price</th>
-                                <th className="p-2 border">Year of Manufacturing</th>
-                                <th className="p-2 border">Model Number</th>
-                                <th className="p-2 border text-center">Actions</th>
-                              </tr>
-                            </thead>
-
-                            <tbody>
-                              {brand.selectedSpecs.map((spec: any) => (
-                                <tr key={spec.id}>
-                                  <td className="p-2 border">{spec.wattage} W</td>
-                                  <td className="p-2 border">{spec.voltage} V</td>
-                                  <td className="p-2 border">₹ {spec.basePrice}</td>
-                                  <td className="p-2 border">{spec.yearOfManufacturing}</td>
-                                  <td className="p-2 border">{spec.modelNumber}</td>
-
-                                  <td className="p-2 border text-center flex gap-3 justify-center">
-                                    <button
-                                      className="text-yellow-600 hover:underline"
-                                      onClick={() => handleEditSelectedSpec(spec)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleRemoveSelectedSpec(spec.id)}
-                                    >
-                                      Remove
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <span className="text-primary-600 text-sm">
+                            {expandedSelectedBrand === brand.brandId
+                              ? "Hide Specs"
+                              : "View Specs"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
+
+                        {/* SPECS TABLE */}
+                        {expandedSelectedBrand === brand.brandId && (
+                          <div className="p-4 bg-gray-50">
+                            <table className="min-w-full text-left mb-4 border rounded bg-white">
+                              <thead className="bg-gray-200">
+                                <tr>
+                                  <th className="p-2 border">Wattage</th>
+                                  <th className="p-2 border">Voltage</th>
+                                  <th className="p-2 border">Base Price</th>
+                                  <th className="p-2 border">MFG Date</th>
+                                  <th className="p-2 border">Model Number</th>
+                                  <th className="p-2 border text-center">Actions</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {brand.selectedSpecs.map((spec: any) => (
+                                  <tr key={spec.id}>
+                                    <td className="p-2 border">{spec.wattage} W</td>
+                                    <td className="p-2 border">{spec.voltage} V</td>
+                                    <td className="p-2 border">₹ {spec.basePrice}</td>
+                                    <td className="p-2 border">{spec.mfgMonthYear}</td>
+                                    <td className="p-2 border">{spec.modelNumber}</td>
+
+                                    <td className="p-2 border text-center flex gap-3 justify-center">
+                                      <button
+                                        className="text-yellow-600 hover:underline"
+                                        onClick={() => handleEditSelectedSpec(spec)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        className="text-red-600 hover:underline"
+                                        onClick={() => handleRemoveSelectedSpec(spec.id)}
+                                      >
+                                        Remove
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 italic">
+                  No battery brands selected yet
+                </div>
+              )
             )}
+
 
           </div>)}
 
@@ -1519,9 +1622,8 @@ const ProductManagement: React.FC = () => {
                                       setNewSpec({
                                         ...spec,
                                         basePrice: "",
-                                        gstPercentage: "",
                                         warrantyMonths: "",
-                                        yearOfManufacturing: "",
+                                        mfgMonthYear: "",
                                       });
 
                                       setSelectedSpecId(spec.id);
@@ -1664,19 +1766,20 @@ const ProductManagement: React.FC = () => {
                                 />
                               </div>
 
-                              {isOrgAdmin && (
-                                <div>
-                                  <label className="block text-sm font-medium">Warranty (Months)</label>
-                                  <input
-                                    type="number"
-                                    className="border p-2 rounded w-full"
-                                    value={newSpec.warrantyMonths}
-                                    onChange={(e) =>
-                                      handleSpecInputChange("warrantyMonths", e.target.value)
-                                    }
-                                  />
-                                </div>
-                              )}
+
+                              <div>
+                                <label className="block text-sm font-medium">Warranty (Months)</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newSpec.warrantyMonths}
+                                  disabled={isOrgAdminSelectMode}
+                                  onChange={(e) =>
+                                    handleSpecInputChange("warrantyMonths", e.target.value)
+                                  }
+                                />
+                              </div>
+
 
                               {isOrgAdmin && (
                                 <div>
@@ -1692,30 +1795,15 @@ const ProductManagement: React.FC = () => {
                                 </div>
                               )}
 
-
                               {isOrgAdmin && (
                                 <div>
-                                  <label className="block text-sm font-medium">GST %</label>
+                                  <label className="block text-sm font-medium">MFG Date</label>
                                   <input
-                                    type="number"
+                                    type="date"
                                     className="border p-2 rounded w-full"
-                                    value={newSpec.gstPercentage}
+                                    value={newSpec.mfgMonthYear}
                                     onChange={(e) =>
-                                      handleSpecInputChange("gstPercentage", e.target.value)
-                                    }
-                                  />
-                                </div>
-                              )}
-
-                              {isOrgAdmin && (
-                                <div>
-                                  <label className="block text-sm font-medium">Year of Manufacturing</label>
-                                  <input
-                                    type="number"
-                                    className="border p-2 rounded w-full"
-                                    value={newSpec.yearOfManufacturing}
-                                    onChange={(e) =>
-                                      handleSpecInputChange("yearOfManufacturing", e.target.value)
+                                      handleSpecInputChange("mfgMonthYear", e.target.value)
                                     }
                                   />
                                 </div>
@@ -1779,169 +1867,291 @@ const ProductManagement: React.FC = () => {
           </div>
         </div>
       )}
-      {/*-----------------------------------------------------------------------------------------------------------------*/}
+      {/*---------------------------------------------------------------------------------------------------------------------------*/}
 
 
-      {/*--------------------------------------Inverter Section-----------------------------------------------------------*/}
+      {/*-----------------------------------------------Inverter Section-----------------------------------------------------------*/}
 
 
       {activeSection === "inverter" && (
-        <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Inverter Brands</h2>
+        <div className="mt-4 space-y-4">
 
-            {isSuperAdmin && (<button
-              onClick={() => setShowAddModalForInverterBrand(true)}
-              className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+          {/*----------------------------------------------------Selected Inverter Specification---------------------------------------*/}
+
+          {isOrgAdmin && (<div className="mt-6 p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+
+            {/* HEADER */}
+            <div
+              className="flex items-center justify-between mb-2 cursor-pointer pr-2"
+              onClick={() => setShowSelectedInverterBrands(!showSelectedInverterBrands)}
             >
-              + Add New Inverter
-            </button>)}
-          </div>
+              <h2 className="text-lg font-semibold">
+                Selected Inverter Brands
+              </h2>
 
-
-          {showAddModalForInverterBrand && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded shadow-lg w-[450px]">
-
-                <h3 className="text-lg font-semibold mb-4">
-                  {isEditingInverterBrand ? "Edit Inverter Brand" : "Add Inverter Brand"}
-                </h3>
-
-                <input
-                  type="text"
-                  value={inverterBrandName}
-                  onChange={(e) => setInverterBrandName(e.target.value)}
-                  placeholder="Enter Inverter brand name"
-                  className="border p-2 rounded w-full mb-4"
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showSelectedInverterBrands ? "rotate-180" : ""
+                  }`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
                 />
+              </svg>
+            </div>
 
-                <div className="flex justify-end gap-3">
 
-                  <button
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                    onClick={() => {
-                      setShowAddModalForInverterBrand(false)
-                    }}
-                  >
-                    Cancel
-                  </button>
+            {showSelectedInverterBrands && (
+              hasSelectedInverters ? (
+              <div className="border rounded-lg">
+                {Object.values(groupByInverterBrand(selectedInverterSpecs)).map(
+                  (inverterBrand: any) => (
+                    <div key={inverterBrand.inverterBrandId} className="border-b">
 
-                  {isEditingInverterBrand ? (
+                      {/* BRAND HEADER */}
+                      <div
+                        className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                        onClick={() =>
+                          setExpandedSelectedInverterBrand(
+                            expandedSelectedInverterBrand === inverterBrand.inverterBrandId
+                              ? null
+                              : inverterBrand.inverterBrandId
+                          )
+                        }
+                      >
+                        <h3 className="font-semibold text-lg">
+                          {inverterBrand.inverterBrandName}
+                        </h3>
+
+                        <span className="text-primary-600 text-sm">
+                          {expandedSelectedInverterBrand === inverterBrand.inverterBrandId
+                            ? "Hide Specs"
+                            : "View Specs"}
+                        </span>
+                      </div>
+
+                      {/* SPECS TABLE */}
+                      {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
+                        <div className="p-4 bg-gray-50">
+                          <table className="min-w-full text-left mb-4 border rounded bg-white">
+                            <thead className="bg-gray-200">
+                              <tr>
+                                <th className="p-2 border">Phase Type - Grid Type</th>
+                                <th className="p-2 border">Inverter Capacity</th>
+                                <th className="p-2 border">Base Price</th>
+                                <th className="p-2 border">ALMM Model Number</th>
+                                <th className="p-2 border">MFG Date (Warranty)</th>
+                                <th className="p-2 border text-center">Actions</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {inverterBrand.selectedInverterSpecs.map((inverterSpec: any) => (
+                                <tr key={inverterSpec.id}>
+                                  <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
+                                  <td className="p-2 border">{inverterSpec.inverterCapacity}</td>
+                                  <td className="p-2 border">₹ {inverterSpec.basePrice}</td>
+                                  <td className="p-2 border">{inverterSpec.almmModelNumber}</td>
+                                  <td className="p-2 border">{inverterSpec.mfgMonthYear}</td>
+
+                                  <td className="p-2 border text-center flex gap-3 justify-center">
+                                    <button
+                                      className="text-yellow-600 hover:underline"
+                                      onClick={() => handleEditSelectedInverterSpec(inverterSpec)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="text-red-600 hover:underline"
+                                      onClick={() => handleRemoveSelectedInverterSpec(inverterSpec.id)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+                <div className="text-center text-gray-500 italic">
+                  No inverter brands selected yet
+                </div>
+              )
+            )}
+
+
+          </div>)}
+
+          {/*----------------------------------------------------------------------------------------------------------------*/}
+
+          <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Inverter Brands</h2>
+
+              {isSuperAdmin && (<button
+                onClick={() => setShowAddModalForInverterBrand(true)}
+                className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+              >
+                + Add New Inverter
+              </button>)}
+            </div>
+
+
+            {showAddModalForInverterBrand && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded shadow-lg w-[450px]">
+
+                  <h3 className="text-lg font-semibold mb-4">
+                    {isEditingInverterBrand ? "Edit Inverter Brand" : "Add Inverter Brand"}
+                  </h3>
+
+                  <input
+                    type="text"
+                    value={inverterBrandName}
+                    onChange={(e) => setInverterBrandName(e.target.value)}
+                    placeholder="Enter Inverter brand name"
+                    className="border p-2 rounded w-full mb-4"
+                  />
+
+                  <div className="flex justify-end gap-3">
+
                     <button
-                      onClick={handleUpdateInverterBrand}
-                      className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                      onClick={() => {
+                        setShowAddModalForInverterBrand(false)
+                      }}
                     >
-                      Update
+                      Cancel
                     </button>
-                  ) : (
-                    <button
-                      onClick={handleAddInverterBrand}
-                      className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
-                    >
-                      Add
-                    </button>
-                  )}
+
+                    {isEditingInverterBrand ? (
+                      <button
+                        onClick={handleUpdateInverterBrand}
+                        className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      >
+                        Update
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleAddInverterBrand}
+                        className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      >
+                        Add
+                      </button>
+                    )}
 
 
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
 
-          {/* Brand List */}
-          <div className="border rounded-lg">
-            {inverterBrands.map((inverterBrand) => (
-              <div key={inverterBrand.id} className="border-b">
+            {/* Brand List */}
+            <div className="border rounded-lg">
+              {inverterBrands.map((inverterBrand) => (
+                <div key={inverterBrand.id} className="border-b">
 
-                <div
-                  className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
-                  onClick={async () => {
-                    setExpandedInverterBrandId(expandedInverterBrandId === inverterBrand.id ? null : inverterBrand.id);
+                  <div
+                    className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                    onClick={async () => {
+                      setExpandedInverterBrandId(expandedInverterBrandId === inverterBrand.id ? null : inverterBrand.id);
 
-                    if (!inverterBrandSpecs[inverterBrand.id]) {
-                      const inverterSpecs = await fetchInverterSpecsByBrand(inverterBrand.id);
-                      setInverterBrandSpecs((prev) => ({ ...prev, [inverterBrand.id]: inverterSpecs }));
-                    }
-                  }}
-                >
-                  {/* Brand Name or Editable Input */}
-                  <h3 className="font-semibold text-lg">{inverterBrand.inverterBrandName}</h3>
+                      if (!inverterBrandSpecs[inverterBrand.id]) {
+                        const inverterSpecs = await fetchInverterSpecsByBrand(inverterBrand.id);
+                        setInverterBrandSpecs((prev) => ({ ...prev, [inverterBrand.id]: inverterSpecs }));
+                      }
+                    }}
+                  >
+                    {/* Brand Name or Editable Input */}
+                    <h3 className="font-semibold text-lg">{inverterBrand.inverterBrandName}</h3>
 
 
-                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
 
-                    {/* Edit Brand (always modal only) */}
-                    {isSuperAdmin && (<button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingInverterBrandId(inverterBrand.id);
-                        setInverterBrandName(inverterBrand.inverterBrandName)
-                        setIsEditingInverterBrand(true);
-                        setShowAddModalForInverterBrand(true);
-                      }}
-                      className="text-yellow-600 text-sm hover:underline"
-                    >
-                      Edit Brand
-                    </button>)}
+                      {/* Edit Brand (always modal only) */}
+                      {isSuperAdmin && (<button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingInverterBrandId(inverterBrand.id);
+                          setInverterBrandName(inverterBrand.inverterBrandName)
+                          setIsEditingInverterBrand(true);
+                          setShowAddModalForInverterBrand(true);
+                        }}
+                        className="text-yellow-600 text-sm hover:underline"
+                      >
+                        Edit Brand
+                      </button>)}
 
-                    {isSuperAdmin && (<button
-                      className="text-green-600 text-sm hover:underline"
-                      onClick={() => openAddInverterSpecForm(inverterBrand.id)}
-                    >
-                      Add Specs
-                    </button>)}
+                      {isSuperAdmin && (<button
+                        className="text-green-600 text-sm hover:underline"
+                        onClick={() => openAddInverterSpecForm(inverterBrand.id)}
+                      >
+                        Add Specs
+                      </button>)}
 
-                    <span
-                      className="text-primary-600 text-sm cursor-pointer"
-                      onClick={() => {
-                        if (expandedInverterBrandId === inverterBrand.id) {
-                          setExpandedInverterBrandId(null);
-                          setShowFormForInverterBrand(null);
-                          setEditingInverterSpecId(null);
-                        } else {
-                          setExpandedInverterBrandId(inverterBrand.id);
-                          setShowFormForInverterBrand(null);
-                        }
-                      }}
-                    >
-                      {expandedInverterBrandId === inverterBrand.id ? "Hide Specs" : "View Available Specs"}
-                    </span>
+                      <span
+                        className="text-primary-600 text-sm cursor-pointer"
+                        onClick={() => {
+                          if (expandedInverterBrandId === inverterBrand.id) {
+                            setExpandedInverterBrandId(null);
+                            setShowFormForInverterBrand(null);
+                            setEditingInverterSpecId(null);
+                          } else {
+                            setExpandedInverterBrandId(inverterBrand.id);
+                            setShowFormForInverterBrand(null);
+                          }
+                        }}
+                      >
+                        {expandedInverterBrandId === inverterBrand.id ? "Hide Specs" : "View Available Specs"}
+                      </span>
+
+                    </div>
 
                   </div>
 
-                </div>
 
 
+                  {expandedInverterBrandId === inverterBrand.id && (
+                    <div className="p-4 bg-gray-50">
 
-                {expandedInverterBrandId === inverterBrand.id && (
-                  <div className="p-4 bg-gray-50">
+                      {/* Existing Specs Table */}
+                      <table className="min-w-full text-left mb-4 border rounded bg-white">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            <th className="p-2 border">Phase Type - Grid Type</th>
+                            <th className="p-2 border">Inverter Capacity</th>
+                            {/* <th className="p-2 border">Warranty</th> */}
+                            <th className="p-2 border">Model Number</th>
+                            {/* <th className="p-2 border">Price</th> */}
+                            <th className="p-2 border text-center">Actions</th>
+                          </tr>
+                        </thead>
 
-                    {/* Existing Specs Table */}
-                    <table className="min-w-full text-left mb-4 border rounded bg-white">
-                      <thead className="bg-gray-200">
-                        <tr>
-                          <th className="p-2 border">Phase Type - Grid Type</th>
-                          <th className="p-2 border">Inverter Capacity</th>
-                          {/* <th className="p-2 border">Warranty</th> */}
-                          <th className="p-2 border">Model Number</th>
-                          {/* <th className="p-2 border">Price</th> */}
-                          <th className="p-2 border text-center">Actions</th>
-                        </tr>
-                      </thead>
+                        <tbody>
+                          {inverterBrandSpecs[inverterBrand.id]?.map((inverterSpec: any) => (
+                            <tr key={inverterSpec.id} className="border-b">
 
-                      <tbody>
-                        {inverterBrandSpecs[inverterBrand.id]?.map((inverterSpec: any) => (
-                          <tr key={inverterSpec.id} className="border-b">
+                              <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
+                              <td className="p-2 border">{inverterSpec.inverterCapacity} kW</td>
+                              {/* <td className="p-2 border">{inverterSpec.productWarrantyMonths} months</td> */}
+                              <td className="p-2 border font-medium">{inverterSpec.almmModelNumber}</td>
+                              {/* <td className="p-2 border">₹ {inverterSpec.basePrice}</td> */}
 
-                            <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
-                            <td className="p-2 border">{inverterSpec.inverterCapacity} kW</td>
-                            {/* <td className="p-2 border">{inverterSpec.productWarrantyMonths} months</td> */}
-                            <td className="p-2 border font-medium">{inverterSpec.almmModelNumber}</td>
-                            {/* <td className="p-2 border">₹ {inverterSpec.basePrice}</td> */}
-
-                            {/* <td className="p-2 border text-center flex gap-3 justify-center">
+                              {/* <td className="p-2 border text-center flex gap-3 justify-center">
                               <button
                                 className="text-yellow-600 hover:underline"
                                 onClick={() => {
@@ -1961,408 +2171,373 @@ const ProductManagement: React.FC = () => {
                               </button>
                             </td> */}
 
-                            <td className="p-2 border text-center flex gap-3 justify-center">
-                              {userInfo?.role === "ROLE_ORG_ADMIN" ? (
-                                <button
-                                  className="text-blue-600 hover:underline"
-                                  onClick={() => {
-                                    // prefill spec data
-                                    setNewInverterSpec({
-                                      ...inverterSpec,
-                                      basePrice: "",
-                                      gstPercentage: "",
-                                      yearOfManufacturing: "",
-                                      productWarrantyMonths: "",
-                                    });
-
-                                    setSelectedInverterSpecId(inverterSpec.id);
-                                    setEditingInverterSpecId(null);
-                                    setShowFormForInverterBrand(inverterBrand.id);
-                                    setShowInverterSpecModal(true);
-                                  }}
-                                >
-                                  Select Specification
-                                </button>
-                              ) : (
-                                <>
-                                  {/* EDIT */}
+                              <td className="p-2 border text-center flex gap-3 justify-center">
+                                {userInfo?.role === "ROLE_ORG_ADMIN" ? (
                                   <button
-                                    className="text-yellow-600 hover:underline"
+                                    className="text-blue-600 hover:underline"
                                     onClick={() => {
-                                      handleEditInverterSpec(inverterSpec);
+                                      // prefill spec data
+                                      setNewInverterSpec({
+                                        ...inverterSpec,
+                                        basePrice: "",
+                                        yearOfManufacturing: "",
+                                        productWarrantyMonths: "",
+                                      });
+
+                                      setSelectedInverterSpecId(inverterSpec.id);
+                                      setEditingInverterSpecId(null);
                                       setShowFormForInverterBrand(inverterBrand.id);
                                       setShowInverterSpecModal(true);
                                     }}
                                   >
-                                    Edit
+                                    Select Specification
                                   </button>
+                                ) : (
+                                  <>
+                                    {/* EDIT */}
+                                    <button
+                                      className="text-yellow-600 hover:underline"
+                                      onClick={() => {
+                                        handleEditInverterSpec(inverterSpec);
+                                        setShowFormForInverterBrand(inverterBrand.id);
+                                        setShowInverterSpecModal(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </button>
 
-                                  {/* DELETE */}
-                                  <button
-                                    className="text-red-600 hover:underline"
-                                    onClick={() => handleDeleteInverterSpec(inverterSpec.id, inverterBrand.id)}
-                                  >
-                                    Remove
-                                  </button>
-                                </>
-                              )}
-                            </td>
+                                    {/* DELETE */}
+                                    <button
+                                      className="text-red-600 hover:underline"
+                                      onClick={() => handleDeleteInverterSpec(inverterSpec.id, inverterBrand.id)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </>
+                                )}
+                              </td>
 
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
 
 
-                    {/* === SPEC MODAL === */}
-                    {showInverterSpecModal && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
+                      {/* === SPEC MODAL === */}
+                      {showInverterSpecModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
 
-                          {/* HEADER */}
-                          <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">
-                              {editingInverterSpecId ? "Edit Specification" : "Add New Specification"}
-                            </h2>
+                            {/* HEADER */}
+                            <div className="flex justify-between items-center mb-4">
+                              <h2 className="text-xl font-semibold">
+                                {editingInverterSpecId ? "Edit Specification" : "Add New Specification"}
+                              </h2>
 
-                            <button
-                              className="text-red-600 text-lg font-bold"
-                              onClick={() => {
-                                setShowInverterSpecModal(false);
-                                setShowFormForInverterBrand(null);
-                                setEditingInverterSpecId(null);
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-
-                          {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                            <div>
-                              <label className="block text-sm font-medium">
-                                Phase Type
-                              </label>
-
-                              <select
-                                className="border p-2 rounded w-full h-[44px]"
-                                value={newInverterSpec.phaseTypeId}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) => {
-                                  const numericValue = e.target.value ? Number(e.target.value) : "";
-                                  handleInverterSpecInputChange("phaseTypeId", numericValue);
+                              <button
+                                className="text-red-600 text-lg font-bold"
+                                onClick={() => {
+                                  setShowInverterSpecModal(false);
+                                  setShowFormForInverterBrand(null);
+                                  setEditingInverterSpecId(null);
                                 }}
                               >
-                                <option value="">Select Phase Type</option>
-
-                                {phases.map((phase) => (
-                                  <option key={phase.id} value={phase.id}>
-                                    {phase.nameEn}
-                                  </option>
-                                ))}
-                              </select>
+                                ✕
+                              </button>
                             </div>
 
-                            <div>
-                              <label className="block text-sm font-medium">Grid Type</label>
+                            {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                              <select
-                                className="border p-2 rounded w-full h-[44px]"
-                                value={newInverterSpec.gridTypeId}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) => {
-                                  const numericValue = e.target.value ? Number(e.target.value) : "";
-                                  handleInverterSpecInputChange("gridTypeId", numericValue);
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Phase Type
+                                </label>
+
+                                <select
+                                  className="border p-2 rounded w-full h-[44px]"
+                                  value={newInverterSpec.phaseTypeId}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => {
+                                    const numericValue = e.target.value ? Number(e.target.value) : "";
+                                    handleInverterSpecInputChange("phaseTypeId", numericValue);
+                                  }}
+                                >
+                                  <option value="">Select Phase Type</option>
+
+                                  {phases.map((phase) => (
+                                    <option key={phase.id} value={phase.id}>
+                                      {phase.nameEn}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Grid Type</label>
+
+                                <select
+                                  className="border p-2 rounded w-full h-[44px]"
+                                  value={newInverterSpec.gridTypeId}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => {
+                                    const numericValue = e.target.value ? Number(e.target.value) : "";
+                                    handleInverterSpecInputChange("gridTypeId", numericValue);
+                                  }}
+                                >
+                                  <option value="">Select Grid Type</option>
+
+                                  {grids.map((grid) => (
+                                    <option key={grid.id} value={grid.id}>
+                                      {grid.gridType}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Inverter Capacity (kW)</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.inverterCapacity}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("inverterCapacity", e.target.value)
+                                  }
+                                />
+                              </div>
+
+
+                              <div>
+                                <label className="block text-sm font-medium">Minimun PV Voltage</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.minPvVoltage}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => handleInverterSpecInputChange("minPvVoltage", e.target.value)}
+                                />
+                              </div>
+
+                              {/* Charging Current */}
+                              <div>
+                                <label className="block text-sm font-medium">Maximum PV Voltage</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.maxPvVoltage}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("maxPvVoltage", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Discharging Current */}
+                              <div>
+                                <label className="block text-sm font-medium">Number of MPPTs</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.numMppts}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("numMppts", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Warranty */}
+                              <div>
+                                <label className="block text-sm font-medium">Number of Strings per MPPT</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.numStringsPerMppt}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("numStringsPerMppt", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Minimun Battery Voltage</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.minBatteryVoltage}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => handleInverterSpecInputChange("minBatteryVoltage", e.target.value)}
+                                />
+                              </div>
+
+                              {/* Charging Current */}
+                              <div>
+                                <label className="block text-sm font-medium">Maximum Battery Voltage</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.maxBatteryVoltage}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("maxBatteryVoltage", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Maximum PV Input Current Amperes</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.maxPvInputCurrentAmps}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => handleInverterSpecInputChange("maxPvInputCurrentAmps", e.target.value)}
+                                />
+                              </div>
+
+                              {/* Charging Current */}
+                              <div>
+                                <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.batteryChargingCurrentAmps}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("batteryChargingCurrentAmps", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Maximum Output Current Amperes</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.maxOutputCurrentAmps}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("maxOutputCurrentAmps", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Overall Efficiency %</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.overallEfficiencyPercent}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("overallEfficiencyPercent", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Model Number */}
+                              <div>
+                                <label className="block text-sm font-medium">MPPT Efficiency %</label>
+                                <input
+                                  type="text"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.mpptEfficiencyPercent}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("mpptEfficiencyPercent", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">ALMM Model Number</label>
+                                <input
+                                  type="text"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.almmModelNumber}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("almmModelNumber", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Base Price */}
+                              {isOrgAdmin && (<div>
+                                <label className="block text-sm font-medium">Base Price (₹)</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.basePrice}
+                                  onChange={(e) =>
+                                    handleInverterSpecInputChange("basePrice", e.target.value)
+                                  }
+                                />
+                              </div>)}
+
+                              <div>
+                                <label className="block text-sm font-medium">Product Warranty (Months)</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.productWarrantyMonths}
+                                  disabled={isOrgAdminSelectModeForInverter}
+                                  onChange={(e) => handleInverterSpecInputChange("productWarrantyMonths", e.target.value)}
+                                />
+                              </div>
+
+                              {isOrgAdmin && (<div>
+                                <label className="block text-sm font-medium">Year of Manufacturing</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newInverterSpec.yearOfManufacturing}
+                                  onChange={(e) => handleInverterSpecInputChange("yearOfManufacturing", e.target.value)}
+                                />
+                              </div>)}
+
+                            </div>
+
+                            {isOrgAdminSelectModeForInverter ? (
+                              <button
+                                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+                                onClick={handleSelectInverterSpecs}
+                              >
+                                Select Specification
+                              </button>
+                            ) : editingInverterSpecId ? (
+                              <button
+                                className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                                onClick={() => {
+                                  handleUpdateInverterSpec(Number(editingInverterSpecId), inverterBrand.id);
+                                  setShowInverterSpecModal(false);
                                 }}
                               >
-                                <option value="">Select Grid Type</option>
-
-                                {grids.map((grid) => (
-                                  <option key={grid.id} value={grid.id}>
-                                    {grid.gridType}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Inverter Capacity (kW)</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.inverterCapacity}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("inverterCapacity", e.target.value)
-                                }
-                              />
-                            </div>
-
-
-                            <div>
-                              <label className="block text-sm font-medium">Minimun PV Voltage</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.minPvVoltage}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) => handleInverterSpecInputChange("minPvVoltage", e.target.value)}
-                              />
-                            </div>
-
-                            {/* Charging Current */}
-                            <div>
-                              <label className="block text-sm font-medium">Maximum PV Voltage</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.maxPvVoltage}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("maxPvVoltage", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            {/* Discharging Current */}
-                            <div>
-                              <label className="block text-sm font-medium">Number of MPPTs</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.numMppts}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("numMppts", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            {/* Warranty */}
-                            <div>
-                              <label className="block text-sm font-medium">Number of Strings per MPPT</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.numStringsPerMppt}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("numStringsPerMppt", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Minimun Battery Voltage</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.minBatteryVoltage}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) => handleInverterSpecInputChange("minBatteryVoltage", e.target.value)}
-                              />
-                            </div>
-
-                            {/* Charging Current */}
-                            <div>
-                              <label className="block text-sm font-medium">Maximum Battery Voltage</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.maxBatteryVoltage}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("maxBatteryVoltage", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Maximum PV Input Current Amperes</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.maxPvInputCurrentAmps}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) => handleInverterSpecInputChange("maxPvInputCurrentAmps", e.target.value)}
-                              />
-                            </div>
-
-                            {/* Charging Current */}
-                            <div>
-                              <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.batteryChargingCurrentAmps}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("batteryChargingCurrentAmps", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Maximum Output Current Amperes</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.maxOutputCurrentAmps}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("maxOutputCurrentAmps", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Overall Efficiency %</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.overallEfficiencyPercent}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("overallEfficiencyPercent", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            {/* Model Number */}
-                            <div>
-                              <label className="block text-sm font-medium">MPPT Efficiency %</label>
-                              <input
-                                type="text"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.mpptEfficiencyPercent}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("mpptEfficiencyPercent", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">ALMM Model Number</label>
-                              <input
-                                type="text"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.almmModelNumber}
-                                disabled={isOrgAdminSelectModeForInverter}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("almmModelNumber", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            {/* Base Price */}
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">Base Price (₹)</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.basePrice}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("basePrice", e.target.value)
-                                }
-                              />
-                            </div>)}
-
-                            {/* GST */}
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">GST %</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.gstPercentage}
-                                onChange={(e) =>
-                                  handleInverterSpecInputChange("gstPercentage", e.target.value)
-                                }
-                              />
-                            </div>)}
-
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">Product Warranty (Months)</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.productWarrantyMonths}
-                                onChange={(e) => handleInverterSpecInputChange("productWarrantyMonths", e.target.value)}
-                              />
-                            </div>)}
-
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">Year of Manufacturing</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newInverterSpec.yearOfManufacturing}
-                                onChange={(e) => handleInverterSpecInputChange("yearOfManufacturing", e.target.value)}
-                              />
-                            </div>)}
+                                Update Specification
+                              </button>
+                            ) : (
+                              <button
+                                className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
+                                onClick={() => {
+                                  handleAddNewInverterSpec(inverterBrand.id);
+                                  setShowInverterSpecModal(false);
+                                }}
+                              >
+                                Save Specification
+                              </button>
+                            )}
 
                           </div>
-
-                          {/* BUTTONS */}
-                          {/* {editingInverterSpecId ? (
-                            <button
-                              className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleUpdateInverterSpec(editingInverterSpecId, inverterBrand.id);
-                                setShowInverterSpecModal(false);
-                              }}
-                            >
-                              Update Specification
-                            </button>
-                          ) : (
-                            <button
-                              className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleAddNewInverterSpec(inverterBrand.id);
-                                setShowInverterSpecModal(false);
-                              }}
-                            >
-                              Save Specification
-                            </button>
-                          )} */}
-
-                          {isOrgAdminSelectModeForInverter ? (
-                            <button
-                              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-                              onClick={handleSelectInverterSpecs}
-                            >
-                              Select Specification
-                            </button>
-                          ) : editingInverterSpecId ? (
-                            <button
-                              className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleUpdateInverterSpec(Number(editingInverterSpecId), inverterBrand.id);
-                                setShowInverterSpecModal(false);
-                              }}
-                            >
-                              Update Specification
-                            </button>
-                          ) : (
-                            <button
-                              className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleAddNewInverterSpec(inverterBrand.id);
-                                setShowInverterSpecModal(false);
-                              }}
-                            >
-                              Save Specification
-                            </button>
-                          )}
-
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -2376,6 +2551,8 @@ const ProductManagement: React.FC = () => {
         <div className="mt-6 space-y-8">
 
           {/* ------------------------------------------ PANEL TYPES CARD --------------------------------------------------- */}
+
+
           {(isSuperAdmin && <div className="p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
             <div className="flex items-center justify-between mb-3">
@@ -2566,6 +2743,123 @@ const ProductManagement: React.FC = () => {
                 </div>
               </div>
             )}
+
+          </div>)}
+
+          {/*------------------------------------------------------Selected Panel Specification---------------------------------------------*/}
+
+          {isOrgAdmin && (<div className="mt-6 p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+
+            {/* HEADER */}
+            <div
+              className="flex items-center justify-between mb-2 cursor-pointer pr-2"
+              onClick={() => setShowSelectedPanelBrands(!showSelectedPanelBrands)}
+            >
+              <h2 className="text-lg font-semibold">
+                Selected Panel Brands
+              </h2>
+
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showSelectedPanelBrands ? "rotate-180" : ""
+                  }`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+
+            {showSelectedPanelBrands && (
+              hasSelectedPanels ? (
+                <div className="border rounded-lg">
+                  {Object.values(groupByPanelBrand(selectedPanelSpecs)).map(
+                    (panelBrand: any) => (
+                      <div key={panelBrand.panelBrandId} className="border-b">
+
+                        {/* BRAND HEADER */}
+                        <div
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                          onClick={() =>
+                            setExpandedSelectedPanelBrand(
+                              expandedSelectedPanelBrand === panelBrand.panelBrandId
+                                ? null
+                                : panelBrand.panelBrandId
+                            )
+                          }
+                        >
+                          <h3 className="font-semibold text-lg">
+                            {panelBrand.panelBrandName}
+                          </h3>
+
+                          <span className="text-primary-600 text-sm">
+                            {expandedSelectedPanelBrand === panelBrand.panelBrandId
+                              ? "Hide Specs"
+                              : "View Specs"}
+                          </span>
+                        </div>
+
+                        {/* SPECS TABLE */}
+                        {expandedSelectedPanelBrand === panelBrand.panelBrandId && (
+                          <div className="p-4 bg-gray-50">
+                            <table className="min-w-full text-left mb-4 border rounded bg-white">
+                              <thead className="bg-gray-200">
+                                <tr>
+                                  <th className="p-2 border">Panel Wattage</th>
+                                  <th className="p-2 border">Material Origin & Panel Type</th>
+                                  <th className="p-2 border">Base Price</th>
+                                  <th className="p-2 border">Model Number</th>
+                                  <th className="p-2 border text-center">Actions</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {panelBrand.selectedPanelSpecs.map((panelSpec: any) => (
+                                  <tr key={panelSpec.id}>
+                                    <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
+                                    <td className="p-2 border">{panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</td>
+                                    <td className="p-2 border">₹ {panelSpec.basePrice}</td>
+                                    <td className="p-2 border">{panelSpec.modelNumber}</td>
+
+                                    <td className="p-2 border text-center flex gap-3 justify-center">
+                                      <button
+                                        className="text-yellow-600 hover:underline"
+                                        onClick={() => handleEditSelectedPanelSpec(panelSpec)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        className="text-red-600 hover:underline"
+                                        onClick={() => handleRemoveSelectedPanelSpec(panelSpec.id)}
+                                      >
+                                        Remove
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+
+
+              ) : (
+                <div className="text-center text-gray-500 italic">
+                  No panel brands selected yet
+                </div>
+              )
+            )}
+
 
           </div>)}
 
@@ -2767,7 +3061,6 @@ const ProductManagement: React.FC = () => {
                                       setNewPanelSpec({
                                         ...panelSpec,
                                         basePrice: "",
-                                        gstPercentage: "",
                                       });
 
                                       setSelectedPanelSpecId(panelSpec.id);
@@ -3026,20 +3319,6 @@ const ProductManagement: React.FC = () => {
                                 />
                               </div>)}
 
-
-                              {/* GST */}
-                              {isOrgAdmin && (<div>
-                                <label className="block text-sm font-medium">GST %</label>
-                                <input
-                                  type="number"
-                                  className="border p-2 rounded w-full"
-                                  value={newPanelSpec.gstPercentage}
-                                  onChange={(e) =>
-                                    handlePanelSpecInputChange("gstPercentage", e.target.value)
-                                  }
-                                />
-                              </div>)}
-
                             </div>
 
                             {isOrgAdminSelectModeForPanel ? (
@@ -3092,402 +3371,499 @@ const ProductManagement: React.FC = () => {
       {/*--------------------------------------Pipe Section---------------------------------------------------------------*/}
 
       {activeSection === "pipe" && (
-        <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Pipe Brands</h2>
+        <div className="mt-4 space-y-4">
 
-            {isSuperAdmin && (<button
-              onClick={() => setShowAddModalForPipeBrand(true)}
-              className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+          {/*----------------------------------------------------Selected Inverter Specification---------------------------------------*/}
+
+          {isOrgAdmin && (<div className="mt-6 p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+
+            {/* HEADER */}
+            <div
+              className="flex items-center justify-between mb-2 cursor-pointer pr-2"
+              onClick={() => setShowSelectedPipeBrands(!showSelectedPipeBrands)}
             >
-              + Add New Pipe
-            </button>)}
-          </div>
+              <h2 className="text-lg font-semibold">
+                Selected Pipe Brands
+              </h2>
 
-
-          {showAddModalForPipeBrand && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded shadow-lg w-[450px]">
-
-                <h3 className="text-lg font-semibold mb-4">
-                  {isEditingPipeBrand ? "Edit Pipe Brand" : "Add Pipe Brand"}
-                </h3>
-
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter Pipe brand name"
-                  className="border p-2 rounded w-full mb-4"
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${showSelectedPipeBrands ? "rotate-180" : ""
+                  }`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
                 />
+              </svg>
+            </div>
 
-                <div className="flex justify-end gap-3">
 
-                  <button
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                    onClick={() => {
-                      setShowAddModalForPipeBrand(false)
-                    }}
-                  >
-                    Cancel
-                  </button>
+            {showSelectedPipeBrands && (
+              hasSelectedPipes ? (
+              <div className="border rounded-lg">
+                {Object.values(groupByPipeBrand(selectedPipeSpecs)).map(
+                  (pipeBrand: any) => (
+                    <div key={pipeBrand.pipeBrandId} className="border-b">
 
-                  {isEditingPipeBrand ? (
+                      {/* BRAND HEADER */}
+                      <div
+                        className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                        onClick={() =>
+                          setExpandedSelectedPipeBrand(
+                            expandedSelectedPipeBrand === pipeBrand.pipeBrandId
+                              ? null
+                              : pipeBrand.pipeBrandId
+                          )
+                        }
+                      >
+                        <h3 className="font-semibold text-lg">
+                          {pipeBrand.pipeBrandName}
+                        </h3>
+
+                        <span className="text-primary-600 text-sm">
+                          {expandedSelectedPipeBrand === pipeBrand.pipeBrandId
+                            ? "Hide Specs"
+                            : "View Specs"}
+                        </span>
+                      </div>
+
+                      {/* SPECS TABLE */}
+                      {expandedSelectedPipeBrand === pipeBrand.pipeBrandId && (
+                        <div className="p-4 bg-gray-50">
+                          <table className="min-w-full text-left mb-4 border rounded bg-white">
+                            <thead className="bg-gray-200">
+                              <tr>
+                                <th className="p-2 border">Dimensions (L × W × H)</th>
+                                <th className="p-2 border">Thickness</th>
+                                <th className="p-2 border">Weight</th>
+                                <th className="p-2 border">Base Price</th>
+                                <th className="p-2 border text-center">Actions</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {pipeBrand.selectedPipeSpecs.map((pipeSpec: any) => (
+                                <tr key={pipeSpec.id}>
+                                  <td className="p-2 border">
+                                    {pipeSpec.lengthMeters} m × {pipeSpec.widthMm} mm × {pipeSpec.heightMm} mm
+                                  </td>
+
+                                  <td className="p-2 border">
+                                    {pipeSpec.thicknessMm} mm
+                                  </td>
+                                  <td className="p-2 border">
+                                    {pipeSpec.weightKg} kg
+                                  </td>
+                                  <td className="p-2 border">₹ {pipeSpec.basePrice}</td>
+
+                                  <td className="p-2 border text-center flex gap-3 justify-center">
+                                    <button
+                                      className="text-yellow-600 hover:underline"
+                                      onClick={() => handleEditSelectedPipeSpec(pipeSpec)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="text-red-600 hover:underline"
+                                      onClick={() => handleRemoveSelectedPipeSpec(pipeSpec.id)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+                <div className="text-center text-gray-500 italic">
+                  No pipe brands selected yet
+                </div>
+              )
+            )}
+
+
+          </div>)}
+
+
+          <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
+
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Pipe Brands</h2>
+
+              {isSuperAdmin && (<button
+                onClick={() => setShowAddModalForPipeBrand(true)}
+                className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+              >
+                + Add New Pipe
+              </button>)}
+            </div>
+
+
+            {showAddModalForPipeBrand && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded shadow-lg w-[450px]">
+
+                  <h3 className="text-lg font-semibold mb-4">
+                    {isEditingPipeBrand ? "Edit Pipe Brand" : "Add Pipe Brand"}
+                  </h3>
+
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter Pipe brand name"
+                    className="border p-2 rounded w-full mb-4"
+                  />
+
+                  <div className="flex justify-end gap-3">
+
                     <button
-                      onClick={handleUpdatePipeBrand}
-                      className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                      onClick={() => {
+                        setShowAddModalForPipeBrand(false)
+                      }}
                     >
-                      Update
+                      Cancel
                     </button>
-                  ) : (
-                    <button
-                      onClick={handleAddPipeBrand}
-                      className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
-                    >
-                      Add
-                    </button>
-                  )}
+
+                    {isEditingPipeBrand ? (
+                      <button
+                        onClick={handleUpdatePipeBrand}
+                        className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      >
+                        Update
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleAddPipeBrand}
+                        className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                      >
+                        Add
+                      </button>
+                    )}
 
 
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
 
-          {/* Brand List */}
-          <div className="border rounded-lg">
-            {pipes.map((pipeBrand) => (
-              <div key={pipeBrand.id} className="border-b">
+            {/* Brand List */}
+            <div className="border rounded-lg">
+              {pipes.map((pipeBrand) => (
+                <div key={pipeBrand.id} className="border-b">
 
-                <div
-                  className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
-                  onClick={async () => {
-                    setExpandedPipeBrandId(expandedPipeBrandId === pipeBrand.id ? null : pipeBrand.id);
+                  <div
+                    className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                    onClick={async () => {
+                      setExpandedPipeBrandId(expandedPipeBrandId === pipeBrand.id ? null : pipeBrand.id);
 
-                    if (!pipeBrandSpecs[pipeBrand.id]) {
-                      const pipeSpecs = await fetchPipeSpecsByBrand(pipeBrand.id);
-                      setPipeBrandSpecs((prev) => ({ ...prev, [pipeBrand.id]: pipeSpecs }));
-                    }
-                  }}
-                >
-                  {/* Brand Name or Editable Input */}
-                  <h3 className="font-semibold text-lg">{pipeBrand.name}</h3>
+                      if (!pipeBrandSpecs[pipeBrand.id]) {
+                        const pipeSpecs = await fetchPipeSpecsByBrand(pipeBrand.id);
+                        setPipeBrandSpecs((prev) => ({ ...prev, [pipeBrand.id]: pipeSpecs }));
+                      }
+                    }}
+                  >
+                    {/* Brand Name or Editable Input */}
+                    <h3 className="font-semibold text-lg">{pipeBrand.name}</h3>
 
 
-                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
 
-                    {/* Edit Brand (always modal only) */}
-                    {isSuperAdmin && (<button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingPipeBrandId(pipeBrand.id);
-                        setName(pipeBrand.name)
-                        setIsEditingPipeBrand(true);
-                        setShowAddModalForPipeBrand(true);
-                      }}
-                      className="text-yellow-600 text-sm hover:underline"
-                    >
-                      Edit Brand
-                    </button>)}
+                      {/* Edit Brand (always modal only) */}
+                      {isSuperAdmin && (<button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingPipeBrandId(pipeBrand.id);
+                          setName(pipeBrand.name)
+                          setIsEditingPipeBrand(true);
+                          setShowAddModalForPipeBrand(true);
+                        }}
+                        className="text-yellow-600 text-sm hover:underline"
+                      >
+                        Edit Brand
+                      </button>)}
 
-                    {isSuperAdmin && (<button
-                      className="text-green-600 text-sm hover:underline"
-                      onClick={() => openAddPipeSpecForm(pipeBrand.id)}
-                    >
-                      Add Specs
-                    </button>)}
+                      {isSuperAdmin && (<button
+                        className="text-green-600 text-sm hover:underline"
+                        onClick={() => openAddPipeSpecForm(pipeBrand.id)}
+                      >
+                        Add Specs
+                      </button>)}
 
-                    <span
-                      className="text-primary-600 text-sm cursor-pointer"
-                      onClick={() => {
-                        if (expandedPipeBrandId === pipeBrand.id) {
-                          setExpandedPipeBrandId(null);
-                          setShowFormForPipeBrand(null);
-                          setEditingPipeSpecId(null);
-                        } else {
-                          setExpandedPipeBrandId(pipeBrand.id);
-                          setShowFormForPipeBrand(null);
-                        }
-                      }}
-                    >
-                      {expandedPipeBrandId === pipeBrand.id ? "Hide Specs" : "View Available Specs"}
-                    </span>
+                      <span
+                        className="text-primary-600 text-sm cursor-pointer"
+                        onClick={() => {
+                          if (expandedPipeBrandId === pipeBrand.id) {
+                            setExpandedPipeBrandId(null);
+                            setShowFormForPipeBrand(null);
+                            setEditingPipeSpecId(null);
+                          } else {
+                            setExpandedPipeBrandId(pipeBrand.id);
+                            setShowFormForPipeBrand(null);
+                          }
+                        }}
+                      >
+                        {expandedPipeBrandId === pipeBrand.id ? "Hide Specs" : "View Available Specs"}
+                      </span>
+
+                    </div>
 
                   </div>
 
-                </div>
 
 
+                  {expandedPipeBrandId === pipeBrand.id && (
+                    <div className="p-4 bg-gray-50">
 
-                {expandedPipeBrandId === pipeBrand.id && (
-                  <div className="p-4 bg-gray-50">
+                      {/* Existing Specs Table */}
+                      <table className="min-w-full text-left mb-4 border rounded bg-white">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            <th className="p-2 border">Dimensions (L × W × H)</th>
+                            <th className="p-2 border">Thickness</th>
+                            <th className="p-2 border">Weight</th>
+                            <th className="p-2 border text-center">Actions</th>
+                          </tr>
+                        </thead>
 
-                    {/* Existing Specs Table */}
-                    <table className="min-w-full text-left mb-4 border rounded bg-white">
-                      <thead className="bg-gray-200">
-                        <tr>
-                          <th className="p-2 border">Length in Meters</th>
-                          <th className="p-2 border">Width in MM</th>
-                          {/* <th className="p-2 border">Warranty</th> */}
-                          <th className="p-2 border">Height in MM</th>
-                          <th className="p-2 border">Thickness in MM</th>
-                          <th className="p-2 border text-center">Actions</th>
-                        </tr>
-                      </thead>
+                        <tbody>
+                          {pipeBrandSpecs[pipeBrand.id]?.map((pipeSpec: any) => (
+                            <tr key={pipeSpec.id} className="border-b">
 
-                      <tbody>
-                        {pipeBrandSpecs[pipeBrand.id]?.map((pipeSpec: any) => (
-                          <tr key={pipeSpec.id} className="border-b">
+                              <td className="p-2 border">
+                                {pipeSpec.lengthMeters} m × {pipeSpec.widthMm} mm × {pipeSpec.heightMm} mm
+                              </td>
 
-                            <td className="p-2 border">{pipeSpec.lengthMeters}</td>
-                            <td className="p-2 border">{pipeSpec.widthMm}</td>
-                            {/* <td className="p-2 border">{inverterSpec.productWarrantyMonths} months</td> */}
-                            <td className="p-2 border font-medium">{pipeSpec.heightMm}</td>
-                            <td className="p-2 border">{pipeSpec.thicknessMm}</td>
+                              <td className="p-2 border">
+                                {pipeSpec.thicknessMm} mm
+                              </td>
+                              <td className="p-2 border">
+                                {pipeSpec.weightKg} kg
+                              </td>
 
-                            {/* <td className="p-2 border text-center flex gap-3 justify-center">
-                              <button
-                                className="text-yellow-600 hover:underline"
-                                onClick={() => {
-                                  handleEditInverterSpec(inverterSpec);
-                                  setShowFormForInverterBrand(inverterBrand.id);
-                                  setShowInverterSpecModal(true);   
-                                }}
-                              >
-                                Edit
-                              </button>
 
-                              <button
-                                className="text-red-600 hover:underline"
-                                onClick={() => handleDeleteInverterSpec(inverterSpec.id, inverterBrand.id)}
-                              >
-                                Remove
-                              </button>
-                            </td> */}
-
-                            <td className="p-2 border text-center flex gap-3 justify-center">
-                              {userInfo?.role === "ROLE_ORG_ADMIN" ? (
-                                <button
-                                  className="text-blue-600 hover:underline"
-                                  onClick={() => {
-                                    // prefill spec data
-                                    setNewPipeSpec({
-                                      ...pipeSpec,
-                                      basePrice: "",
-                                      gstPercentage: ""
-                                    });
-
-                                    setSelectedPipeSpecId(pipeSpec.id);
-                                    setEditingPipeSpecId(null);
-                                    setShowFormForPipeBrand(pipeBrand.id);
-                                    setShowPipeSpecModal(true);
-                                  }}
-                                >
-                                  Select Specification
-                                </button>
-                              ) : (
-                                <>
-                                  {/* EDIT */}
+                              <td className="p-2 border text-center flex gap-3 justify-center">
+                                {userInfo?.role === "ROLE_ORG_ADMIN" ? (
                                   <button
-                                    className="text-yellow-600 hover:underline"
+                                    className="text-blue-600 hover:underline"
                                     onClick={() => {
-                                      handleEditPipeSpec(pipeSpec);
+                                      // prefill spec data
+                                      setNewPipeSpec({
+                                        ...pipeSpec,
+                                        basePrice: "",
+                                      });
+
+                                      setSelectedPipeSpecId(pipeSpec.id);
+                                      setEditingPipeSpecId(null);
                                       setShowFormForPipeBrand(pipeBrand.id);
                                       setShowPipeSpecModal(true);
                                     }}
                                   >
-                                    Edit
+                                    Select Specification
                                   </button>
+                                ) : (
+                                  <>
+                                    {/* EDIT */}
+                                    <button
+                                      className="text-yellow-600 hover:underline"
+                                      onClick={() => {
+                                        handleEditPipeSpec(pipeSpec);
+                                        setShowFormForPipeBrand(pipeBrand.id);
+                                        setShowPipeSpecModal(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </button>
 
-                                  {/* DELETE */}
-                                  <button
-                                    className="text-red-600 hover:underline"
-                                    onClick={() => handleDeletePipeSpec(pipeSpec.id, pipeBrand.id)}
-                                  >
-                                    Remove
-                                  </button>
-                                </>
-                              )}
-                            </td>
+                                    {/* DELETE */}
+                                    <button
+                                      className="text-red-600 hover:underline"
+                                      onClick={() => handleDeletePipeSpec(pipeSpec.id, pipeBrand.id)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </>
+                                )}
+                              </td>
 
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
 
 
-                    {/* === SPEC MODAL === */}
-                    {showPipeSpecModal && (
-                      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
+                      {/* === SPEC MODAL === */}
+                      {showPipeSpecModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
 
-                          {/* HEADER */}
-                          <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">
-                              {editingPipeSpecId ? "Edit Specification" : "Add New Specification"}
-                            </h2>
+                            {/* HEADER */}
+                            <div className="flex justify-between items-center mb-4">
+                              <h2 className="text-xl font-semibold">
+                                {editingPipeSpecId ? "Edit Specification" : "Add New Specification"}
+                              </h2>
 
-                            <button
-                              className="text-red-600 text-lg font-bold"
-                              onClick={() => {
-                                setShowPipeSpecModal(false);
-                                setShowFormForPipeBrand(null);
-                                setEditingPipeSpecId(null);
-                              }}
-                            >
-                              ✕
-                            </button>
+                              <button
+                                className="text-red-600 text-lg font-bold"
+                                onClick={() => {
+                                  setShowPipeSpecModal(false);
+                                  setShowFormForPipeBrand(null);
+                                  setEditingPipeSpecId(null);
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                              <div>
+                                <label className="block text-sm font-medium">Length in Meters</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.lengthMeters}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("lengthMeters", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Width in MM</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.widthMm}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("widthMm", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium">Height in MM</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.heightMm}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("heightMm", e.target.value)
+                                  }
+                                />
+                              </div>
+
+
+                              <div>
+                                <label className="block text-sm font-medium">Thickness in MM</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.thicknessMm}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("thicknessMm", e.target.value)
+                                  }
+                                />
+                              </div>
+
+                              {/* Charging Current */}
+                              <div>
+                                <label className="block text-sm font-medium">Weight in Kg</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.weightKg}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("weightKg", e.target.value)
+                                  }
+                                />
+                              </div>
+
+
+
+                              {/* Base Price */}
+                              {isOrgAdmin && (<div>
+                                <label className="block text-sm font-medium">Base Price (₹)</label>
+                                <input
+                                  type="number"
+                                  className="border p-2 rounded w-full"
+                                  value={newPipeSpec.basePrice}
+                                  onChange={(e) =>
+                                    handlePipeSpecInputChange("basePrice", e.target.value)
+                                  }
+                                />
+                              </div>)}
+
+                              <div className="col-span-2">
+                                <label className="block text-sm font-medium">Description</label>
+                                <textarea
+                                  className="border p-2 rounded w-full"
+                                  rows={3}
+                                  value={newPipeSpec.description}
+                                  disabled={isOrgAdminSelectModeForPipe}
+                                  onChange={(e) => handlePipeSpecInputChange("description", e.target.value)}
+                                />
+                              </div>
+
+                            </div>
+
+                            {isOrgAdminSelectModeForPipe ? (
+                              <button
+                                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+                                onClick={handleSelectPipeSpecs}
+                              >
+                                Select Specification
+                              </button>
+                            ) : editingPipeSpecId ? (
+                              <button
+                                className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                                onClick={() => {
+                                  handleUpdatePipeSpec(Number(editingPipeSpecId), pipeBrand.id);
+                                  setShowPipeSpecModal(false);
+                                }}
+                              >
+                                Update Specification
+                              </button>
+                            ) : (
+                              <button
+                                className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
+                                onClick={() => {
+                                  handleAddNewPipeSpec(pipeBrand.id);
+                                  setShowPipeSpecModal(false);
+                                }}
+                              >
+                                Save Specification
+                              </button>
+                            )}
+
                           </div>
-
-                          {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                            <div>
-                              <label className="block text-sm font-medium">Length in Meters</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.lengthMeters}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("lengthMeters", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Width in MM</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.widthMm}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("widthMm", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium">Height in MM</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.heightMm}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("heightMm", e.target.value)
-                                }
-                              />
-                            </div>
-
-
-                            <div>
-                              <label className="block text-sm font-medium">Thickness in MM</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.thicknessMm}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("thicknessMm", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            {/* Charging Current */}
-                            <div>
-                              <label className="block text-sm font-medium">Weight in Kg</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.weightKg}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("weightKg", e.target.value)
-                                }
-                              />
-                            </div>
-
-
-
-                            {/* Base Price */}
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">Base Price (₹)</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.basePrice}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("basePrice", e.target.value)
-                                }
-                              />
-                            </div>)}
-
-                            {/* GST */}
-                            {isOrgAdmin && (<div>
-                              <label className="block text-sm font-medium">GST %</label>
-                              <input
-                                type="number"
-                                className="border p-2 rounded w-full"
-                                value={newPipeSpec.gstPercentage}
-                                onChange={(e) =>
-                                  handlePipeSpecInputChange("gstPercentage", e.target.value)
-                                }
-                              />
-                            </div>)}
-
-                            <div className="col-span-2">
-                              <label className="block text-sm font-medium">Description</label>
-                              <textarea
-                                className="border p-2 rounded w-full"
-                                rows={3}
-                                value={newPipeSpec.description}
-                                disabled={isOrgAdminSelectModeForPipe}
-                                onChange={(e) => handlePipeSpecInputChange("description", e.target.value)}
-                              />
-                            </div>
-
-                          </div>
-
-                          {isOrgAdminSelectModeForPipe ? (
-                            <button
-                              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-                              onClick={handleSelectPipeSpecs}
-                            >
-                              Select Specification
-                            </button>
-                          ) : editingPipeSpecId ? (
-                            <button
-                              className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleUpdatePipeSpec(Number(editingPipeSpecId), pipeBrand.id);
-                                setShowPipeSpecModal(false);
-                              }}
-                            >
-                              Update Specification
-                            </button>
-                          ) : (
-                            <button
-                              className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
-                              onClick={() => {
-                                handleAddNewPipeSpec(pipeBrand.id);
-                                setShowPipeSpecModal(false);
-                              }}
-                            >
-                              Save Specification
-                            </button>
-                          )}
-
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

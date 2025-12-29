@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getAuthToken } from './jwtService';
 import { getConfig } from '../config';
 import { toast } from "react-toastify";
+import { BatterySpec } from '../pages/SystemSpecifications/SystemSpecifications';
 
 export const getQuotationAPI = () => {
   const { VITE_QUOTATION_API } = getConfig();
@@ -24,23 +25,6 @@ export const getQuotationAPI = () => {
   return quotationAPI;
 };
 
-// export const generateQuotationPDF = async (selectedSpecId: number): Promise<Blob> => {
-//   const quotationAPI = getQuotationAPI();
-//   try {
-//     if (!selectedSpecId) {
-//       throw new Error("Spec ID is missing");
-//     }
-
-//     const response = await quotationAPI.get(`/api/quotation-details/generate-pdf/${selectedSpecId}`, {
-//       responseType: 'blob', 
-//     });
-
-//     return response.data; 
-//   } catch (error) {
-//     console.error("API Error:", error);
-//     throw new Error("Failed to generate PDF from server");
-//   }
-// };
 
 
 export const generateQuotationPDF = async (selectedSpecId: number, quotationGeneratedDate: Date): Promise<Blob> => {
@@ -69,23 +53,6 @@ export const generateQuotationPDF = async (selectedSpecId: number, quotationGene
   }
 };
 
-export const previewQuotationPDF = async (systemSpecsId: number): Promise<Blob> => {
-  const quotationAPI = getQuotationAPI();
-  try {
-    if (!systemSpecsId) {
-      throw new Error("System Specs ID is missing");
-    }
-
-    const response = await quotationAPI.get(`/api/quotation-details/preview-quotation/${systemSpecsId}`, {
-      responseType: 'blob', 
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error("API Error:", error);
-    throw new Error("Failed to generate PDF from server");
-  }
-};
 
 export const fetchPanelWattages = async (
   phaseType: string,
@@ -301,7 +268,7 @@ export const markQuotationFinal = async (requestData: any): Promise<any> => {
   }
 };
 
-export const fetchFinalQuotation = async (
+export const fetchFinalQuotationByConnectionId = async (
   connectionId: number
 ): Promise<{ connectionId: number; quotationId: number }> => {
   const quotationAPI = getQuotationAPI();
@@ -320,6 +287,7 @@ export const fetchFinalQuotation = async (
     throw error;
   }
 };
+
 
 
 export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
@@ -486,14 +454,21 @@ export const fetchSelectedPanelSpecs = async (
 
   try {
     const response = await quotationAPI.get(
-      `/api/org-battery-specs/org/${orgId}`
+      "/api/org-panel-specs/org",
+      {
+        params: {
+          orgId: orgId,
+        },
+      }
     );
+
     return response.data;
   } catch (error) {
-    console.error("Error fetching selected battery specs", error);
+    console.error("Error fetching selected panel specs", error);
     return [];
   }
 };
+
 
 
 
@@ -588,10 +563,10 @@ export const fetchInverterBrands = async (
 
 
 export const fetchInverterBrandCapacities = async (
-  inverterBrandId: number,
-  orgId: number,
-  phaseTypeId: number,
-  gridTypeId: number,
+  inverterBrandId?: number,
+  orgId?: number,
+  phaseTypeId?: number,
+  gridTypeId?: number,
 ): Promise<number[]> => {
   const quotationAPI = getQuotationAPI();
   try {
@@ -777,7 +752,7 @@ export const fetchAllBatteryBrands = async (): Promise<any[] | null> => {
 export const fetchBatteryBrandCapacities = async (
   batteryBrandId: number,
   orgId: number
-): Promise<number[]> => {
+): Promise<BatterySpec[]> => {
   const quotationAPI = getQuotationAPI();
   try {
     console.log("Fetching battery brand capacities...");
@@ -961,13 +936,13 @@ export const fetchPipeSpecification = async (
     return response.data;
 
   } catch (error: any) {
-    const message =
-      error?.response?.data?.message || "Failed to fetch pipe specs.";
+    // const message =
+    //   error?.response?.data?.message || "Failed to fetch pipe specs.";
 
-    toast.error(message, {
-      autoClose: 1000,
-      hideProgressBar: true,
-    });
+    // toast.error(message, {
+    //   autoClose: 1000,
+    //   hideProgressBar: true,
+    // });
 
     console.error("Error fetching pipe specs:", error);
 

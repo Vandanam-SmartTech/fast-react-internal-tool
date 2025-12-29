@@ -5,7 +5,7 @@ import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById } from "../../services/documentManagerService";
-import { checkIsConnectionOnboarded, fetchModule, fetchInverter, fetchInstallation, saveSanctionDetails } from "../../services/customerRequisitionService";
+import { checkIsConnectionOnboarded, saveSanctionDetails } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from 'react-toastify';
 import { formatFileName } from "../../utils/formatFileName";
@@ -248,11 +248,11 @@ export default function GenerateDocuments() {
 
       return {
         sanctionNo: sanctionMatch ? sanctionMatch[1].trim() : null,
-        date: dateMatch ? dateMatch[1].trim() : null,
+        sanctionDate: dateMatch ? dateMatch[1].trim() : null,
       };
     } catch (err) {
       console.error("Failed to extract data:", err);
-      return { sanctionNo: null, date: null };
+      return { sanctionNo: null, sanctionDate: null };
     }
   };
 
@@ -282,17 +282,17 @@ export default function GenerateDocuments() {
         const blob = await downloadDocumentById(sanctionDocs[0].id);
 
         // extract { sanctionNo, date }
-        const { sanctionNo, date } = await extractSanctionNo(blob);
+        const { sanctionNo, sanctionDate } = await extractSanctionNo(blob);
 
         // Set state
         setSanctionNo(sanctionNo);
-        setSanctionDate(date);
+        setSanctionDate(sanctionDate);
 
         console.log("Sanction No:", sanctionNo);
-        console.log("Sanction Date:", date);
+        console.log("Sanction Date:", sanctionDate);
 
-        if (sanctionNo && date) {
-          await saveSanctionDetails(connectionId, sanctionNo, date);
+        if (sanctionNo && sanctionDate) {
+          await saveSanctionDetails(connectionId, sanctionNo, sanctionDate);
         }
       }
 

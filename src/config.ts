@@ -32,10 +32,4 @@ export const getConfig = (): AppConfig => {
   return config;
 };
 
-export const getWebSocketURL = (): string => {
-  const { VITE_CRS_API } = getConfig();
-  // If your backend WS endpoint is /ws
-  return `${VITE_CRS_API}/ws`;
-};
-
 

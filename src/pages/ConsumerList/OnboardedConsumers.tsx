@@ -572,7 +572,7 @@ const OnboardedConsumers: React.FC = () => {
             {materialsMap[consumer.id] ? "View Materials" : "Add Materials"}
           </Button> */}
 
-          {(!( userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <Button
+          {/* {(!( userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <Button
             variant="primary"
             size="sm"
             onClick={() =>
@@ -584,7 +584,7 @@ const OnboardedConsumers: React.FC = () => {
             leftIcon={<Plus className="w-4 h-4" />}
           >
             Manage Material Data
-          </Button>)}
+          </Button>)} */}
 
 
         </div>

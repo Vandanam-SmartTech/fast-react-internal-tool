@@ -142,6 +142,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
 
   useEffect(() => {
+
+    // if (isAuthPage) return;
+
+    // const token = localStorage.getItem("token");
+    // if (!token) return;
+
     const fetchRole = async (checkPageAccess = false) => {
       try {
         const claims = await fetchClaims();
@@ -416,7 +422,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   <Package size={20} />
                   <span>Product Management</span>
                 </button>
-              )} 
+              )}
 
             </nav>
 

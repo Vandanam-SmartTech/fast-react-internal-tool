@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById } from '../../services/customerRequisitionService';
 import {
-  generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
+  generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
-  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -16,6 +16,44 @@ import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
 import { Download as DownloadIcon, CheckCircle } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
+
+interface Inverter {
+  inverterBrandName: string;
+  inverterCapacity: number;
+  inverterCount: number;
+  gridTypeName: string;
+}
+
+export interface BatterySpec {
+  id: number;
+  batteryCapacity?: number;
+  voltage?: number;
+  modelNumber?: string;
+  warrantyMonths?: number;
+}
+
+
+
+interface SystemSpec {
+  id: number;
+  connectionId: number;
+  isRunningCopy: boolean;
+
+  panelBrandShortName?: string;
+  panelRatedWattageW?: number;
+  systemCapacityKw?: number;
+
+  systemCost?: number;
+  fabricationCost?: number;
+
+  batteryBrandName?: string;
+  batteryCapacityKw?: number;
+
+  inverters?: Inverter[];
+
+  createdAt: string; // ISO string from backend
+}
+
 
 
 export const SystemSpecifications = () => {
@@ -31,10 +69,18 @@ export const SystemSpecifications = () => {
   const [orgId, setOrgId] = useState<number | null>(null);
   const [agencyId, setAgencyId] = useState<number | null>(null);
   const [isFetchingRecommendations,] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState("");
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [dialogAction, setDialogAction] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+
+  const [dialogType, setDialogType] = useState<
+    "success" | "error" | "confirm" | ""
+  >("");
+
+  const [dialogMessage, setDialogMessage] = useState<string>("");
+
+  const [dialogAction, setDialogAction] = useState<
+    (() => Promise<void> | void) | null
+  >(null);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
@@ -53,14 +99,15 @@ export const SystemSpecifications = () => {
   const [inverterBrandId,] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
-  const [orgInverterSpecId, setOrgInverterSpecId] = useState<number | null>(null);
-  const [inverterCapacities, setInverterCapacities] = useState<any[]>([]);
+  const [, setOrgInverterSpecId] = useState<number | null>(null);
+  const [, setInverterCapacities] = useState<any[]>([]);
 
   const [panels, setPanels] = useState<any[]>([]);
 
 
   const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
-  const [panelCapacities, setPanelCapacities] = useState([]);
+  const [panelCapacities, setPanelCapacities] = useState<number[]>([]);
+
 
   const [, setSystemCapacityKw] = useState<number | null>(null);
 
@@ -72,10 +119,12 @@ export const SystemSpecifications = () => {
 
 
   const [orgBatterySpecId, setOrgBatterySpecId] = useState<number | null>(null);
-  const [batteryCapacities, setBatteryCapacities] = useState([]);
+  const [batteryCapacities, setBatteryCapacities] = useState<BatterySpec[]>([]);
 
-  const [savedSpecs, setSavedSpecs] = useState([]);
-  const [selectedSpecId, setSelectedSpecId] = useState(null);
+
+  const [savedSpecs, setSavedSpecs] = useState<SystemSpec[]>([]);
+
+  const [selectedSpecId, setSelectedSpecId] = useState<number | null>(null);
 
   const [isPrefilling, setIsPrefilling] = useState(false);
 
@@ -90,7 +139,7 @@ export const SystemSpecifications = () => {
 
   const [inverterCapacitiesMap, setInverterCapacitiesMap] = useState<Record<number, any[]>>({});
 
-  const [systemSpecificationId, setSystemSpecificationId] = useState(null);
+  const [, setSystemSpecificationId] = useState(null);
   const [secondaryId, setSecondaryId] = useState(null);
 
   const [documentsMap, setDocumentsMap] = useState<{ [key: number]: any }>({});
@@ -101,7 +150,7 @@ export const SystemSpecifications = () => {
   const [showDatePickModal, setShowDatePickModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const [activeLoadedSpecId, setActiveLoadedSpecId] = useState(null);
+  const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
 
   const tabs = [
     "Customer Details",
@@ -114,6 +163,12 @@ export const SystemSpecifications = () => {
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingFabrication, setIsEditingFabrication] = useState(false);
+  const [finalQuotationId, setFinalQuotationId] = useState<number | null>(null);
+  const [secondaryIdMap, setSecondaryIdMap] = useState<Record<number, number>>({});
+  const [isLoadingSavedSpecs, setIsLoadingSavedSpecs] = useState(false);
+
+
+
 
 
   const [formData, setFormData] = useState({
@@ -144,12 +199,14 @@ export const SystemSpecifications = () => {
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
 
-  const formatIndianNumber = (value) => {
+
+  const formatIndianNumber = (value: number): string => {
     if (!value) return "";
     return new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 0,
     }).format(value);
   };
+
 
 
 
@@ -246,20 +303,10 @@ export const SystemSpecifications = () => {
     fetchConnection();
   }, [connectionId]);
 
-  // useEffect(() => {
-  //   if (phaseTypeId === 1) {
-  //     setMaterialOriginId(1);
-  //     setFormData((prev) => ({ ...prev, materialOriginId: 1 }));
-  //   } else if (phaseTypeId === 2) {
-  //     setMaterialOriginId(2);
-  //     setFormData((prev) => ({ ...prev, materialOriginId: 2 }));
-  //   }
-  // }, [phaseTypeId]);
-
-
-
 
   const fetchSavedSpecs = async () => {
+    setIsLoadingSavedSpecs(true);
+
     try {
       const data = await getSavedSystemSpecs(connectionId);
       setSavedSpecs(data || []);
@@ -294,7 +341,10 @@ export const SystemSpecifications = () => {
       }
     } catch (err) {
       console.error("Error fetching saved specs", err);
-    }
+    } finally {
+    // ✅ ALWAYS stop spinner (even if no specs or error)
+    setIsLoadingSavedSpecs(false);
+  }
   };
 
   useEffect(() => {
@@ -755,12 +805,6 @@ export const SystemSpecifications = () => {
     setDialogOpen(true);
   };
 
-  const handleUpdateButtonClick = () => {
-    setDialogType("confirm");
-    setDialogMessage("Do you want to update system specification details?");
-    setDialogAction(() => handleUpdateSpecs);
-    setDialogOpen(true);
-  };
 
 
   const handleSelectSpec = async (spec) => {
@@ -857,23 +901,29 @@ export const SystemSpecifications = () => {
   useEffect(() => {
     if (savedSpecs.length === 0) {
       setIsFormOpen(true);
-    } else if (savedSpecs.length === 1) {
+      return;
+    }
+
+    if (savedSpecs.length === 1) {
       handleSelectSpec(savedSpecs[0]);
       setSelectedSpecId(savedSpecs[0].id);
       setIsFormOpen(true);
+      return;
+    }
+
+    const firstEditable = savedSpecs.find(
+      (spec) => spec.isRunningCopy
+    );
+
+    if (firstEditable) {
+      handleSelectSpec(firstEditable);
+      setSelectedSpecId(firstEditable.id);
+      setIsFormOpen(true);
     } else {
-
-      const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
-      if (firstEditable) {
-        handleSelectSpec(firstEditable);
-        setSelectedSpecId(firstEditable.id);
-        setIsFormOpen(true);
-      } else {
-
-        setIsFormOpen(false);
-      }
+      setIsFormOpen(false);
     }
   }, [savedSpecs]);
+
 
 
 
@@ -1032,62 +1082,65 @@ export const SystemSpecifications = () => {
     }
   };
 
+  const hasFetchedRef = useRef(false);
 
-  const handlePreview = async () => {
-    setIsPreviewLoading(true);
-    try {
-      if (!selectedSpecId) {
-        console.error("System Specs ID is missing");
-        return;
-      }
+useEffect(() => {
+  if (hasFetchedRef.current) return;
+  if (savedSpecs.length === 0) return;
 
-      console.log("Fetching PDF for System Specs ID:", selectedSpecId);
+  hasFetchedRef.current = true;
 
-      const pdfBlob = await previewQuotationPDF(selectedSpecId);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+  const fetchLockedSpecsDocs = async () => {
+    const lockedSpecs = savedSpecs.filter(
+      (spec) => !spec.isRunningCopy
+    );
 
-      window.open(pdfUrl, "_blank");
-    } catch (err) {
-      console.error("Failed to preview the quotation:", err);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  };
+    for (const spec of lockedSpecs) {
+      try {
+        setLoadingDocs((prev) => ({
+          ...prev,
+          [spec.id]: true,
+        }));
 
-  useEffect(() => {
-    const fetchLockedSpecsDocs = async () => {
-      const lockedSpecs = savedSpecs.filter((spec) => !spec.isRunningCopy);
-      if (lockedSpecs.length === 0) return;
+        const secondaryResponse = await getSecondaryId(spec.id);
+        const secondaryId =
+          secondaryResponse?.id ?? secondaryResponse?.[0]?.id;
 
-      for (const spec of lockedSpecs) {
-        try {
-          setLoadingDocs((prev) => ({ ...prev, [spec.id]: true }));
+        if (!secondaryId) continue;
 
-          // Step 1: Get secondaryId using systemSpecificationId
-          const secondaryResponse = await getSecondaryId(spec.id);
-          const secondaryId = secondaryResponse?.id || secondaryResponse?.[0]?.id;
-          if (!secondaryId) continue;
+        setSecondaryIdMap((prev) => ({
+          ...prev,
+          [spec.id]: secondaryId,
+        }));
 
-          // Step 2: Fetch document by documentType & documentNumber
-          const documentResponse = await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
+        const documentResponse =
+          await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
             spec.connectionId,
             "Unsigned Quotation",
             secondaryId
           );
 
-          if (Array.isArray(documentResponse) && documentResponse.length > 0) {
-            setDocumentsMap((prev) => ({ ...prev, [spec.id]: documentResponse[0] }));
-          }
-        } catch (err) {
-          console.error(`Error fetching document for specId ${spec.id}:`, err);
-        } finally {
-          setLoadingDocs((prev) => ({ ...prev, [spec.id]: false }));
+        if (Array.isArray(documentResponse) && documentResponse.length > 0) {
+          setDocumentsMap((prev) => ({
+            ...prev,
+            [spec.id]: documentResponse[0],
+          }));
         }
+      } catch (err) {
+        console.error(`Error fetching document for specId ${spec.id}`, err);
+      } finally {
+        setLoadingDocs((prev) => ({
+          ...prev,
+          [spec.id]: false,
+        }));
       }
-    };
+    }
+  };
 
-    if (savedSpecs?.length > 0) fetchLockedSpecsDocs();
-  }, [savedSpecs]);
+  fetchLockedSpecsDocs();
+}, [savedSpecs]);
+
+
 
 
   const handleDownload = async (id: number, fileName: string) => {
@@ -1130,14 +1183,36 @@ export const SystemSpecifications = () => {
       };
 
       await markQuotationFinal(payload);
+      await loadFinalQuotation();
 
       // optional UI feedback
-      toast.success("Quotation marked as final");
+      toast.success("Quotation marked as final", {
+        autoClose: 1000,
+        hideProgressBar: true
+      });
     } catch (error) {
       console.error("Failed to mark final quotation", error);
       toast.error("Failed to mark quotation as final");
     }
   };
+
+  const loadFinalQuotation = async () => {
+    try {
+      const response = await fetchFinalQuotationByConnectionId(connectionId);
+      setFinalQuotationId(response?.quotationId ?? null);
+    } catch (err) {
+      console.error("Error fetching final quotation", err);
+    }
+  };
+
+  useEffect(() => {
+    if (connectionId) {
+      loadFinalQuotation();
+    }
+  }, [connectionId]);
+
+
+
 
 
   return (
@@ -1224,7 +1299,7 @@ export const SystemSpecifications = () => {
       </div>
 
 
-      {isFetchingRecommendations && (
+      {isLoadingSavedSpecs && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
           <div className="flex flex-col items-center space-y-4">
             <svg
@@ -1266,31 +1341,6 @@ export const SystemSpecifications = () => {
             <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
           </div>
 
-          {/* {savedSpecs.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedSpecId(null);
-                setFormData(defaultFormData);
-                setMaterialOriginId(null);
-                setGridTypeId(null);
-                setPanelSpecId(null);
-                setInverterSpecId(null);
-                setBatteryBrandId(null);
-                setBatterySpecId(null);
-                setInverterBrandId(null);
-                setSystemCapacityKw(null);
-
-                setIsFormOpen(true);
-              }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <PlusIcon className="w-4 h-4 text-white" />
-              Add Another System Specs
-            </button>
-
-          )} */}
-
 
         </div>
 
@@ -1305,7 +1355,11 @@ export const SystemSpecifications = () => {
               if (!a.isRunningCopy && b.isRunningCopy) return 1;
 
               if (!a.isRunningCopy && !b.isRunningCopy) {
-                return new Date(b.createdAt) - new Date(a.createdAt);
+                return (
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+                );
+
               }
 
               return 0;
@@ -1314,6 +1368,10 @@ export const SystemSpecifications = () => {
               const isEditable = spec.isRunningCopy;
               const document = documentsMap[spec.id];
               const isLoadingDoc = loadingDocs[spec.id];
+              const secondaryIdForSpec = secondaryIdMap[spec.id];
+              const isFinalQuotation =
+                secondaryIdForSpec === finalQuotationId;
+
 
               return (
                 <div
@@ -1407,12 +1465,29 @@ export const SystemSpecifications = () => {
                           <div className="flex items-center gap-2">
                             {/* MARK AS FINAL ICON */}
                             <button
-                              onClick={(e) => handleMarkFinal(e, Number(secondaryId))}
-                              className="text-green-600 hover:text-green-800 p-2 rounded-full transition"
-                              title="Mark this quotation as final"
+                              onClick={(e) => {
+                                if (!isFinalQuotation && secondaryIdForSpec) {
+                                  handleMarkFinal(e, secondaryIdForSpec);
+                                }
+                              }}
+                              disabled={isFinalQuotation}
+                              className={`p-2 rounded-full transition flex items-center justify-center ${isFinalQuotation
+                                  ? "text-green-700 cursor-default"
+                                  : "text-green-600 hover:text-green-800 hover:bg-green-50"
+                                }`}
+                              title={
+                                isFinalQuotation
+                                  ? "Final quotation"
+                                  : "Mark this quotation as final"
+                              }
                             >
-                              <CheckCircle className="w-5 h-5" />
+                              {isFinalQuotation ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : (
+                                <CheckCircle className="w-5 h-5 text-red-400" />
+                              )}
                             </button>
+
 
                             {/* DOWNLOAD ICON */}
                             <button
@@ -1663,10 +1738,7 @@ export const SystemSpecifications = () => {
                   target: { name: "orgPanelSpecId", value: selectedId },
                 } as any);
               }}
-              // options={panels.map((panel) => ({
-              //   value: panel.panelSpecId,
-              //   label: `${panel.brandShortname} - (${panel.ratedWattageW} W) - (${panel.modelNumber})`,
-              // }))}
+
               options={panels.map((panel) => {
                 const parts = [
                   panel.panelBrandName || null,
@@ -1769,10 +1841,7 @@ export const SystemSpecifications = () => {
                       onChange={(val) =>
                         handleInverterChange(index, "orgInverterSpecId", val === "" ? null : Number(val))
                       }
-                      // options={(inverterCapacitiesMap[index] || []).map((spec) => ({
-                      //   value: spec.id,
-                      //   label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
-                      // }))}
+
                       options={(inverterCapacitiesMap[index] || []).map((spec) => {
                         const parts = [
                           spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
@@ -2077,11 +2146,6 @@ export const SystemSpecifications = () => {
                   type="text"
                   inputMode="numeric"
                   name="systemCost"
-                  // value={
-                  //   isEditing
-                  //     ? formData.systemCost 
-                  //     : formatIndianNumber(formData.systemCost) 
-                  // }
                   value={
                     isEditing
                       ? (formData.systemCost === 0 ? "" : String(formData.systemCost))
@@ -2110,11 +2174,6 @@ export const SystemSpecifications = () => {
                   type="text"
                   inputMode="numeric"
                   name="fabricationCost"
-                  // value={
-                  //   isEditingFabrication
-                  //     ? formData.fabricationCost 
-                  //     : formatIndianNumber(formData.fabricationCost) 
-                  // }
                   value={
                     isEditing
                       ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
@@ -2192,7 +2251,9 @@ export const SystemSpecifications = () => {
                           setDialogOpen(true);
                           return;
                         }
+                        setSelectedDate(new Date());
                         setShowDatePickModal(true);
+
                       }}
                       disabled={!selectedSpecId || isLoading}
                       className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2296,25 +2357,31 @@ export const SystemSpecifications = () => {
                   No
                 </Button>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     setDialogOpen(false);
-                    if (dialogAction) dialogAction();
+                    if (dialogAction) {
+                      await dialogAction();
+                    }
                   }}
                   autoFocus
                 >
                   Yes
                 </Button>
+
               </>
             ) : (
               <Button
-                onClick={() => {
+                onClick={async () => {
                   setDialogOpen(false);
-                  if (dialogAction) dialogAction();
+                  if (dialogAction) {
+                    await dialogAction();
+                  }
                 }}
                 autoFocus
               >
                 OK
               </Button>
+
             )}
           </DialogActions>
         </Dialog>
