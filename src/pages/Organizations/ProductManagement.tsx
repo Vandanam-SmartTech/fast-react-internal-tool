@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Card, { CardBody } from "../../components/ui/Card";
 import { BatteryCharging, PanelTop, CircuitBoard, Hammer } from 'lucide-react';
 import {
@@ -7,7 +7,8 @@ import {
   fetchAllPanelBrands, fetchPanelTypes, fetchPanelSpecsByBrand, updatePanelBrand, updatePanelType, updatePanelSpec,
   fetchInverterSpecsByBrand, updateInverterSpec, updateInverterBrand, addInverterSpec, getGridTypes,
   addBatterySpecForOrg, addPanelSpecForOrg, addInverterSpecForOrg, fetchAllPipeBrands, addPipeSpec, fetchPipeSpecsByBrand, addPipeBrand, updatePipeBrand,
-  updatePipeSpec, addPipeSpecForOrg, fetchSelectedBatterySpecs, fetchSelectedPanelSpecs, fetchInverterBrandCapacities, fetchPipeSpecification
+  updatePipeSpec, addPipeSpecForOrg, fetchSelectedBatterySpecs, fetchSelectedPanelSpecs, fetchInverterBrandCapacities, fetchPipeSpecification, updateSelectedBatterySpec,
+  updateSelectedPanelSpec, updateSelectedInverterSpec, updateSelectedPipeSpec
 } from "../../services/quotationService";
 import { fetchPhaseType } from "../../services/customerRequisitionService";
 import { useUser } from "../../contexts/UserContext";
@@ -86,6 +87,15 @@ const ProductManagement: React.FC = () => {
     mfgMonthYear: "",
   });
 
+  const resetBatteryBrandForm = () => {
+    setIsEditingBatteryBrand(false);
+    setCurrentBrandId(null);
+    setBrandName("");
+    setEditingBrandId(null);
+    setEditedName("");
+  };
+
+
   const openAddSpecForm = (brandId: number) => {
     setExpandedBrandId(brandId);
     setShowFormForBrand(brandId);
@@ -151,7 +161,7 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const handleSaveBrand = async () => {
+  const handleSaveBrand = async (brandId: number) => {
     if (!brandName.trim()) {
       toast.error("Brand name is required", {
         autoClose: 1000,
@@ -160,15 +170,16 @@ const ProductManagement: React.FC = () => {
       return;
     }
 
-    if (!currentBrandId) return;
-
-    const res = await updateBatteryBrand(String(currentBrandId), brandName);
+    const res = await updateBatteryBrand(String(brandId), brandName);
 
     if (res) {
       const data = await fetchAllBatteryBrands();
       if (data) setBatteryBrands(data);
 
-      toast.success("Battery brand updated!", { autoClose: 1000, hideProgressBar: true });
+      toast.success("Battery brand updated!", {
+        autoClose: 1000,
+        hideProgressBar: true
+      });
 
       setShowAddModal(false);
       setBrandName("");
@@ -212,7 +223,7 @@ const ProductManagement: React.FC = () => {
       totalAh: Number(newSpec.totalAh),
       chargingCurrent: Number(newSpec.chargingCurrent),
       dischargingCurrent: Number(newSpec.dischargingCurrent),
-      //warrantyMonths: Number(newSpec.warrantyMonths),
+      warrantyMonths: Number(newSpec.warrantyMonths),
       modelNumber: newSpec.modelNumber,
       description: newSpec.description,
       //basePrice: Number(newSpec.basePrice),
@@ -234,11 +245,6 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteBatterySpec = async (specId: number, brandId: number) => {
-    await deleteBatterySpec(specId);
-    const updated = await fetchBatterySpecs(brandId);
-    setBrandSpecs((prev) => ({ ...prev, [brandId]: updated }));
-  };
 
   const handleUpdateSpec = async (specId: number, brandId: number) => {
     const payload = {
@@ -248,9 +254,8 @@ const ProductManagement: React.FC = () => {
       totalAh: Number(newSpec.totalAh),
       chargingCurrent: Number(newSpec.chargingCurrent),
       dischargingCurrent: Number(newSpec.dischargingCurrent),
-      //warrantyMonths: Number(newSpec.warrantyMonths),
-      //basePrice: Number(newSpec.basePrice),
-      //gstPercentage: Number(newSpec.gstPercentage),
+      warrantyMonths: Number(newSpec.warrantyMonths),
+      modelNumber: newSpec.modelNumber,
     };
 
     const res = await updateBatterySpec(specId, brandId, payload);
@@ -290,6 +295,9 @@ const ProductManagement: React.FC = () => {
         hideProgressBar: true,
       });
 
+      await loadSelectedBatteries();
+
+
       setShowSpecModal(false);
       setSelectedSpecId(null);
     }
@@ -298,6 +306,7 @@ const ProductManagement: React.FC = () => {
   const [selectedBatterySpecs, setSelectedBatterySpecs] = useState<any[]>([]);
   const [expandedSelectedBrand, setExpandedSelectedBrand] = useState<string | null>(null);
   const [showSelectedBrands, setShowSelectedBrands] = useState(true);
+
 
 
   const groupByBrand = (data: any[]) => {
@@ -314,16 +323,39 @@ const ProductManagement: React.FC = () => {
     }, {});
   };
 
-  useEffect(() => {
-    const loadSelectedBatteries = async () => {
-      const data = await fetchSelectedBatterySpecs(userInfo.orgId);
-      setSelectedBatterySpecs(data);
-    };
+  const loadSelectedBatteries = async () => {
+    const data = await fetchSelectedBatterySpecs(userInfo.orgId);
+    setSelectedBatterySpecs(data);
+  };
 
-    loadSelectedBatteries();
+  useEffect(() => {
+    if (userInfo.orgId) {
+      loadSelectedBatteries();
+    }
   }, [userInfo.orgId]);
 
+
   const hasSelectedBatteries = selectedBatterySpecs.length > 0;
+
+  const [editingSelectedSpecId, setEditingSelectedSpecId] = useState<number | null>(null);
+  const [selectedOrgBatterySpecId, setSelectedOrgBatterySpecId] = useState<number | null>(null);
+  const [showSelectedSpecModal, setShowSelectedSpecModal] = useState(false);
+
+  const handleEditSelectedSpec = (spec: any) => {
+    setEditingSelectedSpecId(spec.id);
+    setSelectedOrgBatterySpecId(spec.batterySpecsId);
+    setNewSpec({ ...spec });   // Autofill form
+  };
+
+  const buildSelectedSpecUpdatePayload = () => ({
+    selectedBatterySpecId: editingSelectedSpecId,
+    orgId: userInfo?.orgId,
+    basePrice: Number(newSpec.basePrice),
+    mfgMonthYear: newSpec.mfgMonthYear,
+    batterySpecsId: selectedOrgBatterySpecId,
+  });
+
+
 
 
   {/*--------------------------Inverter Operations----------------------------------------*/ }
@@ -365,7 +397,6 @@ const ProductManagement: React.FC = () => {
       mpptEfficiencyPercent: "",
       basePrice: "",
       productWarrantyMonths: "",
-      yearOfManufacturing: "",
     });
   };
 
@@ -388,7 +419,6 @@ const ProductManagement: React.FC = () => {
     mpptEfficiencyPercent: "",
     basePrice: "",
     productWarrantyMonths: "",
-    yearOfManufacturing: "",
   });
 
   const handleAddInverterBrand = async () => {
@@ -478,10 +508,7 @@ const ProductManagement: React.FC = () => {
       maxOutputCurrentAmps: Number(newInverterSpec.maxOutputCurrentAmps),
       overallEfficiencyPercent: Number(newInverterSpec.overallEfficiencyPercent),
       mpptEfficiencyPercent: Number(newInverterSpec.mpptEfficiencyPercent),
-      //yearOfManufacturing: Number(newInverterSpec.yearOfManufacturing),
-      // basePrice: Number(newInverterSpec.basePrice),
-      // gstPercentage: Number(newInverterSpec.gstPercentage),
-      // productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths),
+      productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths),
     };
 
     const res = await updateInverterSpec(inverterSpecId, payload);
@@ -519,10 +546,7 @@ const ProductManagement: React.FC = () => {
       maxOutputCurrentAmps: Number(newInverterSpec.maxOutputCurrentAmps),
       overallEfficiencyPercent: Number(newInverterSpec.overallEfficiencyPercent),
       mpptEfficiencyPercent: Number(newInverterSpec.mpptEfficiencyPercent),
-      //yearOfManufacturing: Number(newInverterSpec.yearOfManufacturing),
-      // basePrice: Number(newInverterSpec.basePrice),
-      // gstPercentage: Number(newInverterSpec.gstPercentage),
-      // productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths),
+      productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths)
     };
 
     const res = await addInverterSpec(payload);
@@ -550,11 +574,11 @@ const ProductManagement: React.FC = () => {
       inverterSpecsId: selectedInverterSpecId,
       orgId: userInfo.orgId,
       basePrice: newInverterSpec.basePrice,
-      productWarrantyMonths: newInverterSpec.productWarrantyMonths,
-      yearOfManufacturing: newInverterSpec.yearOfManufacturing,
     };
 
     const response = await addInverterSpecForOrg(payload);
+
+    await loadSelectedInverters();
 
     if (response) {
       toast.success("Inverter specification selected successfully", {
@@ -593,23 +617,40 @@ const ProductManagement: React.FC = () => {
   };
 
 
+  const loadSelectedInverters = useCallback(async () => {
+    if (!userInfo?.orgId) return;
+
+    const data = await fetchInverterBrandCapacities(
+      undefined,      // inverterBrandId
+      userInfo.orgId  // orgId
+    );
+    setSelectedInverterSpecs(data);
+  }, [userInfo?.orgId]);
+
   useEffect(() => {
-    if (!userInfo.orgId) return;
-
-    const loadSelectedInverters = async () => {
-      const data = await fetchInverterBrandCapacities(
-        undefined,          // inverterBrandId
-        userInfo.orgId      // orgId
-      );
-      setSelectedInverterSpecs(data);
-    };
-
     loadSelectedInverters();
-  }, [userInfo.orgId]);
+  }, [loadSelectedInverters]);
+
 
   const hasSelectedInverters = selectedInverterSpecs.length > 0;
 
 
+  const [editingSelectedInverterSpecId, setEditingSelectedInverterSpecId] = useState<number | null>(null);
+  const [selectedOrgInverterSpecId, setSelectedOrgInverterSpecId] = useState<number | null>(null);
+  const [showSelectedInverterSpecModal, setShowSelectedInverterSpecModal] = useState(false);
+
+  const handleEditSelectedInverterSpec = (inverterSpec: any) => {
+    setEditingSelectedInverterSpecId(inverterSpec.id);
+    setSelectedOrgInverterSpecId(inverterSpec.inverterSpecsId);
+    setNewInverterSpec({ ...inverterSpec });   // Autofill form
+  };
+
+  const buildSelectedInverterSpecUpdatePayload = () => ({
+    selectedInverterSpecId: editingSelectedInverterSpecId,
+    orgId: userInfo?.orgId,
+    basePrice: Number(newInverterSpec.basePrice),
+    inverterSpecsId: selectedOrgInverterSpecId,
+  });
 
 
 
@@ -898,6 +939,9 @@ const ProductManagement: React.FC = () => {
 
     const res = await addPanelBrand(payload);
 
+    const brandData = await fetchAllPanelBrands();
+    if (brandData) setPanelBrands(brandData);
+
     if (res) {
       toast.success("Panel brand added!", {
         autoClose: 1000,
@@ -909,14 +953,6 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-
-  const handleDeletePanelBrand = async (id: number) => {
-    const res = await deletePanelBrand(id);
-    if (res) {
-      toast.success("Brand removed");
-      setPanelBrands(panelBrands.filter((b) => b.id !== id));
-    }
-  };
 
   const handleSelectPanelSpecs = async () => {
     if (!selectedPanelSpecId) {
@@ -932,6 +968,8 @@ const ProductManagement: React.FC = () => {
 
     const response = await addPanelSpecForOrg(payload);
 
+    await loadSelectedPanels();
+
     if (response) {
       toast.success("panel specification selected successfully", {
         autoClose: 1200,
@@ -942,13 +980,6 @@ const ProductManagement: React.FC = () => {
       setSelectedPanelSpecId(null);
     }
   };
-
-  //   const handleDeletePanelSpec = async (panelSpecId: number, panelBrandId: number) => {
-  //   await deletePanelSpec(panelSpecId);
-  //   const updated = await fetchPanelSpecsByBrand(panelBrandId);
-  //   setPannelSpecs((prev) => ({ ...prev, [panelBrandId]: updated }));
-  // };
-
 
   const [selectedPanelSpecs, setSelectedPanelSpecs] = useState<any[]>([]);
   const [expandedSelectedPanelBrand, setExpandedSelectedPanelBrand] = useState<string | null>(null);
@@ -969,16 +1000,44 @@ const ProductManagement: React.FC = () => {
     }, {});
   };
 
-  useEffect(() => {
-    const loadSelectedPanels = async () => {
-      const data = await fetchSelectedPanelSpecs(userInfo.orgId);
-      setSelectedPanelSpecs(data);
-    };
+  // useEffect(() => {
+  //   const loadSelectedPanels = async () => {
+  //     const data = await fetchSelectedPanelSpecs(userInfo.orgId);
+  //     setSelectedPanelSpecs(data);
+  //   };
 
-    loadSelectedPanels();
+  //   loadSelectedPanels();
+  // }, [userInfo.orgId]);
+
+  const loadSelectedPanels = async () => {
+    const data = await fetchSelectedPanelSpecs(userInfo.orgId);
+    setSelectedPanelSpecs(data);
+  };
+
+  useEffect(() => {
+    if (userInfo.orgId) {
+      loadSelectedPanels();
+    }
   }, [userInfo.orgId]);
 
   const hasSelectedPanels = selectedPanelSpecs.length > 0;
+
+  const [editingSelectedPanelSpecId, setEditingSelectedPanelSpecId] = useState<number | null>(null);
+  const [selectedOrgPanelSpecId, setSelectedOrgPanelSpecId] = useState<number | null>(null);
+  const [showSelectedPanelSpecModal, setShowSelectedPanelSpecModal] = useState(false);
+
+  const handleEditSelectedPanelSpec = (panelSpec: any) => {
+    setEditingSelectedPanelSpecId(panelSpec.id);
+    setSelectedOrgPanelSpecId(panelSpec.panelSpecsId);
+    setNewPanelSpec({ ...panelSpec });   // Autofill form
+  };
+
+  const buildSelectedPanelSpecUpdatePayload = () => ({
+    selectedPanelSpecId: editingSelectedPanelSpecId,
+    orgId: userInfo?.orgId,
+    basePrice: Number(newPanelSpec.basePrice),
+    panelSpecsId: selectedOrgPanelSpecId,
+  });
 
   {/*----------------------------------------Pipe Operations----------------------------------------------*/ }
 
@@ -1173,6 +1232,8 @@ const ProductManagement: React.FC = () => {
 
     const response = await addPipeSpecForOrg(payload);
 
+    await loadSelectedPipes();
+
     if (response) {
       toast.success("Pipe specification selected successfully", {
         autoClose: 1200,
@@ -1203,16 +1264,37 @@ const ProductManagement: React.FC = () => {
     }, {});
   };
 
-  useEffect(() => {
-    const loadSelectedPipes = async () => {
-      const data = await fetchPipeSpecification(userInfo.orgId);
-      setSelectedPipeSpecs(data);
-    };
+  const loadSelectedPipes = useCallback(async () => {
+    if (!userInfo?.orgId) return;
 
+    const data = await fetchPipeSpecification(userInfo.orgId);
+    setSelectedPipeSpecs(data);
+  }, [userInfo?.orgId]);
+
+  useEffect(() => {
     loadSelectedPipes();
-  }, [userInfo.orgId]);
+  }, [loadSelectedPipes]);
+
 
   const hasSelectedPipes = selectedPipeSpecs.length > 0;
+
+  const [editingSelectedPipeSpecId, setEditingSelectedPipeSpecId] = useState<number | null>(null);
+  const [selectedOrgPipeSpecId, setSelectedOrgPipeSpecId] = useState<number | null>(null);
+  const [showSelectedPipeSpecModal, setShowSelectedPipeSpecModal] = useState(false);
+
+  const handleEditSelectedPipeSpec = (pipeSpec: any) => {
+    setEditingSelectedPipeSpecId(pipeSpec.id);
+    setSelectedOrgPipeSpecId(pipeSpec.pipeSpecsId);
+    setNewPipeSpec({ ...pipeSpec });
+  };
+
+  const buildSelectedPipeSpecUpdatePayload = () => ({
+    selectedPipeSpecId: editingSelectedPipeSpecId,
+    orgId: userInfo?.orgId,
+    basePrice: Number(newPipeSpec.basePrice),
+    pipeSpecsId: selectedOrgPipeSpecId,
+  });
+
   {/*------------------------------------------------------------------------------------------------------------------*/ }
 
   return (
@@ -1378,7 +1460,7 @@ const ProductManagement: React.FC = () => {
                                   <th className="p-2 border">Base Price</th>
                                   <th className="p-2 border">MFG Date</th>
                                   <th className="p-2 border">Model Number</th>
-                                  <th className="p-2 border text-center">Actions</th>
+                                  <th className="p-2 border text-center">Action</th>
                                 </tr>
                               </thead>
 
@@ -1394,15 +1476,13 @@ const ProductManagement: React.FC = () => {
                                     <td className="p-2 border text-center flex gap-3 justify-center">
                                       <button
                                         className="text-yellow-600 hover:underline"
-                                        onClick={() => handleEditSelectedSpec(spec)}
+                                        onClick={() => {
+                                          handleEditSelectedSpec(spec);
+                                          setShowFormForBrand(null);
+                                          setShowSelectedSpecModal(true);
+                                        }}
                                       >
                                         Edit
-                                      </button>
-                                      <button
-                                        className="text-red-600 hover:underline"
-                                        onClick={() => handleRemoveSelectedSpec(spec.id)}
-                                      >
-                                        Remove
                                       </button>
                                     </td>
                                   </tr>
@@ -1420,6 +1500,187 @@ const ProductManagement: React.FC = () => {
                   No battery brands selected yet
                 </div>
               )
+            )}
+
+            {showSelectedSpecModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
+
+                  {/* HEADER */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      Edit Selected Specification
+                    </h2>
+
+                    <button
+                      className="text-red-600 text-lg font-bold"
+                      onClick={() => {
+                        setShowSelectedSpecModal(false);
+                        //setShowFormForBrand(null);
+                        setEditingSelectedSpecId(null);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Wattage */}
+                    <div>
+                      <label className="block text-sm font-medium">Wattage (W)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.wattage}
+                        disabled
+                        onChange={(e) => handleSpecInputChange("wattage", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Voltage */}
+                    <div>
+                      <label className="block text-sm font-medium">Voltage (V)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.voltage}
+                        disabled
+                        onChange={(e) => handleSpecInputChange("voltage", e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Total Ah</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.totalAh}
+                        disabled
+                        onChange={(e) => handleSpecInputChange("totalAh", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Charging Current (A)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        disabled
+                        value={newSpec.chargingCurrent}
+                        onChange={(e) =>
+                          handleSpecInputChange("chargingCurrent", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Discharging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Discharging Current (A)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.dischargingCurrent}
+                        disabled
+                        onChange={(e) =>
+                          handleSpecInputChange("dischargingCurrent", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Model Number */}
+                    <div>
+                      <label className="block text-sm font-medium">Model Number</label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.modelNumber}
+                        disabled
+                        onChange={(e) =>
+                          handleSpecInputChange("modelNumber", e.target.value)
+                        }
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium">Warranty (Months)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newSpec.warrantyMonths}
+                        disabled
+                        onChange={(e) =>
+                          handleSpecInputChange("warrantyMonths", e.target.value)
+                        }
+                      />
+                    </div>
+
+
+                    {isOrgAdmin && (
+                      <div>
+                        <label className="block text-sm font-medium">Base Price (₹)</label>
+                        <input
+                          type="number"
+                          className="border p-2 rounded w-full"
+                          value={newSpec.basePrice}
+                          onChange={(e) =>
+                            handleSpecInputChange("basePrice", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
+
+                    {isOrgAdmin && (
+                      <div>
+                        <label className="block text-sm font-medium">MFG Date</label>
+                        <input
+                          type="date"
+                          className="border p-2 rounded w-full"
+                          value={newSpec.mfgMonthYear}
+                          onChange={(e) =>
+                            handleSpecInputChange("mfgMonthYear", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
+
+
+                    {/* ... all remaining fields SAME as before ... */}
+
+                    {/* Description */}
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium">Description</label>
+                      <textarea
+                        className="border p-2 rounded w-full"
+                        rows={3}
+                        value={newSpec.description}
+                        disabled
+                        onChange={(e) => handleSpecInputChange("description", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                    onClick={async () => {
+                      if (!editingSelectedSpecId || !userInfo?.orgId) return;
+
+                      const payload = buildSelectedSpecUpdatePayload();
+
+                      await updateSelectedBatterySpec(editingSelectedSpecId, payload);
+                      await loadSelectedBatteries();
+
+                      setShowSelectedSpecModal(false);
+                      setEditingSelectedSpecId(null);
+                    }}
+                  >
+                    Update Selected Specification
+                  </button>
+
+                </div>
+              </div>
             )}
 
 
@@ -1459,18 +1720,27 @@ const ProductManagement: React.FC = () => {
 
                     <button
                       className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={() => {
+                        resetBatteryBrandForm();
+                        setShowAddModal(false);
+                      }}
+
                     >
                       Cancel
                     </button>
 
                     {isEditingBatteryBrand ? (
                       <button
-                        onClick={handleSaveBrand}
+                        onClick={() => {
+                          if (currentBrandId) {
+                            handleSaveBrand(currentBrandId);
+                          }
+                        }}
                         className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
                       >
                         Update
                       </button>
+
                     ) : (
                       <button
                         onClick={handleAddBrand}
@@ -1533,8 +1803,9 @@ const ProductManagement: React.FC = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingBrandId(null);
+                              resetBatteryBrandForm();
                             }}
+
                             className="text-red-600 text-sm hover:underline"
                           >
                             Cancel
@@ -1592,12 +1863,12 @@ const ProductManagement: React.FC = () => {
                           <tr>
                             <th className="p-2 border">Wattage</th>
                             <th className="p-2 border">Voltage</th>
-                            {/* <th className="p-2 border">Warranty</th> */}
+                            <th className="p-2 border">Warranty</th>
                             <th className="p-2 border">Charging Current</th>
                             <th className="p-2 border">Discharging Current</th>
                             <th className="p-2 border">Model</th>
                             {/* <th className="p-2 border">Price</th> */}
-                            <th className="p-2 border text-center">Actions</th>
+                            <th className="p-2 border text-center">Action</th>
                           </tr>
                         </thead>
 
@@ -1607,7 +1878,7 @@ const ProductManagement: React.FC = () => {
 
                               <td className="p-2 border">{spec.wattage}W</td>
                               <td className="p-2 border">{spec.voltage}V</td>
-                              {/* <td className="p-2 border">{spec.warrantyMonths} months</td> */}
+                              <td className="p-2 border">{spec.warrantyMonths} months</td>
                               <td className="p-2 border font-medium">{spec.chargingCurrent}</td>
                               <td className="p-2 border font-medium">{spec.dischargingCurrent}</td>
                               <td className="p-2 border font-medium">{spec.modelNumber}</td>
@@ -1622,7 +1893,6 @@ const ProductManagement: React.FC = () => {
                                       setNewSpec({
                                         ...spec,
                                         basePrice: "",
-                                        warrantyMonths: "",
                                         mfgMonthYear: "",
                                       });
 
@@ -1647,14 +1917,6 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-
-                                    {/* DELETE */}
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleDeleteBatterySpec(spec.id, brand.id)}
-                                    >
-                                      Remove
-                                    </button>
                                   </>
                                 )}
                               </td>
@@ -1672,7 +1934,11 @@ const ProductManagement: React.FC = () => {
                             {/* HEADER */}
                             <div className="flex justify-between items-center mb-4">
                               <h2 className="text-xl font-semibold">
-                                {editingSpecId ? "Edit Specification" : "Add New Specification"}
+                                {isOrgAdminSelectMode
+                                  ? "Select Specification for Organization"
+                                  : editingSpecId
+                                    ? "Edit Specification"
+                                    : "Add New Specification"}
                               </h2>
 
                               <button
@@ -1909,92 +2175,372 @@ const ProductManagement: React.FC = () => {
 
             {showSelectedInverterBrands && (
               hasSelectedInverters ? (
-              <div className="border rounded-lg">
-                {Object.values(groupByInverterBrand(selectedInverterSpecs)).map(
-                  (inverterBrand: any) => (
-                    <div key={inverterBrand.inverterBrandId} className="border-b">
+                <div className="border rounded-lg">
+                  {Object.values(groupByInverterBrand(selectedInverterSpecs)).map(
+                    (inverterBrand: any) => (
+                      <div key={inverterBrand.inverterBrandId} className="border-b">
 
-                      {/* BRAND HEADER */}
-                      <div
-                        className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
-                        onClick={() =>
-                          setExpandedSelectedInverterBrand(
-                            expandedSelectedInverterBrand === inverterBrand.inverterBrandId
-                              ? null
-                              : inverterBrand.inverterBrandId
-                          )
-                        }
-                      >
-                        <h3 className="font-semibold text-lg">
-                          {inverterBrand.inverterBrandName}
-                        </h3>
+                        {/* BRAND HEADER */}
+                        <div
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                          onClick={() =>
+                            setExpandedSelectedInverterBrand(
+                              expandedSelectedInverterBrand === inverterBrand.inverterBrandId
+                                ? null
+                                : inverterBrand.inverterBrandId
+                            )
+                          }
+                        >
+                          <h3 className="font-semibold text-lg">
+                            {inverterBrand.inverterBrandName}
+                          </h3>
 
-                        <span className="text-primary-600 text-sm">
-                          {expandedSelectedInverterBrand === inverterBrand.inverterBrandId
-                            ? "Hide Specs"
-                            : "View Specs"}
-                        </span>
-                      </div>
-
-                      {/* SPECS TABLE */}
-                      {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
-                        <div className="p-4 bg-gray-50">
-                          <table className="min-w-full text-left mb-4 border rounded bg-white">
-                            <thead className="bg-gray-200">
-                              <tr>
-                                <th className="p-2 border">Phase Type - Grid Type</th>
-                                <th className="p-2 border">Inverter Capacity</th>
-                                <th className="p-2 border">Base Price</th>
-                                <th className="p-2 border">ALMM Model Number</th>
-                                <th className="p-2 border">MFG Date (Warranty)</th>
-                                <th className="p-2 border text-center">Actions</th>
-                              </tr>
-                            </thead>
-
-                            <tbody>
-                              {inverterBrand.selectedInverterSpecs.map((inverterSpec: any) => (
-                                <tr key={inverterSpec.id}>
-                                  <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
-                                  <td className="p-2 border">{inverterSpec.inverterCapacity}</td>
-                                  <td className="p-2 border">₹ {inverterSpec.basePrice}</td>
-                                  <td className="p-2 border">{inverterSpec.almmModelNumber}</td>
-                                  <td className="p-2 border">{inverterSpec.mfgMonthYear}</td>
-
-                                  <td className="p-2 border text-center flex gap-3 justify-center">
-                                    <button
-                                      className="text-yellow-600 hover:underline"
-                                      onClick={() => handleEditSelectedInverterSpec(inverterSpec)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleRemoveSelectedInverterSpec(inverterSpec.id)}
-                                    >
-                                      Remove
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <span className="text-primary-600 text-sm">
+                            {expandedSelectedInverterBrand === inverterBrand.inverterBrandId
+                              ? "Hide Specs"
+                              : "View Specs"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-            ) : (
+
+                        {/* SPECS TABLE */}
+                        {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
+                          <div className="p-4 bg-gray-50">
+                            <table className="min-w-full text-left mb-4 border rounded bg-white">
+                              <thead className="bg-gray-200">
+                                <tr>
+                                  <th className="p-2 border">Phase Type - Grid Type</th>
+                                  <th className="p-2 border">Inverter Capacity</th>
+                                  <th className="p-2 border">Base Price</th>
+                                  <th className="p-2 border">ALMM Model Number</th>
+                                  <th className="p-2 border text-center">Action</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {inverterBrand.selectedInverterSpecs.map((inverterSpec: any) => (
+                                  <tr key={inverterSpec.id}>
+                                    <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
+                                    <td className="p-2 border">{inverterSpec.inverterCapacity}</td>
+                                    <td className="p-2 border">₹ {inverterSpec.basePrice}</td>
+                                    <td className="p-2 border">{inverterSpec.almmModelNumber}</td>
+
+                                    <td className="p-2 border text-center flex gap-3 justify-center">
+                                      <button
+                                        className="text-yellow-600 hover:underline"
+                                        //onClick={() => handleEditSelectedInverterSpec(inverterSpec)}
+                                        onClick={() => {
+                                          handleEditSelectedInverterSpec(inverterSpec);
+                                          setShowFormForInverterBrand(null);
+                                          setShowSelectedInverterSpecModal(true);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
                 <div className="text-center text-gray-500 italic">
                   No inverter brands selected yet
                 </div>
               )
             )}
 
+            {showSelectedInverterSpecModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
 
+                  {/* HEADER */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      Edit Selected Specification
+                    </h2>
+
+                    <button
+                      className="text-red-600 text-lg font-bold"
+                      onClick={() => {
+                        setShowSelectedInverterSpecModal(false);
+                        setEditingSelectedInverterSpecId(null);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-sm font-medium">
+                        Phase Type
+                      </label>
+
+                      <select
+                        className="border p-2 rounded w-full h-[44px]"
+                        value={newInverterSpec.phaseTypeId}
+                        disabled
+                        onChange={(e) => {
+                          const numericValue = e.target.value ? Number(e.target.value) : "";
+                          handleInverterSpecInputChange("phaseTypeId", numericValue);
+                        }}
+                      >
+                        <option value="">Select Phase Type</option>
+
+                        {phases.map((phase) => (
+                          <option key={phase.id} value={phase.id}>
+                            {phase.nameEn}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Grid Type</label>
+
+                      <select
+                        className="border p-2 rounded w-full h-[44px]"
+                        value={newInverterSpec.gridTypeId}
+                        disabled
+                        onChange={(e) => {
+                          const numericValue = e.target.value ? Number(e.target.value) : "";
+                          handleInverterSpecInputChange("gridTypeId", numericValue);
+                        }}
+                      >
+                        <option value="">Select Grid Type</option>
+
+                        {grids.map((grid) => (
+                          <option key={grid.id} value={grid.id}>
+                            {grid.gridType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Inverter Capacity (kW)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.inverterCapacity}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("inverterCapacity", e.target.value)
+                        }
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium">Minimun PV Voltage</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.minPvVoltage}
+                        disabled
+                        onChange={(e) => handleInverterSpecInputChange("minPvVoltage", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Maximum PV Voltage</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.maxPvVoltage}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("maxPvVoltage", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Discharging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Number of MPPTs</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.numMppts}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("numMppts", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Warranty */}
+                    <div>
+                      <label className="block text-sm font-medium">Number of Strings per MPPT</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.numStringsPerMppt}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("numStringsPerMppt", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Minimun Battery Voltage</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.minBatteryVoltage}
+                        disabled
+                        onChange={(e) => handleInverterSpecInputChange("minBatteryVoltage", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Maximum Battery Voltage</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.maxBatteryVoltage}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("maxBatteryVoltage", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Maximum PV Input Current Amperes</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.maxPvInputCurrentAmps}
+                        disabled
+                        onChange={(e) => handleInverterSpecInputChange("maxPvInputCurrentAmps", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.batteryChargingCurrentAmps}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("batteryChargingCurrentAmps", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Maximum Output Current Amperes</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.maxOutputCurrentAmps}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("maxOutputCurrentAmps", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Overall Efficiency %</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.overallEfficiencyPercent}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("overallEfficiencyPercent", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Model Number */}
+                    <div>
+                      <label className="block text-sm font-medium">MPPT Efficiency %</label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.mpptEfficiencyPercent}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("mpptEfficiencyPercent", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">ALMM Model Number</label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.almmModelNumber}
+                        disabled
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("almmModelNumber", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Base Price */}
+                    {isOrgAdmin && (<div>
+                      <label className="block text-sm font-medium">Base Price (₹)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.basePrice}
+                        onChange={(e) =>
+                          handleInverterSpecInputChange("basePrice", e.target.value)
+                        }
+                      />
+                    </div>)}
+
+                    <div>
+                      <label className="block text-sm font-medium">Product Warranty (Months)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newInverterSpec.productWarrantyMonths}
+                        disabled
+                        onChange={(e) => handleInverterSpecInputChange("productWarrantyMonths", e.target.value)}
+                      />
+                    </div>
+
+                  </div>
+
+                  <button
+                    className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                    onClick={async () => {
+                      if (!editingSelectedInverterSpecId || !userInfo?.orgId) return;
+
+                      const payload = buildSelectedInverterSpecUpdatePayload();
+
+                      await updateSelectedInverterSpec(editingSelectedInverterSpecId, payload);
+                      await loadSelectedInverters();
+
+                      setShowSelectedInverterSpecModal(false);
+                      setEditingSelectedInverterSpecId(null);
+                    }}
+                  >
+                    Update Selected Specification
+                  </button>
+
+                </div>
+              </div>
+            )}
           </div>)}
 
-          {/*----------------------------------------------------------------------------------------------------------------*/}
 
           <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
@@ -2032,6 +2578,9 @@ const ProductManagement: React.FC = () => {
                       className="px-4 py-2 text-gray-600 hover:text-gray-800"
                       onClick={() => {
                         setShowAddModalForInverterBrand(false)
+                        setEditingInverterBrandId(null);
+                        setInverterBrandName("")
+                        setIsEditingInverterBrand(false);
                       }}
                     >
                       Cancel
@@ -2134,10 +2683,8 @@ const ProductManagement: React.FC = () => {
                           <tr>
                             <th className="p-2 border">Phase Type - Grid Type</th>
                             <th className="p-2 border">Inverter Capacity</th>
-                            {/* <th className="p-2 border">Warranty</th> */}
                             <th className="p-2 border">Model Number</th>
-                            {/* <th className="p-2 border">Price</th> */}
-                            <th className="p-2 border text-center">Actions</th>
+                            <th className="p-2 border text-center">Action</th>
                           </tr>
                         </thead>
 
@@ -2147,29 +2694,7 @@ const ProductManagement: React.FC = () => {
 
                               <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
                               <td className="p-2 border">{inverterSpec.inverterCapacity} kW</td>
-                              {/* <td className="p-2 border">{inverterSpec.productWarrantyMonths} months</td> */}
                               <td className="p-2 border font-medium">{inverterSpec.almmModelNumber}</td>
-                              {/* <td className="p-2 border">₹ {inverterSpec.basePrice}</td> */}
-
-                              {/* <td className="p-2 border text-center flex gap-3 justify-center">
-                              <button
-                                className="text-yellow-600 hover:underline"
-                                onClick={() => {
-                                  handleEditInverterSpec(inverterSpec);
-                                  setShowFormForInverterBrand(inverterBrand.id);
-                                  setShowInverterSpecModal(true);   
-                                }}
-                              >
-                                Edit
-                              </button>
-
-                              <button
-                                className="text-red-600 hover:underline"
-                                onClick={() => handleDeleteInverterSpec(inverterSpec.id, inverterBrand.id)}
-                              >
-                                Remove
-                              </button>
-                            </td> */}
 
                               <td className="p-2 border text-center flex gap-3 justify-center">
                                 {userInfo?.role === "ROLE_ORG_ADMIN" ? (
@@ -2205,14 +2730,6 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-
-                                    {/* DELETE */}
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleDeleteInverterSpec(inverterSpec.id, inverterBrand.id)}
-                                    >
-                                      Remove
-                                    </button>
                                   </>
                                 )}
                               </td>
@@ -2222,8 +2739,6 @@ const ProductManagement: React.FC = () => {
                         </tbody>
                       </table>
 
-
-                      {/* === SPEC MODAL === */}
                       {showInverterSpecModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                           <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -2231,8 +2746,13 @@ const ProductManagement: React.FC = () => {
                             {/* HEADER */}
                             <div className="flex justify-between items-center mb-4">
                               <h2 className="text-xl font-semibold">
-                                {editingInverterSpecId ? "Edit Specification" : "Add New Specification"}
+                                {isOrgAdminSelectModeForInverter
+                                  ? "Select Specification for Organization"
+                                  : editingInverterSpecId
+                                    ? "Edit Specification"
+                                    : "Add New Specification"}
                               </h2>
+
 
                               <button
                                 className="text-red-600 text-lg font-bold"
@@ -2489,16 +3009,6 @@ const ProductManagement: React.FC = () => {
                                 />
                               </div>
 
-                              {isOrgAdmin && (<div>
-                                <label className="block text-sm font-medium">Year of Manufacturing</label>
-                                <input
-                                  type="number"
-                                  className="border p-2 rounded w-full"
-                                  value={newInverterSpec.yearOfManufacturing}
-                                  onChange={(e) => handleInverterSpecInputChange("yearOfManufacturing", e.target.value)}
-                                />
-                              </div>)}
-
                             </div>
 
                             {isOrgAdminSelectModeForInverter ? (
@@ -2598,7 +3108,7 @@ const ProductManagement: React.FC = () => {
                         <th className="p-2 border">Efficiency (%)</th>
                         <th className="p-2 border">Year</th>
                         <th className="p-2 border">Description</th>
-                        <th className="p-2 border text-center">Actions</th>
+                        <th className="p-2 border text-center">Action</th>
 
                       </tr>
                     </thead>
@@ -2629,16 +3139,6 @@ const ProductManagement: React.FC = () => {
                             >
                               Edit
                             </button>
-
-
-                            {/* DELETE */}
-                            <button
-                              className="text-red-600 hover:underline"
-                              onClick={() => handleDeletePanelType(type.id)}
-                            >
-                              Remove
-                            </button>
-
                           </td>
 
                         </tr>
@@ -2665,12 +3165,13 @@ const ProductManagement: React.FC = () => {
 
                     {/* Type Name */}
                     <div>
-                      <label className="block text-sm font-medium mb-1">Panel Type Name</label>
+                      <label className="block text-sm font-medium mb-1">Panel Type Name <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={typeName}
                         onChange={(e) => setTypeName(e.target.value)}
                         placeholder="Type Name (e.g. Mono Perc)"
+                        required
                         className="border p-2 rounded w-full"
                       />
                     </div>
@@ -2703,12 +3204,13 @@ const ProductManagement: React.FC = () => {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium mb-1">Description</label>
+                      <label className="block text-sm font-medium mb-1">Description <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={typeDescription}
                         onChange={(e) => setTypeDescription(e.target.value)}
                         placeholder="Description"
+                        required
                         className="border p-2 rounded w-full"
                       />
                     </div>
@@ -2815,7 +3317,7 @@ const ProductManagement: React.FC = () => {
                                   <th className="p-2 border">Material Origin & Panel Type</th>
                                   <th className="p-2 border">Base Price</th>
                                   <th className="p-2 border">Model Number</th>
-                                  <th className="p-2 border text-center">Actions</th>
+                                  <th className="p-2 border text-center">Action</th>
                                 </tr>
                               </thead>
 
@@ -2830,15 +3332,14 @@ const ProductManagement: React.FC = () => {
                                     <td className="p-2 border text-center flex gap-3 justify-center">
                                       <button
                                         className="text-yellow-600 hover:underline"
-                                        onClick={() => handleEditSelectedPanelSpec(panelSpec)}
+                                        //onClick={() => handleEditSelectedPanelSpec(panelSpec)}
+                                        onClick={() => {
+                                          handleEditSelectedPanelSpec(panelSpec);
+                                          setShowFormForPanelBrand(null);
+                                          setShowSelectedPanelSpecModal(true);
+                                        }}
                                       >
                                         Edit
-                                      </button>
-                                      <button
-                                        className="text-red-600 hover:underline"
-                                        onClick={() => handleRemoveSelectedPanelSpec(panelSpec.id)}
-                                      >
-                                        Remove
                                       </button>
                                     </td>
                                   </tr>
@@ -2860,6 +3361,248 @@ const ProductManagement: React.FC = () => {
               )
             )}
 
+            {showSelectedPanelSpecModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg w-[90%] max-w-3xl max-h-[90vh] overflow-y-auto">
+
+                  {/* HEADER */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      Edit Selected Specification
+                    </h2>
+
+
+
+                    <button
+                      className="text-red-600 text-lg font-bold"
+                      onClick={() => {
+                        setShowSelectedPanelSpecModal(false);
+                        //setShowFormForPanelBrand(null);
+                        setEditingSelectedPanelSpecId(null);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-sm font-medium">
+                        Material Origin Type
+                      </label>
+
+                      <select
+                        className="border p-2 rounded w-full h-[44px]"
+                        value={newPanelSpec.materialOriginId}
+                        disabled
+                        onChange={(e) => {
+                          const numericValue = e.target.value ? Number(e.target.value) : "";
+                          handlePanelSpecInputChange("materialOriginId", numericValue);
+                        }}
+                      >
+                        <option value="">Select Material Origin Type</option>
+
+                        {origins.map((origin) => (
+                          <option key={origin.id} value={origin.id}>
+                            {origin.originCode}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Panel Type</label>
+
+                      <select
+                        className="border p-2 rounded w-full h-[44px]"
+                        value={newPanelSpec.panelTypeId}
+                        disabled
+                        onChange={(e) => {
+                          const numericValue = e.target.value ? Number(e.target.value) : "";
+                          handlePanelSpecInputChange("panelTypeId", numericValue);
+                        }}
+                      >
+                        <option value="">Select Panel Type</option>
+
+                        {panelTypes.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.typeName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+
+
+                    {/* Wattage */}
+                    <div>
+                      <label className="block text-sm font-medium">Panel Wattage (W)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.ratedWattageW}
+                        disabled
+                        onChange={(e) => handlePanelSpecInputChange("ratedWattageW", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Voltage */}
+                    <div>
+                      <label className="block text-sm font-medium">Product Warranty (Yrs)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.productWarrantyYrs}
+                        disabled
+                        onChange={(e) => handlePanelSpecInputChange("productWarrantyYrs", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Total Ah */}
+                    <div>
+                      <label className="block text-sm font-medium">Efficient Warranty (Yrs)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.efficiencyWarrantyYrs}
+                        disabled
+                        onChange={(e) => handlePanelSpecInputChange("efficiencyWarrantyYrs", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Annual Yield Units Per kW</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.annualYieldUnitsPerKw}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("annualYieldUnitsPerKw", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Discharging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Open Circuit Volts</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.openCircuitVolts}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("openCircuitVolts", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Warranty */}
+                    <div>
+                      <label className="block text-sm font-medium">Short Circuit Amps</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.shortCircuitAmps}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("shortCircuitAmps", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Max Power Volts</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.maxPowerVolts}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("maxPowerVolts", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Warranty */}
+                    <div>
+                      <label className="block text-sm font-medium">Max Power Amps</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.maxPowerAmps}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("maxPowerAmps", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Model Number</label>
+                      <input
+                        type="text"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.modelNumber}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("modelNumber", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Efficiency Percentage %</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.efficiencyPercentage}
+                        disabled
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("efficiencyPercentage", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Base Price */}
+                    {isOrgAdmin && (<div>
+                      <label className="block text-sm font-medium">Base Price (₹)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPanelSpec.basePrice}
+                        onChange={(e) =>
+                          handlePanelSpecInputChange("basePrice", e.target.value)
+                        }
+                      />
+                    </div>)}
+
+                  </div>
+
+                  <button
+                    className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                    onClick={async () => {
+                      if (!editingSelectedPanelSpecId || !userInfo?.orgId) return;
+
+                      const payload = buildSelectedPanelSpecUpdatePayload();
+
+                      await updateSelectedPanelSpec(editingSelectedPanelSpecId, payload);
+                      await loadSelectedPanels();
+
+                      setShowSelectedPanelSpecModal(false);
+                      setEditingSelectedPanelSpecId(null);
+                    }}
+                  >
+                    Update Selected Specification
+                  </button>
+
+
+                </div>
+              </div>
+            )}
+
 
           </div>)}
 
@@ -2869,12 +3612,15 @@ const ProductManagement: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Panel Brands</h2>
 
-              {(isSuperAdmin && <button
-                onClick={() => setShowPanelBrandModal(true)}
-                className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
-              >
-                + Add New Panel Brand
-              </button>)}
+              {isSuperAdmin && (
+                <button
+                  onClick={() => setShowPanelBrandModal(true)}
+                  className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                >
+                  + Add New Panel Brand
+                </button>
+              )}
+
             </div>
 
             {/* Panel Brand Modal */}
@@ -2889,26 +3635,28 @@ const ProductManagement: React.FC = () => {
 
                   <div className="mb-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Brand Full Name
+                      Brand Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={brandFullname}
                       onChange={(e) => setBrandFullname(e.target.value)}
                       placeholder="Enter brand full name"
+                      required
                       className="border p-2 rounded w-full"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Brand Short Name
+                      Brand Short Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={brandShortname}
                       onChange={(e) => setBrandShortname(e.target.value)}
                       placeholder="Enter brand short name"
+                      required
                       className="border p-2 rounded w-full"
                     />
                   </div>
@@ -2918,7 +3666,10 @@ const ProductManagement: React.FC = () => {
                       className="px-4 py-2 text-gray-600 hover:text-gray-800"
                       onClick={() => {
                         setShowPanelBrandModal(false);
-                        setIsEditingPanelBrand(false);
+                        setIsEditingBrand(false);
+                        setEditingPanelBrandId(null);
+                        setBrandFullname("");
+                        setBrandShortname("");
                       }}
                     >
                       Cancel
@@ -2961,19 +3712,22 @@ const ProductManagement: React.FC = () => {
                     <div className="flex items-center gap-4">
 
                       {/* Edit Brand (always modal only) */}
-                      {(isSuperAdmin && <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingPanelBrandId(panelBrand.id);
-                          setBrandFullname(panelBrand.brandFullname);
-                          setBrandShortname(panelBrand.brandShortname);
-                          setIsEditingBrand(true);
-                          setShowPanelBrandModal(true);
-                        }}
-                        className="text-yellow-600 text-sm hover:underline"
-                      >
-                        Edit Brand
-                      </button>)}
+                      {isSuperAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPanelBrandId(panelBrand.id);
+                            setBrandFullname(panelBrand.brandFullname);
+                            setBrandShortname(panelBrand.brandShortname);
+                            setIsEditingBrand(true);
+                            setShowPanelBrandModal(true);
+                          }}
+                          className="text-yellow-600 text-sm hover:underline"
+                        >
+                          Edit Brand
+                        </button>
+                      )}
+
 
                       {(isSuperAdmin && <button
                         className="text-green-600 text-sm hover:underline"
@@ -3015,7 +3769,7 @@ const ProductManagement: React.FC = () => {
                             <th className="p-2 border">Product + Efficiency Warranty</th>
                             <th className="p-2 border">Model</th>
                             {/* <th className="p-2 border">Price</th> */}
-                            <th className="p-2 border text-center">Actions</th>
+                            <th className="p-2 border text-center">Action</th>
                           </tr>
                         </thead>
 
@@ -3031,26 +3785,6 @@ const ProductManagement: React.FC = () => {
 
                               <td className="p-2 border font-medium">{panelSpec.modelNumber}</td>
                               {/* <td className="p-2 border">₹ {panelSpec.basePrice}</td> */}
-
-                              {/* <td className="p-2 border text-center flex gap-3 justify-center">
-                                <button
-                                  className="text-yellow-600 hover:underline"
-                                  onClick={() => {
-                                    handleEditPanelSpec(panelSpec);
-                                    setShowFormForPanelBrand(panelBrand.id); 
-                                    setShowPanelSpecModal(true);
-                                  }}
-                                >
-                                  Edit
-                                </button>
-
-                                <button
-                                  className="text-red-600 hover:underline"
-                                  onClick={() => handleDeletePanelSpec(panelSpec.id, panelBrand.id)}
-                                >
-                                  Remove
-                                </button>
-                              </td> */}
 
                               <td className="p-2 border text-center flex gap-3 justify-center">
                                 {userInfo?.role === "ROLE_ORG_ADMIN" ? (
@@ -3085,14 +3819,6 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-
-                                    {/* DELETE */}
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleDeletePanelSpec(panelSpec.id, panelBrand.id)}
-                                    >
-                                      Remove
-                                    </button>
                                   </>
                                 )}
                               </td>
@@ -3110,8 +3836,13 @@ const ProductManagement: React.FC = () => {
                             {/* HEADER */}
                             <div className="flex justify-between items-center mb-4">
                               <h2 className="text-xl font-semibold">
-                                {editingPanelSpecId ? "Edit Specification" : "Add New Specification"}
+                                {isOrgAdminSelectModeForPanel
+                                  ? "Select Specification for Organization"
+                                  : editingPanelSpecId
+                                    ? "Edit Specification"
+                                    : "Add New Specification"}
                               </h2>
+
 
                               <button
                                 className="text-red-600 text-lg font-bold"
@@ -3172,9 +3903,6 @@ const ProductManagement: React.FC = () => {
                                   ))}
                                 </select>
                               </div>
-
-
-
                               {/* Wattage */}
                               <div>
                                 <label className="block text-sm font-medium">Panel Wattage (W)</label>
@@ -3406,91 +4134,230 @@ const ProductManagement: React.FC = () => {
 
             {showSelectedPipeBrands && (
               hasSelectedPipes ? (
-              <div className="border rounded-lg">
-                {Object.values(groupByPipeBrand(selectedPipeSpecs)).map(
-                  (pipeBrand: any) => (
-                    <div key={pipeBrand.pipeBrandId} className="border-b">
+                <div className="border rounded-lg">
+                  {Object.values(groupByPipeBrand(selectedPipeSpecs)).map(
+                    (pipeBrand: any) => (
+                      <div key={pipeBrand.pipeBrandId} className="border-b">
 
-                      {/* BRAND HEADER */}
-                      <div
-                        className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
-                        onClick={() =>
-                          setExpandedSelectedPipeBrand(
-                            expandedSelectedPipeBrand === pipeBrand.pipeBrandId
-                              ? null
-                              : pipeBrand.pipeBrandId
-                          )
-                        }
-                      >
-                        <h3 className="font-semibold text-lg">
-                          {pipeBrand.pipeBrandName}
-                        </h3>
+                        {/* BRAND HEADER */}
+                        <div
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                          onClick={() =>
+                            setExpandedSelectedPipeBrand(
+                              expandedSelectedPipeBrand === pipeBrand.pipeBrandId
+                                ? null
+                                : pipeBrand.pipeBrandId
+                            )
+                          }
+                        >
+                          <h3 className="font-semibold text-lg">
+                            {pipeBrand.pipeBrandName}
+                          </h3>
 
-                        <span className="text-primary-600 text-sm">
-                          {expandedSelectedPipeBrand === pipeBrand.pipeBrandId
-                            ? "Hide Specs"
-                            : "View Specs"}
-                        </span>
-                      </div>
-
-                      {/* SPECS TABLE */}
-                      {expandedSelectedPipeBrand === pipeBrand.pipeBrandId && (
-                        <div className="p-4 bg-gray-50">
-                          <table className="min-w-full text-left mb-4 border rounded bg-white">
-                            <thead className="bg-gray-200">
-                              <tr>
-                                <th className="p-2 border">Dimensions (L × W × H)</th>
-                                <th className="p-2 border">Thickness</th>
-                                <th className="p-2 border">Weight</th>
-                                <th className="p-2 border">Base Price</th>
-                                <th className="p-2 border text-center">Actions</th>
-                              </tr>
-                            </thead>
-
-                            <tbody>
-                              {pipeBrand.selectedPipeSpecs.map((pipeSpec: any) => (
-                                <tr key={pipeSpec.id}>
-                                  <td className="p-2 border">
-                                    {pipeSpec.lengthMeters} m × {pipeSpec.widthMm} mm × {pipeSpec.heightMm} mm
-                                  </td>
-
-                                  <td className="p-2 border">
-                                    {pipeSpec.thicknessMm} mm
-                                  </td>
-                                  <td className="p-2 border">
-                                    {pipeSpec.weightKg} kg
-                                  </td>
-                                  <td className="p-2 border">₹ {pipeSpec.basePrice}</td>
-
-                                  <td className="p-2 border text-center flex gap-3 justify-center">
-                                    <button
-                                      className="text-yellow-600 hover:underline"
-                                      onClick={() => handleEditSelectedPipeSpec(pipeSpec)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleRemoveSelectedPipeSpec(pipeSpec.id)}
-                                    >
-                                      Remove
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <span className="text-primary-600 text-sm">
+                            {expandedSelectedPipeBrand === pipeBrand.pipeBrandId
+                              ? "Hide Specs"
+                              : "View Specs"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-            ) : (
+
+                        {/* SPECS TABLE */}
+                        {expandedSelectedPipeBrand === pipeBrand.pipeBrandId && (
+                          <div className="p-4 bg-gray-50">
+                            <table className="min-w-full text-left mb-4 border rounded bg-white">
+                              <thead className="bg-gray-200">
+                                <tr>
+                                  <th className="p-2 border">Dimensions (L × W × H)</th>
+                                  <th className="p-2 border">Thickness</th>
+                                  <th className="p-2 border">Weight</th>
+                                  <th className="p-2 border">Base Price</th>
+                                  <th className="p-2 border text-center">Action</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {pipeBrand.selectedPipeSpecs.map((pipeSpec: any) => (
+                                  <tr key={pipeSpec.id}>
+                                    <td className="p-2 border">
+                                      {pipeSpec.lengthMeters} m × {pipeSpec.widthMm} mm × {pipeSpec.heightMm} mm
+                                    </td>
+
+                                    <td className="p-2 border">
+                                      {pipeSpec.thicknessMm} mm
+                                    </td>
+                                    <td className="p-2 border">
+                                      {pipeSpec.weightKg} kg
+                                    </td>
+                                    <td className="p-2 border">₹ {pipeSpec.basePrice}</td>
+
+                                    <td className="p-2 border text-center flex gap-3 justify-center">
+                                      <button
+                                        className="text-yellow-600 hover:underline"
+                                        onClick={() => {
+                                          handleEditSelectedPipeSpec(pipeSpec);
+                                          setShowFormForPipeBrand(null);
+                                          setShowSelectedPipeSpecModal(true);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
                 <div className="text-center text-gray-500 italic">
                   No pipe brands selected yet
                 </div>
               )
+            )}
+
+            {/* === SPEC MODAL === */}
+            {showSelectedPipeSpecModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
+
+                  {/* HEADER */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      Edit Selected Specification
+                    </h2>
+
+                    <button
+                      className="text-red-600 text-lg font-bold"
+                      onClick={() => {
+                        setShowSelectedPipeSpecModal(false);
+                        setEditingSelectedPipeSpecId(null);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-sm font-medium">Length in Meters</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.lengthMeters}
+                        disabled
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("lengthMeters", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Width in MM</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.widthMm}
+                        disabled
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("widthMm", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium">Height in MM</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.heightMm}
+                        disabled
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("heightMm", e.target.value)
+                        }
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium">Thickness in MM</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.thicknessMm}
+                        disabled
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("thicknessMm", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    {/* Charging Current */}
+                    <div>
+                      <label className="block text-sm font-medium">Weight in Kg</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.weightKg}
+                        disabled
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("weightKg", e.target.value)
+                        }
+                      />
+                    </div>
+
+
+
+                    {/* Base Price */}
+                    {isOrgAdmin && (<div>
+                      <label className="block text-sm font-medium">Base Price (₹)</label>
+                      <input
+                        type="number"
+                        className="border p-2 rounded w-full"
+                        value={newPipeSpec.basePrice}
+                        onChange={(e) =>
+                          handlePipeSpecInputChange("basePrice", e.target.value)
+                        }
+                      />
+                    </div>)}
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium">Description</label>
+                      <textarea
+                        className="border p-2 rounded w-full"
+                        rows={3}
+                        value={newPipeSpec.description}
+                        disabled
+                        onChange={(e) => handlePipeSpecInputChange("description", e.target.value)}
+                      />
+                    </div>
+
+                  </div>
+
+                  <button
+                    className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
+                    onClick={async () => {
+                      if (!editingSelectedPipeSpecId || !userInfo?.orgId) return;
+
+                      const payload = buildSelectedPipeSpecUpdatePayload();
+
+                      await updateSelectedPipeSpec(editingSelectedPipeSpecId, payload);
+                      await loadSelectedPipes();
+
+                      setShowSelectedPipeSpecModal(false);
+                      setEditingSelectedPipeSpecId(null);
+                    }}
+                  >
+                    Update Selected Specification
+                  </button>
+
+                </div>
+              </div>
             )}
 
 
@@ -3533,6 +4400,10 @@ const ProductManagement: React.FC = () => {
                       className="px-4 py-2 text-gray-600 hover:text-gray-800"
                       onClick={() => {
                         setShowAddModalForPipeBrand(false)
+                        setEditingPipeBrandId(null);
+                        setName("")
+                        setIsEditingPipeBrand(false);
+
                       }}
                     >
                       Cancel
@@ -3636,7 +4507,7 @@ const ProductManagement: React.FC = () => {
                             <th className="p-2 border">Dimensions (L × W × H)</th>
                             <th className="p-2 border">Thickness</th>
                             <th className="p-2 border">Weight</th>
-                            <th className="p-2 border text-center">Actions</th>
+                            <th className="p-2 border text-center">Action</th>
                           </tr>
                         </thead>
 
@@ -3688,14 +4559,6 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-
-                                    {/* DELETE */}
-                                    <button
-                                      className="text-red-600 hover:underline"
-                                      onClick={() => handleDeletePipeSpec(pipeSpec.id, pipeBrand.id)}
-                                    >
-                                      Remove
-                                    </button>
                                   </>
                                 )}
                               </td>
@@ -3714,8 +4577,13 @@ const ProductManagement: React.FC = () => {
                             {/* HEADER */}
                             <div className="flex justify-between items-center mb-4">
                               <h2 className="text-xl font-semibold">
-                                {editingPipeSpecId ? "Edit Specification" : "Add New Specification"}
+                                {isOrgAdminSelectModeForPipe
+                                  ? "Select Specification for Organization"
+                                  : editingPipeSpecId
+                                    ? "Edit Specification"
+                                    : "Add New Specification"}
                               </h2>
+
 
                               <button
                                 className="text-red-600 text-lg font-bold"

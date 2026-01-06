@@ -384,6 +384,54 @@ export const updateSelectedBatterySpec = async (selectedBatterySpecId: number, r
   }
 };
 
+export const updateSelectedPanelSpec = async (selectedPanelSpecId: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!selectedPanelSpecId) {
+    throw new Error("Selected panel spec Id is missing for update!");
+  }
+
+  try {
+    const response = await quotationAPI.put(`/api/org-panel-specs/${selectedPanelSpecId}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating selected panel specs:", error);
+    throw new Error("Failed to update selected panel specs.");
+  }
+};
+
+export const updateSelectedInverterSpec = async (selectedInverterSpecId: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!selectedInverterSpecId) {
+    throw new Error("Selected inverter spec Id is missing for update!");
+  }
+
+  try {
+    const response = await quotationAPI.put(`/api/org-inverter-specs/${selectedInverterSpecId}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating selected inverter specs:", error);
+    throw new Error("Failed to update selected inverter specs.");
+  }
+};
+
+export const updateSelectedPipeSpec = async (selectedPipeSpecId: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  if (!selectedPipeSpecId) {
+    throw new Error("Selected pipe spec Id is missing for update!");
+  }
+
+  try {
+    const response = await quotationAPI.put(`/api/org-pipe-specs/${selectedPipeSpecId}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating selected pipe specs:", error);
+    throw new Error("Failed to update selected pipe specs.");
+  }
+};
+
 export const updateInverterSpecs = async (id: number, requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 

@@ -61,14 +61,13 @@ export const SystemSpecifications = () => {
   const navigate = useNavigate();
 
   const [, setIsSpecsSaved] = useState(false);
-  const [, setIsPreviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [, setIsCustomSpecs] = useState(false);
   const [govIdName, setGovIdName] = useState("");
+  const [connectionType, setConnectionType] = useState("");
   const [orgId, setOrgId] = useState<number | null>(null);
   const [agencyId, setAgencyId] = useState<number | null>(null);
-  const [isFetchingRecommendations,] = useState(false);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
   const [dialogType, setDialogType] = useState<
@@ -80,6 +79,12 @@ export const SystemSpecifications = () => {
   const [dialogAction, setDialogAction] = useState<
     (() => Promise<void> | void) | null
   >(null);
+
+  const [quotationFileMeta, setQuotationFileMeta] = useState<{
+  systemCapacityKw?: number;
+  panelBrandName?: string;
+}>({});
+
 
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
@@ -114,11 +119,10 @@ export const SystemSpecifications = () => {
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
 
-  const [orgPipeSpecId, setOrgPipeSpecId] = useState<number | null>(null);
   const [pipes, setPipes] = useState<any[]>([]);
 
 
-  const [orgBatterySpecId, setOrgBatterySpecId] = useState<number | null>(null);
+  const [, setOrgBatterySpecId] = useState<number | null>(null);
   const [batteryCapacities, setBatteryCapacities] = useState<BatterySpec[]>([]);
 
 
@@ -126,7 +130,7 @@ export const SystemSpecifications = () => {
 
   const [selectedSpecId, setSelectedSpecId] = useState<number | null>(null);
 
-  const [isPrefilling, setIsPrefilling] = useState(false);
+  const [, setIsPrefilling] = useState(false);
 
   const [isFormOpen, setIsFormOpen] = useState(savedSpecs.length === 0 || savedSpecs.length === 1);
 
@@ -162,14 +166,10 @@ export const SystemSpecifications = () => {
   const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [isEditingFabrication, setIsEditingFabrication] = useState(false);
+  const [, setIsEditingFabrication] = useState(false);
   const [finalQuotationId, setFinalQuotationId] = useState<number | null>(null);
   const [secondaryIdMap, setSecondaryIdMap] = useState<Record<number, number>>({});
   const [isLoadingSavedSpecs, setIsLoadingSavedSpecs] = useState(false);
-
-
-
-
 
   const [formData, setFormData] = useState({
     systemCost: 0,
@@ -287,13 +287,15 @@ export const SystemSpecifications = () => {
         const data = await getConnectionByConnectionId(Number(connectionId));
         setConnectionDetails(data);
 
-        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null) {
+        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null && data?.connectionTypeName) {
           setPhaseTypeId(data.phaseTypeId);
           setAvgMonthlyConsumption(data.avgMonthlyConsumption);
+          setConnectionType(data.connectionTypeName)
           console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
         } else {
           setPhaseTypeId(null);
           setAvgMonthlyConsumption(null);
+          setConnectionType("");
         }
       } catch (error) {
         console.error("Failed to fetch connection details", error);
@@ -308,21 +310,21 @@ export const SystemSpecifications = () => {
     setIsLoadingSavedSpecs(true);
 
     try {
+
+      hasFetchedRef.current = false;
+
       const data = await getSavedSystemSpecs(connectionId);
       setSavedSpecs(data || []);
 
-      // 🔍 Find the first locked spec (isRunningCopy = false)
       const lockedSpec = (data || []).find(spec => spec.isRunningCopy === false);
 
       if (lockedSpec) {
         console.log("Locked spec found:", lockedSpec);
         setSystemSpecificationId(lockedSpec.id);
 
-        // 🔄 Fetch secondaryId for that locked spec
         try {
           const secondaryData = await getSecondaryId(lockedSpec.id);
 
-          // handle both array or object responses
           const secondaryIdValue = Array.isArray(secondaryData)
             ? secondaryData[0]?.id
             : secondaryData?.id;
@@ -342,7 +344,7 @@ export const SystemSpecifications = () => {
     } catch (err) {
       console.error("Error fetching saved specs", err);
     } finally {
-    // ✅ ALWAYS stop spinner (even if no specs or error)
+
     setIsLoadingSavedSpecs(false);
   }
   };
@@ -811,6 +813,11 @@ export const SystemSpecifications = () => {
     setIsPrefilling(true);
     setSelectedSpecId(spec.id);
 
+    setQuotationFileMeta({
+    systemCapacityKw: spec.systemCapacityKw,
+    panelBrandName: spec.panelBrandShortName,
+  });
+
     // STEP 1: Extract common fields FIRST
     const initialGridTypeId =
       spec.inverters?.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId;
@@ -1026,10 +1033,31 @@ export const SystemSpecifications = () => {
     setIsLoading(true);
     try {
       const pdfBlob = await generateQuotationPDF(selectedSpecId, date);
+
+      const safe = (val?: string | number) =>
+  String(val || "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, ""); // ✅ allow dot
+
+
+    const fileName = [
+      safe(govIdName),
+      safe(quotationFileMeta.systemCapacityKw
+        ? `${quotationFileMeta.systemCapacityKw}kW`
+        : ""),
+      safe(connectionType),          // ✅ FROM STATE
+      safe(quotationFileMeta.panelBrandName),
+      "Quotation",
+    ]
+      .filter(Boolean)
+      .join("_") + ".pdf";
+
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
-      link.download = `quotation_${govIdName}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

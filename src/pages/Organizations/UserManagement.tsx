@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, Us
 import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
 import { fetchOrganizations, Organization, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
-import Card, { CardBody, CardHeader } from '../../components/ui/Card';
+import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';

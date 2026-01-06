@@ -230,7 +230,7 @@ const ListOfConsumers: React.FC = () => {
       event === "CONNECTION_ADDED"
     ) {
       // Reset pagination and reload list
-      setCurrentPage(0);
+      //setCurrentPage(0);
       loadConsumers(0);
     }
   });

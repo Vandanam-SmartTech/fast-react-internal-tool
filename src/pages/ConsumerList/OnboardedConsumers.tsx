@@ -3,10 +3,10 @@ import { fetchOnboardedConsumers, searchOnboardedConsumers } from "../../service
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye, Plus } from "lucide-react";
+import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye, UserPlus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId } from "../../services/organizationService";
+import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, fetchAllUsersByOrgId } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 
 interface Consumer {
@@ -47,7 +47,29 @@ const OnboardedConsumers: React.FC = () => {
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
 
-  const [isLoadingAll, ] = useState<boolean>(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [selectedConsumer, setSelectedConsumer] = useState<Consumer | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"ELECTRICIAN" | "FABRICATOR" | null>(null);
+
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+
+  const [search, setSearch] = useState("");
+
+const visibleUsers = filteredUsers.filter(user =>
+  user.nameAsPerGovId.toLowerCase().includes(search.toLowerCase()) ||
+  user.contactNumber.includes(search)
+);
+
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+
+
+  console.log("User org roles:", users.map(u => u.organizationRoles));
+
+
+  const [isLoadingAll,] = useState<boolean>(false);
 
   const handleViewConsumer = (consumer: Consumer) => {
     console.log('Viewing onboarded consumer:', { consumer });
@@ -64,6 +86,33 @@ const OnboardedConsumers: React.FC = () => {
     navigate(`/generate-documents`, { state: { consumer } });
   };
 
+  const openAssignModule = async (consumer: Consumer) => {
+    setSelectedConsumer(consumer);
+    setIsAssignOpen(true);
+    setSelectedRole(null);
+    setFilteredUsers([]);
+
+    const data = await fetchAllUsersByOrgId(userInfo.orgId);
+    setUsers(data || []);
+  };
+
+  const ROLE_MAP = {
+    ELECTRICIAN: "ROLE_ORG_ELECTRICIAN",
+    FABRICATOR: "ROLE_ORG_FABRICATOR",
+  };
+
+  const handleRoleSelect = (role: "ELECTRICIAN" | "FABRICATOR") => {
+    setSelectedRole(role);
+
+    const filtered = users.filter(user =>
+      user.organizationRoles?.some(r =>
+        Number(r.organizationId) === Number(userInfo.orgId) &&
+        r.roleName === ROLE_MAP[role]
+      )
+    );
+
+    setFilteredUsers(filtered);
+  };
 
 
   const loadOnboardedConsumers = async (page: number) => {
@@ -211,72 +260,6 @@ const OnboardedConsumers: React.FC = () => {
       }
     };
   }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole, isInitialized]);
-
-
-  // useEffect(() => {
-  //   const loadMaterialsForSearchResults = async () => {
-  //     if (searchResults.length === 0) return;
-
-  //     const materialsPromises = searchResults.map(async (consumer) => {
-  //       try {
-  //         const materials = await getMaterialsByConnectionId(consumer.id);
-  //         return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
-  //       } catch (error) {
-  //         console.error(`Error loading materials for consumer ${consumer.id}:`, error);
-  //         return { consumerId: consumer.id, hasMaterials: false };
-  //       }
-  //     });
-
-  //     try {
-  //       const materialsResults = await Promise.all(materialsPromises);
-  //       const newMaterialsMap = { ...materialsMap };
-
-  //       materialsResults.forEach(({ consumerId, hasMaterials }) => {
-  //         newMaterialsMap[consumerId] = hasMaterials;
-  //       });
-
-  //       setMaterialsMap(newMaterialsMap);
-  //     } catch (error) {
-  //       console.error("Error loading materials for search results:", error);
-  //     }
-  //   };
-
-  //   loadMaterialsForSearchResults();
-  // }, [searchResults]);
-
-  // Load materials for regular consumers list
-
-
-  // useEffect(() => {
-  //   const loadMaterialsForConsumers = async () => {
-  //     if (consumers.length === 0) return;
-
-  //     const materialsPromises = consumers.map(async (consumer) => {
-  //       try {
-  //         const materials = await getMaterialsByConnectionId(consumer.id);
-  //         return { consumerId: consumer.id, hasMaterials: materials.length > 0 };
-  //       } catch (error) {
-  //         console.error(`Error loading materials for consumer ${consumer.id}:`, error);
-  //         return { consumerId: consumer.id, hasMaterials: false };
-  //       }
-  //     });
-
-  //     try {
-  //       const materialsResults = await Promise.all(materialsPromises);
-  //       const newMaterialsMap = { ...materialsMap };
-
-  //       materialsResults.forEach(({ consumerId, hasMaterials }) => {
-  //         newMaterialsMap[consumerId] = hasMaterials;
-  //       });
-
-  //       setMaterialsMap(newMaterialsMap);
-  //     } catch (error) {
-  //       console.error("Error loading materials for consumers:", error);
-  //     }
-  //   };
-
-  //   loadMaterialsForConsumers();
-  // }, [consumers]);
 
   const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
@@ -485,15 +468,6 @@ const OnboardedConsumers: React.FC = () => {
             <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            {/* <div className="flex items-center gap-3">
-
-              {materialsMap[consumer.id] && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-50 text-solar-700 dark:bg-solar-900/20 dark:text-solar-300 px-2.5 py-1 text-xs">
-                  <Package className="w-3.5 h-3.5" />
-                  Materials Added
-                </span>
-              )}
-            </div> */}
           </div>
         </div>
 
@@ -530,62 +504,35 @@ const OnboardedConsumers: React.FC = () => {
 
 
         <div className="space-y-3">
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleViewConsumer(consumer)}
-              className="flex-1"
               leftIcon={<Eye className="w-4 h-4" />}
             >
               View Details
             </Button>
 
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
               onClick={() => handleGenerateDocuments(consumer)}
-              className="flex-1"
               leftIcon={<FileText className="w-4 h-4" />}
             >
               Manage Documents
             </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openAssignModule(consumer)}
+              className="col-span-2"
+              leftIcon={<UserPlus className="w-4 h-4" />}
+            >
+              Assign Staff
+            </Button>
           </div>
-
-          {/* <Button
-            variant={materialsMap[consumer.id] ? "outline" : "primary"}
-            size="sm"
-            onClick={() =>
-              materialsMap[consumer.id]
-                ? handleViewMaterialDetails(consumer)
-                : handleMaterialDetails(consumer)
-            }
-            className="w-full"
-            leftIcon={
-              materialsMap[consumer.id] ? (
-                <Package className="w-4 h-4" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )
-            }
-          >
-            {materialsMap[consumer.id] ? "View Materials" : "Add Materials"}
-          </Button> */}
-
-          {/* {(!( userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <Button
-            variant="primary"
-            size="sm"
-            onClick={() =>
-              navigate("/material-form", {
-                state: { consumer, connectionId: consumer.id },
-              })
-            }
-            className="w-full"
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            Manage Material Data
-          </Button>)} */}
-
 
         </div>
       </CardBody>
@@ -819,8 +766,6 @@ const OnboardedConsumers: React.FC = () => {
                 </div>
               )}
 
-
-
           </div>
         </div>
       </div>
@@ -902,12 +847,135 @@ const OnboardedConsumers: React.FC = () => {
             </div>
           )}
 
+
+
           {/* Pagination */}
           {renderPagination() && (
             <div className="flex justify-center items-center mt-8 gap-2">
               {renderPagination()}
             </div>
           )}
+
+{isAssignOpen && (
+  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+
+    {/* Modal */}
+    <div className="w-full max-w-lg bg-white rounded-xl shadow-xl p-5 max-h-[90vh] flex flex-col">
+
+      {/* Header */}
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <h3 className="text-lg font-semibold">Assign Staff</h3>
+          <p className="text-sm text-gray-500">
+            Consumer: {selectedConsumer?.govIdName}
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsAssignOpen(false)}
+          className="text-gray-500 hover:text-gray-700 text-lg"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Role Selection */}
+      <div className="flex gap-3 mb-3">
+        <Button
+          variant={selectedRole === "ELECTRICIAN" ? "primary" : "outline"}
+          onClick={() => handleRoleSelect("ELECTRICIAN")}
+          className="flex-1"
+        >
+          Electrician
+        </Button>
+
+        <Button
+          variant={selectedRole === "FABRICATOR" ? "primary" : "outline"}
+          onClick={() => handleRoleSelect("FABRICATOR")}
+          className="flex-1"
+        >
+          Fabricator
+        </Button>
+
+      </div>
+
+      {/* Assignment Duration */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="text-xs text-gray-600">Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full border rounded-md px-2 py-1 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-600">End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            min={startDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full border rounded-md px-2 py-1 text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Search */}
+      <input
+        type="text"
+        placeholder="Search staff by name or mobile"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border rounded-md px-3 py-2 text-sm mb-2"
+      />
+
+      {/* Count */}
+      {selectedRole && (
+        <p className="text-xs text-gray-500 mb-2">
+          {visibleUsers.length} staff found
+        </p>
+      )}
+
+      {/* Staff List */}
+      <div className="space-y-2 overflow-y-auto flex-1">
+        {!selectedRole ? (
+          <p className="text-sm text-gray-500 text-center mt-6">
+            Select role to continue
+          </p>
+        ) : visibleUsers.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center mt-6">
+            No {selectedRole.toLowerCase()} available
+          </p>
+        ) : (
+          visibleUsers.map(user => (
+            <div
+              key={user.id}
+              className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50"
+            >
+              <div>
+                <p className="font-medium">{user.nameAsPerGovId}</p>
+                <p className="text-xs text-gray-500">{user.contactNumber}</p>
+              </div>
+
+              <Button
+                size="sm"
+                disabled={!startDate || !endDate}
+                onClick={() => assignUserToConsumer(user)}
+              >
+                Assign
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
+
+    </div>
+  </div>
+)}
+
         </>
       )}
     </div>
