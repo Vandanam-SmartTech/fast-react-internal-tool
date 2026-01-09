@@ -51,10 +51,8 @@ interface SystemSpec {
 
   inverters?: Inverter[];
 
-  createdAt: string; // ISO string from backend
+  createdAt: string;
 }
-
-
 
 export const SystemSpecifications = () => {
   const location = useLocation();
@@ -85,7 +83,6 @@ export const SystemSpecifications = () => {
   panelBrandName?: string;
 }>({});
 
-
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
@@ -109,10 +106,8 @@ export const SystemSpecifications = () => {
 
   const [panels, setPanels] = useState<any[]>([]);
 
-
   const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
   const [panelCapacities, setPanelCapacities] = useState<number[]>([]);
-
 
   const [, setSystemCapacityKw] = useState<number | null>(null);
 
@@ -121,16 +116,14 @@ export const SystemSpecifications = () => {
 
   const [pipes, setPipes] = useState<any[]>([]);
 
-
   const [, setOrgBatterySpecId] = useState<number | null>(null);
   const [batteryCapacities, setBatteryCapacities] = useState<BatterySpec[]>([]);
-
 
   const [savedSpecs, setSavedSpecs] = useState<SystemSpec[]>([]);
 
   const [selectedSpecId, setSelectedSpecId] = useState<number | null>(null);
 
-  const [, setIsPrefilling] = useState(false);
+  const [isPrefilling, setIsPrefilling] = useState(false);
 
   const [isFormOpen, setIsFormOpen] = useState(savedSpecs.length === 0 || savedSpecs.length === 1);
 
@@ -166,7 +159,7 @@ export const SystemSpecifications = () => {
   const [availableSpaceTypes, setAvailableSpaceTypes] = useState<any[]>([]);
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [, setIsEditingFabrication] = useState(false);
+  const [isEditingFabrication, setIsEditingFabrication] = useState(false);
   const [finalQuotationId, setFinalQuotationId] = useState<number | null>(null);
   const [secondaryIdMap, setSecondaryIdMap] = useState<Record<number, number>>({});
   const [isLoadingSavedSpecs, setIsLoadingSavedSpecs] = useState(false);
@@ -376,48 +369,81 @@ export const SystemSpecifications = () => {
   }, []);
 
 
+  // useEffect(() => {
+  //   const loadInverterBrands = async () => {
+
+  //     setInverters([]);
+  //     setInverterCapacities([]);
+  //     setFormData((prev) => {
+
+  //       const updatedInverters = (prev.inverters || []).map((inv) => ({
+  //         ...inv,
+  //         inverterBrandId: null,
+  //         orgInverterSpecId: null,
+  //       }));
+  //       return {
+  //         ...prev,
+  //         inverterBrandId: null,
+  //         orgInverterSpecId: null,
+  //         inverters: updatedInverters,
+  //       };
+  //     });
+
+
+  //     setInverterCapacitiesMap({});
+
+  //     if (phaseTypeId !== null && gridTypeId !== null && orgId !== null) {
+  //       try {
+  //         const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
+  //         setInverters(Array.isArray(data) ? data : []);
+  //       } catch (error) {
+  //         console.error("Failed to fetch inverter brands:", error);
+  //         setInverters([]);
+  //       } finally {
+  //         setIsPrefilling(false);
+  //       }
+  //     }
+  //   };
+
+  //   loadInverterBrands();
+  // }, [phaseTypeId, gridTypeId, orgId]);
+
   useEffect(() => {
-    const loadInverterBrands = async () => {
+  const loadInverterBrands = async () => {
 
-      setInverters([]);
-      setInverterCapacities([]);
-      setFormData((prev) => {
+    setInverters([]);
+    setInverterCapacities([]);
 
-        const updatedInverters = (prev.inverters || []).map((inv) => ({
+    if (!isPrefilling) {
+      setFormData((prev) => ({
+        ...prev,
+        inverters: (prev.inverters || []).map(inv => ({
           ...inv,
           inverterBrandId: null,
           orgInverterSpecId: null,
-        }));
-        return {
-          ...prev,
-          inverterBrandId: null,
-          orgInverterSpecId: null,
-          inverters: updatedInverters,
-        };
-      });
-
+        })),
+      }));
 
       setInverterCapacitiesMap({});
+    }
 
-      if (phaseTypeId !== null && gridTypeId !== null && orgId !== null) {
-        try {
-          const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
-          setInverters(Array.isArray(data) ? data : []);
-        } catch (error) {
-          console.error("Failed to fetch inverter brands:", error);
-          setInverters([]);
-        } finally {
-          setIsPrefilling(false);
-        }
-      }
-    };
+    if (phaseTypeId && gridTypeId && orgId) {
+      const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
+      setInverters(Array.isArray(data) ? data : []);
+    }
 
-    loadInverterBrands();
-  }, [phaseTypeId, gridTypeId, orgId]);
+    setIsPrefilling(false);
+  };
+
+  loadInverterBrands();
+}, [phaseTypeId, gridTypeId, orgId]);
+
 
 
   useEffect(() => {
     const loadInverterBrandCapacities = async () => {
+
+      if (isPrefilling) return;
 
       setInverterCapacities([]);
 
@@ -808,7 +834,6 @@ export const SystemSpecifications = () => {
   };
 
 
-
   const handleSelectSpec = async (spec) => {
     setIsPrefilling(true);
     setSelectedSpecId(spec.id);
@@ -894,6 +919,9 @@ export const SystemSpecifications = () => {
     // setBatterySpecId(spec.batterySpecsId);
 
     setPriceAlreadySetFromCustomerData(true);
+
+    setTimeout(() => setIsPrefilling(false), 0);
+
   };
 
 
@@ -1326,7 +1354,6 @@ useEffect(() => {
         </div>
       </div>
 
-
       {isLoadingSavedSpecs && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
           <div className="flex flex-col items-center space-y-4">
@@ -1354,10 +1381,6 @@ useEffect(() => {
           </div>
         </div>
       )}
-
-
-
-
 
       <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
@@ -1770,6 +1793,7 @@ useEffect(() => {
               options={panels.map((panel) => {
                 const parts = [
                   panel.panelBrandName || null,
+                  panel.panelTypeName || null,
                   panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
                   panel.modelNumber ? `(${panel.modelNumber})` : null
                 ];
@@ -1884,11 +1908,9 @@ useEffect(() => {
                           label,
                         };
                       })}
-
                       disabled={!inv.inverterBrandId}
                       placeholder="Select Inverter Spec"
                     />
-
                   </div>
 
                   {/* Inverter Count */}
@@ -1936,7 +1958,6 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-
           </div>
 
 
@@ -2203,7 +2224,7 @@ useEffect(() => {
                   inputMode="numeric"
                   name="fabricationCost"
                   value={
-                    isEditing
+                    isEditingFabrication
                       ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
                       : formatIndianNumber(formData.fabricationCost)
                   }
@@ -2252,17 +2273,6 @@ useEffect(() => {
               </button>
 
 
-
-              {/* {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (<button
-                  type="button"
-                  onClick={handlePreview}
-                  disabled={!selectedSpecId || isPreviewLoading}
-                  className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
-                </button>)} */}
 
               {(userInfo?.role === "ROLE_ORG_ADMIN" ||
                 userInfo?.role === "ROLE_AGENCY_ADMIN" ||

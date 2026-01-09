@@ -184,152 +184,151 @@ const StaffDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div className="p-6 max-w-7xl mx-auto">
 
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between
+                    gap-3 sm:gap-4 mb-6 sm:mb-8">
 
         <div>
-          <h1 className="text-3xl font-bold text-secondary-900">
+          <h1 className="font-bold text-secondary-900
+                       text-xl sm:text-2xl lg:text-3xl
+                       leading-tight">
             {userClaims?.preferred_name
               ? `${greeting}, ${userClaims.preferred_name}!`
               : 'Welcome back!'}
           </h1>
-          <p className="text-secondary-700 dark:text-secondary-300 mt-1">
+
+          <p className="mt-1 text-secondary-700 dark:text-secondary-300
+                      text-xs sm:text-sm lg:text-base">
             Manage Customers and View Progress
           </p>
         </div>
 
-
-        <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+        {/* Time & Date */}
+        <div className="flex items-center gap-3 sm:gap-4
+                      text-xs sm:text-sm
+                      text-secondary-600 dark:text-secondary-300">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>{currentTime.toLocaleTimeString()}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>{currentTime.toLocaleDateString()}</span>
           </div>
         </div>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+                    gap-4 sm:gap-6 mt-4 sm:mt-6">
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-
-
-
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover-lift focus-ring" onClick={() => handleActivate('/list-of-consumers')}>
-          <CardBody className="p-4" >
-            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/list-of-consumers" aria-label="View total customers" onKeyDown={handleKeyActivate}>
+        <Card
+          className="bg-gradient-to-r from-purple-50 to-purple-100
+                   border-purple-200 hover-lift focus-ring"
+          onClick={() => handleActivate('/list-of-consumers')}
+        >
+          <CardBody className="p-4 sm:p-5">
+            <div
+              className="flex items-center justify-between"
+              role="button"
+              tabIndex={0}
+              data-path="/list-of-consumers"
+              aria-label="View total customers"
+              onKeyDown={handleKeyActivate}
+            >
               <div>
-                <p className="text-sm font-medium text-purple-600">Total Customers</p>
-                <p className="text-2xl font-bold text-purple-900" aria-live="polite">
+                <p className="font-medium text-purple-600
+                            text-xs sm:text-sm">
+                  Total Customers
+                </p>
+                <p className="font-bold text-purple-900
+                            text-lg sm:text-2xl"
+                  aria-live="polite">
                   {count !== null ? animatedCount : 0}
                 </p>
               </div>
-              <div className="p-2 bg-purple-200 rounded-lg">
-                <Users className="h-6 w-6 text-purple-700" />
+              <div className="p-2 sm:p-2.5 bg-purple-200 rounded-lg">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-700" />
               </div>
             </div>
           </CardBody>
         </Card>
 
-        <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200 hover-lift focus-ring" onClick={() => handleActivate('/onboarded-consumers')}>
-          <CardBody className="p-4">
-            <div className="flex items-center justify-between" role="button" tabIndex={0} data-path="/onboarded-consumers" aria-label="View onboarded customers" onKeyDown={handleKeyActivate}>
+        <Card
+          className="bg-gradient-to-r from-solar-50 to-solar-100
+                   border-solar-200 hover-lift focus-ring"
+          onClick={() => handleActivate('/onboarded-consumers')}
+        >
+          <CardBody className="p-4 sm:p-5">
+            <div
+              className="flex items-center justify-between"
+              role="button"
+              tabIndex={0}
+              data-path="/onboarded-consumers"
+              aria-label="View onboarded customers"
+              onKeyDown={handleKeyActivate}
+            >
               <div>
-                <p className="text-sm font-medium text-solar-600">Onboarded Customers</p>
-                <p className="text-2xl font-bold text-solar-900" aria-live="polite"> {onboardedCount !== null ? animatedOnboardedCount : 0}</p>
+                <p className="font-medium text-solar-600
+                            text-xs sm:text-sm">
+                  Onboarded Customers
+                </p>
+                <p className="font-bold text-solar-900
+                            text-lg sm:text-2xl"
+                  aria-live="polite">
+                  {onboardedCount !== null ? animatedOnboardedCount : 0}
+                </p>
               </div>
-              <div className="p-2 bg-solar-200 rounded-lg">
-                <UserCheck className="h-6 w-6 text-solar-700" />
+              <div className="p-2 sm:p-2.5 bg-solar-200 rounded-lg">
+                <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-solar-700" />
               </div>
             </div>
           </CardBody>
         </Card>
-
       </div>
 
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-6">
+      {/* Dashboard Items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+                    gap-4 sm:gap-6 mb-6 sm:mb-8 mt-6">
         {dashboardItems.map((item, index) => (
           <div
             key={index}
             onClick={() => navigate(item.path)}
-            className={`${item.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200 hover-lift focus-ring`}
+            className={`${item.color}
+                      p-4 sm:p-6
+                      rounded-lg shadow hover:shadow-lg
+                      cursor-pointer transition-all duration-200
+                      border border-gray-200 hover-lift focus-ring`}
             role="button"
             tabIndex={0}
             data-path={item.path}
             aria-label={item.title}
             onKeyDown={handleKeyActivate}
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
               {item.icon}
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h2>
-                <p className="text-gray-600 text-sm">{item.description}</p>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-gray-900
+                             text-sm sm:text-lg mb-1 sm:mb-2
+                             leading-tight">
+                  {item.title}
+                </h2>
+                <p className="text-gray-600
+                            text-xs sm:text-sm
+                            line-clamp-2">
+                  {item.description}
+                </p>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-
-      {/* Progress Chart */}
-      {/* <div className="card p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
-          Customer Progress Trend
-        </h2>
-        {statsLoading ? (
-          <SkeletonLoader className="w-full" height="h-[300px]" variant="rectangular" />
-        ) : data && data.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-              <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(dateStr) => format(parseISO(dateStr), 'MMM yyyy')}
-                tick={{ fontSize: 12, fill: '#475569' }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                minTickGap={16}
-                tickMargin={12}
-              />
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 12, fill: '#475569' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                formatter={(value: number) => [`${value} customers`, 'Count']}
-                labelFormatter={(label: string) => format(parseISO(label), 'MMM dd, yyyy')}
-                contentStyle={{ borderRadius: 8, borderColor: '#e5e7eb' }}
-                wrapperStyle={{ outline: 'none' }}
-                cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#2563eb"
-                strokeWidth={3}
-                dot={{ r: 3, strokeWidth: 2, stroke: '#2563eb', fill: '#ffffff' }}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: '#2563eb', fill: '#2563eb' }}
-                isAnimationActive
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-center text-secondary-600 dark:text-secondary-300 py-16">
-            No trend data available for the last 12 months.
-          </div>
-        )}
-      </div> */}
     </div>
   );
+
 };
 
 export default StaffDashboard;

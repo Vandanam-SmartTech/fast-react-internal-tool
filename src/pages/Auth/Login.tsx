@@ -245,21 +245,6 @@ const Login = () => {
             {/* Role selection */}
             {showOrgSelection ? (
               <div className="space-y-6 animate-fade-in">
-                {/* <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="w-full p-3 border rounded-xl"
-                >
-                  <option value="">Select Role & Organization</option>
-                  {roleOptions.map(({ orgId, orgName, role }) => (
-                    <option
-                      key={`${orgId}-${role}`}
-                      value={`${role}|${orgId}|${orgName}`}
-                    >
-                      {orgName} ({role.replace('ROLE_', '').replace(/_/g, ' ')})
-                    </option>
-                  ))}
-                </select> */}
 
                 <ReusableDropdown
                   value={selectedRole}

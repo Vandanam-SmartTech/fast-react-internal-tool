@@ -38,34 +38,42 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
-    useEffect(() => {
-      if (userInfo.orgId) {
-        loadOrganization(parseInt(userInfo.orgId));
-      }
-    }, [userInfo.orgId]);
+  useEffect(() => {
+    if (userInfo.orgId) {
+      loadOrganization(parseInt(userInfo.orgId));
+    }
+  }, [userInfo.orgId]);
 
-   const loadOrganization = async (orgId: number) => {
-  try {
-    const org = await getOrganizationById(orgId);
-    setOrganization(org);
-    setGstNumber(org.gstNumber); // ✅ store gst
-  } catch (error) {
-    toast.error('Failed to load organization');
-    navigate('/organizations');
-  } finally {
-    setLoading(false);
-  }
-};
+  const loadOrganization = async (orgId: number) => {
+    try {
+      const org = await getOrganizationById(orgId);
+      setOrganization(org);
+      setGstNumber(org.gstNumber); // ✅ store gst
+    } catch (error) {
+      toast.error('Failed to load organization');
+      navigate('/organizations');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const dashboardItems = [
 
+        {
+      title: 'Manage Customers',
+      description: 'List, View, Add, Update customers',
+      icon: <Users className="h-8 w-8 text-primary-600" />,
+      path: '/manage-customers',
+      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+      // requiresOrg: true
+    },
     {
       title: 'My Organization',
       description: 'View, Update my organization',
       icon: <Building className="h-8 w-8 text-purple-600" />,
       path: '/organization-view',
-      state: { orgId: userInfo?.orgId},
+      state: { orgId: userInfo?.orgId },
       color: 'bg-purple-50 hover:bg-purple-100',
     },
 
@@ -73,11 +81,11 @@ const AdminDashboard: React.FC = () => {
       title: 'Manage Agencies',
       description: 'List, View, Add, Update agencies',
       icon: <Building2 className="h-8 w-8 text-warning-600" />,
-      path: '/agencies',                     
+      path: '/agencies',
       state: {
-      orgId: userInfo?.orgId,
-      gstNumber: gstNumber // ✅ passed here
-    },
+        orgId: userInfo?.orgId,
+        gstNumber: gstNumber // ✅ passed here
+      },
       color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700'
     },
 
@@ -94,176 +102,57 @@ const AdminDashboard: React.FC = () => {
       icon: <Shield className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
-    },
-    {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-8 w-8 text-primary-600" />,
-      path: '/manage-customers',
-      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-      // requiresOrg: true
     }
   ];
-
-  // const quickActions = [
-  //   {
-  //     title: 'Add Customer',
-  //     description: 'Create a new customer record',
-  //     icon: <UserPlus className="h-5 w-5" />,
-  //     path: '/customer-form',
-  //     variant: 'primary' as const
-  //   },
-  //   {
-  //     title: 'View Reports',
-  //     description: 'Access analytics and reports',
-  //     icon: <BarChart3 className="h-5 w-5" />,
-  //     path: '/analytics',
-  //     variant: 'secondary' as const
-  //   },
-  //   {
-  //     title: 'Schedule Meeting',
-  //     description: 'Book appointments and meetings',
-  //     icon: <Calendar className="h-5 w-5" />,
-  //     path: '/schedule',
-  //     variant: 'success' as const
-  //   }
-  // ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header Section */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary-900">
-              {userClaims?.preferred_name
-                ? `${greeting}, ${userClaims.preferred_name}!`
-                : 'Welcome back!'}
-            </h1>
-            <p className="text-secondary-700 dark:text-secondary-300 mt-1">
-              Here's what's happening with your organization today
-            </p>
-          </div>
+<div className="space-y-3 sm:space-y-4">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+    
+    <div>
+      {/* Greeting */}
+      <h1 className="font-bold text-secondary-900
+                     text-xl sm:text-2xl lg:text-3xl
+                     leading-tight">
+        {userClaims?.preferred_name
+          ? `${greeting}, ${userClaims.preferred_name}!`
+          : 'Welcome back!'}
+      </h1>
 
+      {/* Subtitle */}
+      <p className="mt-1 text-secondary-700 dark:text-secondary-300
+                    text-xs sm:text-sm lg:text-base">
+        Here's what's happening with your organization today
+      </p>
+    </div>
 
-          <div className="flex items-center gap-4 text-sm text-secondary-600 dark:text-secondary-300">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>{currentTime.toLocaleTimeString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>{currentTime.toLocaleDateString()}</span>
-            </div>
-          </div>
-        </div>
+    {/* Time & Date */}
+    <div className="flex items-center gap-3 sm:gap-4
+                    text-xs sm:text-sm
+                    text-secondary-600 dark:text-secondary-300">
 
-        {/* Quick Stats */}
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-          <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-success-600">Active Users</p>
-                  <p className="text-2xl font-bold text-success-900">156</p>
-                </div>
-                <div className="p-2 bg-success-200 rounded-lg">
-                  <UserCog className="h-6 w-6 text-success-700" />
-                </div>
-              </div> */}
-        {/* <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+8% from last month</span>
-              </div> */}
-        {/* </CardBody>
-          </Card> */}
-
-
-        {/* <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary-600">Total Customers</p>
-                  <p className="text-2xl font-bold text-primary-900">1,234</p>
-                </div>
-                <div className="p-2 bg-primary-200 rounded-lg">
-                  <Users className="h-6 w-6 text-primary-700" />
-                </div>
-              </div> */}
-        {/* <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+12% from last month</span>
-              </div> */}
-        {/* </CardBody>
-          </Card> */}
-
-
-
-        {/* <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-warning-600">Agencies</p>
-                  <p className="text-2xl font-bold text-warning-900">23</p>
-                </div>
-                <div className="p-2 bg-warning-200 rounded-lg">
-                  <Building2 className="h-6 w-6 text-warning-700" />
-                </div>
-              </div> */}
-        {/* <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+3 new this month</span>
-              </div> */}
-        {/* </CardBody>
-          </Card> */}
-
-        {/* <Card className="bg-gradient-to-r from-solar-50 to-solar-100 border-solar-200">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-solar-600">Documents</p>
-                  <p className="text-2xl font-bold text-solar-900">89</p>
-                </div>
-                <div className="p-2 bg-solar-200 rounded-lg">
-                  <FileText className="h-6 w-6 text-solar-700" />
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1">
-                <TrendingUp className="h-4 w-4 text-success-600" />
-                <span className="text-sm text-success-600">+15 this week</span>
-              </div>
-            </CardBody>
-          </Card> */}
-        {/* </div> */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <span>{currentTime.toLocaleTimeString()}</span>
       </div>
 
-      {/* Quick Actions */}
-      {/* <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-secondary-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {quickActions.map((action, index) => (
-            <Card key={index} hover onClick={() => navigate(action.path)}>
-              <CardBody className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-${action.variant}-100`}>
-                    {action.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-secondary-900">{action.title}</h3>
-                    <p className="text-sm text-secondary-700 dark:text-secondary-300">{action.description}</p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </div> */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <span>{currentTime.toLocaleDateString()}</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 
       {/* Main Dashboard Items */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-secondary-900">Management Tools</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {dashboardItems.map((item, index) => (
             <Card
               key={index}
@@ -271,41 +160,53 @@ const AdminDashboard: React.FC = () => {
               onClick={() => navigate(item.path, { state: item.state })}
               className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
             >
-              <CardBody className="p-6">
-                <div className="flex items-start gap-4">
+              <CardBody className="p-4 md:p-5">
+                <div className="flex items-start gap-3">
 
-                  {/* Icon with white background */}
-                  <div className="p-3 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                  {/* Icon */}
+                  <div className="p-2 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                     {item.icon}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                    {/* Title */}
+                    <h3 className="font-semibold text-secondary-900
+                       text-sm sm:text-base lg:text-lg
+                       leading-tight mb-1">
                       {item.title}
                     </h3>
-                    <p className="text-secondary-700 dark:text-secondary-300 text-sm mb-4">
+
+                    {/* Description */}
+                    <p className="text-secondary-700 dark:text-secondary-300
+                      text-xs sm:text-sm
+                      leading-snug line-clamp-2 mb-2">
                       {item.description}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-secondary-900">
-                          {item.stats}
-                        </span>
-                        <span
-                          className={`text-sm font-medium ${item.changeType === 'positive' ? 'text-success-600 dark:text-success-400' :
-                            item.changeType === 'negative' ? 'text-error-600 dark:text-error-400' :
-                              'text-secondary-700 dark:text-secondary-300'
-                            }`}
-                        >
-                          {item.change}
-                        </span>
-                      </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-secondary-900
+                           text-lg sm:text-xl lg:text-2xl">
+                        {item.stats}
+                      </span>
+
+                      <span
+                        className={`text-xs sm:text-sm font-medium ${item.changeType === 'positive'
+                            ? 'text-success-600 dark:text-success-400'
+                            : item.changeType === 'negative'
+                              ? 'text-error-600 dark:text-error-400'
+                              : 'text-secondary-700 dark:text-secondary-300'
+                          }`}
+                      >
+                        {item.change}
+                      </span>
                     </div>
                   </div>
 
                 </div>
               </CardBody>
             </Card>
+
           ))}
         </div>
       </div>

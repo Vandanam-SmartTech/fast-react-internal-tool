@@ -620,7 +620,7 @@ export const fetchInverterBrandCapacities = async (
   try {
     console.log("Fetching inverter capacities...");
     console.log("Request params:", {
-      inverterBrandId
+      inverterBrandId,orgId,phaseTypeId,gridTypeId
     });
 
     const response = await quotationAPI.get(`/api/org-inverter-specs`, {

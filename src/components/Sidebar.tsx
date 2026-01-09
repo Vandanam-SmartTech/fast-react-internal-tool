@@ -54,31 +54,60 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     };
   }, [isOpen, onToggle]);
 
-  const goToListOfConsumers = () => navigate("/list-of-consumers");
-  const goToOnboardedConsumers = () => navigate("/onboarded-consumers");
-  const goToCustomerForm = () => navigate("/customer-form");
-  const goToOrganizations = () => navigate("/organizations");
-  const goToAdminManagement = () => navigate("/admin-management");
-  const goToUserManagement = () => navigate("/user-management");
-  const goToProductManagement = () => navigate("product-management");
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth < 768) {
+      onToggle(); // sidebar close
+    }
+  };
+
+  const navigateWithSidebarClose = (path: string) => {
+    navigate(path);
+    closeSidebarOnMobile();
+  };
+
+  const goToListOfConsumers = () =>
+    navigateWithSidebarClose("/list-of-consumers");
+
+  const goToOnboardedConsumers = () =>
+    navigateWithSidebarClose("/onboarded-consumers");
+
+  const goToCustomerForm = () =>
+    navigateWithSidebarClose("/customer-form");
+
+  const goToOrganizations = () =>
+    navigateWithSidebarClose("/organizations");
+
+  const goToAdminManagement = () =>
+    navigateWithSidebarClose("/admin-management");
+
+  const goToUserManagement = () =>
+    navigateWithSidebarClose("/user-management");
+
+  const goToProductManagement = () =>
+    navigateWithSidebarClose("/product-management");
+
 
 
   const handleHomeClick = async () => {
     try {
       if (!userClaims) {
         navigate("/login");
-        return;
+        closeSidebarOnMobile();
+      return;
+
       }
 
       // Super Admin shortcut
       if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
         navigate("/super-admin-dashboard");
+        closeSidebarOnMobile();
         return;
       }
 
       const selectedOrgStr = localStorage.getItem("selectedOrg");
       if (!selectedOrgStr) {
         navigate("/login");
+        closeSidebarOnMobile();
         return;
       }
 
@@ -89,6 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         console.error("Invalid selectedOrg format in localStorage");
         localStorage.removeItem("selectedOrg");
         navigate("/login");
+        closeSidebarOnMobile();
         return;
       }
 
@@ -97,6 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         alert("Invalid organization selection.");
         localStorage.removeItem("selectedOrg");
         navigate("/login");
+        closeSidebarOnMobile();
         return;
       }
 
@@ -132,10 +163,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           localStorage.removeItem("selectedOrg");
           navigate("/login");
       }
+      closeSidebarOnMobile();
     } catch (error) {
       console.error("Error fetching claims:", error);
       alert("Error determining user role.");
       navigate("/login");
+      closeSidebarOnMobile();
     }
   };
 

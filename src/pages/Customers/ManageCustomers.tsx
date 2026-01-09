@@ -34,33 +34,59 @@ const ManageCustomers: React.FC = () => {
   navigate(path); 
 };
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Customers</h1>
-        <p className="text-gray-600">Customer management and operations</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {customerActions.map((action, index) => (
-          <div 
-            key={index}
-            onClick={() => handleActionClick(action.path)}
-            className={`${action.color} p-6 rounded-lg shadow hover:shadow-lg cursor-pointer transition-all duration-200 border border-gray-200`}
-          >
-            <div className="flex items-start gap-4">
-              {action.icon}
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{action.title}</h2>
-                <p className="text-gray-600 text-sm">{action.description}</p>
-              </div>
+return (
+  <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+
+    {/* Header */}
+    <div className="mb-6 sm:mb-8">
+      <h1 className="font-bold text-gray-900
+                     text-xl sm:text-2xl lg:text-3xl
+                     leading-tight mb-1 sm:mb-2">
+        Manage Customers
+      </h1>
+      <p className="text-gray-600
+                    text-xs sm:text-sm lg:text-base">
+        Customer management and operations
+      </p>
+    </div>
+
+    {/* Action Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+                    gap-4 sm:gap-6">
+      {customerActions.map((action, index) => (
+        <div 
+          key={index}
+          onClick={() => handleActionClick(action.path)}
+          className={`${action.color}
+                      p-4 sm:p-6
+                      rounded-lg shadow hover:shadow-lg
+                      cursor-pointer transition-all duration-200
+                      border border-gray-200`}
+        >
+          <div className="flex items-start gap-3 sm:gap-4">
+            {action.icon}
+
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-gray-900
+                             text-sm sm:text-lg
+                             mb-1 sm:mb-2
+                             leading-tight">
+                {action.title}
+              </h2>
+              <p className="text-gray-600
+                            text-xs sm:text-sm
+                            line-clamp-2">
+                {action.description}
+              </p>
             </div>
           </div>
-        ))}
-      </div>
-
+        </div>
+      ))}
     </div>
-  );
+
+  </div>
+);
+
 };
 
 export default ManageCustomers;

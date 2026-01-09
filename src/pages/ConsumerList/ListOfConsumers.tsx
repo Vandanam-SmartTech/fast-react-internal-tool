@@ -223,22 +223,21 @@ const ListOfConsumers: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-  connectCustomerSocket((event) => {
-    if (
-      event === "CUSTOMER_ADDED" ||
-      event === "CONNECTION_ADDED"
-    ) {
-      // Reset pagination and reload list
-      //setCurrentPage(0);
-      loadConsumers(0);
-    }
-  });
+//   useEffect(() => {
+//   connectCustomerSocket((event) => {
+//     if (
+//       event === "CUSTOMER_ADDED" ||
+//       event === "CONNECTION_ADDED"
+//     ) {
 
-  return () => {
-    disconnectCustomerSocket();
-  };
-}, [isInitialized]);
+//       loadConsumers(0);
+//     }
+//   });
+
+//   return () => {
+//     disconnectCustomerSocket();
+//   };
+// }, [isInitialized]);
 
 
 
