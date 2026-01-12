@@ -27,7 +27,7 @@ export const getQuotationAPI = () => {
 
 
 
-export const generateQuotationPDF = async (selectedSpecId: number, quotationGeneratedDate: Date): Promise<Blob> => {
+export const generateQuotationPDF = async (selectedSpecId: number, quotationGeneratedDate: Date, quotationNumber: string): Promise<Blob> => {
   const quotationAPI = getQuotationAPI();
   try {
     if (!selectedSpecId) throw new Error("Spec ID is missing");
@@ -42,7 +42,9 @@ export const generateQuotationPDF = async (selectedSpecId: number, quotationGene
       `/api/quotation-details/generate-pdf/${selectedSpecId}`,
       {
         responseType: "blob",
-        params: { quotationGeneratedDate: formattedDate },
+        params: { quotationGeneratedDate: formattedDate,
+          quotationNumber,
+         },
       }
     );
 

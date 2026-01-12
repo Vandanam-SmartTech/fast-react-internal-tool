@@ -79,9 +79,9 @@ export const SystemSpecifications = () => {
   >(null);
 
   const [quotationFileMeta, setQuotationFileMeta] = useState<{
-  systemCapacityKw?: number;
-  panelBrandName?: string;
-}>({});
+    systemCapacityKw?: number;
+    panelBrandName?: string;
+  }>({});
 
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
@@ -101,8 +101,11 @@ export const SystemSpecifications = () => {
   const [inverterBrandId,] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
-  const [, setOrgInverterSpecId] = useState<number | null>(null);
+
   const [, setInverterCapacities] = useState<any[]>([]);
+
+  const [quotationNumber, setQuotationNumber] = useState("");
+
 
   const [panels, setPanels] = useState<any[]>([]);
 
@@ -148,6 +151,10 @@ export const SystemSpecifications = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
+
+  const normalizedQuotationNumber =
+    quotationNumber?.trim() === "" ? null : quotationNumber.trim();
+
 
   const tabs = [
     "Customer Details",
@@ -338,8 +345,8 @@ export const SystemSpecifications = () => {
       console.error("Error fetching saved specs", err);
     } finally {
 
-    setIsLoadingSavedSpecs(false);
-  }
+      setIsLoadingSavedSpecs(false);
+    }
   };
 
   useEffect(() => {
@@ -369,106 +376,63 @@ export const SystemSpecifications = () => {
   }, []);
 
 
-  // useEffect(() => {
-  //   const loadInverterBrands = async () => {
-
-  //     setInverters([]);
-  //     setInverterCapacities([]);
-  //     setFormData((prev) => {
-
-  //       const updatedInverters = (prev.inverters || []).map((inv) => ({
-  //         ...inv,
-  //         inverterBrandId: null,
-  //         orgInverterSpecId: null,
-  //       }));
-  //       return {
-  //         ...prev,
-  //         inverterBrandId: null,
-  //         orgInverterSpecId: null,
-  //         inverters: updatedInverters,
-  //       };
-  //     });
-
-
-  //     setInverterCapacitiesMap({});
-
-  //     if (phaseTypeId !== null && gridTypeId !== null && orgId !== null) {
-  //       try {
-  //         const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
-  //         setInverters(Array.isArray(data) ? data : []);
-  //       } catch (error) {
-  //         console.error("Failed to fetch inverter brands:", error);
-  //         setInverters([]);
-  //       } finally {
-  //         setIsPrefilling(false);
-  //       }
-  //     }
-  //   };
-
-  //   loadInverterBrands();
-  // }, [phaseTypeId, gridTypeId, orgId]);
-
   useEffect(() => {
-  const loadInverterBrands = async () => {
+    const loadInverterBrands = async () => {
 
-    setInverters([]);
-    setInverterCapacities([]);
-
-    if (!isPrefilling) {
-      setFormData((prev) => ({
-        ...prev,
-        inverters: (prev.inverters || []).map(inv => ({
-          ...inv,
-          inverterBrandId: null,
-          orgInverterSpecId: null,
-        })),
-      }));
-
-      setInverterCapacitiesMap({});
-    }
-
-    if (phaseTypeId && gridTypeId && orgId) {
-      const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
-      setInverters(Array.isArray(data) ? data : []);
-    }
-
-    setIsPrefilling(false);
-  };
-
-  loadInverterBrands();
-}, [phaseTypeId, gridTypeId, orgId]);
-
-
-
-  useEffect(() => {
-    const loadInverterBrandCapacities = async () => {
-
-      if (isPrefilling) return;
-
+      setInverters([]);
       setInverterCapacities([]);
 
-      setOrgInverterSpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        orgInverterSpecId: null
-      }));
+      if (!isPrefilling) {
+        setFormData((prev) => ({
+          ...prev,
+          inverters: (prev.inverters || []).map(inv => ({
+            ...inv,
+            inverterBrandId: null,
+            orgInverterSpecId: null,
+          })),
+        }));
+
+        setInverterCapacitiesMap({});
+      }
+
+      if (phaseTypeId && gridTypeId && orgId) {
+        const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
+        setInverters(Array.isArray(data) ? data : []);
+      }
+
+      setIsPrefilling(false);
+    };
+
+    loadInverterBrands();
+  }, [phaseTypeId, gridTypeId, orgId]);
 
 
-      if (inverterBrandId !== null && gridTypeId !== null && orgId !== null && phaseTypeId !== null) {
-        try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId, orgId, phaseTypeId, gridTypeId);
-          setInverterCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch inverter brand capacities:", error);
-          setInverterCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
+
+
+  useEffect(() => {
+    if (isPrefilling) return;
+    if (!inverterBrandId) return;
+
+    const loadInverterBrandCapacities = async () => {
+      setInverterCapacities([]);
+
+      try {
+        const data = await fetchInverterBrandCapacities(
+          inverterBrandId,
+          Number(orgId),
+          Number(phaseTypeId),
+          Number(gridTypeId)
+        );
+        setInverterCapacities(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch inverter brand capacities:", error);
+        setInverterCapacities([]);
       }
     };
 
     loadInverterBrandCapacities();
   }, [inverterBrandId, gridTypeId, orgId, phaseTypeId]);
+
 
   useEffect(() => {
     const loadPanelBrands = async () => {
@@ -581,8 +545,6 @@ export const SystemSpecifications = () => {
         } catch (error) {
           console.error("Failed to fetch battery brand capacities:", error);
           setBatteryCapacities([]);
-        } finally {
-          setIsPrefilling(false);
         }
       };
 
@@ -839,9 +801,9 @@ export const SystemSpecifications = () => {
     setSelectedSpecId(spec.id);
 
     setQuotationFileMeta({
-    systemCapacityKw: spec.systemCapacityKw,
-    panelBrandName: spec.panelBrandShortName,
-  });
+      systemCapacityKw: spec.systemCapacityKw,
+      panelBrandName: spec.panelBrandShortName,
+    });
 
     // STEP 1: Extract common fields FIRST
     const initialGridTypeId =
@@ -849,12 +811,14 @@ export const SystemSpecifications = () => {
 
     const initialMaterialOriginId = spec.materialOriginId;
 
-    setBatteryBrandId(spec.batteryBrandId || null);
-    setOrgBatterySpecId(spec.orgBatterySpecId || null);
+
 
     // Set them immediately
     setGridTypeId(initialGridTypeId);
     setMaterialOriginId(initialMaterialOriginId);
+
+    setBatteryBrandId(spec.batteryBrandId || null);
+    setOrgBatterySpecId(spec.orgBatterySpecId || null);
 
     // STEP 2: Build inverter list
     const inverterList = (spec.inverters || []).map((inv) => ({
@@ -875,7 +839,13 @@ export const SystemSpecifications = () => {
 
       if (inv.inverterBrandId) {
         try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId, Number(orgId), Number(phaseTypeId), Number(gridTypeId));
+          const capacities = await fetchInverterBrandCapacities(
+            inv.inverterBrandId,
+            Number(orgId),
+            Number(phaseTypeId),
+            Number(initialGridTypeId) // ✅ FIX
+          );
+
           capacitiesMap[i] = capacities;
         } catch (error) {
           capacitiesMap[i] = [];
@@ -915,8 +885,6 @@ export const SystemSpecifications = () => {
     }));
 
     setOrgPanelSpecId(spec.orgPanelSpecId);
-    // setBatteryBrandId(spec.batteryBrandId);
-    // setBatterySpecId(spec.batterySpecsId);
 
     setPriceAlreadySetFromCustomerData(true);
 
@@ -1055,31 +1023,37 @@ export const SystemSpecifications = () => {
     fetchPriceDetails();
   }, [priceInputsKey, fetchTrigger]);
 
-  const handleGenerateQuotation = async (date) => {
+  const handleGenerateQuotation = async (date: Date,
+    quotationNumber?: string) => {
     if (!selectedSpecId || !date) return;
 
     setIsLoading(true);
     try {
-      const pdfBlob = await generateQuotationPDF(selectedSpecId, date);
+      const normalizedQuotationNumber =
+      quotationNumber && quotationNumber.trim() !== ""
+        ? quotationNumber.trim()
+        : null;
+
+      const pdfBlob = await generateQuotationPDF(selectedSpecId, date, normalizedQuotationNumber as string);
 
       const safe = (val?: string | number) =>
-  String(val || "")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9._-]/g, ""); // ✅ allow dot
+        String(val || "")
+          .trim()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9._-]/g, ""); // ✅ allow dot
 
 
-    const fileName = [
-      safe(govIdName),
-      safe(quotationFileMeta.systemCapacityKw
-        ? `${quotationFileMeta.systemCapacityKw}kW`
-        : ""),
-      safe(connectionType),          // ✅ FROM STATE
-      safe(quotationFileMeta.panelBrandName),
-      "Quotation",
-    ]
-      .filter(Boolean)
-      .join("_") + ".pdf";
+      const fileName = [
+        safe(govIdName),
+        safe(quotationFileMeta.systemCapacityKw
+          ? `${quotationFileMeta.systemCapacityKw}kW`
+          : ""),
+        safe(connectionType),          // ✅ FROM STATE
+        safe(quotationFileMeta.panelBrandName),
+        "Quotation",
+      ]
+        .filter(Boolean)
+        .join("_") + ".pdf";
 
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -1140,61 +1114,61 @@ export const SystemSpecifications = () => {
 
   const hasFetchedRef = useRef(false);
 
-useEffect(() => {
-  if (hasFetchedRef.current) return;
-  if (savedSpecs.length === 0) return;
+  useEffect(() => {
+    if (hasFetchedRef.current) return;
+    if (savedSpecs.length === 0) return;
 
-  hasFetchedRef.current = true;
+    hasFetchedRef.current = true;
 
-  const fetchLockedSpecsDocs = async () => {
-    const lockedSpecs = savedSpecs.filter(
-      (spec) => !spec.isRunningCopy
-    );
+    const fetchLockedSpecsDocs = async () => {
+      const lockedSpecs = savedSpecs.filter(
+        (spec) => !spec.isRunningCopy
+      );
 
-    for (const spec of lockedSpecs) {
-      try {
-        setLoadingDocs((prev) => ({
-          ...prev,
-          [spec.id]: true,
-        }));
-
-        const secondaryResponse = await getSecondaryId(spec.id);
-        const secondaryId =
-          secondaryResponse?.id ?? secondaryResponse?.[0]?.id;
-
-        if (!secondaryId) continue;
-
-        setSecondaryIdMap((prev) => ({
-          ...prev,
-          [spec.id]: secondaryId,
-        }));
-
-        const documentResponse =
-          await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
-            spec.connectionId,
-            "Unsigned Quotation",
-            secondaryId
-          );
-
-        if (Array.isArray(documentResponse) && documentResponse.length > 0) {
-          setDocumentsMap((prev) => ({
+      for (const spec of lockedSpecs) {
+        try {
+          setLoadingDocs((prev) => ({
             ...prev,
-            [spec.id]: documentResponse[0],
+            [spec.id]: true,
+          }));
+
+          const secondaryResponse = await getSecondaryId(spec.id);
+          const secondaryId =
+            secondaryResponse?.id ?? secondaryResponse?.[0]?.id;
+
+          if (!secondaryId) continue;
+
+          setSecondaryIdMap((prev) => ({
+            ...prev,
+            [spec.id]: secondaryId,
+          }));
+
+          const documentResponse =
+            await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
+              spec.connectionId,
+              "Unsigned Quotation",
+              secondaryId
+            );
+
+          if (Array.isArray(documentResponse) && documentResponse.length > 0) {
+            setDocumentsMap((prev) => ({
+              ...prev,
+              [spec.id]: documentResponse[0],
+            }));
+          }
+        } catch (err) {
+          console.error(`Error fetching document for specId ${spec.id}`, err);
+        } finally {
+          setLoadingDocs((prev) => ({
+            ...prev,
+            [spec.id]: false,
           }));
         }
-      } catch (err) {
-        console.error(`Error fetching document for specId ${spec.id}`, err);
-      } finally {
-        setLoadingDocs((prev) => ({
-          ...prev,
-          [spec.id]: false,
-        }));
       }
-    }
-  };
+    };
 
-  fetchLockedSpecsDocs();
-}, [savedSpecs]);
+    fetchLockedSpecsDocs();
+  }, [savedSpecs]);
 
 
 
@@ -1523,8 +1497,8 @@ useEffect(() => {
                               }}
                               disabled={isFinalQuotation}
                               className={`p-2 rounded-full transition flex items-center justify-center ${isFinalQuotation
-                                  ? "text-green-700 cursor-default"
-                                  : "text-green-600 hover:text-green-800 hover:bg-green-50"
+                                ? "text-green-700 cursor-default"
+                                : "text-green-600 hover:text-green-800 hover:bg-green-50"
                                 }`}
                               title={
                                 isFinalQuotation
@@ -2304,10 +2278,20 @@ useEffect(() => {
                       <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
                         <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
                           <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                            Select Quotation Date
+                            Quotation Details
                           </h2>
 
                           {/* Native HTML Date Picker */}
+                          {/* Quotation Number */}
+                          <input
+                            type="text"
+                            placeholder="Enter Quotation Number"
+                            value={quotationNumber}
+                            onChange={(e) => setQuotationNumber(e.target.value)}
+                            className="border px-3 py-2 rounded w-full mb-4"
+                          />
+
+
                           <input
                             type="date"
                             value={
@@ -2336,7 +2320,7 @@ useEffect(() => {
                                   setShowDatePickModal(false); // close modal first
                                   // slight delay to ensure modal close before API call
                                   setTimeout(() => {
-                                    handleGenerateQuotation(selectedDate);
+                                    handleGenerateQuotation(selectedDate, quotationNumber);
                                   }, 300);
                                 }
                               }}
