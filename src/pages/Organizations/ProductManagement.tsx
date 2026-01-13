@@ -80,7 +80,7 @@ const ProductManagement: React.FC = () => {
     totalAh: "",
     chargingCurrent: "",
     dischargingCurrent: "",
-    warrantyMonths: "",
+    productWarranty: "",
     modelNumber: "",
     basePrice: "",
     description: "",
@@ -112,7 +112,7 @@ const ProductManagement: React.FC = () => {
       totalAh: "",
       chargingCurrent: "",
       dischargingCurrent: "",
-      warrantyMonths: "",
+      productWarranty: "",
       modelNumber: "",
       description: "",
       basePrice: "",
@@ -223,7 +223,7 @@ const ProductManagement: React.FC = () => {
       totalAh: Number(newSpec.totalAh),
       chargingCurrent: Number(newSpec.chargingCurrent),
       dischargingCurrent: Number(newSpec.dischargingCurrent),
-      warrantyMonths: Number(newSpec.warrantyMonths),
+      productWarranty: newSpec.productWarranty,
       modelNumber: newSpec.modelNumber,
       description: newSpec.description,
       //basePrice: Number(newSpec.basePrice),
@@ -254,7 +254,7 @@ const ProductManagement: React.FC = () => {
       totalAh: Number(newSpec.totalAh),
       chargingCurrent: Number(newSpec.chargingCurrent),
       dischargingCurrent: Number(newSpec.dischargingCurrent),
-      warrantyMonths: Number(newSpec.warrantyMonths),
+      productWarranty: newSpec.productWarranty,
       modelNumber: newSpec.modelNumber,
     };
 
@@ -366,7 +366,6 @@ const ProductManagement: React.FC = () => {
   const [showAddModalForInverterBrand, setShowAddModalForInverterBrand] = useState(false);
   const [isEditingInverterBrand, setIsEditingInverterBrand] = useState(false);
   const [expandedInverterBrandId, setExpandedInverterBrandId] = useState<number | null>(null);
-  const [inverterSpecs, setInverterSpecs] = useState<Record<number, any[]>>({});
   const [editingInverterBrandId, setEditingInverterBrandId] = useState<number | null>(null);
   const [editingInverterSpecId, setEditingInverterSpecId] = useState<string | null>(null);
   const [showInverterSpecModal, setShowInverterSpecModal] = useState(false);
@@ -396,7 +395,7 @@ const ProductManagement: React.FC = () => {
       overallEfficiencyPercent: "",
       mpptEfficiencyPercent: "",
       basePrice: "",
-      productWarrantyMonths: "",
+      productWarranty: "",
     });
   };
 
@@ -418,7 +417,7 @@ const ProductManagement: React.FC = () => {
     overallEfficiencyPercent: "",
     mpptEfficiencyPercent: "",
     basePrice: "",
-    productWarrantyMonths: "",
+    productWarranty: "",
   });
 
   const handleAddInverterBrand = async () => {
@@ -508,7 +507,7 @@ const ProductManagement: React.FC = () => {
       maxOutputCurrentAmps: Number(newInverterSpec.maxOutputCurrentAmps),
       overallEfficiencyPercent: Number(newInverterSpec.overallEfficiencyPercent),
       mpptEfficiencyPercent: Number(newInverterSpec.mpptEfficiencyPercent),
-      productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths),
+      productWarranty: newInverterSpec.productWarranty,
     };
 
     const res = await updateInverterSpec(inverterSpecId, payload);
@@ -546,7 +545,7 @@ const ProductManagement: React.FC = () => {
       maxOutputCurrentAmps: Number(newInverterSpec.maxOutputCurrentAmps),
       overallEfficiencyPercent: Number(newInverterSpec.overallEfficiencyPercent),
       mpptEfficiencyPercent: Number(newInverterSpec.mpptEfficiencyPercent),
-      productWarrantyMonths: Number(newInverterSpec.productWarrantyMonths)
+      productWarranty: newInverterSpec.productWarranty
     };
 
     const res = await addInverterSpec(payload);
@@ -773,9 +772,8 @@ const ProductManagement: React.FC = () => {
   const [brandShortname, setBrandShortname] = useState("");
   const [expandedPanelBrandId, setExpandedPanelBrandId] = useState<number | null>(null);
   const [panelBrandSpecs, setPanelBrandSpecs] = useState<Record<number, any[]>>({});
-  const [showFormForPanelBrand, setShowFormForPanelBrand] = useState<number | null>(null);
+  const [, setShowFormForPanelBrand] = useState<number | null>(null);
   const [editingPanelSpecId, setEditingPanelSpecId] = useState<number | null>(null);
-  const [isEditingPanelBrand, setIsEditingPanelBrand] = useState(false);
   const [isEditingBrand, setIsEditingBrand] = useState(false);
   const [editingPanelBrandId, setEditingPanelBrandId] = useState<number | null>(null);
   const [showPanelSpecModal, setShowPanelSpecModal] = useState(false);
@@ -850,8 +848,6 @@ const ProductManagement: React.FC = () => {
       panelBrandId: Number(panelBrandId),
       panelTypeId: Number(newPanelSpec.panelTypeId),
       materialOriginId: Number(newPanelSpec.materialOriginId),
-      // basePrice: Number(newPanelSpec.basePrice),
-      // gstPercentage: Number(newPanelSpec.gstPercentage),
       annualYieldUnitsPerKw: Number(newPanelSpec.annualYieldUnitsPerKw),
       openCircuitVolts: Number(newPanelSpec.openCircuitVolts),
       shortCircuitAmps: Number(newPanelSpec.shortCircuitAmps),
@@ -884,8 +880,6 @@ const ProductManagement: React.FC = () => {
       panelBrandId: Number(newPanelSpec.panelBrandId),
       panelTypeId: Number(newPanelSpec.panelTypeId),
       materialOriginId: Number(newPanelSpec.materialOriginId),
-      // basePrice: Number(newPanelSpec.basePrice),
-      // gstPercentage: Number(newPanelSpec.gstPercentage),
       annualYieldUnitsPerKw: Number(newPanelSpec.annualYieldUnitsPerKw),
       openCircuitVolts: Number(newPanelSpec.openCircuitVolts),
       shortCircuitAmps: Number(newPanelSpec.shortCircuitAmps),
@@ -1000,14 +994,6 @@ const ProductManagement: React.FC = () => {
     }, {});
   };
 
-  // useEffect(() => {
-  //   const loadSelectedPanels = async () => {
-  //     const data = await fetchSelectedPanelSpecs(userInfo.orgId);
-  //     setSelectedPanelSpecs(data);
-  //   };
-
-  //   loadSelectedPanels();
-  // }, [userInfo.orgId]);
 
   const loadSelectedPanels = async () => {
     const data = await fetchSelectedPanelSpecs(userInfo.orgId);
@@ -1048,7 +1034,6 @@ const ProductManagement: React.FC = () => {
   const [showAddModalForPipeBrand, setShowAddModalForPipeBrand] = useState(false);
   const [isEditingPipeBrand, setIsEditingPipeBrand] = useState(false);
   const [expandedPipeBrandId, setExpandedPipeBrandId] = useState<number | null>(null);
-  const [pipeSpecs, setPipeSpecs] = useState<Record<number, any[]>>({});
   const [editingPipeBrandId, setEditingPipeBrandId] = useState<number | null>(null);
   const [editingPipeSpecId, setEditingPipeSpecId] = useState<string | null>(null);
   const [showPipeSpecModal, setShowPipeSpecModal] = useState(false);
@@ -1169,7 +1154,7 @@ const ProductManagement: React.FC = () => {
     const res = await updatePipeSpec(pipeSpecId, pipeBrandId, payload);
 
     if (res) {
-      // ✅ refresh by BRAND ID (not spec ID)
+
       const updated = await fetchPipeSpecsByBrand(pipeBrandId);
       setPipeBrandSpecs((prev) => ({
         ...prev,
@@ -1516,7 +1501,6 @@ const ProductManagement: React.FC = () => {
                       className="text-red-600 text-lg font-bold"
                       onClick={() => {
                         setShowSelectedSpecModal(false);
-                        //setShowFormForBrand(null);
                         setEditingSelectedSpecId(null);
                       }}
                     >
@@ -1605,14 +1589,14 @@ const ProductManagement: React.FC = () => {
 
 
                     <div>
-                      <label className="block text-sm font-medium">Warranty (Months)</label>
+                      <label className="block text-sm font-medium">Product Warranty</label>
                       <input
-                        type="number"
+                        type="text"
                         className="border p-2 rounded w-full"
-                        value={newSpec.warrantyMonths}
+                        value={newSpec.productWarranty}
                         disabled
                         onChange={(e) =>
-                          handleSpecInputChange("warrantyMonths", e.target.value)
+                          handleSpecInputChange("productWarranty", e.target.value)
                         }
                       />
                     </div>
@@ -1878,7 +1862,7 @@ const ProductManagement: React.FC = () => {
 
                               <td className="p-2 border">{spec.wattage}W</td>
                               <td className="p-2 border">{spec.voltage}V</td>
-                              <td className="p-2 border">{spec.warrantyMonths} months</td>
+                              <td className="p-2 border">{spec.productWarranty}</td>
                               <td className="p-2 border font-medium">{spec.chargingCurrent}</td>
                               <td className="p-2 border font-medium">{spec.dischargingCurrent}</td>
                               <td className="p-2 border font-medium">{spec.modelNumber}</td>
@@ -2034,14 +2018,14 @@ const ProductManagement: React.FC = () => {
 
 
                               <div>
-                                <label className="block text-sm font-medium">Warranty (Months)</label>
+                                <label className="block text-sm font-medium">Product Warranty</label>
                                 <input
-                                  type="number"
+                                  type="text"
                                   className="border p-2 rounded w-full"
-                                  value={newSpec.warrantyMonths}
+                                  value={newSpec.productWarranty}
                                   disabled={isOrgAdminSelectMode}
                                   onChange={(e) =>
-                                    handleSpecInputChange("warrantyMonths", e.target.value)
+                                    handleSpecInputChange("productWarranty", e.target.value)
                                   }
                                 />
                               </div>
@@ -2507,13 +2491,13 @@ const ProductManagement: React.FC = () => {
                     </div>)}
 
                     <div>
-                      <label className="block text-sm font-medium">Product Warranty (Months)</label>
+                      <label className="block text-sm font-medium">Product Warranty</label>
                       <input
-                        type="number"
+                        type="text"
                         className="border p-2 rounded w-full"
-                        value={newInverterSpec.productWarrantyMonths}
+                        value={newInverterSpec.productWarranty}
                         disabled
-                        onChange={(e) => handleInverterSpecInputChange("productWarrantyMonths", e.target.value)}
+                        onChange={(e) => handleInverterSpecInputChange("productWarranty", e.target.value)}
                       />
                     </div>
 
@@ -2706,7 +2690,6 @@ const ProductManagement: React.FC = () => {
                                         ...inverterSpec,
                                         basePrice: "",
                                         yearOfManufacturing: "",
-                                        productWarrantyMonths: "",
                                       });
 
                                       setSelectedInverterSpecId(inverterSpec.id);
@@ -2999,13 +2982,13 @@ const ProductManagement: React.FC = () => {
                               </div>)}
 
                               <div>
-                                <label className="block text-sm font-medium">Product Warranty (Months)</label>
+                                <label className="block text-sm font-medium">Product Warranty</label>
                                 <input
-                                  type="number"
+                                  type="text"
                                   className="border p-2 rounded w-full"
-                                  value={newInverterSpec.productWarrantyMonths}
+                                  value={newInverterSpec.productWarranty}
                                   disabled={isOrgAdminSelectModeForInverter}
-                                  onChange={(e) => handleInverterSpecInputChange("productWarrantyMonths", e.target.value)}
+                                  onChange={(e) => handleInverterSpecInputChange("productWarranty", e.target.value)}
                                 />
                               </div>
 

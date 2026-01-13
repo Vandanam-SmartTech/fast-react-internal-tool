@@ -29,7 +29,7 @@ export interface BatterySpec {
   batteryCapacity?: number;
   voltage?: number;
   modelNumber?: string;
-  warrantyMonths?: number;
+  productWarranty?: number;
 }
 
 
@@ -151,10 +151,6 @@ export const SystemSpecifications = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
-
-  const normalizedQuotationNumber =
-    quotationNumber?.trim() === "" ? null : quotationNumber.trim();
-
 
   const tabs = [
     "Customer Details",
@@ -827,7 +823,7 @@ export const SystemSpecifications = () => {
       orgInverterSpecId: inv.orgInverterSpecId,
       inverterCount: inv.inverterCount || 1,
       inverterCapacity: inv.inverterCapacity,
-      inverterWarrantyMonths: inv.inverterWarrantyMonths,
+      productWarranty: inv.productWarranty,
       almmModelNumber: inv.almmModelNumber,
       gridTypeId: inv.gridTypeId,
     }));
@@ -1273,7 +1269,7 @@ export const SystemSpecifications = () => {
           <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
           <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-            {tabs.map((tab, index) => {
+            {tabs.map((tab) => {
               const isActive = activeTab === tab;
 
               const Icon =
@@ -1871,7 +1867,7 @@ export const SystemSpecifications = () => {
                       options={(inverterCapacitiesMap[index] || []).map((spec) => {
                         const parts = [
                           spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
-                          spec.productWarrantyMonths ? `(${spec.productWarrantyMonths} months)` : null,
+                          spec.productWarranty ? `(${spec.productWarranty} )` : null,
                           spec.almmModelNumber ? `(${spec.almmModelNumber})` : null
                         ];
 
@@ -1982,7 +1978,7 @@ export const SystemSpecifications = () => {
                       b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
                       b.voltage ? `${b.voltage} V` : null,
                       b.modelNumber || null,
-                      b.warrantyMonths ? `(${b.warrantyMonths} months)` : null
+                      b.productWarranty ? `(${b.productWarranty} )` : null
                     ];
 
                     // Filter out null/empty values and join with " - "
