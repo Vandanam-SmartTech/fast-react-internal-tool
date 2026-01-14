@@ -226,8 +226,6 @@ const ProductManagement: React.FC = () => {
       productWarranty: newSpec.productWarranty,
       modelNumber: newSpec.modelNumber,
       description: newSpec.description,
-      //basePrice: Number(newSpec.basePrice),
-      //gstPercentage: Number(newSpec.gstPercentage),
     };
 
     const res = await addBatterySpec(brandId, payload);
@@ -1512,7 +1510,7 @@ const ProductManagement: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Wattage */}
                     <div>
-                      <label className="block text-sm font-medium">Wattage (W)</label>
+                      <label className="block text-sm font-medium">Wattage (W) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -1524,7 +1522,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Voltage */}
                     <div>
-                      <label className="block text-sm font-medium">Voltage (V)</label>
+                      <label className="block text-sm font-medium">Voltage (V) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -1535,7 +1533,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Total Ah</label>
+                      <label className="block text-sm font-medium">Total Ah <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -1547,7 +1545,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Charging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Charging Current (A)</label>
+                      <label className="block text-sm font-medium">Charging Current (A) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -1561,7 +1559,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Discharging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Discharging Current (A)</label>
+                      <label className="block text-sm font-medium">Discharging Current (A) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -1575,7 +1573,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Model Number */}
                     <div>
-                      <label className="block text-sm font-medium">Model Number</label>
+                      <label className="block text-sm font-medium">Model Number <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="border p-2 rounded w-full"
@@ -1941,7 +1939,7 @@ const ProductManagement: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {/* Wattage */}
                               <div>
-                                <label className="block text-sm font-medium">Wattage (W)</label>
+                                <label className="block text-sm font-medium">Wattage (W) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -1953,7 +1951,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Voltage */}
                               <div>
-                                <label className="block text-sm font-medium">Voltage (V)</label>
+                                <label className="block text-sm font-medium">Voltage (V) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -1964,7 +1962,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Total Ah</label>
+                                <label className="block text-sm font-medium">Total Ah <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -1976,7 +1974,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Charging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Charging Current (A)</label>
+                                <label className="block text-sm font-medium">Charging Current (A) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -1990,7 +1988,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Discharging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Discharging Current (A)</label>
+                                <label className="block text-sm font-medium">Discharging Current (A) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2004,7 +2002,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Model Number */}
                               <div>
-                                <label className="block text-sm font-medium">Model Number</label>
+                                <label className="block text-sm font-medium">Model Number <span className="text-red-500">*</span></label>
                                 <input
                                   type="text"
                                   className="border p-2 rounded w-full"
