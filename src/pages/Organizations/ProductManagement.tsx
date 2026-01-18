@@ -207,16 +207,102 @@ const ProductManagement: React.FC = () => {
     }
   };
 
+  const numberFields = [
+    "wattage",
+    "voltage",
+    "totalAh",
+    "chargingCurrent",
+    "dischargingCurrent",
+    "basePrice",
+    "inverterCapacity",
+    "minPvVoltage",
+    "maxPvVoltage",
+    "numMppts",
+    "numStringsPerMppt",
+    "minBatteryVoltage",
+    "maxBatteryVoltage",
+    "maxPvInputCurrentAmps",
+    "batteryChargingCurrentAmps",
+    "maxOutputCurrentAmps",
+    "overallEfficiencyPercent",
+    "mpptEfficiencyPercent",
+  ];
+
+  const dateFields = [
+    "mfgMonthYear",
+  ];
+
   const handleSpecInputChange = (key: string, value: string) => {
+    if (value === "") {
+      setNewSpec((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
+
+    if (dateFields.includes(key)) {
+      setNewSpec((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
+
+    if (numberFields.includes(key)) {
+      const num = Number(value);
+
+      if (Number.isNaN(num) || num < 0) return;
+
+      setNewSpec((prev) => ({ ...prev, [key]: num }));
+      return;
+    }
+
     setNewSpec((prev) => ({ ...prev, [key]: value }));
   };
+
+
+
 
   const handleEditSpec = (spec: any) => {
     setEditingSpecId(spec.id);
     setNewSpec({ ...spec });   // Autofill form
   };
 
+  const validateSpecForm = () => {
+    const requiredNumberFields = [
+      "wattage",
+      "voltage",
+      "totalAh",
+      "chargingCurrent",
+      "dischargingCurrent",
+    ];
+
+    const requiredTextFields = [
+      "modelNumber",
+      "productWarranty",
+    ];
+
+    // Check numeric fields
+    for (const field of requiredNumberFields) {
+      const value = Number(newSpec[field as keyof typeof newSpec]);
+      if (!value || value < 0) {
+        toast.error(`${field} must be 0 or greater than 0`);
+        return false;
+      }
+    }
+
+    // Check text fields
+    for (const field of requiredTextFields) {
+      const value = newSpec[field as keyof typeof newSpec];
+      if (!value || String(value).trim() === "") {
+        toast.error(`${field} is required`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+
   const handleAddNewSpec = async (brandId: number) => {
+
+    if (!validateSpecForm()) return;
+
     const payload = {
       wattage: Number(newSpec.wattage),
       voltage: Number(newSpec.voltage),
@@ -240,11 +326,15 @@ const ProductManagement: React.FC = () => {
       setBrandSpecs((prev) => ({ ...prev, [brandId]: updated }));
 
       resetSpecForm();
+      setShowSpecModal(false);
     }
   };
 
 
   const handleUpdateSpec = async (specId: number, brandId: number) => {
+
+    if (!validateSpecForm()) return;
+
     const payload = {
       ...newSpec,
       wattage: Number(newSpec.wattage),
@@ -269,6 +359,7 @@ const ProductManagement: React.FC = () => {
 
       setEditingSpecId(null);
       resetSpecForm();
+      setShowSpecModal(false);
     }
   };
 
@@ -278,10 +369,16 @@ const ProductManagement: React.FC = () => {
       return;
     }
 
+    // 🔒 Validation
+    if (!newSpec.basePrice || Number(newSpec.basePrice) < 0) {
+      toast.error("Base price must be greater than 0");
+      return;
+    }
+
     const payload = {
       batterySpecsId: selectedSpecId,
       orgId: userInfo.orgId,
-      basePrice: newSpec.basePrice,
+      basePrice: Number(newSpec.basePrice),
       mfgMonthYear: newSpec.mfgMonthYear,
     };
 
@@ -295,11 +392,11 @@ const ProductManagement: React.FC = () => {
 
       await loadSelectedBatteries();
 
-
       setShowSpecModal(false);
       setSelectedSpecId(null);
     }
   };
+
 
   const [selectedBatterySpecs, setSelectedBatterySpecs] = useState<any[]>([]);
   const [expandedSelectedBrand, setExpandedSelectedBrand] = useState<string | null>(null);
@@ -344,6 +441,32 @@ const ProductManagement: React.FC = () => {
     setSelectedOrgBatterySpecId(spec.batterySpecsId);
     setNewSpec({ ...spec });   // Autofill form
   };
+
+  const validateSelectedSpecUpdate = () => {
+    if (!editingSelectedSpecId) {
+      toast.error("No specification selected for update");
+      return false;
+    }
+
+    if (!userInfo?.orgId) {
+      toast.error("Organization not found");
+      return false;
+    }
+
+    if (!newSpec.basePrice || Number(newSpec.basePrice) < 0) {
+      toast.error("Base price must be greater than 0");
+      return false;
+    }
+
+
+    if (!selectedOrgBatterySpecId) {
+      toast.error("Battery specification not selected");
+      return false;
+    }
+
+    return true;
+  };
+
 
   const buildSelectedSpecUpdatePayload = () => ({
     selectedBatterySpecId: editingSelectedSpecId,
@@ -476,7 +599,20 @@ const ProductManagement: React.FC = () => {
     setShowInverterSpecModal(true);
   };
 
-  const handleInverterSpecInputChange = (key: string, value: string | number) => {
+  const handleInverterSpecInputChange = (key: string, value: string) => {
+    if (value === "") {
+      setNewInverterSpec((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
+
+    if (numberFields.includes(key)) {
+      const num = Number(value);
+
+      if (Number.isNaN(num) || num < 0) return;
+
+      setNewInverterSpec((prev) => ({ ...prev, [key]: num }));
+      return;
+    }
     setNewInverterSpec((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -487,7 +623,50 @@ const ProductManagement: React.FC = () => {
     setNewInverterSpec({ ...inverterSpec });   // Autofill form
   };
 
+  const validateInverterSpecForm = () => {
+    const requiredNumberFields = [
+      "inverterCapacity",
+      "minPvVoltage",
+      "maxPvVoltage",
+      "numMppts",
+      "numStringsPerMppt",
+      "maxPvInputCurrentAmps",
+      "batteryChargingCurrentAmps",
+      "maxOutputCurrentAmps",
+      "overallEfficiencyPercent",
+      "mpptEfficiencyPercent",
+    ];
+
+    const requiredTextFields = [
+      "almmModelNumber",
+      "productWarranty",
+    ];
+
+    // Check numeric fields
+    for (const field of requiredNumberFields) {
+      const value = Number(newInverterSpec[field as keyof typeof newInverterSpec]);
+      if (!value || value < 0) {
+        toast.error(`${field} must be 0 or greater than 0`);
+        return false;
+      }
+    }
+
+    // Check text fields
+    for (const field of requiredTextFields) {
+      const value = newInverterSpec[field as keyof typeof newInverterSpec];
+      if (!value || String(value).trim() === "") {
+        toast.error(`${field} is required`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleUpdateInverterSpec = async (inverterSpecId: number, inverterBrandId: number) => {
+
+    if (!validateInverterSpecForm()) return;
+
     const payload = {
       inverterBrandId: inverterBrandId,
       inverterCapacity: Number(newInverterSpec.inverterCapacity),
@@ -516,6 +695,7 @@ const ProductManagement: React.FC = () => {
 
       setEditingInverterSpecId(null);
       resetInverterSpecForm();
+      setShowInverterSpecModal(false)
 
       toast.success("Specification updated!", {
         autoClose: 1000,
@@ -526,6 +706,9 @@ const ProductManagement: React.FC = () => {
 
 
   const handleAddNewInverterSpec = async (inverterBrandId: number) => {
+
+    if (!validateInverterSpecForm()) return;
+    
     const payload = {
       inverterBrandId: inverterBrandId,
       inverterCapacity: Number(newInverterSpec.inverterCapacity),
@@ -553,6 +736,7 @@ const ProductManagement: React.FC = () => {
       setInverterBrandSpecs((prev) => ({ ...prev, [inverterBrandId]: updated }));
 
       resetInverterSpecForm();
+      setShowInverterSpecModal(false)
 
       toast.success("New inverter specification added!", {
         autoClose: 1000,
@@ -862,6 +1046,8 @@ const ProductManagement: React.FC = () => {
       setPanelBrandSpecs((prev) => ({ ...prev, [panelBrandId]: updated }));
       resetPanelSpecForm();
 
+      setShowPanelSpecModal(false);
+
       toast.success("New specification added!", {
         autoClose: 1000,
         hideProgressBar: true,
@@ -895,6 +1081,8 @@ const ProductManagement: React.FC = () => {
       setPanelBrandSpecs((prev) => ({ ...prev, [panelBrandId]: updated }));
       setEditingPanelSpecId(null);
       resetPanelSpecForm();
+
+      setShowPanelSpecModal(false);
 
       toast.success("Specification updated!", {
         autoClose: 1000,
@@ -1516,6 +1704,7 @@ const ProductManagement: React.FC = () => {
                         className="border p-2 rounded w-full"
                         value={newSpec.wattage}
                         disabled
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) => handleSpecInputChange("wattage", e.target.value)}
                       />
                     </div>
@@ -1528,6 +1717,7 @@ const ProductManagement: React.FC = () => {
                         className="border p-2 rounded w-full"
                         value={newSpec.voltage}
                         disabled
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) => handleSpecInputChange("voltage", e.target.value)}
                       />
                     </div>
@@ -1539,6 +1729,7 @@ const ProductManagement: React.FC = () => {
                         className="border p-2 rounded w-full"
                         value={newSpec.totalAh}
                         disabled
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) => handleSpecInputChange("totalAh", e.target.value)}
                       />
                     </div>
@@ -1551,6 +1742,7 @@ const ProductManagement: React.FC = () => {
                         className="border p-2 rounded w-full"
                         disabled
                         value={newSpec.chargingCurrent}
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) =>
                           handleSpecInputChange("chargingCurrent", e.target.value)
                         }
@@ -1565,6 +1757,7 @@ const ProductManagement: React.FC = () => {
                         className="border p-2 rounded w-full"
                         value={newSpec.dischargingCurrent}
                         disabled
+                        onWheel={(e) => e.currentTarget.blur()}
                         onChange={(e) =>
                           handleSpecInputChange("dischargingCurrent", e.target.value)
                         }
@@ -1587,7 +1780,7 @@ const ProductManagement: React.FC = () => {
 
 
                     <div>
-                      <label className="block text-sm font-medium">Product Warranty</label>
+                      <label className="block text-sm font-medium">Product Warranty <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="border p-2 rounded w-full"
@@ -1602,11 +1795,12 @@ const ProductManagement: React.FC = () => {
 
                     {isOrgAdmin && (
                       <div>
-                        <label className="block text-sm font-medium">Base Price (₹)</label>
+                        <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                         <input
                           type="number"
                           className="border p-2 rounded w-full"
                           value={newSpec.basePrice}
+                          onWheel={(e) => e.currentTarget.blur()}
                           onChange={(e) =>
                             handleSpecInputChange("basePrice", e.target.value)
                           }
@@ -1647,15 +1841,32 @@ const ProductManagement: React.FC = () => {
                   <button
                     className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
                     onClick={async () => {
-                      if (!editingSelectedSpecId || !userInfo?.orgId) return;
+                      if (!validateSelectedSpecUpdate()) return;
 
                       const payload = buildSelectedSpecUpdatePayload();
 
-                      await updateSelectedBatterySpec(editingSelectedSpecId, payload);
-                      await loadSelectedBatteries();
+                      try {
+                        await updateSelectedBatterySpec(Number(editingSelectedSpecId), payload);
+                        await loadSelectedBatteries();
 
-                      setShowSelectedSpecModal(false);
-                      setEditingSelectedSpecId(null);
+                        toast.success("Specification updated successfully", {
+                          autoClose: 1000,
+                          hideProgressBar: true
+                        });
+
+                        setShowSelectedSpecModal(false);
+                        setEditingSelectedSpecId(null);
+                      } catch (error: any) {
+                        console.error(error);
+
+                        toast.error(
+                          error?.response?.data?.message ||
+                          "Failed to update specification", {
+                          autoClose: 1000,
+                          hideProgressBar: true
+                        }
+                        );
+                      }
                     }}
                   >
                     Update Selected Specification
@@ -1945,7 +2156,12 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   value={newSpec.wattage}
                                   disabled={isOrgAdminSelectMode}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  required
                                   onChange={(e) => handleSpecInputChange("wattage", e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -1957,7 +2173,12 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   value={newSpec.voltage}
                                   disabled={isOrgAdminSelectMode}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  required
                                   onChange={(e) => handleSpecInputChange("voltage", e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -1968,7 +2189,12 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   value={newSpec.totalAh}
                                   disabled={isOrgAdminSelectMode}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  required
                                   onChange={(e) => handleSpecInputChange("totalAh", e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -1980,9 +2206,14 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   disabled={isOrgAdminSelectMode}
                                   value={newSpec.chargingCurrent}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  required
                                   onChange={(e) =>
                                     handleSpecInputChange("chargingCurrent", e.target.value)
                                   }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -1994,9 +2225,14 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   value={newSpec.dischargingCurrent}
                                   disabled={isOrgAdminSelectMode}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  required
                                   onChange={(e) =>
                                     handleSpecInputChange("dischargingCurrent", e.target.value)
                                   }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -2008,6 +2244,7 @@ const ProductManagement: React.FC = () => {
                                   className="border p-2 rounded w-full"
                                   value={newSpec.modelNumber}
                                   disabled={isOrgAdminSelectMode}
+                                  required
                                   onChange={(e) =>
                                     handleSpecInputChange("modelNumber", e.target.value)
                                   }
@@ -2016,12 +2253,13 @@ const ProductManagement: React.FC = () => {
 
 
                               <div>
-                                <label className="block text-sm font-medium">Product Warranty</label>
+                                <label className="block text-sm font-medium">Product Warranty <span className="text-red-500">*</span></label>
                                 <input
                                   type="text"
                                   className="border p-2 rounded w-full"
                                   value={newSpec.productWarranty}
                                   disabled={isOrgAdminSelectMode}
+                                  required
                                   onChange={(e) =>
                                     handleSpecInputChange("productWarranty", e.target.value)
                                   }
@@ -2031,7 +2269,7 @@ const ProductManagement: React.FC = () => {
 
                               {isOrgAdmin && (
                                 <div>
-                                  <label className="block text-sm font-medium">Base Price (₹)</label>
+                                  <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                                   <input
                                     type="number"
                                     className="border p-2 rounded w-full"
@@ -2039,6 +2277,11 @@ const ProductManagement: React.FC = () => {
                                     onChange={(e) =>
                                       handleSpecInputChange("basePrice", e.target.value)
                                     }
+                                    required
+                                    onWheel={(e) => e.currentTarget.blur()}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "-" || e.key === "e") e.preventDefault();
+                                    }}
                                   />
                                 </div>
                               )}
@@ -2086,7 +2329,7 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleUpdateSpec(editingSpecId, brand.id);
-                                  setShowSpecModal(false);
+                                  //setShowSpecModal(false);
                                 }}
                               >
                                 Update Specification
@@ -2096,14 +2339,12 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleAddNewSpec(brand.id);
-                                  setShowSpecModal(false);
+                                  //setShowSpecModal(false);
                                 }}
                               >
                                 Save Specification
                               </button>
                             )}
-
-
                           </div>
                         </div>
                       )}
@@ -2261,7 +2502,7 @@ const ProductManagement: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium">
-                        Phase Type
+                        Phase Type <span className="text-red-500">*</span>
                       </label>
 
                       <select
@@ -2284,7 +2525,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Grid Type</label>
+                      <label className="block text-sm font-medium">Grid Type <span className="text-red-500">*</span></label>
 
                       <select
                         className="border p-2 rounded w-full h-[44px]"
@@ -2306,7 +2547,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Inverter Capacity (kW)</label>
+                      <label className="block text-sm font-medium">Inverter Capacity (kW) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2320,7 +2561,7 @@ const ProductManagement: React.FC = () => {
 
 
                     <div>
-                      <label className="block text-sm font-medium">Minimun PV Voltage</label>
+                      <label className="block text-sm font-medium">Minimun PV Voltage <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2332,7 +2573,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Charging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Maximum PV Voltage</label>
+                      <label className="block text-sm font-medium">Maximum PV Voltage <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2346,7 +2587,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Discharging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Number of MPPTs</label>
+                      <label className="block text-sm font-medium">Number of MPPTs <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2360,7 +2601,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Warranty */}
                     <div>
-                      <label className="block text-sm font-medium">Number of Strings per MPPT</label>
+                      <label className="block text-sm font-medium">Number of Strings per MPPT <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2398,7 +2639,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Maximum PV Input Current Amperes</label>
+                      <label className="block text-sm font-medium">Maximum PV Input Current Amperes <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2410,7 +2651,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Charging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
+                      <label className="block text-sm font-medium">Battery Charging Current Amperes <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2423,7 +2664,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Maximum Output Current Amperes</label>
+                      <label className="block text-sm font-medium">Maximum Output Current Amperes <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2436,7 +2677,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Overall Efficiency %</label>
+                      <label className="block text-sm font-medium">Overall Efficiency % <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2450,7 +2691,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Model Number */}
                     <div>
-                      <label className="block text-sm font-medium">MPPT Efficiency %</label>
+                      <label className="block text-sm font-medium">MPPT Efficiency % <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="border p-2 rounded w-full"
@@ -2463,7 +2704,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">ALMM Model Number</label>
+                      <label className="block text-sm font-medium">ALMM Model Number <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="border p-2 rounded w-full"
@@ -2477,7 +2718,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Base Price */}
                     {isOrgAdmin && (<div>
-                      <label className="block text-sm font-medium">Base Price (₹)</label>
+                      <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -2489,7 +2730,7 @@ const ProductManagement: React.FC = () => {
                     </div>)}
 
                     <div>
-                      <label className="block text-sm font-medium">Product Warranty</label>
+                      <label className="block text-sm font-medium">Product Warranty <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="border p-2 rounded w-full"
@@ -2752,7 +2993,7 @@ const ProductManagement: React.FC = () => {
 
                               <div>
                                 <label className="block text-sm font-medium">
-                                  Phase Type
+                                  Phase Type <span className="text-red-500">*</span>
                                 </label>
 
                                 <select
@@ -2763,6 +3004,7 @@ const ProductManagement: React.FC = () => {
                                     const numericValue = e.target.value ? Number(e.target.value) : "";
                                     handleInverterSpecInputChange("phaseTypeId", numericValue);
                                   }}
+                                  required
                                 >
                                   <option value="">Select Phase Type</option>
 
@@ -2775,7 +3017,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Grid Type</label>
+                                <label className="block text-sm font-medium">Grid Type <span className="text-red-500">*</span></label>
 
                                 <select
                                   className="border p-2 rounded w-full h-[44px]"
@@ -2785,6 +3027,7 @@ const ProductManagement: React.FC = () => {
                                     const numericValue = e.target.value ? Number(e.target.value) : "";
                                     handleInverterSpecInputChange("gridTypeId", numericValue);
                                   }}
+                                  required
                                 >
                                   <option value="">Select Grid Type</option>
 
@@ -2797,7 +3040,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Inverter Capacity (kW)</label>
+                                <label className="block text-sm font-medium">Inverter Capacity (kW) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2806,24 +3049,34 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("inverterCapacity", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
 
                               <div>
-                                <label className="block text-sm font-medium">Minimun PV Voltage</label>
+                                <label className="block text-sm font-medium">Minimun PV Voltage <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
                                   value={newInverterSpec.minPvVoltage}
                                   disabled={isOrgAdminSelectModeForInverter}
                                   onChange={(e) => handleInverterSpecInputChange("minPvVoltage", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               {/* Charging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Maximum PV Voltage</label>
+                                <label className="block text-sm font-medium">Maximum PV Voltage <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2832,12 +3085,17 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("maxPvVoltage", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               {/* Discharging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Number of MPPTs</label>
+                                <label className="block text-sm font-medium">Number of MPPTs <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2846,12 +3104,17 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("numMppts", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               {/* Warranty */}
                               <div>
-                                <label className="block text-sm font-medium">Number of Strings per MPPT</label>
+                                <label className="block text-sm font-medium">Number of Strings per MPPT <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2860,6 +3123,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("numStringsPerMppt", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -2871,6 +3139,10 @@ const ProductManagement: React.FC = () => {
                                   value={newInverterSpec.minBatteryVoltage}
                                   disabled={isOrgAdminSelectModeForInverter}
                                   onChange={(e) => handleInverterSpecInputChange("minBatteryVoltage", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -2885,23 +3157,32 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("maxBatteryVoltage", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Maximum PV Input Current Amperes</label>
+                                <label className="block text-sm font-medium">Maximum PV Input Current Amperes <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
                                   value={newInverterSpec.maxPvInputCurrentAmps}
                                   disabled={isOrgAdminSelectModeForInverter}
                                   onChange={(e) => handleInverterSpecInputChange("maxPvInputCurrentAmps", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               {/* Charging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
+                                <label className="block text-sm font-medium">Battery Charging Current Amperes <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2910,11 +3191,16 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("batteryChargingCurrentAmps", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Maximum Output Current Amperes</label>
+                                <label className="block text-sm font-medium">Maximum Output Current Amperes <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2923,11 +3209,16 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("maxOutputCurrentAmps", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Overall Efficiency %</label>
+                                <label className="block text-sm font-medium">Overall Efficiency % <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2936,12 +3227,17 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("overallEfficiencyPercent", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               {/* Model Number */}
                               <div>
-                                <label className="block text-sm font-medium">MPPT Efficiency %</label>
+                                <label className="block text-sm font-medium">MPPT Efficiency % <span className="text-red-500">*</span></label>
                                 <input
                                   type="text"
                                   className="border p-2 rounded w-full"
@@ -2950,11 +3246,16 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("mpptEfficiencyPercent", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">ALMM Model Number</label>
+                                <label className="block text-sm font-medium">ALMM Model Number <span className="text-red-500">*</span></label>
                                 <input
                                   type="text"
                                   className="border p-2 rounded w-full"
@@ -2968,7 +3269,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Base Price */}
                               {isOrgAdmin && (<div>
-                                <label className="block text-sm font-medium">Base Price (₹)</label>
+                                <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -2976,11 +3277,16 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handleInverterSpecInputChange("basePrice", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>)}
 
                               <div>
-                                <label className="block text-sm font-medium">Product Warranty</label>
+                                <label className="block text-sm font-medium">Product Warranty <span className="text-red-500">*</span></label>
                                 <input
                                   type="text"
                                   className="border p-2 rounded w-full"
@@ -3004,7 +3310,7 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleUpdateInverterSpec(Number(editingInverterSpecId), inverterBrand.id);
-                                  setShowInverterSpecModal(false);
+                                  //setShowInverterSpecModal(false);
                                 }}
                               >
                                 Update Specification
@@ -3014,7 +3320,7 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleAddNewInverterSpec(inverterBrand.id);
-                                  setShowInverterSpecModal(false);
+                                  //setShowInverterSpecModal(false);
                                 }}
                               >
                                 Save Specification
@@ -3841,7 +4147,7 @@ const ProductManagement: React.FC = () => {
 
                               <div>
                                 <label className="block text-sm font-medium">
-                                  Material Origin Type
+                                  Material Origin Type <span className="text-red-500">*</span>
                                 </label>
 
                                 <select
@@ -3864,7 +4170,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Panel Type</label>
+                                <label className="block text-sm font-medium">Panel Type <span className="text-red-500">*</span></label>
 
                                 <select
                                   className="border p-2 rounded w-full h-[44px]"
@@ -3886,7 +4192,7 @@ const ProductManagement: React.FC = () => {
                               </div>
                               {/* Wattage */}
                               <div>
-                                <label className="block text-sm font-medium">Panel Wattage (W)</label>
+                                <label className="block text-sm font-medium">Panel Wattage (W) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -3898,7 +4204,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Voltage */}
                               <div>
-                                <label className="block text-sm font-medium">Product Warranty (Yrs)</label>
+                                <label className="block text-sm font-medium">Product Warranty (Yrs) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -3910,7 +4216,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Total Ah */}
                               <div>
-                                <label className="block text-sm font-medium">Efficient Warranty (Yrs)</label>
+                                <label className="block text-sm font-medium">Efficient Warranty (Yrs) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4017,7 +4323,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Base Price */}
                               {isOrgAdmin && (<div>
-                                <label className="block text-sm font-medium">Base Price (₹)</label>
+                                <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4042,7 +4348,7 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleUpdatePanelSpec(editingPanelSpecId, panelBrand.id);
-                                  setShowPanelSpecModal(false);
+                                  //setShowPanelSpecModal(false);
                                 }}
                               >
                                 Update Specification
@@ -4052,7 +4358,7 @@ const ProductManagement: React.FC = () => {
                                 className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
                                 onClick={() => {
                                   handleAddNewPanelSpec(panelBrand.id);
-                                  setShowPanelSpecModal(false);
+                                  //setShowPanelSpecModal(false);
                                 }}
                               >
                                 Save Specification
@@ -4226,7 +4532,7 @@ const ProductManagement: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                     <div>
-                      <label className="block text-sm font-medium">Length in Meters</label>
+                      <label className="block text-sm font-medium">Length in Meters <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4239,7 +4545,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Width in MM</label>
+                      <label className="block text-sm font-medium">Width in MM <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4252,7 +4558,7 @@ const ProductManagement: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Height in MM</label>
+                      <label className="block text-sm font-medium">Height in MM <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4266,7 +4572,7 @@ const ProductManagement: React.FC = () => {
 
 
                     <div>
-                      <label className="block text-sm font-medium">Thickness in MM</label>
+                      <label className="block text-sm font-medium">Thickness in MM <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4280,7 +4586,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Charging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Weight in Kg</label>
+                      <label className="block text-sm font-medium">Weight in Kg <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4296,7 +4602,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Base Price */}
                     {isOrgAdmin && (<div>
-                      <label className="block text-sm font-medium">Base Price (₹)</label>
+                      <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -4582,7 +4888,7 @@ const ProductManagement: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                               <div>
-                                <label className="block text-sm font-medium">Length in Meters</label>
+                                <label className="block text-sm font-medium">Length in Meters <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4595,7 +4901,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Width in MM</label>
+                                <label className="block text-sm font-medium">Width in MM <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4608,7 +4914,7 @@ const ProductManagement: React.FC = () => {
                               </div>
 
                               <div>
-                                <label className="block text-sm font-medium">Height in MM</label>
+                                <label className="block text-sm font-medium">Height in MM <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4622,7 +4928,7 @@ const ProductManagement: React.FC = () => {
 
 
                               <div>
-                                <label className="block text-sm font-medium">Thickness in MM</label>
+                                <label className="block text-sm font-medium">Thickness in MM <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4636,7 +4942,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Charging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Weight in Kg</label>
+                                <label className="block text-sm font-medium">Weight in Kg <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
@@ -4652,7 +4958,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Base Price */}
                               {isOrgAdmin && (<div>
-                                <label className="block text-sm font-medium">Base Price (₹)</label>
+                                <label className="block text-sm font-medium">Base Price (₹) <span className="text-red-500">*</span></label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"

@@ -1205,13 +1205,12 @@ export const SystemSpecifications = () => {
     try {
       const payload = {
         connectionId: connectionId,
-        quotationId: secondaryId, // document-id as quotationId
+        quotationId: secondaryId,
       };
 
       await markQuotationFinal(payload);
       await loadFinalQuotation();
 
-      // optional UI feedback
       toast.success("Quotation marked as final", {
         autoClose: 1000,
         hideProgressBar: true

@@ -149,28 +149,26 @@ export const ViewConnection = () => {
     try {
       const exists = await checkFinalQuotationExists(connection.id);
 
-      // ❌ Final quotation NOT given
-      if (!exists) {
-        setDialogType("confirm");
-        setDialogMessage(
-          "Final Quotation is not given to this consumer. Do you want to give final quotation?"
-        );
+      // if (!exists) {
+      //   setDialogType("confirm");
+      //   setDialogMessage(
+      //     "Final Quotation is not given to this consumer. Do you want to give final quotation?"
+      //   );
 
-        setDialogAction(() => () => {
-          navigate(`/system-specifications`, {
-            state: {
-              connectionId: connection.id,
-              consumerId: connection.consumerId,
-              customerId: connection.customerId,
-            },
-          });
-        });
+      //   setDialogAction(() => () => {
+      //     navigate(`/system-specifications`, {
+      //       state: {
+      //         connectionId: connection.id,
+      //         consumerId: connection.consumerId,
+      //         customerId: connection.customerId,
+      //       },
+      //     });
+      //   });
 
-        setDialogOpen(true);
-        return;
-      }
+      //   setDialogOpen(true);
+      //   return;
+      // }
 
-      // ✅ Final quotation exists → continue onboarding
       setDialogType("confirm");
       setDialogMessage("Do you want to onboard the consumer?");
       setDialogAction(() => handleYes);

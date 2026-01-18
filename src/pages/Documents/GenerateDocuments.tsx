@@ -71,14 +71,12 @@ export default function GenerateDocuments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
-  const [materialDataDialogOpen, setMaterialDataDialogOpen] = useState(false);
-  const [pendingDocAction, setPendingDocAction] = useState<{ type: 'generate' | 'preview', doc: string } | null>(null);
 
   const [quotedTotals, setQuotedTotals] = useState<Record<string, number | ''>>({});
   const [isConnectionOnboarded, setIsConnectionOnboarded] = useState<boolean>(false);
   const [fileSizeError, setFileSizeError] = useState<Record<string, boolean>>({});
 
-  const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+  const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 1 MB
 
   const connectionId = consumer?.id?.toString();
 
@@ -146,7 +144,8 @@ export default function GenerateDocuments() {
       id: 3,
       title: "Consumer Vendor Agreement",
       documents: [
-        { label: "Consumer Vendor Agreement", name: "Consumer Vendor Agreement", canGenerate: true, canPreview: true }
+        { label: "Consumer Vendor Agreement (Draft)", name: "Consumer Vendor Agreement Draft", canGenerate: true, canPreview: true },
+        { label: "Consumer Vendor Agreement (Signed)", name: "Consumer Vendor Agreement Signed", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
@@ -187,10 +186,14 @@ export default function GenerateDocuments() {
       id: 7,
       title: "MNRE and Discom Documents",
       documents: [
-        { label: "Net Agreement", name: "Net Agreement", canGenerate: true, canPreview: true },
-        { label: "WCR", name: "WCR", canGenerate: true, canPreview: true },
-        { label: "Annexure-I", name: "Annexure-I", canGenerate: true, canPreview: true },
-        { label: "RTS Declaration", name: "RTS Declaration", canGenerate: true, canPreview: true },
+        { label: "WCR (Draft)", name: "WCR Draft", canGenerate: true, canPreview: true },
+        { label: "WCR (Signed)", name: "WCR Signed", canGenerate: false, canPreview: false },
+        { label: "Net Agreement (Draft)", name: "Net Agreement Draft", canGenerate: true, canPreview: true },
+        { label: "Net Agreement (Signed)", name: "Net Agreement Signed", canGenerate: false, canPreview: false },
+        { label: "Annexure-I (Draft)", name: "Annexure-I Draft", canGenerate: true, canPreview: true },
+        { label: "Annexure-I (Signed)", name: "Annexure-I Signed", canGenerate: false, canPreview: false },
+        { label: "RTS Declaration (Draft)", name: "RTS Declaration Draft", canGenerate: true, canPreview: true },
+        { label: "RTS Declaration (Signed)", name: "RTS Declaration Signed", canGenerate: false, canPreview: false },
         { label: "Earthing Report", name: "Earthing Report", canGenerate: true, canPreview: true },
         { label: "Geo Tag Photo", name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] },
         { label: "D1-Form", name: "D1Form", canGenerate: false, canPreview: false },
@@ -1192,6 +1195,8 @@ export default function GenerateDocuments() {
 
               {/* Right: Active Step Content (Desktop only) */}
               <section className="hidden lg:block lg:col-span-8">
+                <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4
+                  max-h-[90vh] overflow-y-auto">
                 {(() => {
                   const activeStep =
                     documentSteps.find((s) => s.id === currentStep) ||
@@ -1223,6 +1228,7 @@ export default function GenerateDocuments() {
 
                   return renderStepContent(activeStep);
                 })()}
+                </div>
               </section>
             </>
           );
@@ -1258,57 +1264,6 @@ export default function GenerateDocuments() {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* <Dialog
-          open={materialDataDialogOpen}
-          onClose={() => {
-            setMaterialDataDialogOpen(false);
-            setPendingDocAction(null);
-          }}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Material Details Required</DialogTitle>
-          <DialogContent dividers>
-            <Alert severity="warning">
-              If you want the document to have complete data, you can fill in the material details. Do you want to fill them in?
-            </Alert>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={async () => {
-                setMaterialDataDialogOpen(false);
-                const action = pendingDocAction;
-                setPendingDocAction(null);
-                if (action) {
-                  if (action.type === 'generate') {
-                    await proceedWithGenerate(action.doc);
-                  } else if (action.type === 'preview') {
-                    await proceedWithPreview(action.doc);
-                  }
-                }
-              }}
-            >
-              No
-            </Button>
-            <Button
-              onClick={() => {
-                setMaterialDataDialogOpen(false);
-                if (consumer?.id) {
-                  navigate("/material-form", {
-                    state: { consumer, connectionId: consumer.id },
-                  });
-                }
-                setPendingDocAction(null);
-              }}
-              autoFocus
-              variant="contained"
-              color="primary"
-            >
-              Yes
-            </Button>
-          </DialogActions>
-        </Dialog> */}
 
       </div>
 

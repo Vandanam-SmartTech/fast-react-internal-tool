@@ -391,6 +391,7 @@ const EditOrganization: React.FC = () => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
               required
+              disabled
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
