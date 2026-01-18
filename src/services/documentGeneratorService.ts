@@ -31,13 +31,13 @@ export const fetchPdf = async (
   const docGeneratorAPI = getDocGeneratorAPI();
 
   const endpointMap: Record<string, string> = {
-    "WCR": `/api/pdf/wcrUndertakingAdhar/${id}?download=true`,
-    "Annexure-I": `/api/pdf/annexureProformaAConverted/${id}?download=true`,
+    "WCR Draft": `/api/pdf/wcrUndertakingAdhar/${id}?download=true`,
+    "Annexure-I Draft": `/api/pdf/annexureProformaAConverted/${id}?download=true`,
     "Earthing Report": `/api/pdf/earthingPageController/${id}?download=true`,
-    "Consumer Vendor Agreement": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
+    "Consumer Vendor Agreement Draft": `/api/pdf/subsidyagreementpageone/${id}?download=true`,
     "Vendor Feasibility": `/api/pdf/vendorFeasibilityController/${id}?download=true`,
-    "Net Agreement": `/api/pdf/netAgreementOne/${id}?download=true`,
-    "RTS Declaration": `/api/pdf/declarationPage/${id}?download=true`,
+    "Net Agreement Draft": `/api/pdf/netAgreementOne/${id}?download=true`,
+    "RTS Declaration Draft": `/api/pdf/declarationPage/${id}?download=true`,
     "Gen Meter Testing Letter": `/api/pdf/genMeterLetter/${id}?download=true`,
   };
 
@@ -47,7 +47,7 @@ export const fetchPdf = async (
   }
 
   try {
-    if (docName === "Consumer Vendor Agreement") {
+    if (docName === "Consumer Vendor Agreement Draft") {
       // POST request with body
       const response = await docGeneratorAPI.post(
         endpoint,

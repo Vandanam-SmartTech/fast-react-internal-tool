@@ -354,7 +354,7 @@ export default function GenerateDocuments() {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
-    if (doc === "Consumer Vendor Agreement") {
+    if (doc === "Consumer Vendor Agreement Draft") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
         toast.error("Please enter a valid quoted total amount before generating.", {
@@ -408,7 +408,7 @@ export default function GenerateDocuments() {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
-    if (doc === "Consumer Vendor Agreement") {
+    if (doc === "Consumer Vendor Agreement Draft") {
       quotedTotal = quotedTotals[doc];
       if (!quotedTotal || isNaN(quotedTotal)) {
         toast.error("Please enter a valid quoted total amount before previewing.", {
@@ -755,7 +755,7 @@ export default function GenerateDocuments() {
                   />
                 </div>
 
-                {docDef.name === "Consumer Vendor Agreement" && (
+                {docDef.name === "Consumer Vendor Agreement Draft" && (
                   <div className="mb-3">
                     <label className="block text-xs font-medium text-gray-700 mb-2">
                       Total Quoted Price (₹)
