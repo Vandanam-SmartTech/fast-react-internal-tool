@@ -92,14 +92,14 @@ const SuperAdminDashboard: React.FC = () => {
   ];
 
   return (
-  <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
+  <div className="p-4 max-w-7xl mx-auto space-y-2">
     {/* Header */}
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+    <div className="space-y-3 sm:space-y-4">
       
       <div>
         <h1 className="font-bold text-secondary-900
-                       text-xl sm:text-2xl lg:text-3xl
-                       leading-tight">
+                     text-lg sm:text-xl lg:text-2xl
+                     leading-tight">
           {userClaims?.preferred_name
             ? `${greeting}, ${userClaims.preferred_name}!`
             : 'Welcome back!'}
@@ -127,14 +127,13 @@ const SuperAdminDashboard: React.FC = () => {
     </div>
 
     {/* Management Tools */}
-    <div>
+     <div className="space-y-2">
       <h2 className="font-semibold text-secondary-900 dark:text-secondary-100
                      text-base sm:text-lg lg:text-xl mb-3 sm:mb-4">
         Management Tools
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-                      gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {dashboardItems.map((item, index) => (
           <Card
             key={index}
@@ -144,26 +143,26 @@ const SuperAdminDashboard: React.FC = () => {
             hover
             onClick={() => handleItemClick(item)}
           >
-            <CardBody className="p-4 sm:p-6">
-              <div className="flex items-start gap-3 sm:gap-4">
-                
-                <div className="p-2 bg-white dark:bg-secondary-800
-                                rounded-lg shadow-soft">
-                  {item.icon}
-                </div>
+            <CardBody className="p-3 md:p-4 flex items-center">
+              <div className="flex items-center gap-2 w-full">
 
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-secondary-900 dark:text-secondary-100
-                                 text-sm sm:text-base lg:text-lg
-                                 leading-tight mb-1">
-                    {item.title}
-                  </h3>
+                  {/* Icon */}
+                  <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                    {item.icon}
+                  </div>
 
+
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <h3 className="font-semibold text-secondary-900
+                     text-sm sm:text-base lg:text-lg
+                     leading-tight mb-0.5">
+                      {item.title}
+                    </h3>
                   <p className="text-secondary-700 dark:text-secondary-300
-                                text-xs sm:text-sm
-                                leading-snug line-clamp-2">
-                    {item.description}
-                  </p>
+                    text-xs sm:text-sm
+                    leading-snug line-clamp-2 mb-1">
+                      {item.description}
+                    </p>
                 </div>
 
               </div>

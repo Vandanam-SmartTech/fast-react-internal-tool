@@ -178,29 +178,26 @@ const StaffDashboard: React.FC = () => {
       icon: <Users className="h-8 w-8 text-primary-600" />,
       path: '/manage-customers',
       color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-      // requiresOrg: true
     },
 
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
 
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between
-                    gap-3 sm:gap-4 mb-6 sm:mb-8">
-
-        <div>
+          <div>
           <h1 className="font-bold text-secondary-900
-                       text-xl sm:text-2xl lg:text-3xl
-                       leading-tight">
+                     text-lg sm:text-xl lg:text-2xl
+                     leading-tight">
             {userClaims?.preferred_name
               ? `${greeting}, ${userClaims.preferred_name}!`
               : 'Welcome back!'}
           </h1>
 
           <p className="mt-1 text-secondary-700 dark:text-secondary-300
-                      text-xs sm:text-sm lg:text-base">
+                    text-xs sm:text-sm lg:text-base">
             Manage Customers and View Progress
           </p>
         </div>
@@ -219,10 +216,62 @@ const StaffDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
 
+
+      <div className="space-y-3">
+        <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+          Management Tools
+        </h2>
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-                    gap-4 sm:gap-6 mt-4 sm:mt-6">
+
+            {/* Dashboard Items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        {dashboardItems.map((item, index) => (
+            <Card
+              key={index}
+              hover
+              onClick={() => navigate(item.path, { state: item.state })}
+              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+            >
+              <CardBody className="p-3 md:p-4 flex items-center">
+                <div className="flex items-center gap-2 w-full">
+
+                  {/* Icon */}
+                  <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                    {item.icon}
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+
+                    {/* Title */}
+                    <h3 className="font-semibold text-secondary-900
+                     text-sm sm:text-base lg:text-lg
+                     leading-tight mb-0.5">
+                      {item.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-secondary-700 dark:text-secondary-300
+                    text-xs sm:text-sm
+                    leading-snug line-clamp-2 mb-1">
+                      {item.description}
+                    </p>
+
+                  </div>
+
+                </div>
+              </CardBody>
+
+            </Card>
+        ))}
+      </div>
+
+      <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+          Customer Records
+        </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
 
         <Card
           className="bg-gradient-to-r from-purple-50 to-purple-100
@@ -289,41 +338,7 @@ const StaffDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Dashboard Items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
-                    gap-4 sm:gap-6 mb-6 sm:mb-8 mt-6">
-        {dashboardItems.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(item.path)}
-            className={`${item.color}
-                      p-4 sm:p-6
-                      rounded-lg shadow hover:shadow-lg
-                      cursor-pointer transition-all duration-200
-                      border border-gray-200 hover-lift focus-ring`}
-            role="button"
-            tabIndex={0}
-            data-path={item.path}
-            aria-label={item.title}
-            onKeyDown={handleKeyActivate}
-          >
-            <div className="flex items-start gap-3 sm:gap-4">
-              {item.icon}
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-gray-900
-                             text-sm sm:text-lg mb-1 sm:mb-2
-                             leading-tight">
-                  {item.title}
-                </h2>
-                <p className="text-gray-600
-                            text-xs sm:text-sm
-                            line-clamp-2">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+
       </div>
 
     </div>

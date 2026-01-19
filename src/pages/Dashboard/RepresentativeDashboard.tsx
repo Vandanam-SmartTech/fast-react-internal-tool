@@ -171,40 +171,39 @@ const RepresentativeDashboard: React.FC = () => {
   };
 
   const dashboardItems = [
-    {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-12 w-12 text-blue-600" />,
-      path: '/manage-customers',
-      color: 'bg-blue-50 hover:bg-blue-100'
-    }
+     {
+          title: 'Manage Customers',
+          description: 'List, View, Add, Update customers',
+          icon: <Users className="h-8 w-8 text-primary-600" />,
+          path: '/manage-customers',
+          color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+        },
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between
-                gap-3 sm:gap-4 mb-6 sm:mb-8">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
 
-        {/* Left - Greeting */}
-        <div>
+          <div>
           <h1 className="font-bold text-secondary-900
-                   text-xl sm:text-2xl lg:text-3xl
-                   leading-tight">
+                     text-lg sm:text-xl lg:text-2xl
+                     leading-tight">
             {userClaims?.preferred_name
               ? `${greeting}, ${userClaims.preferred_name}!`
               : 'Welcome back!'}
           </h1>
 
-          <p className="mt-1 text-gray-600
-                  text-xs sm:text-sm lg:text-base">
-            Manage customers and track progress
+          <p className="mt-1 text-secondary-700 dark:text-secondary-300
+                    text-xs sm:text-sm lg:text-base">
+            Manage Customers and View Progress
           </p>
         </div>
 
-        {/* Right - Time & Date */}
+        {/* Time & Date */}
         <div className="flex items-center gap-3 sm:gap-4
-                  text-xs sm:text-sm text-gray-600">
+                      text-xs sm:text-sm
+                      text-secondary-600 dark:text-secondary-300">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>{currentTime.toLocaleTimeString()}</span>
@@ -215,14 +214,65 @@ const RepresentativeDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-                gap-4 sm:gap-6 mt-4 sm:mt-6">
+      <div className="space-y-3">
+        <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+          Management Tools
+        </h2>
+      {/* Stats Cards */}
+
+            {/* Dashboard Items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        {dashboardItems.map((item, index) => (
+            <Card
+              key={index}
+              hover
+              onClick={() => navigate(item.path, { state: item.state })}
+              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+            >
+              <CardBody className="p-3 md:p-4 flex items-center">
+                <div className="flex items-center gap-2 w-full">
+
+                  {/* Icon */}
+                  <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                    {item.icon}
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+
+                    {/* Title */}
+                    <h3 className="font-semibold text-secondary-900
+                     text-sm sm:text-base lg:text-lg
+                     leading-tight mb-0.5">
+                      {item.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-secondary-700 dark:text-secondary-300
+                    text-xs sm:text-sm
+                    leading-snug line-clamp-2 mb-1">
+                      {item.description}
+                    </p>
+
+                  </div>
+
+                </div>
+              </CardBody>
+
+            </Card>
+        ))}
+      </div>
+
+      <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+          Customer Records
+        </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
 
         <Card
           className="bg-gradient-to-r from-purple-50 to-purple-100
-               border-purple-200 hover-lift focus-ring"
+                   border-purple-200 hover-lift focus-ring"
           onClick={() => handleActivate('/list-of-consumers')}
         >
           <CardBody className="p-4 sm:p-5">
@@ -236,16 +286,15 @@ const RepresentativeDashboard: React.FC = () => {
             >
               <div>
                 <p className="font-medium text-purple-600
-                        text-xs sm:text-sm">
+                            text-xs sm:text-sm">
                   Total Customers
                 </p>
                 <p className="font-bold text-purple-900
-                        text-lg sm:text-2xl"
+                            text-lg sm:text-2xl"
                   aria-live="polite">
                   {count !== null ? animatedCount : 0}
                 </p>
               </div>
-
               <div className="p-2 sm:p-2.5 bg-purple-200 rounded-lg">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-700" />
               </div>
@@ -255,8 +304,8 @@ const RepresentativeDashboard: React.FC = () => {
 
         <Card
           className="bg-gradient-to-r from-solar-50 to-solar-100
-               border-solar-200 hover-lift focus-ring"
-          onClick={() => handleActivate('/OnboardedConsumers')}
+                   border-solar-200 hover-lift focus-ring"
+          onClick={() => handleActivate('/onboarded-consumers')}
         >
           <CardBody className="p-4 sm:p-5">
             <div
@@ -269,16 +318,15 @@ const RepresentativeDashboard: React.FC = () => {
             >
               <div>
                 <p className="font-medium text-solar-600
-                        text-xs sm:text-sm">
+                            text-xs sm:text-sm">
                   Onboarded Customers
                 </p>
                 <p className="font-bold text-solar-900
-                        text-lg sm:text-2xl"
+                            text-lg sm:text-2xl"
                   aria-live="polite">
                   {onboardedCount !== null ? animatedOnboardedCount : 0}
                 </p>
               </div>
-
               <div className="p-2 sm:p-2.5 bg-solar-200 rounded-lg">
                 <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-solar-700" />
               </div>
@@ -287,36 +335,7 @@ const RepresentativeDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
-                gap-4 sm:gap-6 mb-6 sm:mb-8 mt-6">
-        {dashboardItems.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(item.path)}
-            className={`${item.color}
-                  p-4 sm:p-6
-                  rounded-lg shadow hover:shadow-lg
-                  cursor-pointer transition-all duration-200
-                  border border-gray-200`}
-          >
-            <div className="flex items-start gap-3 sm:gap-4">
-              {item.icon}
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-gray-900
-                         text-sm sm:text-lg mb-1 sm:mb-2
-                         leading-tight">
-                  {item.title}
-                </h2>
-                <p className="text-gray-600
-                        text-xs sm:text-sm
-                        line-clamp-2">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+
       </div>
 
 

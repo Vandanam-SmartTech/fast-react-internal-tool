@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Building2, UserCog, Calendar, Clock } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
 import { getParentDetails } from '../../services/organizationService';
+import Card, { CardBody } from '../../components/ui/Card';
 
 
 const AgencyAdminDashboard: React.FC = () => {
@@ -55,54 +56,45 @@ const AgencyAdminDashboard: React.FC = () => {
     {
       title: 'Manage Customers',
       description: 'List, View, Add, Update customers',
-      icon: <Users className="h-12 w-12 text-blue-600" />,
+      icon: <Users className="h-8 w-8 text-primary-600" />,
       path: '/manage-customers',
-      color: 'bg-blue-50 hover:bg-blue-100'
+      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
     },
     {
       title: 'My Agency',
       description: 'View, Update my agency',
-      icon: <Building2 className="h-12 w-12 text-purple-600" />,
+      icon: <Building2 className="h-8 w-8 text-warning-600" />,
       path: '/agency-view',
       state: { agencyId: userInfo?.orgId || null, orgId: parentOrgId },
-      color: 'bg-purple-50 hover:bg-purple-100'
+      color: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700',
     },
     {
       title: 'Agency Users',
       description: 'Manage users within my agency',
-      icon: <UserCog className="h-12 w-12 text-orange-600" />,
+      icon: <UserCog className="h-8 w-8 text-error-600" />,
       path: '/user-management',
-      color: 'bg-orange-50 hover:bg-orange-100'
+      color: 'bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700'
     },
-    
-    // {
-    //   title: 'User Agency Roles',
-    //   description: 'Manage user roles in my agency',
-    //   icon: <Settings className="h-12 w-12 text-indigo-600" />,
-    //   path: '/admin-management',
-    //   color: 'bg-indigo-50 hover:bg-indigo-100'
-    // }
+
   ];
 
-return (
-  <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-    
-    {/* Header */}
-    <div className="space-y-3 sm:space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between
-                      gap-3 sm:gap-4">
-        
+  return (
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
+      {/* Header */}
+      <div className="space-y-3 sm:space-y-4">
+
+
         <div>
           <h1 className="font-bold text-secondary-900
-                         text-xl sm:text-2xl lg:text-3xl
-                         leading-tight">
+                     text-lg sm:text-xl lg:text-2xl
+                     leading-tight">
             {userClaims?.preferred_name
               ? `${greeting}, ${userClaims.preferred_name}!`
               : 'Welcome back!'}
           </h1>
 
           <p className="mt-1 text-secondary-700 dark:text-secondary-300
-                        text-xs sm:text-sm lg:text-base">
+                      text-xs sm:text-sm lg:text-base">
             Here's what's happening with your agency today
           </p>
         </div>
@@ -121,50 +113,60 @@ return (
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Management Tools */}
-    <div className="space-y-3 sm:space-y-4">
-      <h2 className="font-semibold text-secondary-900
-                     text-base sm:text-lg lg:text-xl">
-        Management Tools
-      </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
-                      gap-4 sm:gap-6">
-        {dashboardItems.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(item.path, { state: item.state })}
-            className={`${item.color}
-                        p-4 sm:p-6
-                        rounded-lg shadow hover:shadow-lg
-                        cursor-pointer transition-all duration-200
-                        border border-gray-200`}
-          >
-            <div className="flex items-start gap-3 sm:gap-4">
-              {item.icon}
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-gray-900
-                               text-sm sm:text-lg
-                               mb-1 sm:mb-2
-                               leading-tight">
-                  {item.title}
-                </h2>
-                <p className="text-gray-600
-                              text-xs sm:text-sm
-                              line-clamp-2">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Management Tools */}
+      <div className="space-y-2">
+        <h2 className="font-semibold text-secondary-900 dark:text-secondary-100
+                     text-base sm:text-lg lg:text-xl mb-3 sm:mb-4">
+          Management Tools
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {dashboardItems.map((item, index) => (
+            <Card
+              key={index}
+              hover
+              onClick={() => navigate(item.path, { state: item.state })}
+              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+            >
+              <CardBody className="p-3 md:p-4 flex items-center">
+                <div className="flex items-center gap-2 w-full">
+
+                  {/* Icon */}
+                  <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                    {item.icon}
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+
+                    {/* Title */}
+                    <h3 className="font-semibold text-secondary-900
+                     text-sm sm:text-base lg:text-lg
+                     leading-tight mb-0.5">
+                      {item.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-secondary-700 dark:text-secondary-300
+                    text-xs sm:text-sm
+                    leading-snug line-clamp-2 mb-1">
+                      {item.description}
+                    </p>
+
+                  </div>
+
+                </div>
+              </CardBody>
+
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
 
-  </div>
-);
+    </div>
+  );
 
 };
 
