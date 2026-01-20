@@ -342,30 +342,28 @@ export const ViewConnection = () => {
 
       <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
         <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
-<div className="flex items-start justify-between gap-3 mb-3">
-
+<div className="flex items-center justify-between gap-3 mb-3">
   {/* Left: Icon + Title */}
   <div className="flex items-center gap-3 whitespace-nowrap">
     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
       <BoltIcon className="w-5 h-5 text-white" />
     </div>
 
-    <h3 className="text-sm sm:text-lg font-semibold text-gray-800">
+    <h3 className="text-base font-semibold text-gray-800">
       Connection Details
     </h3>
   </div>
 
   {/* Right: Status */}
   <div className="text-right leading-tight">
-
     {/* Mobile: short | Desktop: full */}
     <p className="text-xs sm:text-sm text-green-700">
       <span className="sm:hidden">Active Grid Connection</span>
       <span className="hidden sm:inline">Active Grid Connection</span>
     </p>
   </div>
-
 </div>
+
 
 
 

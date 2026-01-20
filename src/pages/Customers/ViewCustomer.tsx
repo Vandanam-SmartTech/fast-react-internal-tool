@@ -230,7 +230,7 @@ export const ViewCustomer = () => {
 
 
         {/* Customer Card */}
-        <div className="px-2 mt-4">
+        <div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-2">

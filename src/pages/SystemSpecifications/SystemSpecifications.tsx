@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
-import { Download as DownloadIcon, CheckCircle } from "lucide-react";
+import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
 interface Inverter {
@@ -1026,9 +1026,9 @@ export const SystemSpecifications = () => {
     setIsLoading(true);
     try {
       const normalizedQuotationNumber =
-      quotationNumber && quotationNumber.trim() !== ""
-        ? quotationNumber.trim()
-        : null;
+        quotationNumber && quotationNumber.trim() !== ""
+          ? quotationNumber.trim()
+          : null;
 
       const pdfBlob = await generateQuotationPDF(selectedSpecId, date, normalizedQuotationNumber as string);
 
@@ -1254,10 +1254,10 @@ export const SystemSpecifications = () => {
         </button>
 
 
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
+        <h1 className="text-xl font-bold text-gray-700">
           {/* {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"} */}
-          System Specification Details
-        </h2>
+          System Specs Details
+        </h1>
       </div>
 
 
@@ -1367,7 +1367,7 @@ export const SystemSpecifications = () => {
         <div className="border-b border-gray-200 mb-4" />
 
         {savedSpecs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
 
             {/* Always show isRunningCopy=true first */}
             {([...savedSpecs].sort((a, b) => {
@@ -1406,25 +1406,34 @@ export const SystemSpecifications = () => {
 
                     setIsFormOpen(true);
                   }}
-                  className={`relative cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
+                  className={`relative cursor-pointer border rounded-lg p-3 shadow hover:shadow-md transition 
             ${isEditable
                       ? "bg-green-50 border-green-400 hover:shadow-lg"
                       : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"}
             ${activeLoadedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}`}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-bold text-gray-800 flex-1 pr-2">
+                    {/* Panel Info */}
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 flex-1 min-w-0 pr-2 truncate">
                       {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
                     </h3>
 
+                    {/* Status + Delete */}
                     <div className="flex items-center gap-2">
+                      {/* Editable / Locked Icon */}
                       <span
-                        className={`text-xs font-semibold px-2 py-1 rounded-full ${isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                        className={`p-2 rounded-full flex items-center justify-center ${isEditable ? "bg-green-300" : "bg-gray-300"
                           }`}
                       >
-                        {isEditable ? "Editable" : "Locked"}
+                        {isEditable ? (
+                          <PencilIcon className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <LockIcon className="w-4 h-4 text-gray-600" />
+                        )}
                       </span>
 
+
+                      {/* Delete button only for locked */}
                       {!isEditable && (
                         <button
                           onClick={(e) => {
@@ -1439,6 +1448,8 @@ export const SystemSpecifications = () => {
                       )}
                     </div>
                   </div>
+
+
 
                   {spec.inverters && spec.inverters.length > 0 ? (
                     spec.inverters.map((inv, index) => (
