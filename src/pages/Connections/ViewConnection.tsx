@@ -261,26 +261,28 @@ export const ViewConnection = () => {
 
   return (
 
-    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-1 sm:pt-1 pr-4 pl-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:space-x-4 col-span-1 md:col-span-2 w-full">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() =>
-              navigate(-1)
-            }
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() =>
+                navigate(-1)
+              }
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
-          <h1 className="text-2xl font-bold text-gray-700">View Connection Details</h1>
+            <h1 className="text-xl font-bold text-gray-700">View Connection Details</h1>
+          </div>
         </div>
 
       </div>
 
 
-      <div className="col-span-1 md:col-span-2 w-full max-w-4xl mx-auto overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
@@ -340,21 +342,35 @@ export const ViewConnection = () => {
 
       <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
         <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Connection Details</h3>
-          <div className="border-b border-gray-200 mb-4" />
+<div className="flex items-start justify-between gap-3 mb-3">
 
-          {/* Connection Status */}
-          <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <BoltIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h4 className="text-base font-medium text-blue-900">Connection Status</h4>
-                <p className="text-sm text-blue-700">Active Grid Connection: Yes</p>
-              </div>
-            </div>
-          </div>
+  {/* Left: Icon + Title */}
+  <div className="flex items-center gap-3 whitespace-nowrap">
+    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+      <BoltIcon className="w-5 h-5 text-white" />
+    </div>
+
+    <h3 className="text-sm sm:text-lg font-semibold text-gray-800">
+      Connection Details
+    </h3>
+  </div>
+
+  {/* Right: Status */}
+  <div className="text-right leading-tight">
+
+    {/* Mobile: short | Desktop: full */}
+    <p className="text-xs sm:text-sm text-green-700">
+      <span className="sm:hidden">Active Grid Connection</span>
+      <span className="hidden sm:inline">Active Grid Connection</span>
+    </p>
+  </div>
+
+</div>
+
+
+
+
+          <div className="border-b border-gray-200 mb-4" />
 
           {/* Consumer Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
@@ -370,7 +386,7 @@ export const ViewConnection = () => {
                 <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "....."}</p>
               </div>
               <div>
-                <h5 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h5>
+                <h5 className="text-sm font-medium text-gray-500">Avg Monthly Units</h5>
                 <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "....."}</p>
               </div>
               <div>

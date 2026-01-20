@@ -27,6 +27,7 @@ const OnboardedConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
   // refs to handle debounced searching and race conditions
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,10 +56,10 @@ const OnboardedConsumers: React.FC = () => {
 
   const [search, setSearch] = useState("");
 
-const visibleUsers = filteredUsers.filter(user =>
-  user.nameAsPerGovId.toLowerCase().includes(search.toLowerCase()) ||
-  user.contactNumber.includes(search)
-);
+  const visibleUsers = filteredUsers.filter(user =>
+    user.nameAsPerGovId.toLowerCase().includes(search.toLowerCase()) ||
+    user.contactNumber.includes(search)
+  );
 
 
   const [startDate, setStartDate] = useState("");
@@ -167,6 +168,7 @@ const visibleUsers = filteredUsers.filter(user =>
       setConsumers(data.content);
       setTotalPages(data.totalPages);
       setCurrentPage(page);
+      setTotalCustomers(data.totalElements);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
@@ -460,43 +462,42 @@ const visibleUsers = filteredUsers.filter(user =>
   };
 
   const renderConsumerCard = (consumer: Consumer) => (
-    <Card key={consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+    <Card key={consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <CardBody className="p-4">
 
-        <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
+            <h3 className="text-base font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
           </div>
         </div>
 
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                    <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-gray-600 truncate">
+           <span className="text-xs text-secondary-700 dark:text-secondary-300 truncate">
               {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
+          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-secondary-700 dark:text-secondary-300">
+           <span className="text-xs text-secondary-700 dark:text-secondary-300 truncate">
               {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No phone number provided"}
             </span>
           </div>
 
           <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <User className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-secondary-700 dark:text-secondary-300">
+            <span className="text-xs text-secondary-700 dark:text-secondary-300">
               Consumer ID: {consumer.consumerId}
             </span>
           </div>
 
           <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
             <Zap className="w-4 h-4 text-primary-500 flex-shrink-0" />
-            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+            <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
               {consumer.connectionType}
             </span>
           </div>
@@ -523,7 +524,7 @@ const visibleUsers = filteredUsers.filter(user =>
               Manage Documents
             </Button>
 
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={() => openAssignModule(consumer)}
@@ -531,7 +532,7 @@ const visibleUsers = filteredUsers.filter(user =>
               leftIcon={<UserPlus className="w-4 h-4" />}
             >
               Assign Staff
-            </Button>
+            </Button> */}
           </div>
 
         </div>
@@ -540,12 +541,16 @@ const visibleUsers = filteredUsers.filter(user =>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
 
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+          {/* Heading + Subtitle */}
           <div>
-            <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
+            <h1 className="font-bold text-secondary-900
+                     text-xl sm:text-2xl lg:text-3xl
+                     leading-tight">
               Onboarded Consumers
             </h1>
 
@@ -790,10 +795,13 @@ const visibleUsers = filteredUsers.filter(user =>
       <div className="mb-4 flex items-center justify-between">
         <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
-            isLoadingAll ? "Loading all onboarded customers for search..." : "Loading onboarded customers..."
+            isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
+          ) : searchQuery.trim() === "" ? (
+            `Showing ${displayData.length} of ${totalCustomers} customers`
           ) : (
-            `Showing ${displayData.length} onboarded customer${displayData.length !== 1 ? 's' : ''}`
+            `Showing ${displayData.length} customer${displayData.length !== 1 ? "s" : ""}`
           )}
+
         </div>
 
         {!loading && !isLoadingAll && displayData.length > 0 && (
@@ -856,125 +864,125 @@ const visibleUsers = filteredUsers.filter(user =>
             </div>
           )}
 
-{isAssignOpen && (
-  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          {isAssignOpen && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
 
-    {/* Modal */}
-    <div className="w-full max-w-lg bg-white rounded-xl shadow-xl p-5 max-h-[90vh] flex flex-col">
+              {/* Modal */}
+              <div className="w-full max-w-lg bg-white rounded-xl shadow-xl p-5 max-h-[90vh] flex flex-col">
 
-      {/* Header */}
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="text-lg font-semibold">Assign Staff</h3>
-          <p className="text-sm text-gray-500">
-            Consumer: {selectedConsumer?.govIdName}
-          </p>
-        </div>
+                {/* Header */}
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">Assign Staff</h3>
+                    <p className="text-sm text-gray-500">
+                      Consumer: {selectedConsumer?.govIdName}
+                    </p>
+                  </div>
 
-        <button
-          onClick={() => setIsAssignOpen(false)}
-          className="text-gray-500 hover:text-gray-700 text-lg"
-        >
-          ✕
-        </button>
-      </div>
+                  <button
+                    onClick={() => setIsAssignOpen(false)}
+                    className="text-gray-500 hover:text-gray-700 text-lg"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-      {/* Role Selection */}
-      <div className="flex gap-3 mb-3">
-        <Button
-          variant={selectedRole === "ELECTRICIAN" ? "primary" : "outline"}
-          onClick={() => handleRoleSelect("ELECTRICIAN")}
-          className="flex-1"
-        >
-          Electrician
-        </Button>
+                {/* Role Selection */}
+                <div className="flex gap-3 mb-3">
+                  <Button
+                    variant={selectedRole === "ELECTRICIAN" ? "primary" : "outline"}
+                    onClick={() => handleRoleSelect("ELECTRICIAN")}
+                    className="flex-1"
+                  >
+                    Electrician
+                  </Button>
 
-        <Button
-          variant={selectedRole === "FABRICATOR" ? "primary" : "outline"}
-          onClick={() => handleRoleSelect("FABRICATOR")}
-          className="flex-1"
-        >
-          Fabricator
-        </Button>
+                  <Button
+                    variant={selectedRole === "FABRICATOR" ? "primary" : "outline"}
+                    onClick={() => handleRoleSelect("FABRICATOR")}
+                    className="flex-1"
+                  >
+                    Fabricator
+                  </Button>
 
-      </div>
+                </div>
 
-      {/* Assignment Duration */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className="text-xs text-gray-600">Start Date</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full border rounded-md px-2 py-1 text-sm"
-          />
-        </div>
+                {/* Assignment Duration */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="text-xs text-gray-600">Start Date</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full border rounded-md px-2 py-1 text-sm"
+                    />
+                  </div>
 
-        <div>
-          <label className="text-xs text-gray-600">End Date</label>
-          <input
-            type="date"
-            value={endDate}
-            min={startDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full border rounded-md px-2 py-1 text-sm"
-          />
-        </div>
-      </div>
+                  <div>
+                    <label className="text-xs text-gray-600">End Date</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full border rounded-md px-2 py-1 text-sm"
+                    />
+                  </div>
+                </div>
 
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Search staff by name or mobile"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full border rounded-md px-3 py-2 text-sm mb-2"
-      />
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search staff by name or mobile"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border rounded-md px-3 py-2 text-sm mb-2"
+                />
 
-      {/* Count */}
-      {selectedRole && (
-        <p className="text-xs text-gray-500 mb-2">
-          {visibleUsers.length} staff found
-        </p>
-      )}
+                {/* Count */}
+                {selectedRole && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    {visibleUsers.length} staff found
+                  </p>
+                )}
 
-      {/* Staff List */}
-      <div className="space-y-2 overflow-y-auto flex-1">
-        {!selectedRole ? (
-          <p className="text-sm text-gray-500 text-center mt-6">
-            Select role to continue
-          </p>
-        ) : visibleUsers.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center mt-6">
-            No {selectedRole.toLowerCase()} available
-          </p>
-        ) : (
-          visibleUsers.map(user => (
-            <div
-              key={user.id}
-              className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50"
-            >
-              <div>
-                <p className="font-medium">{user.nameAsPerGovId}</p>
-                <p className="text-xs text-gray-500">{user.contactNumber}</p>
+                {/* Staff List */}
+                <div className="space-y-2 overflow-y-auto flex-1">
+                  {!selectedRole ? (
+                    <p className="text-sm text-gray-500 text-center mt-6">
+                      Select role to continue
+                    </p>
+                  ) : visibleUsers.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center mt-6">
+                      No {selectedRole.toLowerCase()} available
+                    </p>
+                  ) : (
+                    visibleUsers.map(user => (
+                      <div
+                        key={user.id}
+                        className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div>
+                          <p className="font-medium">{user.nameAsPerGovId}</p>
+                          <p className="text-xs text-gray-500">{user.contactNumber}</p>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          disabled={!startDate || !endDate}
+                          onClick={() => assignUserToConsumer(user)}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
               </div>
-
-              <Button
-                size="sm"
-                disabled={!startDate || !endDate}
-                onClick={() => assignUserToConsumer(user)}
-              >
-                Assign
-              </Button>
             </div>
-          ))
-        )}
-      </div>
-
-    </div>
-  </div>
-)}
+          )}
 
         </>
       )}

@@ -71,31 +71,6 @@ export const CustomerForm = () => {
     referredByUserId: null,
   });
 
-
-
-  ///////////////////////////////////////////////////////////
-  // useEffect(() => {
-  //   const savedFormData = localStorage.getItem("customerFormData");
-  //   const savedConfirmMobile = localStorage.getItem("confirmMobileNumber");
-  //   const savedConfirmEmail = localStorage.getItem("confirmEmailAddress");
-
-  //   if (savedFormData) {
-  //     setFormData(JSON.parse(savedFormData));
-  //   }
-
-  //   if (savedConfirmMobile) {
-  //     setConfirmMobileNumber(savedConfirmMobile);
-  //   }
-
-  //   if (savedConfirmEmail) {
-  //     setConfirmEmailAddress(savedConfirmEmail);
-  //   }
-
-  // }, []);
-
-  ///////////////////////////////////////////////////////////
-
-
   useEffect(() => {
     const checkExists = async () => {
       if (formData.mobileNumber.length === 10) {

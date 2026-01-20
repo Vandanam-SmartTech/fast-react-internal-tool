@@ -172,7 +172,7 @@ export const ViewCustomer = () => {
               <ArrowLeft className="w-6 h-6 text-gray-700" />
             </button>
 
-            <h1 className="text-2xl font-bold text-gray-700">View Customer Details</h1>
+            <h1 className="text-xl font-bold text-gray-700">View Customer Details</h1>
           </div>
 
         </div>

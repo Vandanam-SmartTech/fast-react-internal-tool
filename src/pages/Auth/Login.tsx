@@ -162,7 +162,8 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen relative flex items-center justify-center overflow-hidden"
+      className="min-h-screen relative flex justify-center overflow-hidden items-start pt-24 md:items-center md:pt-0"
+
       style={{
         backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%), url(${bgImage})`,
         backgroundSize: 'cover',
@@ -192,13 +193,14 @@ const Login = () => {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-md mx-auto px-4 sm:px-6">
+     <div
+  className={`relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 ${showOrgSelection ? 'mt-12 sm:mt-0' : 'mt-0'}`}>
         <Card className="relative glass-effect-enhanced border-0 shadow-2xl">
-          <CardBody className="p-8 sm:p-10">
+          <CardBody className="p-6 sm:p-8">
             {/* Logo and title */}
 
-            <div className="text-center mb-4">
-              <div className="flex justify-center mb-4">
+            <div className="text-center mb-2">
+              <div className="flex justify-center mb-2">
                 <div className="relative">
                   <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
                   <Logo
@@ -218,7 +220,7 @@ const Login = () => {
               </div>
 
               {/* Feature Icons */}
-              <div className="flex justify-center items-center gap-4 mt-6">
+              <div className="flex justify-center items-center gap-4 mt-2">
                 <div className="flex items-center gap-2 text-xs text-secondary-600 dark:text-secondary-300">
                   <Shield className="h-3 w-3 text-primary-500" />
                   <span>Secure</span>

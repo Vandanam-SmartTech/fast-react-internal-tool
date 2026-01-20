@@ -28,7 +28,8 @@ const ListOfConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [isLoadingAll, ] = useState<boolean>(false);
+  const [isLoadingAll,] = useState<boolean>(false);
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
 
   // refs to handle debounced searching and race conditions
@@ -215,6 +216,7 @@ const ListOfConsumers: React.FC = () => {
       const data = await fetchConsumersWithConnections(page, params);
       setConsumers(data.content);
       setTotalPages(data.totalPages);
+      setTotalCustomers(data.totalElements);
       setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching consumers:", error);
@@ -222,24 +224,6 @@ const ListOfConsumers: React.FC = () => {
       setLoading(false);
     }
   };
-
-//   useEffect(() => {
-//   connectCustomerSocket((event) => {
-//     if (
-//       event === "CUSTOMER_ADDED" ||
-//       event === "CONNECTION_ADDED"
-//     ) {
-
-//       loadConsumers(0);
-//     }
-//   });
-
-//   return () => {
-//     disconnectCustomerSocket();
-//   };
-// }, [isInitialized]);
-
-
 
   const handleSearch = (searchTerm: string) => {
     setSearchQuery(searchTerm);
@@ -432,19 +416,13 @@ const ListOfConsumers: React.FC = () => {
 
   const renderConsumerCard = (consumer: Consumer) => (
     <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <CardBody className="p-6">
+      <CardBody className="p-4">
         {/* Header with status indicators */}
-        <div className="flex items-start justify-between mb-5">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
+            <h3 className="text-base font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
               {consumer.govIdName}
             </h3>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 px-2.5 py-1 text-xs">
-                <Users className="w-3.5 h-3.5" />
-                {consumer.connections?.length || 0} connections
-              </span>
-            </div>
           </div>
 
           {/* Action buttons */}
@@ -458,21 +436,20 @@ const ListOfConsumers: React.FC = () => {
             >
               View
             </Button>
-
-
           </div>
         </div>
 
+
         {/* Contact Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-gray-600 truncate">
+            <span className="text-xs text-secondary-700 dark:text-secondary-300 truncate">
               {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
+          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
               {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No mobile number provided"}
@@ -482,12 +459,15 @@ const ListOfConsumers: React.FC = () => {
 
         {/* Connections Section  */}
         {consumer.connections && consumer.connections.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-2">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-1.5">
                 <Zap className="w-4 h-4" />
-                Active Connections
+                {consumer.connections?.length || 0}{" "}
+                {(consumer.connections?.length || 0) === 1 ? "Connection" : "Connections"}
+
               </h4>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -502,19 +482,20 @@ const ListOfConsumers: React.FC = () => {
                 leftIcon={<Plus className="w-4 h-4" />}
                 className="whitespace-nowrap"
               >
-                Add New Connection
+                Add Connection
               </Button>
             </div>
+
             {consumer.connections.map((connection, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
+                className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-primary-700 dark:text-primary-300">
+                  <div className="text-xs font-medium text-primary-700 dark:text-primary-300">
                     Connection {index + 1}
                   </div>
-                  <div className="text-xs text-secondary-700 dark:text-secondary-300 font-mono">
+                  <div className="text-[11px] text-secondary-700 dark:text-secondary-300 font-mono">
                     {connection.consumerId}
                   </div>
                 </div>
@@ -601,7 +582,7 @@ const ListOfConsumers: React.FC = () => {
               leftIcon={<Plus className="w-4 h-4" />}
               className="whitespace-nowrap"
             >
-              Add New Connection
+              Add Connection
             </Button>
           </div>
         )}
@@ -611,15 +592,17 @@ const ListOfConsumers: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
 
 
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
           {/* Heading + Subtitle */}
           <div>
-            <h1 className="text-3xl font-bold text-secondary-900 dark:text-secondary-100">
+            <h1 className="font-bold text-secondary-900
+                     text-xl sm:text-2xl lg:text-3xl
+                     leading-tight">
               Customer Directory
             </h1>
 
@@ -868,9 +851,12 @@ const ListOfConsumers: React.FC = () => {
         <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
+          ) : searchQuery.trim() === "" ? (
+            `Showing ${displayData.length} of ${totalCustomers} customers`
           ) : (
-            `Showing ${displayData.length} customer${displayData.length !== 1 ? 's' : ''}`
+            `Showing ${displayData.length} customer${displayData.length !== 1 ? "s" : ""}`
           )}
+
         </div>
 
         {!loading && !isLoadingAll && displayData.length > 0 && (
