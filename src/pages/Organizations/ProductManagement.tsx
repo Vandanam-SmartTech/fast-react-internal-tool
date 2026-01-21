@@ -631,7 +631,6 @@ const ProductManagement: React.FC = () => {
       "numMppts",
       "numStringsPerMppt",
       "maxPvInputCurrentAmps",
-      "batteryChargingCurrentAmps",
       "maxOutputCurrentAmps",
       "overallEfficiencyPercent",
       "mpptEfficiencyPercent",
@@ -2651,7 +2650,7 @@ const ProductManagement: React.FC = () => {
 
                     {/* Charging Current */}
                     <div>
-                      <label className="block text-sm font-medium">Battery Charging Current Amperes <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
                       <input
                         type="number"
                         className="border p-2 rounded w-full"
@@ -3182,7 +3181,7 @@ const ProductManagement: React.FC = () => {
 
                               {/* Charging Current */}
                               <div>
-                                <label className="block text-sm font-medium">Battery Charging Current Amperes <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium">Battery Charging Current Amperes</label>
                                 <input
                                   type="number"
                                   className="border p-2 rounded w-full"
