@@ -342,31 +342,27 @@ export const ViewConnection = () => {
 
       <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
         <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
-<div className="flex items-center justify-between gap-3 mb-3">
-  {/* Left: Icon + Title */}
-  <div className="flex items-center gap-3 whitespace-nowrap">
-    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-      <BoltIcon className="w-5 h-5 text-white" />
-    </div>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            {/* Left: Icon + Title */}
+            <div className="flex items-center gap-3 whitespace-nowrap">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <BoltIcon className="w-5 h-5 text-white" />
+              </div>
 
-    <h3 className="text-base font-semibold text-gray-800">
-      Connection Details
-    </h3>
-  </div>
+              <h3 className="text-base font-semibold text-gray-800">
+                Connection Details
+              </h3>
+            </div>
 
-  {/* Right: Status */}
-  <div className="text-right leading-tight">
-    {/* Mobile: short | Desktop: full */}
-    <p className="text-xs sm:text-sm text-green-700">
-      <span className="sm:hidden">Active Grid Connection</span>
-      <span className="hidden sm:inline">Active Grid Connection</span>
-    </p>
-  </div>
-</div>
-
-
-
-
+            {/* Right: Status */}
+            <div className="text-right leading-tight">
+              {/* Mobile: short | Desktop: full */}
+              <p className="text-xs sm:text-sm text-green-700">
+                <span className="sm:hidden">Active Grid Connection</span>
+                <span className="hidden sm:inline">Active Grid Connection</span>
+              </p>
+            </div>
+          </div>
 
           <div className="border-b border-gray-200 mb-4" />
 
@@ -378,26 +374,26 @@ export const ViewConnection = () => {
               </div>
               <h4 className="text-base font-medium text-gray-900">Connection Information</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Consumer Number</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Avg Monthly Units</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "NA"}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "NA"}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "NA"}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">DISCOM ID</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.discomId || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.discomId || "NA"}</p>
               </div>
             </div>
           </div>
@@ -410,14 +406,14 @@ export const ViewConnection = () => {
               </div>
               <h4 className="text-base font-medium text-gray-900">Business Information</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
               </div>
               <div>
                 <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
               </div>
             </div>
           </div>
@@ -430,24 +426,30 @@ export const ViewConnection = () => {
               </div>
               <h4 className="text-base font-medium text-gray-900">Address Information</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {/* Address - full width on mobile */}
+              <div className="col-span-2 md:col-span-1">
                 <h5 className="text-sm font-medium text-gray-500">Address</h5>
                 <p className="text-sm text-gray-800 mt-1">
-                  {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
+                  {connection.addressLine1}, {connection.villageName}, {connection.talukaName},{" "}
+                  {connection.districtName}, {connection.pinCode}
                 </p>
               </div>
-              <div>
-                <h5 className="text-sm font-medium text-gray-500">Postal Code</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.pinCode || "....."}</p>
-              </div>
+
+              {/* Address Type */}
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.addressTypeName || "....."}</p>
+                <p className="text-sm text-gray-800 mt-1">
+                  {connection.addressTypeName || "NA"}
+                </p>
               </div>
+
+              {/* Latitude, Longitude */}
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Latitude, Longitude</h5>
-                <p className="text-sm text-gray-800 mt-1">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
+                <p className="text-sm text-gray-800 mt-1">
+                  {connection.latitude || "NA"}, {connection.longitude || "NA"}
+                </p>
               </div>
             </div>
           </div>
@@ -496,7 +498,7 @@ export const ViewConnection = () => {
       </div>
 
 
-      <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-6">
+      <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-4 mt-4">
         {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
           <details
             key={installation.id}
@@ -522,46 +524,46 @@ export const ViewConnection = () => {
             {/* Installation Info Block */}
             <div className="px-6 pb-6 text-sm text-gray-700">
               <div className="border-b border-gray-200 mb-4" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-16">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
                   <p className="mt-1">{getSpaceTypeName(installation.installationSpaceTypeId)}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
-                  <p className="mt-1">{installation.installationSpaceTitle || "....."}</p>
+                  <p className="mt-1">{installation.installationSpaceTitle || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">East-West Length (Feet)</h3>
-                  <p className="mt-1">{installation.availableEastWestLengthFt || "....."}</p>
+                  <p className="mt-1">{installation.availableEastWestLengthFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">South-North Length (Feet)</h3>
-                  <p className="mt-1">{installation.availableSouthNorthLengthFt || "....."}</p>
+                  <p className="mt-1">{installation.availableSouthNorthLengthFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.structureInverterDistanceFt || "....."}</p>
+                  <p className="mt-1">{installation.structureInverterDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.inverterMeterDistanceFt || "....."}</p>
+                  <p className="mt-1">{installation.inverterMeterDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.inverterEarthDistanceFt || "....."}</p>
+                  <p className="mt-1">{installation.inverterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
-                  <p className="mt-1">{installation.arresterEarthDistanceFt || "....."}</p>
+                  <p className="mt-1">{installation.arresterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
-                  <p className="mt-1">{installation.minimumElevationFt || "....."}</p>
+                  <p className="mt-1">{installation.minimumElevationFt || "NA"}</p>
                 </div>
                 <div className="md:col-span-2">
                   <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                  <p className="mt-1 whitespace-pre-line">{installation.descriptionOfInstallation || "....."}</p>
+                  <p className="mt-1 whitespace-pre-line">{installation.descriptionOfInstallation || "NA"}</p>
                 </div>
               </div>
 
@@ -589,51 +591,55 @@ export const ViewConnection = () => {
       </div>
 
       {/* Action Buttons Section */}
-      <div className="col-span-1 md:col-span-2 px-4 py-4">
+      <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-4 py-4">
+
+
         {/* Responsive Button Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {/* Add New Installation Button */}
-          <button
-            onClick={() => {
-              console.log("Navigating with connectionId:", connectionId);
-              console.log("Navigating with consumerId:", consumerId);
-              console.log("Navigating with customerId:", customerId);
-              if (!connectionId || !consumerId) {
-                alert("Connection ID and Consumer Id is missing!");
-                return;
+        <div className="w-full max-w-4xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Add New Installation Button */}
+            <button
+              onClick={() => {
+                console.log("Navigating with connectionId:", connectionId);
+                console.log("Navigating with consumerId:", consumerId);
+                console.log("Navigating with customerId:", customerId);
+                if (!connectionId || !consumerId) {
+                  alert("Connection ID and Consumer Id is missing!");
+                  return;
+                }
+                navigate(`/installation-form`, {
+                  state: {
+                    connectionId: connectionId,
+                    consumerId: consumerId,
+                    customerId,
+                  },
+                });
+              }}
+              className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              <HomeModernIcon className="w-4 h-4" />
+              <span>Add New Installation</span>
+            </button>
+
+
+
+            {/* Get Recommendation Button */}
+            <button
+              onClick={() =>
+                navigate(`/system-specifications`, {
+                  state: {
+                    connectionId: connectionId,
+                    consumerId: consumerId,
+                    customerId,
+                  },
+                })
               }
-              navigate(`/installation-form`, {
-                state: {
-                  connectionId: connectionId,
-                  consumerId: consumerId,
-                  customerId,
-                },
-              });
-            }}
-            className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-          >
-            <HomeModernIcon className="w-4 h-4" />
-            <span>Add New Installation</span>
-          </button>
-
-
-
-          {/* Get Recommendation Button */}
-          <button
-            onClick={() =>
-              navigate(`/system-specifications`, {
-                state: {
-                  connectionId: connectionId,
-                  consumerId: consumerId,
-                  customerId,
-                },
-              })
-            }
-            className="py-2 px-6 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
-          >
-            <Cog6ToothIcon className="w-4 h-4" />
-            <span>Get System Specs</span>
-          </button>
+              className="py-2 px-6 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              <Cog6ToothIcon className="w-4 h-4" />
+              <span>Get System Specs</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -642,30 +648,32 @@ export const ViewConnection = () => {
         userInfo?.role === "ROLE_AGENCY_ADMIN" ||
         userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) &&
         connection && (
-          <div className="col-span-1 md:col-span-2 flex justify-start px-4">
-            {connection.isOnboardedCustomers === true ? (
-              <button
-                onClick={() => {
-                  setDialogType("confirm");
-                  setDialogMessage("Do you want to offboard the consumer?");
-                  setDialogAction(() => handleNo);
-                  setDialogOpen(true);
-                }}
-                className="py-2 px-6 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
-              >
-                Do you want to Offboard the Consumer?
-              </button>
-            ) : (
-              <button
-                onClick={handleOnboardClick}
-                className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                Do you want to Onboard the Consumer?
-              </button>
-
-            )}
+          <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4">
+            <div className="w-full max-w-4xl flex justify-start">
+              {connection.isOnboardedCustomers === true ? (
+                <button
+                  onClick={() => {
+                    setDialogType("confirm");
+                    setDialogMessage("Do you want to offboard the consumer?");
+                    setDialogAction(() => handleNo);
+                    setDialogOpen(true);
+                  }}
+                  className="py-2 px-6 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+                >
+                  Do you want to Offboard the Consumer?
+                </button>
+              ) : (
+                <button
+                  onClick={handleOnboardClick}
+                  className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  Do you want to Onboard the Consumer?
+                </button>
+              )}
+            </div>
           </div>
         )}
+
 
 
 

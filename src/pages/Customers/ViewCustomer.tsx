@@ -103,53 +103,53 @@ export const ViewCustomer = () => {
   // }, [customerId]);
 
   useEffect(() => {
-  const fetchAllData = async () => {
-    if (!customerId) return;
+    const fetchAllData = async () => {
+      if (!customerId) return;
 
-    try {
-      const data = await getCustomerConnectionInstallationById(Number(customerId));
+      try {
+        const data = await getCustomerConnectionInstallationById(Number(customerId));
 
-      if (!data) return;
+        if (!data) return;
 
-      // Set Customer details
-      setCustomer(data);
+        // Set Customer details
+        setCustomer(data);
 
-      // Set referred by user if exists
-      if (data.referredByUserId) {
-        const userResponse = await getUserById(data.referredByUserId);
-        setReferredByUser(userResponse?.data || null);
+        // Set referred by user if exists
+        if (data.referredByUserId) {
+          const userResponse = await getUserById(data.referredByUserId);
+          setReferredByUser(userResponse?.data || null);
+        }
+
+        // Set all connections directly from response
+        setConnections(data.connections || []);
+
+        // Prepare installation map
+        const installationMap: Record<string, any[]> = {};
+
+        data.connections?.forEach((conn: any) => {
+          installationMap[conn.connectionId] = conn.installationSpaces || [];
+        });
+
+        setInstallationsByConsumer(installationMap);
+
+        // Extract all space types (optional)
+        // const uniqueTypes = [
+        //   ...new Set(
+        //     data.connections
+        //       ?.flatMap((c: any) => c.installationSpaces?.map((s: any) => s.installationSpaceTypeName))
+        //       .filter(Boolean)
+        //   ),
+        // ];
+
+        // setSpaceTypes(uniqueTypes);
+
+      } catch (error) {
+        console.error("Error loading customer + connections + installations", error);
       }
+    };
 
-      // Set all connections directly from response
-      setConnections(data.connections || []);
-
-      // Prepare installation map
-      const installationMap: Record<string, any[]> = {};
-
-      data.connections?.forEach((conn: any) => {
-        installationMap[conn.connectionId] = conn.installationSpaces || [];
-      });
-
-      setInstallationsByConsumer(installationMap);
-
-      // Extract all space types (optional)
-      // const uniqueTypes = [
-      //   ...new Set(
-      //     data.connections
-      //       ?.flatMap((c: any) => c.installationSpaces?.map((s: any) => s.installationSpaceTypeName))
-      //       .filter(Boolean)
-      //   ),
-      // ];
-
-      // setSpaceTypes(uniqueTypes);
-
-    } catch (error) {
-      console.error("Error loading customer + connections + installations", error);
-    }
-  };
-
-  fetchAllData();
-}, [customerId]);
+    fetchAllData();
+  }, [customerId]);
 
 
 
@@ -161,26 +161,24 @@ export const ViewCustomer = () => {
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center gap-2">
-            {/* Back Arrow */}
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-full hover:bg-gray-200 transition"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </button>
 
-            <h1 className="text-xl font-bold text-gray-700">View Customer Details</h1>
-          </div>
+        <div className="flex items-center gap-2">
+          {/* Back Arrow */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
 
+          <h1 className="text-xl font-bold text-gray-700">View Customer Details</h1>
         </div>
 
 
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
-          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
+        <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
             {/* Connector Line: between the first and last icon only */}
             <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
@@ -226,9 +224,6 @@ export const ViewCustomer = () => {
           </div>
         </div>
 
-
-
-
         {/* Customer Card */}
         <div>
 
@@ -251,22 +246,22 @@ export const ViewCustomer = () => {
             </div>
 
             <div className="border-b border-gray-200 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 text-gray-800">
               <div className="break-words">
                 <h3 className="text-sm font-medium text-gray-500">Name as per Gov ID</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.govIdName || "....."}</p>
+                <p className="mt-1 text-sm text-gray-800">{customer.govIdName || "....."}</p>
               </div>
               <div className="break-words">
                 <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-                <p className="mt-1 text-base text-gray-800">+91 {customer.mobileNumber || "....."}</p>
+                <p className="mt-1 text-sm text-gray-800">+91 {customer.mobileNumber || "....."}</p>
               </div>
               <div className="break-words">
                 <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.preferredName || "....."}</p>
+                <p className="mt-1 text-sm text-gray-800">{customer.preferredName || "....."}</p>
               </div>
               <div className="break-words">
                 <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.emailAddress || "....."}</p>
+                <p className="mt-1 text-sm text-gray-800">{customer.emailAddress || "....."}</p>
               </div>
             </div>
           </div>
@@ -411,78 +406,71 @@ export const ViewCustomer = () => {
 
                     <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
                       <div className="border-b border-gray-200 mb-2" />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-y-6 gap-x-16">
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
-                          <p className="mt-1 text-base text-gray-800">Yes</p>
+                          <p className="mt-1 text-sm text-gray-800">Yes</p>
                         </div>
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.consumerNumber || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.consumerNumber || "....."}</p>
                         </div>
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.billedTo || "....."}</p>
                         </div>
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.avgMonthlyConsumption || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.avgMonthlyConsumption || "....."}</p>
                         </div>
 
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.connectionTypeName || "....."}</p>
                         </div>
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.phaseTypeName || "....."}</p>
                         </div>
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.discomId || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.discomId || "....."}</p>
                         </div>
-
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.gstNumber || "....."}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.gstNumber || "....."}</p>
                         </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
-                        </div>
-
-
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                          <p className="mt-1 text-base text-gray-800">
-                            {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
+                          <p className="mt-1 text-sm text-gray-800">
+                            {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}, {connection.pinCode}
                           </p>
                         </div>
 
                         <div>
-                          <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.pinCode || "....."}</p>
+                          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
+                          <p className="mt-1 text-sm text-gray-800">{connection.addressTypeName || "NA"}</p>
                         </div>
+
 
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
+                          <p className="mt-1 text-sm text-gray-800">{connection.latitude || "NA"}, {connection.longitude || "NA"}</p>
                         </div>
 
                         {connection.isNameCorrectionRequired && (
                           <div>
                             <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-                            <p className="mt-1 text-base text-gray-800">{connection.correctionTypeName || "....."}</p>
+                            <p className="mt-1 text-sm text-gray-800">{connection.correctionTypeName || "NA"}</p>
                           </div>
                         )}
                       </div>
@@ -549,70 +537,70 @@ export const ViewCustomer = () => {
                             <div className="border-b border-gray-200 mb-2 mt-2" />
                             <div className="p-4 w-full">
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
+                              <div className="grid grid-cols-2 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
 
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.installationSpaceTypeName || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.installationSpaceTypeName || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.installationSpaceTitle || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.installationSpaceTitle || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">East-West-Length (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.availableEastWestLengthFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.availableEastWestLengthFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">South-North-Length (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.availableSouthNorthLengthFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.availableSouthNorthLengthFt || "NA"}
                                   </p>
                                 </div>
                               </div>
 
                               {/* Row 2 */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
+                              <div className="grid grid-cols-2 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.structureInverterDistanceFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.structureInverterDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterMeterDistanceFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.inverterMeterDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterEarthDistanceFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.inverterEarthDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.arresterEarthDistanceFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.arresterEarthDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.minimumElevationFt || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.minimumElevationFt || "NA"}
                                   </p>
                                 </div>
                                 <div className="md:col-span-2">
                                   <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.descriptionOfInstallation || "....."}
+                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                    {installation.descriptionOfInstallation || "NA"}
                                   </p>
                                 </div>
                               </div>
