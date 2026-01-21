@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
-import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon } from "lucide-react";
+import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon, X } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
 interface Inverter {
@@ -1279,13 +1279,13 @@ export const SystemSpecifications = () => {
 
           <div className="flex items-center gap-2">
             <span
-              className={`p-2 rounded-full flex items-center justify-center ${isEditable ? "bg-green-300" : "bg-gray-300"
+              className={`p-1.5 rounded-full flex items-center justify-center ${isEditable ? "bg-green-300" : "bg-gray-300"
                 }`}
             >
               {isEditable ? (
                 <PencilIcon className="w-4 h-4 text-green-700" />
               ) : (
-                <LockIcon className="w-4 h-4 text-gray-600" />
+                <LockIcon className="w-4 h-4 text-gray-500" />
               )}
             </span>
 
@@ -1295,10 +1295,12 @@ export const SystemSpecifications = () => {
                   e.stopPropagation();
                   handleDeleteSpec(spec.id, document?.id);
                 }}
-                className="text-red-600 hover:text-red-800 p-1"
+                className="p-1 rounded-full text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors"
+                aria-label="Delete"
               >
-                ❌
+                <X className="w-5 h-5" />
               </button>
+
             )}
           </div>
         </div>
