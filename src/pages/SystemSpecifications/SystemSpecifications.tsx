@@ -1062,6 +1062,12 @@ export const SystemSpecifications = () => {
       URL.revokeObjectURL(pdfUrl);
 
       await fetchSavedSpecs();
+
+      window.scrollTo({
+      top: 0,
+      behavior: "smooth", // or "instant"
+    });
+
     } catch (error) {
       console.error("Error generating quotation PDF:", error);
     } finally {

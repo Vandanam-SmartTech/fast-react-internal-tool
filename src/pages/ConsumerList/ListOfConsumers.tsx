@@ -432,9 +432,9 @@ const ListOfConsumers: React.FC = () => {
               size="sm"
               className="px-1 py-1 text-xs gap-0.5 transition-all duration-200 hover:bg-secondary-100 dark:hover:bg-secondary-700 hover:scale-105 hover:shadow-md"
               onClick={() => handleViewConsumer(consumer)}
-              leftIcon={<Eye className="w-3 h-3" />}
+              title="View Customer"
             >
-              View
+              <Eye className="w-3 h-3" />
             </Button>
           </div>
         </div>

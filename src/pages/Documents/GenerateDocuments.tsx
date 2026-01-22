@@ -728,7 +728,7 @@ export default function GenerateDocuments() {
                         }
                         // Check for file size validation (1MB limit)
                         if (file.size > MAX_FILE_SIZE_BYTES) {
-                          toast.error(`You can't upload file greater than 1 MB`, {
+                          toast.error(`You can't upload file greater than 5 MB`, {
                             hideProgressBar: true,
                           });
                           setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
@@ -1100,8 +1100,9 @@ export default function GenerateDocuments() {
                           : "bg-white border-gray-200 hover:bg-gray-50";
 
                     const isStepDisabled =
-                      (step.id >= 3 && !isConnectionOnboarded) ||   // Rule 1: onboarding not done
-                      (step.id > 4 && !hasSanctionLetter);         // Rule 2: sanction letter missing
+                      (step.id >= 3 && !isConnectionOnboarded) 
+                      {/* || */}
+                      // (step.id > 4 && !hasSanctionLetter);         
 
 
                     const disabledClasses = isStepDisabled ? "opacity-50 cursor-not-allowed" : "";

@@ -226,42 +226,60 @@ export const ViewCustomer = () => {
 
         {/* Customer Card */}
         <div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <UserCircleIcon className="w-4 h-4 text-green-600" />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full max-w-4xl mx-auto">
+            <div className="mb-1">
+              <div className="flex items-start sm:items-center">
+                {/* Customer Details */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                    <UserCircleIcon className="w-4 h-4 text-green-600" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-800 whitespace-nowrap">
+                    Customer Details
+                  </h3>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800">Customer Details</h3>
-              </div>
 
-              <div
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-900 cursor-pointer transition-colors"
-                onClick={() => setShowUserModal(true)}
-              >
-                <User className="w-4 h-4" />
-                <span className="font-medium">Referrer: {referredByUser?.nameAsPerGovId || 'User'}</span>
+                {/* Ref User */}
+                <div
+                  className="
+        ml-auto
+        text-sm text-blue-600 hover:text-blue-900
+        cursor-pointer transition-colors
+        text-right
+        max-w-[55%]
+      "
+                  onClick={() => setShowUserModal(true)}
+                >
+                  <span className="font-medium">
+                    Ref:&nbsp;
+                    <span className="sm:whitespace-nowrap break-words">
+                      {referredByUser?.nameAsPerGovId || "User"}
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="border-b border-gray-200 mb-4" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 text-gray-800">
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Name as per Gov ID</h3>
-                <p className="mt-1 text-sm text-gray-800">{customer.govIdName || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-                <p className="mt-1 text-sm text-gray-800">+91 {customer.mobileNumber || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
-                <p className="mt-1 text-sm text-gray-800">{customer.preferredName || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
-                <p className="mt-1 text-sm text-gray-800">{customer.emailAddress || "....."}</p>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 ">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 text-gray-800">
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Gov ID Name</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.govIdName || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
+                  <p className="mt-1 text-sm text-gray-800">+91 {customer.mobileNumber || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.preferredName || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.emailAddress || "....."}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -316,7 +334,7 @@ export const ViewCustomer = () => {
 
 
 
-          <div className="flex gap-3 justify-start mt-6 max-w-4xl mx-auto">
+          <div className="flex gap-2 justify-start mt-4 max-w-4xl mx-auto">
             <button
               onClick={() =>
                 navigate(`/edit-customer`, {
@@ -349,9 +367,8 @@ export const ViewCustomer = () => {
         </div>
 
 
-
         {connections.length > 0 && (
-          <div className="mt-6 px-2">
+          <div className="mt-4">
             <div className="max-w-4xl mx-auto space-y-6">
 
               <div className="space-y-6">
@@ -404,76 +421,114 @@ export const ViewCustomer = () => {
                     </summary>
 
 
-                    <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
-                      <div className="border-b border-gray-200 mb-2" />
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-y-6 gap-x-16">
+                    <div className="px-5 pb-5 space-y-4 text-sm text-gray-700">
+                      <div className="border-b border-gray-200" />
 
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
-                          <p className="mt-1 text-sm text-gray-800">Yes</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.consumerNumber || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.billedTo || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.avgMonthlyConsumption || "....."}</p>
-                        </div>
-
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.connectionTypeName || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.phaseTypeName || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.discomId || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.gstNumber || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                          <p className="mt-1 text-sm text-gray-800">
-                            {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}, {connection.pinCode}
-                          </p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.addressTypeName || "NA"}</p>
-                        </div>
-
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
-                          <p className="mt-1 text-sm text-gray-800">{connection.latitude || "NA"}, {connection.longitude || "NA"}</p>
-                        </div>
-
-                        {connection.isNameCorrectionRequired && (
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-                            <p className="mt-1 text-sm text-gray-800">{connection.correctionTypeName || "NA"}</p>
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-2">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                            <UserCircleIcon className="w-4 h-4 text-green-600" />
                           </div>
-                        )}
+                          <h4 className="text-base font-medium text-gray-900">Connection Information</h4>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Consumer Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Avg Monthly Units</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">DISCOM ID</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.discomId || "NA"}</p>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Business Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+                            <Cog6ToothIcon className="w-4 h-4 text-orange-600" />
+                          </div>
+                          <h4 className="text-base font-medium text-gray-900">Business Information</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Address Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <HomeModernIcon className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <h4 className="text-base font-medium text-gray-900">Address Information</h4>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {/* Address - full width on mobile */}
+                          <div className="col-span-2 md:col-span-1">
+                            <h5 className="text-sm font-medium text-gray-500">Address</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.addressLine1}, {connection.villageName}, {connection.talukaName},{" "}
+                              {connection.districtName}, {connection.pinCode}
+                            </p>
+                          </div>
+
+                          {/* Address Type */}
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.addressTypeName || "NA"}
+                            </p>
+                          </div>
+
+                          {/* Latitude, Longitude */}
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Latitude, Longitude</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.latitude || "NA"}, {connection.longitude || "NA"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Name Correction */}
+                      {connection.isNameCorrectionRequired && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-base font-medium text-gray-900">Name Correction Required</h4>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Correction Name</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.correctionTypeName || "....."}</p>
+                          </div>
+                        </div>
+                      )}
+
 
                       {/* View/Edit Buttons */}
                       <div className="w-full grid grid-cols-2 gap-4 md:flex md:justify-start md:gap-4">

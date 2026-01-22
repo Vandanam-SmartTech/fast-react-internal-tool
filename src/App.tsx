@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { UserProvider } from './contexts/UserContext';
+import ScrollToTop from './components/ScrollToTop';
 
 import Login from './pages/Auth/Login';
 import PrivateRoute from './routes/PrivateRoute';
@@ -507,8 +508,10 @@ const AppContent: React.FC = () => {
 
 function App({ basePath }: { basePath: string }) {
   return (
+    
     <UserProvider>
       <Router basename={basePath}>
+        <ScrollToTop />
         <AppContent />
       </Router>
     </UserProvider>

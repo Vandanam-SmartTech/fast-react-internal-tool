@@ -226,6 +226,20 @@ const ProductManagement: React.FC = () => {
     "maxOutputCurrentAmps",
     "overallEfficiencyPercent",
     "mpptEfficiencyPercent",
+    "ratedWattageW",
+    "productWarrantyYrs",
+    "efficiencyWarrantyYrs",
+    "annualYieldUnitsPerKw",
+    "openCircuitVolts",
+    "shortCircuitAmps",
+    "maxPowerVolts",
+    "maxPowerAmps",
+    "efficiencyPercentage",
+    "lengthMeters",
+    "widthMm",
+    "heightMm",
+    "thicknessMm",
+    "weightKg",
   ];
 
   const dateFields = [
@@ -707,7 +721,7 @@ const ProductManagement: React.FC = () => {
   const handleAddNewInverterSpec = async (inverterBrandId: number) => {
 
     if (!validateInverterSpecForm()) return;
-    
+
     const payload = {
       inverterBrandId: inverterBrandId,
       inverterCapacity: Number(newInverterSpec.inverterCapacity),
@@ -877,6 +891,14 @@ const ProductManagement: React.FC = () => {
     fetchGridTypes();
   }, []);
 
+  const sanitizeNonNegative = (value: string) => {
+    if (value === "") return "";
+    const num = Number(value);
+    if (isNaN(num) || num < 0) return "";
+    return String(num);
+  };
+
+
 
   const handleAddPanelType = async () => {
     if (!typeName || !typicalEfficiency || !yearIntroduced) {
@@ -1011,7 +1033,20 @@ const ProductManagement: React.FC = () => {
   };
 
 
-  const handlePanelSpecInputChange = (key: string, value: string | number) => {
+  const handlePanelSpecInputChange = (key: string, value: string) => {
+    if (value === "") {
+      setNewPanelSpec((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
+
+    if (numberFields.includes(key)) {
+      const num = Number(value);
+
+      if (Number.isNaN(num) || num < 0) return;
+
+      setNewPanelSpec((prev) => ({ ...prev, [key]: num }));
+      return;
+    }
     setNewPanelSpec((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -1021,7 +1056,31 @@ const ProductManagement: React.FC = () => {
     setNewPanelSpec({ ...spec });   // Autofill form
   };
 
+
+  const validatePanelSpecForm = () => {
+    const requiredNumberFields = [
+      "ratedWattageW",
+      "productWarrantyYrs",
+      "efficiencyWarrantyYrs",
+    ];
+
+    // Check numeric fields
+    for (const field of requiredNumberFields) {
+      const value = Number(newPanelSpec[field as keyof typeof newPanelSpec]);
+      if (!value || value < 0) {
+        toast.error(`${field} must be 0 or greater than 0`, {
+          autoClose: 1000,
+          hideProgressBar: true
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleAddNewPanelSpec = async (panelBrandId: number) => {
+    if (!validatePanelSpecForm()) return;
     const payload = {
       ratedWattageW: Number(newPanelSpec.ratedWattageW),
       productWarrantyYrs: Number(newPanelSpec.productWarrantyYrs),
@@ -1056,6 +1115,7 @@ const ProductManagement: React.FC = () => {
   };
 
   const handleUpdatePanelSpec = async (specId: number, panelBrandId: number) => {
+    if (!validatePanelSpecForm()) return;
     const payload = {
       ratedWattageW: Number(newPanelSpec.ratedWattageW),
       productWarrantyYrs: Number(newPanelSpec.productWarrantyYrs),
@@ -1311,7 +1371,20 @@ const ProductManagement: React.FC = () => {
     setShowPipeSpecModal(true);
   };
 
-  const handlePipeSpecInputChange = (key: string, value: string | number) => {
+  const handlePipeSpecInputChange = (key: string, value: string) => {
+    if (value === "") {
+      setNewPipeSpec((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
+
+    if (numberFields.includes(key)) {
+      const num = Number(value);
+
+      if (Number.isNaN(num) || num < 0) return;
+
+      setNewPipeSpec((prev) => ({ ...prev, [key]: num }));
+      return;
+    }
     setNewPipeSpec((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -1803,6 +1876,9 @@ const ProductManagement: React.FC = () => {
                           onChange={(e) =>
                             handleSpecInputChange("basePrice", e.target.value)
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === "-" || e.key === "e") e.preventDefault();
+                          }}
                         />
                       </div>
                     )}
@@ -2725,6 +2801,10 @@ const ProductManagement: React.FC = () => {
                         onChange={(e) =>
                           handleInverterSpecInputChange("basePrice", e.target.value)
                         }
+                        onWheel={(e) => e.currentTarget.blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === "-" || e.key === "e") e.preventDefault();
+                        }}
                       />
                     </div>)}
 
@@ -3374,7 +3454,7 @@ const ProductManagement: React.FC = () => {
                     setTypicalEfficiency("");
                     setYearIntroduced("");
                     setShowAddPanelTypeModal(true);
-                    setShowPanelTypes(false);
+                    //setShowPanelTypes(false);
                   }}
                   className="px-4 py-2 rounded bg-success-600 hover:bg-success-700 text-white"
                 >
@@ -3418,7 +3498,6 @@ const ProductManagement: React.FC = () => {
                                 setTypeDescription(type.typeDescription);
                                 setTypicalEfficiency(type.typicalEfficiency);
                                 setYearIntroduced(type.yearIntroduced);
-
                                 setShowPanelTypes(false); // hide table while editing
                                 setShowAddPanelTypeModal(true); // open modal
                               }}
@@ -3469,11 +3548,21 @@ const ProductManagement: React.FC = () => {
                       </label>
                       <input
                         type="number"
+                        min={0}
                         value={typicalEfficiency}
                         onChange={(e) => setTypicalEfficiency(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "-" || e.key === "e") {
+                            e.preventDefault();
+                          }
+                        }}
+                        onBlur={(e) =>
+                          setTypicalEfficiency(sanitizeNonNegative(e.target.value))
+                        }
                         placeholder="Typical Efficiency (%)"
                         className="border p-2 rounded w-full"
                       />
+
                     </div>
 
                     {/* Year Introduced */}
@@ -3481,11 +3570,21 @@ const ProductManagement: React.FC = () => {
                       <label className="block text-sm font-medium mb-1">Year Introduced</label>
                       <input
                         type="number"
+                        min={0}
                         value={yearIntroduced}
                         onChange={(e) => setYearIntroduced(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "-" || e.key === "e") {
+                            e.preventDefault();
+                          }
+                        }}
+                        onBlur={(e) =>
+                          setYearIntroduced(sanitizeNonNegative(e.target.value))
+                        }
                         placeholder="Year Introduced"
                         className="border p-2 rounded w-full"
                       />
+
                     </div>
 
                     {/* Description */}
@@ -3862,6 +3961,10 @@ const ProductManagement: React.FC = () => {
                         onChange={(e) =>
                           handlePanelSpecInputChange("basePrice", e.target.value)
                         }
+                        onWheel={(e) => e.currentTarget.blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === "-" || e.key === "e") e.preventDefault();
+                        }}
                       />
                     </div>)}
 
@@ -4198,6 +4301,11 @@ const ProductManagement: React.FC = () => {
                                   value={newPanelSpec.ratedWattageW}
                                   disabled={isOrgAdminSelectModeForPanel}
                                   onChange={(e) => handlePanelSpecInputChange("ratedWattageW", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4210,6 +4318,11 @@ const ProductManagement: React.FC = () => {
                                   value={newPanelSpec.productWarrantyYrs}
                                   disabled={isOrgAdminSelectModeForPanel}
                                   onChange={(e) => handlePanelSpecInputChange("productWarrantyYrs", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4222,6 +4335,11 @@ const ProductManagement: React.FC = () => {
                                   value={newPanelSpec.efficiencyWarrantyYrs}
                                   disabled={isOrgAdminSelectModeForPanel}
                                   onChange={(e) => handlePanelSpecInputChange("efficiencyWarrantyYrs", e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4236,6 +4354,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("annualYieldUnitsPerKw", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4250,6 +4372,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("openCircuitVolts", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4264,6 +4390,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("shortCircuitAmps", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4277,6 +4407,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("maxPowerVolts", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4291,6 +4425,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("maxPowerAmps", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4317,6 +4455,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("efficiencyPercentage", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>
 
@@ -4330,6 +4472,10 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePanelSpecInputChange("basePrice", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
                                 />
                               </div>)}
 
@@ -4609,6 +4755,10 @@ const ProductManagement: React.FC = () => {
                         onChange={(e) =>
                           handlePipeSpecInputChange("basePrice", e.target.value)
                         }
+                        onWheel={(e) => e.currentTarget.blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === "-" || e.key === "e") e.preventDefault();
+                        }}
                       />
                     </div>)}
 
@@ -4896,6 +5046,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("lengthMeters", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4909,6 +5064,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("widthMm", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4922,6 +5082,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("heightMm", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4936,6 +5101,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("thicknessMm", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4950,6 +5120,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("weightKg", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>
 
@@ -4965,6 +5140,11 @@ const ProductManagement: React.FC = () => {
                                   onChange={(e) =>
                                     handlePipeSpecInputChange("basePrice", e.target.value)
                                   }
+                                  onWheel={(e) => e.currentTarget.blur()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                                  }}
+                                  required
                                 />
                               </div>)}
 
