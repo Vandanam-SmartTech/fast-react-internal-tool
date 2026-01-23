@@ -146,11 +146,9 @@ const SuperAdminDashboard: React.FC = () => {
             <CardBody className="p-3 md:p-4 flex items-center">
               <div className="flex items-center gap-2 w-full">
 
-                  {/* Icon */}
                   <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                     {item.icon}
                   </div>
-
 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <h3 className="font-semibold text-secondary-900
