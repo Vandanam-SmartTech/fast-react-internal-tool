@@ -300,24 +300,25 @@ const AgencyForm: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() =>
-            navigate(-1)
-          }
+     <div className="min-h-screen bg-gray-50 py-4">
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+             <div className="flex items-center gap-2">
+         <button
+           onClick={() => navigate(-1)}
+           className="p-2 rounded-full hover:bg-gray-200 transition"
+         >
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
+         </button>
+         <h1 className="text-xl font-bold text-gray-700">
+           Add New Agency
+         </h1>
+       </div>
+       </div>
 
-          className="p-2 rounded-full hover:bg-gray-200 transition"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
-          Add Agency
-        </h1>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Legal Name <span className="text-red-500">*</span>
@@ -603,29 +604,34 @@ const AgencyForm: React.FC = () => {
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
-
-
-
+        </div>
         </div>
 
-        <div className="col-span-2 flex justify-center gap-6 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+           className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
+           className="
+      w-full sm:w-auto inline-flex items-center justify-center gap-2
+      px-3 py-2.5 sm:px-5 sm:py-2.5
+      bg-blue-600 text-white font-semibold
+      text-sm sm:text-base
+      rounded-md hover:bg-blue-700
+      transition-colors shadow-sm hover:shadow-md
+      disabled:opacity-50">
             <Save className="h-4 w-4" />
             {loading ? 'Saving...' : 'Save Agency'}
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 };

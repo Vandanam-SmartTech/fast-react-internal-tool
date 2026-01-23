@@ -318,31 +318,35 @@ const UserOrgRoles: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        {/* LEFT */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => navigate("/user-management")}
             className="p-1 rounded-full hover:bg-gray-200 transition"
           >
             <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
           </button>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 flex-wrap">
-            <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="break-words">
+
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-2 min-w-0">
+            {/* <Shield className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" /> */}
+            <span className="truncate">
               Roles - {user.nameAsPerGovId || user.username}
             </span>
           </h1>
-
-
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Add Role
-          </button>
         </div>
+
+        {/* RIGHT */}
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 shrink-0 whitespace-nowrap"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Role</span>
+        </button>
       </div>
+
+
 
       {/* Add Role Form */}
       {showAddForm && (
@@ -462,114 +466,119 @@ const UserOrgRoles: React.FC = () => {
       )}
 
 
-      {/* Roles Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full text-sm text-gray-700">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Organization
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Roles
-              </th>
-            </tr>
-          </thead>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        {/* Header */}
+<div className="hidden md:grid grid-cols-2 items-center bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+  <div className="px-6 py-3 flex items-center gap-2">
+    <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+      Organization
+    </span>
+  </div>
 
-          <tbody className="divide-y divide-gray-100">
-            {/* ✅ Global Roles (e.g., Super Admin) */}
-            {user?.roles?.length > 0 && (
-              <tr className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                  Global Roles
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {user.roles.map((role) => {
-                      const label = allRoles.find((r) => r.name === role.name)?.label || role.name;
-                      const roleName = role.name;
+  <div className="px-6 py-3 flex items-center gap-2">
+    <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+      Roles
+    </span>
+  </div>
+</div>
 
-                      const disableDelete =
-                        roleName === "ROLE_SUPER_ADMIN" ||
-                        (userInfo?.role === "ROLE_ORG_ADMIN" && roleName === "ROLE_ORG_ADMIN") ||
-                        (userInfo?.role === "ROLE_AGENCY_ADMIN" && roleName === "ROLE_AGENCY_ADMIN");
 
-                      return (
-                        <div
-                          key={role.id}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200 shadow-sm hover:shadow transition-all whitespace-normal break-words"
+        {/* Body */}
+        <div className="divide-y divide-gray-100">
+          {/* Global Roles */}
+          {user?.roles?.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 px-4 md:px-6 py-4">
+              <div className="font-medium text-gray-900">
+                Global Roles
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {user.roles.map((role) => {
+                  const label =
+                    allRoles.find((r) => r.name === role.name)?.label || role.name;
+
+                  const disableDelete =
+                    role.name === "ROLE_SUPER_ADMIN" ||
+                    (userInfo?.role === "ROLE_ORG_ADMIN" &&
+                      role.name === "ROLE_ORG_ADMIN") ||
+                    (userInfo?.role === "ROLE_AGENCY_ADMIN" &&
+                      role.name === "ROLE_AGENCY_ADMIN");
+
+                  return (
+                    <span
+                      key={role.id}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                    >
+                      {label.replace("ROLE_", "")}
+                      {!disableDelete && (
+                        <button
+                          onClick={() => handleRemoveRole(0, role.id)}
+                          className="text-red-500 hover:text-red-700 p-0.5"
                         >
-                          <span>{label.replace("ROLE_", "")}</span>
-                          {!disableDelete && (
-                            <button
-                              onClick={() => handleRemoveRole(0, role.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5 transition"
-                              title={`Remove ${label}`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </td>
-              </tr>
-            )}
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-            {/* ✅ Organization Roles */}
-            {userOrgRoles.map((orgRole) => (
-              <tr
-                key={orgRole.organizationId}
-                className="hover:bg-gray-50 transition-colors duration-150"
-              >
-                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                  {orgRole.organizationName}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {orgRole.roles.map((role) => {
-                      const label = allRoles.find((r) => r.name === role.name)?.label || role.name;
-                      const roleName = role.name;
+          {/* Organization Roles */}
+          {userOrgRoles.map((orgRole) => (
+            <div
+              key={orgRole.organizationId}
+              className="grid grid-cols-1 md:grid-cols-2 px-4 md:px-6 py-4"
+            >
+              <div className="font-medium text-gray-900">
+                {orgRole.organizationName}
+              </div>
 
-                      const disableDelete =
-                        (userInfo?.role === "ROLE_ORG_ADMIN" && roleName === "ROLE_ORG_ADMIN") ||
-                        (userInfo?.role === "ROLE_AGENCY_ADMIN" && roleName === "ROLE_AGENCY_ADMIN");
+              <div className="flex flex-wrap gap-2">
+                {orgRole.roles.map((role) => {
+                  const label =
+                    allRoles.find((r) => r.name === role.name)?.label || role.name;
 
-                      return (
-                        <div
-                          key={role.id}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200 shadow-sm hover:shadow transition-all whitespace-normal break-words"
+                  const disableDelete =
+                    (userInfo?.role === "ROLE_ORG_ADMIN" &&
+                      role.name === "ROLE_ORG_ADMIN") ||
+                    (userInfo?.role === "ROLE_AGENCY_ADMIN" &&
+                      role.name === "ROLE_AGENCY_ADMIN");
+
+                  return (
+                    <span
+                      key={role.id}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                    >
+                      {label.replace("ROLE_", "")}
+                      {!disableDelete && (
+                        <button
+                          onClick={() =>
+                            handleRemoveRole(orgRole.organizationId, role.id)
+                          }
+                          className="text-red-500 hover:text-red-700 p-0.5"
                         >
-                          <span>{label.replace("ROLE_", "")}</span>
-                          {!disableDelete && (
-                            <button
-                              onClick={() => handleRemoveRole(orgRole.organizationId, role.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-0.5 transition"
-                              title={`Remove ${label}`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
-
-            {user?.roles?.length === 0 && userOrgRoles.length === 0 && (
-              <tr>
-                <td colSpan={2} className="px-6 py-8 text-sm text-gray-500 text-center">
-                  No roles assigned
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+          {user?.roles?.length === 0 && userOrgRoles.length === 0 && (
+            <div className="px-6 py-8 text-sm text-gray-500 text-center">
+              No roles assigned
+            </div>
+          )}
+        </div>
       </div>
+
 
       <Dialog
         open={dialogOpen}

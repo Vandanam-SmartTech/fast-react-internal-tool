@@ -3,7 +3,7 @@ import { fetchOnboardedConsumers, searchOnboardedConsumers } from "../../service
 import { useNavigate } from "react-router-dom";
 import { obfuscateEmail } from "../../utils/emailUtils";
 import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
-import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye, UserPlus } from "lucide-react";
+import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, fetchAllUsersByOrgId } from "../../services/organizationService";
@@ -549,7 +549,7 @@ const OnboardedConsumers: React.FC = () => {
           {/* Heading + Subtitle */}
           <div>
             <h1 className="font-bold text-secondary-900
-                     text-xl sm:text-2xl lg:text-3xl
+                     text-xl sm:text-2xl lg:text-2xl
                      leading-tight">
               Onboarded Consumers
             </h1>

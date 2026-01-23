@@ -214,110 +214,111 @@ const OrganizationView: React.FC = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <div className="mb-6">
-  <div className="flex items-center gap-2 flex-nowrap">
-    {/* Left Section */}
-    <div className="flex items-center gap-2 min-w-0">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-700" />
-      </button>
+      <div className="mb-3">
+        <div className="flex items-center gap-2 flex-nowrap">
+          {/* Left Section */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Back Button */}
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
-      {/* Logo Upload UI */}
-      <div
-        className="relative group h-12 w-12 shrink-0 cursor-pointer"
-        onClick={() => {
-          setCreatedOrgId(orgId);
-          setShowImageModal(true);
-        }}
-      >
-        {organizationLogo ? (
-          <img
-            src={organizationLogo}
-            alt="Organization Logo"
-            className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
-          />
-        ) : (
-          <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
-            <Building className="h-6 w-6 text-blue-600" />
+            {/* Logo Upload UI */}
+            <div
+              className="relative group h-12 w-12 shrink-0 cursor-pointer"
+              onClick={() => {
+                setCreatedOrgId(orgId);
+                setShowImageModal(true);
+              }}
+            >
+              {organizationLogo ? (
+                <img
+                  src={organizationLogo}
+                  alt="Organization Logo"
+                  className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+                />
+              ) : (
+                <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
+                  <Building className="h-6 w-6 text-blue-600" />
+                </div>
+              )}
+
+              <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-5 h-5 text-white"/>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="font-bold text-gray-900 truncate">
+              <span className="text-lg sm:text-2xl">
+                <span className="sm:hidden">Org Details</span>
+                <span className="hidden sm:inline">Organization Details</span>
+              </span>
+            </h1>
           </div>
-        )}
 
-        <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <Camera className="w-5 h-5 text-white" />
-        </div>
-      </div>
-
-      {/* Title */}
-      <h1 className="font-bold text-gray-900 truncate">
-        <span className="text-lg sm:text-2xl">
-          <span className="sm:hidden">Org Details</span>
-          <span className="hidden sm:inline">Organization Details</span>
-        </span>
-      </h1>
-    </div>
-
-    {/* Edit Button */}
-    <button
-      onClick={() =>
-        navigate("/edit-organization", {
-          state: { organizationId: orgId }
-        })
-      }
-      className="
+          {/* Edit Button */}
+          <button
+            onClick={() =>
+              navigate("/edit-organization", {
+                state: { organizationId: orgId }
+              })
+            }
+            className="
         bg-blue-600 text-white px-3 py-2 rounded-lg
         flex items-center gap-1 hover:bg-blue-700
         ml-auto shrink-0
       "
-    >
-      <Edit className="h-4 w-4" />
-      <span className="hidden sm:inline">Edit</span>
-    </button>
-  </div>
-</div>
+          >
+            <Edit className="h-4 w-4" />
+            <span className="hidden sm:inline">Edit</span>
+          </button>
+        </div>
+      </div>
 
 
 
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">Name (Short Name)</label>
-            <p className="text-gray-900">{organization.name}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Legal Name</label>
+            <p className="text-sm text-gray-800">{organization.legalName || '-'}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Display Name</label>
-            <p className="text-gray-900">{organization.displayName || '-'}</p>
+            <p className="text-sm text-gray-800">{organization.displayName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">Legal Name</label>
-            <p className="text-gray-900">{organization.legalName || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Name (Short Name)</label>
+            <p className="text-sm text-gray-800">{organization.name}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Contact Number</label>
-            <p className="text-gray-900">{organization.contactNumber || '-'}</p>
+            <p className="text-sm text-gray-800">{organization.contactNumber || '-'}</p>
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
-            <p className="text-gray-900">
+            <p className="text-sm text-gray-800">
               {`${organization.addressLine1}, ${organization.villageName}, ${organization.talukaName}, ${organization.districtName}, ${organization.pinCode}`}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">GST Number</label>
-            <p className="text-gray-900">{organization.gstNumber || '-'}</p>
+            <p className="text-sm text-gray-800">{organization.gstNumber || '-'}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Government Registration Number</label>
-            <p className="text-gray-900">{organization.govtRegNumber || '-'}</p>
+            <p className="text-sm text-gray-800">{organization.govtRegNumber || '-'}</p>
           </div>
 
           {organization.createdAt && (
@@ -329,7 +330,8 @@ const OrganizationView: React.FC = () => {
         </div>
 
         {!isAgency && (
-          <div className="mt-8 pt-6 border-t">
+          <div className="pt-6 ">
+            <div className="border-b border-gray-200 mb-4" />
             <button
               onClick={() =>
                 navigate("/agencies", {
@@ -347,20 +349,39 @@ const OrganizationView: React.FC = () => {
       </div>
 
       {/* Organization Users Section */}
-      <div className="bg-white rounded-lg shadow p-6 mt-6">
+      <div className="bg-white rounded-lg shadow p-4 mt-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Organization Members ({orgUsers.length})
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-1 sm:gap-2">
+            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+
+            {/* Mobile text */}
+            <span className="sm:hidden">
+              Org Members ({orgUsers.length})
+            </span>
+
+            {/* Desktop text */}
+            <span className="hidden sm:inline">
+              Organization Members ({orgUsers.length})
+            </span>
           </h2>
 
           <button
             onClick={() => navigate("/user-form")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="
+      px-2.5 py-1.5 sm:px-4 sm:py-2
+      bg-blue-600 text-white rounded-md sm:rounded-lg
+      hover:bg-blue-700 transition-colors
+      text-xs sm:text-sm font-medium
+    "
           >
-            + Add New User
+            {/* Mobile text */}
+            <span className="sm:hidden">+ Add User</span>
+
+            {/* Desktop text */}
+            <span className="hidden sm:inline">+ Add New User</span>
           </button>
         </div>
+
 
 
         {usersLoading ? (

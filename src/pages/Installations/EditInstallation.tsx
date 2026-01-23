@@ -169,8 +169,10 @@ export const EditInstallation = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+     <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div className="flex items-center gap-2">
         {/* Back Arrow */}
         <button
@@ -182,11 +184,12 @@ export const EditInstallation = () => {
         </button>
 
         {/* Heading - Adjusts Position on Small Screens */}
-        <h1 className="text-2xl font-bold text-gray-700">Edit Installation</h1>
+        <h1 className="text-xl font-bold text-gray-700">Edit Installation</h1>
+      </div>
       </div>
 
-
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+      {/* Progress Steps */}
+      <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
         <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
           {/* Connector Line: between the first and last icon only */}
@@ -282,7 +285,7 @@ export const EditInstallation = () => {
                 Installation Space Title <span className="text-red-500">*</span>
               </label>
 
-                            <ReusableDropdown
+              <ReusableDropdown
                 name="installationSpaceTitle"
                 value={formData.installationSpaceTitle || ""}
                 onChange={(val) => {
@@ -492,6 +495,7 @@ export const EditInstallation = () => {
           </div>
         </div>
 
+
         {/* Submit Button */}
         <div className="flex justify-center sm:justify-center space-x-3 pt-1">
 
@@ -502,8 +506,7 @@ export const EditInstallation = () => {
           >
             Cancel
           </button>
-
-
+          
           <button
             type="submit"
             className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
@@ -512,6 +515,7 @@ export const EditInstallation = () => {
           </button>
         </div>
       </form>
+      </div>
 
       <Dialog
         open={dialogOpen}

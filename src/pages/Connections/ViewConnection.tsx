@@ -264,30 +264,26 @@ export const ViewConnection = () => {
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                navigate(-1)
-              }
-              className="p-2 rounded-full hover:bg-gray-200 transition"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </button>
+<div className="flex items-center gap-2">
+          {/* Back Arrow */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
 
-            <h1 className="text-xl font-bold text-gray-700">View Connection Details</h1>
-          </div>
+          <h1 className="text-xl font-bold text-gray-700">View Connection Details</h1>
         </div>
 
-      </div>
 
+     <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+            {/* Connector Line: between the first and last icon only */}
+            <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
-        <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-
-          <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
-
-          <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+            <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
             {tabs.map((tab) => {
               const isActive = activeTab === tab;
 
@@ -340,7 +336,7 @@ export const ViewConnection = () => {
       </div>
 
 
-      <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh] px-4">
+      <div className="col-span-1 md:col-span-2 flex items-center min-h-[20vh]">
         <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
           <div className="flex items-center justify-between gap-3 mb-3">
             {/* Left: Icon + Title */}
@@ -475,7 +471,7 @@ export const ViewConnection = () => {
 
 
           <div className="col-span-1 md:col-span-2 flex space-x-14">
-            <div className="flex justify-start px-2 ml-2">
+            <div className="flex justify-start">
 
               <button
                 onClick={() =>
@@ -498,7 +494,7 @@ export const ViewConnection = () => {
       </div>
 
 
-      <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-4 mt-4">
+      <div className="col-span-1 md:col-span-2 flex flex-col items-center space-y-4 mt-4">
         {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
           <details
             key={installation.id}
@@ -522,53 +518,55 @@ export const ViewConnection = () => {
 
 
             {/* Installation Info Block */}
-            <div className="px-6 pb-6 text-sm text-gray-700">
+            <div className="px-4 pb-6 text-sm text-gray-700">
               <div className="border-b border-gray-200 mb-4" />
+<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-16">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
-                  <p className="mt-1">{getSpaceTypeName(installation.installationSpaceTypeId)}</p>
+                  <p className="text-sm text-gray-800 mt-1">{getSpaceTypeName(installation.installationSpaceTypeId)}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
-                  <p className="mt-1">{installation.installationSpaceTitle || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.installationSpaceTitle || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">East-West Length (Feet)</h3>
-                  <p className="mt-1">{installation.availableEastWestLengthFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.availableEastWestLengthFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">South-North Length (Feet)</h3>
-                  <p className="mt-1">{installation.availableSouthNorthLengthFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.availableSouthNorthLengthFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.structureInverterDistanceFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.structureInverterDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.inverterMeterDistanceFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.inverterMeterDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
-                  <p className="mt-1">{installation.inverterEarthDistanceFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.inverterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
-                  <p className="mt-1">{installation.arresterEarthDistanceFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.arresterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
-                  <p className="mt-1">{installation.minimumElevationFt || "NA"}</p>
+                  <p className="text-sm text-gray-800 mt-1">{installation.minimumElevationFt || "NA"}</p>
                 </div>
                 <div className="md:col-span-2">
                   <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                  <p className="mt-1 whitespace-pre-line">{installation.descriptionOfInstallation || "NA"}</p>
+                  <p className="mt-1 text-sm text-gray-800 whitespace-pre-line">{installation.descriptionOfInstallation || "NA"}</p>
                 </div>
+              </div>
               </div>
 
               {/* Edit Button */}
-              <div className="flex justify-start mt-6">
+              <div className="flex justify-start mt-4">
                 <button
                   onClick={() =>
                     navigate(`/edit-installation`, {
@@ -591,7 +589,7 @@ export const ViewConnection = () => {
       </div>
 
       {/* Action Buttons Section */}
-      <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4 space-y-4 py-4">
+      <div className="col-span-1 md:col-span-2 flex flex-col items-center space-y-4 py-4">
 
 
         {/* Responsive Button Grid */}
@@ -648,7 +646,7 @@ export const ViewConnection = () => {
         userInfo?.role === "ROLE_AGENCY_ADMIN" ||
         userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) &&
         connection && (
-          <div className="col-span-1 md:col-span-2 flex flex-col items-center px-4">
+          <div className="col-span-1 md:col-span-2 flex flex-col items-center">
             <div className="w-full max-w-4xl flex justify-start">
               {connection.isOnboardedCustomers === true ? (
                 <button
@@ -754,6 +752,7 @@ export const ViewConnection = () => {
         </DialogActions>
       </Dialog>
 
+      </div>
 
 
     </div>

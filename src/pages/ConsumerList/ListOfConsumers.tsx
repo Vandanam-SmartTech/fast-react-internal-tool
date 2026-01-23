@@ -8,7 +8,6 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import { connectCustomerSocket, disconnectCustomerSocket } from "../../services/websocket";
 
 interface Consumer {
   id: number;
@@ -601,7 +600,7 @@ const ListOfConsumers: React.FC = () => {
           {/* Heading + Subtitle */}
           <div>
             <h1 className="font-bold text-secondary-900
-                     text-xl sm:text-2xl lg:text-3xl
+                     text-xl sm:text-2xl lg:text-2xl
                      leading-tight">
               Customer Directory
             </h1>

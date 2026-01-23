@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building2, ArrowLeft, Eye, Search, Phone, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
 import { deleteOrganization, Organization, getChildOrganizationsInPagination } from '../../services/organizationService';
@@ -71,6 +71,24 @@ const AgencyList: React.FC = () => {
       setLoading(false);
     }
   };
+
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+  
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setOpenDropdown(null);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdown(null);
@@ -194,26 +212,46 @@ const AgencyList: React.FC = () => {
   if (loading) return <div className="flex justify-center p-8">Loading...</div>;
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <button
+      <div className="mb-4">
+        {/* Header Row */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between sm:justify-start gap-3">
+             
+            <h1
+              className="text-xl sm:text-2xl lg:text-3xl
+                   leading-tight font-bold text-secondary-900
+                   flex items-center"
+            >
+              <button
             onClick={() => navigate(-1)}
             className="p-2 rounded-full hover:bg-gray-200 transition"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
-            Agencies
-          </h1>
-        </div>
+              Agencies
+            </h1>
+
+            {/* Mobile Add */}
+            <button
+              onClick={() =>
+              navigate("/agency-form", {
+                state: { orgId: orgId, gstNumber: gstNumber },
+              })
+            }
+              className="sm:hidden bg-blue-600 text-white px-3 py-1.5 rounded-md
+                   text-sm flex items-center gap-1 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Agency
+            </button>
+          </div>
 
         {/* Search and Add Button */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search agencies..."
@@ -228,14 +266,16 @@ const AgencyList: React.FC = () => {
                 state: { orgId: orgId, gstNumber: gstNumber },
               })
             }
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+             className="hidden sm:flex bg-blue-600 text-white px-4 py-2 rounded-lg
+                   items-center gap-2 hover:bg-blue-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Agency
           </button>
         </div>
       </div>
-
+      </div>
+          
       {/* Cards Grid */}
       {filteredAgencies.length === 0 ? (
         <div className="text-center py-12">
@@ -261,22 +301,17 @@ const AgencyList: React.FC = () => {
           {filteredAgencies.map((agency) => (
             <div
               key={agency.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-visible"
             >
               {/* Card Header */}
-              <div className="p-4 sm:p-5">
-                <div className="flex justify-between items-start mb-3">
-                  {/* <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Building2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <h3 className="font-semibold text-gray-900 truncate" title={agency.name}>
-                      {agency.name}
-                    </h3>
-                  </div> */}
+              <div className="p-3 sm:p-4">
+                <div className="flex justify-between items-start mb-1">
+
 
                   <div
-                    className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                    className="flex items-center gap-2 min-w-0 flex-1 "
                   >
-                    <div className="relative group h-12 w-12">
+                    <div className="relative group h-12 w-12 flex-shrink-0 cursor-pointer">
                       {organizationLogos.has(orgId!) ? (
                         <img
                           src={organizationLogos.get(orgId!)}
@@ -314,9 +349,9 @@ const AgencyList: React.FC = () => {
                     </button>
 
                     {openDropdown === agency.id && (
-                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
+                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-40">
                         <button
-                          onClick={() => {
+                          onMouseDown={() => {
                             navigate(`/agency-view`, {
                               state: {
                                 orgId: orgId,
@@ -331,7 +366,7 @@ const AgencyList: React.FC = () => {
                           View Details
                         </button>
                         <button
-                          onClick={() => {
+                          onMouseDown={() => {
                             navigate("/edit-agency", {
                               state: {
                                 orgId: orgId,
@@ -346,7 +381,7 @@ const AgencyList: React.FC = () => {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(agency.id!)}
+                          onMouseDown={() => handleDelete(agency.id!)}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -359,10 +394,10 @@ const AgencyList: React.FC = () => {
 
                 {/* Display Name */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="font-medium">Display Name:</span>
-                    <span className="truncate" title={agency.displayName || 'Not Available'}>
-                      {agency.displayName || 'Not Available'}
+                  <div className="flex items-center gap-2 text-sm text-gray-900">
+                    
+                    <span className="truncate" title={agency.legalName || 'Not Available'}>
+                      {agency.legalName || 'Not Available'}
                     </span>
                   </div>
 
@@ -377,7 +412,7 @@ const AgencyList: React.FC = () => {
               </div>
 
               {/* Quick Action Buttons - Mobile Friendly */}
-              <div className="border-t border-gray-100 p-3 bg-gray-50">
+              {/* <div className="border-t border-gray-100 p-3 bg-gray-50">
                 <div className="flex justify-between items-center gap-2">
                   <button
                     onClick={() =>
@@ -407,7 +442,7 @@ const AgencyList: React.FC = () => {
                     <span className="hidden sm:inline">Edit</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>

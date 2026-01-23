@@ -430,7 +430,7 @@ const AdminManagement: React.FC = () => {
         });
     }
 
-      if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+    if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
       getChildOrganizations(parseInt(userInfo.orgId))
         .then((res) => setAgencies(res))
         .catch((err) => {
@@ -478,7 +478,7 @@ const AdminManagement: React.FC = () => {
       agencyId: ""
     }));
 
-      setNewAssignment((prev) => ({
+    setNewAssignment((prev) => ({
       ...prev,
       organizationId: orgId,
       agencyId: "",
@@ -594,28 +594,28 @@ const AdminManagement: React.FC = () => {
 
 
   const handlePromoteChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
 
-  setPromoteData(prev => ({ ...prev, [name]: value }));
+    setPromoteData(prev => ({ ...prev, [name]: value }));
 
-  // Role changed to Agency Admin => load agencies
-  const newRole = roles.find(r => r.id?.toString() === (name === 'roleId' ? value : promoteData.roleId));
-  const orgId = name === 'organizationId' ? value : promoteData.organizationId;
+    // Role changed to Agency Admin => load agencies
+    const newRole = roles.find(r => r.id?.toString() === (name === 'roleId' ? value : promoteData.roleId));
+    const orgId = name === 'organizationId' ? value : promoteData.organizationId;
 
-if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '') && orgId) {
-  try {
-    const data = await getChildOrganizations(parseInt(orgId));
-    setAgencies(data);
-  } catch (err) {
-    console.error('Failed to fetch agencies', err);
-    setAgencies([]);
-  }
-} else if (name === 'organizationId' || !['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '')) {
-  setAgencies([]);
-  setPromoteData(prev => ({ ...prev, agencyId: '' }));
-}
+    if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '') && orgId) {
+      try {
+        const data = await getChildOrganizations(parseInt(orgId));
+        setAgencies(data);
+      } catch (err) {
+        console.error('Failed to fetch agencies', err);
+        setAgencies([]);
+      }
+    } else if (name === 'organizationId' || !['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(newRole?.name || '')) {
+      setAgencies([]);
+      setPromoteData(prev => ({ ...prev, agencyId: '' }));
+    }
 
-};
+  };
 
 
   const loadAgencies = async (parentId: number) => {
@@ -633,23 +633,22 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+      <div className="mb-2 sm:mb-4">
+
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-1 sm:gap-2">
           <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
-          Role Management
+          <span>Role Management</span>
         </h1>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">
-          Manage user roles and assign them to organizations
-        </p>
       </div>
 
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-4">
+
           {isSuperAdmin && (<button
             onClick={() => setActiveTab('roles')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'roles' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
-            <Shield className="h-4 w-4 sm:mr-2" />
+
             <span className="hidden sm:inline">Manage Roles</span>
             <span className="sm:hidden">Manage Roles</span>
           </button>)}
@@ -660,15 +659,15 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             }}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
-            <Users className="h-4 w-4 sm:mr-2" />
+
             <span className="hidden sm:inline">List Admin Users</span>
             <span className="sm:hidden">List Admin Users</span>
           </button>
-          { isSuperAdmin && (<button
+          {isSuperAdmin && (<button
             onClick={() => setActiveTab('promote')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'promote' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
-            <Shield className="h-4 w-4 sm:mr-2" />
+
             <span className="hidden sm:inline">Assign Role</span>
             <span className="sm:hidden">Assign Role</span>
           </button>)}
@@ -676,9 +675,9 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             onClick={() => setActiveTab('create')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base ${activeTab === 'create' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center sm:justify-start`}
           >
-            <UserPlus className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Create User with Role</span>
-            <span className="sm:hidden">Create User with Role</span>
+
+            <span className="hidden sm:inline">Create New User</span>
+            <span className="sm:hidden">Create New User</span>
           </button>
         </div>
       </div>
@@ -686,8 +685,8 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
       {activeTab === 'roles' && (
         <div className="space-y-4 sm:space-y-6">
           {/* Create New Role */}
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Role</h2>
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Role</h2>
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
@@ -728,13 +727,18 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             {/* Desktop Table View */}
             <div className="hidden md:block">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role Name</th>
-                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th> */}
+                    <th className="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                      ID
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                      Role Name
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="bg-white divide-y divide-gray-200">
                   {roles.map((role) => (
                     <tr key={role.id} className="hover:bg-gray-50">
@@ -758,64 +762,6 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
                           </span>
                         )}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          {editingRole?.id === role.id ? (
-                            <>
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    await updateRole(role.id!, editingRole);
-                                    toast.success('Role updated successfully');
-                                    setEditingRole(null);
-                                    loadRoles();
-                                  } catch (error) {
-                                    toast.error('Failed to update role');
-                                  }
-                                }}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => setEditingRole(null)}
-                                className="text-gray-600 hover:text-gray-900"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => setEditingRole(role)}
-                                className="text-blue-600 hover:text-blue-900"
-                                title="Edit Role"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              {role.name !== 'ROLE_SUPER_ADMIN' && (
-                                <button
-                                  onClick={async () => {
-                                    if (window.confirm('Are you sure you want to delete this role?')) {
-                                      try {
-                                        await deleteRole(role.id!);
-                                        toast.success('Role deleted successfully');
-                                        loadRoles();
-                                      } catch (error) {
-                                        toast.error('Failed to delete role');
-                                      }
-                                    }
-                                  }}
-                                  className="text-red-600 hover:text-red-900"
-                                  title="Delete Role"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -825,90 +771,46 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             {/* Mobile Card View */}
             <div className="md:hidden">
               {roles.map((role) => (
-                <div key={role.id} className="p-4 border-b border-gray-200 last:border-b-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-gray-500">ID: {role.id}</span>
-                      </div>
-                      <div className="mb-3">
-                        {editingRole && editingRole.id === role.id ? (
-                          <input
-                            type="text"
-                            value={editingRole.name}
-                            onChange={(e) => setEditingRole({ ...editingRole, name: e.target.value })}
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          />
-                        ) : (
-                          <span className={`px-2 py-1 text-xs rounded-full ${role.name === 'ROLE_SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
-                            role.name.includes('ADMIN') ? 'bg-red-100 text-red-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                            {role.name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {/* <div className="flex space-x-2 ml-4">
-                      {editingRole?.id === role.id ? (
-                        <>
-                          <button
-                            onClick={async () => {
-                              try {
-                                await updateRole(role.id!, editingRole);
-                                toast.success('Role updated successfully');
-                                setEditingRole(null);
-                                loadRoles();
-                              } catch (error) {
-                                toast.error('Failed to update role');
-                              }
-                            }}
-                            className="text-green-600 hover:text-green-900 text-sm"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingRole(null)}
-                            className="text-gray-600 hover:text-gray-900 text-sm"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => setEditingRole(role)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="Edit Role"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          {role.name !== 'ROLE_SUPER_ADMIN' && (
-                            <button
-                              onClick={async () => {
-                                if (window.confirm('Are you sure you want to delete this role?')) {
-                                  try {
-                                    await deleteRole(role.id!);
-                                    toast.success('Role deleted successfully');
-                                    loadRoles();
-                                  } catch (error) {
-                                    toast.error('Failed to delete role');
-                                  }
-                                }
-                              }}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete Role"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div> */}
+                <div
+                  key={role.id}
+                  className="p-4 border-b border-gray-200 last:border-b-0"
+                >
+                  <div className="flex items-center justify-between gap-3">
+
+                    {/* ID */}
+                    <span className="text-xs text-gray-500 shrink-0">
+                      ID: {role.id}
+                    </span>
+
+                    {/* Role */}
+                    {editingRole && editingRole.id === role.id ? (
+                      <input
+                        type="text"
+                        value={editingRole.name}
+                        onChange={(e) =>
+                          setEditingRole({ ...editingRole, name: e.target.value })
+                        }
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    ) : (
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full truncate
+              ${role.name === 'ROLE_SUPER_ADMIN'
+                            ? 'bg-purple-100 text-purple-800'
+                            : role.name.includes('ADMIN')
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }
+            `}
+                      >
+                        {role.name}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
+
 
             {roles.length === 0 && (
               <div className="text-center py-8 text-gray-500">
@@ -1109,7 +1011,7 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
       )}
 
       {activeTab === 'promote' && (
-        <form onSubmit={handlePromoteUser} className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <form onSubmit={handlePromoteUser} className="bg-white rounded-lg shadow p-4 sm:p-4">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Assign Role to User</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
@@ -1173,38 +1075,38 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             </div>
 
             {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(
-  roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
-) && (
-  <div className="lg:col-span-2">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Select Agency <span className="text-red-500">*</span>
-    </label>
-    <select
-      name="agencyId"
-      value={promoteData.agencyId}
-      onChange={handlePromoteChange}
-      required
-      disabled={!promoteData.organizationId}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-    >
-      <option value="">Select Agency</option>
-      {agencies.map((agency) => (
-        <option key={agency.id} value={agency.id}>
-          {agency.name} {agency.displayName && `(${agency.displayName})`}
-        </option>
-      ))}
-    </select>
-    {!promoteData.organizationId && (
-      <p className="text-sm text-gray-500 mt-1">Select organization first</p>
-    )}
-    {promoteData.organizationId && agencies.length === 0 && (
-      <p className="text-sm text-gray-500 mt-1">No agencies found for this organization</p>
-    )}
-    {promoteData.organizationId && agencies.length > 0 && (
-      <p className="text-sm text-green-600 mt-1">{agencies.length} agencies available</p>
-    )}
-  </div>
-)}
+              roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
+            ) && (
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Agency <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="agencyId"
+                    value={promoteData.agencyId}
+                    onChange={handlePromoteChange}
+                    required
+                    disabled={!promoteData.organizationId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Select Agency</option>
+                    {agencies.map((agency) => (
+                      <option key={agency.id} value={agency.id}>
+                        {agency.name} {agency.displayName && `(${agency.displayName})`}
+                      </option>
+                    ))}
+                  </select>
+                  {!promoteData.organizationId && (
+                    <p className="text-sm text-gray-500 mt-1">Select organization first</p>
+                  )}
+                  {promoteData.organizationId && agencies.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-1">No agencies found for this organization</p>
+                  )}
+                  {promoteData.organizationId && agencies.length > 0 && (
+                    <p className="text-sm text-green-600 mt-1">{agencies.length} agencies available</p>
+                  )}
+                </div>
+              )}
 
           </div>
 
@@ -1229,7 +1131,7 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
             </div>
           )}
 
-          <div className="flex justify-center gap-4 mt-6 sm:mt-8">
+          <div className="flex justify-center gap-4 mt-4 sm:mt-6">
             <button
               type="submit"
               disabled={loading}
@@ -1243,9 +1145,9 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
       )}
 
       {activeTab === 'create' && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New User with Role</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Add New User with Role</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Name as per Gov ID <span className="text-red-500">*</span>
@@ -1767,7 +1669,7 @@ if (['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].inc
 
           </div>
 
-          <div className="flex justify-center gap-4 mt-6 sm:mt-8">
+          <div className="flex justify-center gap-4 mt-4 sm:mt-4">
             <button
               type="submit"
               disabled={loading}

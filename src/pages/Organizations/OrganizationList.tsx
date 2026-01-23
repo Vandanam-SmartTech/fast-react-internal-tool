@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Building, Building2, Eye, Search, Phone, FileText, MoreVertical, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { fetchOrganizationsInPagination, deleteOrganization, Organization } from '../../services/organizationService';
@@ -21,12 +21,11 @@ const OrganizationList: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalElements, setTotalElements] = useState<number>(0);
+  const [, setTotalElements] = useState<number>(0);
   const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
 
   const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadLoading, setUploadLoading] = useState(false);
+  const [, setSelectedFile] = useState<File | null>(null);
   const [createdOrgId, setCreatedOrgId] = useState<number | null>(null);
 
   const [showCropModal, setShowCropModal] = useState(false);
@@ -51,36 +50,36 @@ const OrganizationList: React.FC = () => {
     loadOrganizations(currentPage);
   }, [currentPage]);
 
-const loadOrganizations = async (page: number) => {
-  try {
-    setLoading(true);
-    const data = await fetchOrganizationsInPagination(page);
+  const loadOrganizations = async (page: number) => {
+    try {
+      setLoading(true);
+      const data = await fetchOrganizationsInPagination(page);
 
-    setOrganizations(data.content);
-    setFilteredOrganizations(data.content);
-    setTotalPages(data.totalPages);
-    setTotalElements(data.totalElements);
-    // ❌ remove this
-    // setCurrentPage(data.currentPage);
-  } catch (error) {
-    toast.error('Failed to load organizations');
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  organizations.forEach(async (org) => {
-    if (org.id && !organizationLogos.has(org.id)) {
-      const imageUrl = await fetchOrganizationImage(org.id);
-      setOrganizationLogos(prev => {
-        const updated = new Map(prev);
-        updated.set(org.id!, imageUrl);
-        return updated;
-      });
+      setOrganizations(data.content);
+      setFilteredOrganizations(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      // ❌ remove this
+      // setCurrentPage(data.currentPage);
+    } catch (error) {
+      toast.error('Failed to load organizations');
+    } finally {
+      setLoading(false);
     }
-  });
-}, [organizations]);
+  };
+
+  useEffect(() => {
+    organizations.forEach(async (org) => {
+      if (org.id && !organizationLogos.has(org.id)) {
+        const imageUrl = await fetchOrganizationImage(org.id);
+        setOrganizationLogos(prev => {
+          const updated = new Map(prev);
+          updated.set(org.id!, imageUrl);
+          return updated;
+        });
+      }
+    });
+  }, [organizations]);
 
 
 
@@ -99,22 +98,41 @@ useEffect(() => {
     }
   };
 
-const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  setSelectedFile(file);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      setImageSrc(reader.result);
-      setShowImageModal(false);
-      setShowCropModal(true);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageSrc(reader.result);
+        setShowImageModal(false);
+        setShowCropModal(true);
+      }
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
 
   const handleCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
@@ -177,22 +195,22 @@ const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
   };
 
 
-const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      setImageSrc(reader.result);
-      setCroppedAreaPixels(null);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setRotation(0);
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageSrc(reader.result);
+        setCroppedAreaPixels(null);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+      }
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
   const renderPagination = () => {
     if (searchTerm.trim() !== "") return null;
@@ -307,6 +325,7 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-64">
@@ -319,35 +338,62 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Building className="h-6 w-6" />
-          Organizations
-        </h1>
+      <div className="mb-3">
+        {/* Header Row */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-        {/* Search and Add Button */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search organizations..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          {/* Left: Title + Mobile Add */}
+          <div className="flex items-center justify-between sm:justify-start gap-3">
+            <h1
+              className="text-xl sm:text-2xl lg:text-2xl
+                   leading-tight font-bold text-secondary-900
+                   flex items-center gap-2"
+            >
+              <Building className="h-6 w-6" />
+              Organizations
+            </h1>
+
+            {/* Mobile Add */}
+            <button
+              onClick={() => navigate("/organization-form")}
+              className="sm:hidden bg-blue-600 text-white px-3 py-1.5 rounded-md
+                   text-sm flex items-center gap-1 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Org
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/organization-form')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Organization
-          </button>
+
+          {/* Right: Search + Desktop Add */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search organizations..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full sm:w-80 pl-10 pr-8 py-2 border border-gray-300 rounded-lg
+                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Desktop Add */}
+            <button
+              onClick={() => navigate("/organization-form")}
+              className="hidden sm:flex bg-blue-600 text-white px-4 py-2 rounded-lg
+                   items-center gap-2 hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Organization
+            </button>
+          </div>
         </div>
       </div>
+
+
 
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
@@ -382,20 +428,21 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
           {filteredOrganizations.map((org) => (
             <div
               key={org.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 overflow-visible"
             >
               {/* Card Header */}
-              <div className="p-4 sm:p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div
-                    className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
-                    onClick={() => {
-                      setCreatedOrgId(org.id);
-                      setShowImageModal(true);
-                    }}
-                  >
-                    <div className="relative group h-12 w-12 flex-shrink-0">
+              <div className="p-3 sm:p-4">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
 
+                    {/* Logo / Image (clickable) */}
+                    <div
+                      className="relative group h-12 w-12 flex-shrink-0 cursor-pointer"
+                      onClick={() => {
+                        setCreatedOrgId(org.id);
+                        setShowImageModal(true);
+                      }}
+                    >
                       {organizationLogos.has(org.id!) ? (
                         <img
                           src={organizationLogos.get(org.id!)}
@@ -409,15 +456,18 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                       )}
 
                       {/* Camera overlay */}
-                      <div className="absolute inset-0 rounded-full bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 rounded-full bg-black bg-opacity-30
+                    flex items-center justify-center opacity-0
+                    group-hover:opacity-100 transition-opacity">
                         <Camera className="w-5 h-5 text-white" />
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {/* Name + Status (NOT clickable) */}
+                    <div className="flex items-center gap-2 min-w-0">
                       <h3 className="font-semibold text-gray-900 truncate max-w-[140px] sm:max-w-[220px] md:max-w-none">
-  {org.name}
-</h3>
+                        {org.name}
+                      </h3>
 
                       {org.isActive ? (
                         <CheckCircle className="h-4 w-4 text-green-600" />
@@ -425,12 +475,14 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                         <XCircle className="h-4 w-4 text-red-600" />
                       )}
                     </div>
-
                   </div>
 
 
                   {/* Dropdown Menu */}
-                  <div className="relative flex-shrink-0">
+                  <div
+                    className="relative flex-shrink-0 overflow-visible"
+                  >
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -442,9 +494,9 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                     </button>
 
                     {openDropdown === org.id && (
-                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-40">
+                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-40">
                         <button
-                          onClick={() => {
+                          onMouseDown={() => {
                             navigate("/organization-view", {
                               state: { orgId: org.id }
                             });
@@ -456,7 +508,7 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                           View Details
                         </button>
                         <button
-                          onClick={() => {
+                          onMouseDown={() => {
                             navigate("/agencies", {
                               state: { orgId: org.id }
                             });
@@ -468,7 +520,7 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                           View Agencies
                         </button>
                         <button
-                          onClick={() => {
+                          onMouseDown={() => {
                             navigate(`/edit-organization`, {
                               state: {
                                 organizationId: org.id,
@@ -483,7 +535,7 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(org.id!)}
+                          onMouseDown={() => handleDelete(org.id!)}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -492,35 +544,36 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                       </div>
                     )}
                   </div>
+
                 </div>
 
                 {/* Display Name */}
                 {org.displayName && (
-                  <p className="text-sm text-gray-600 mb-3 truncate" title={org.displayName}>
-                    {org.displayName}
+                  <p className="text-md text-gray-900 mb-2 truncate" title={org.legalName}>
+                    {org.legalName}
                   </p>
                 )}
 
                 {/* Contact Info */}
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-1 sm:gap-3">
                   {org.contactNumber && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="truncate">{org.contactNumber}</span>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <FileText className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate" title={org.gstNumber || 'Not Available'}>
-                      {org.gstNumber || 'Not Available'}
+                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="truncate" title={org.gstNumber || "Not Available"}>
+                      {org.gstNumber || "Not Available"}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Quick Action Buttons - Mobile Friendly */}
-              <div className="border-t border-gray-100 p-3 bg-gray-50">
+              {/* <div className="border-t border-gray-100 p-3 bg-gray-50">
                 <div className="flex justify-between items-center gap-2">
                   <button
                     onClick={() =>
@@ -560,7 +613,7 @@ const handleChooseAnotherImage = (e: React.ChangeEvent<HTMLInputElement>) => {
                     <span className="hidden sm:inline">Edit</span>
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>

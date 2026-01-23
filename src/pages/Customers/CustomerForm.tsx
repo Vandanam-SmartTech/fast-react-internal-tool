@@ -450,7 +450,7 @@ useEffect(() => {
         <div className="mb-3 sm:mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-700">Add New Customer</h1>
+              <h1 className="text-xl font-bold text-gray-700">Add New Customer</h1>
             </div>
           </div>
         </div>
@@ -505,7 +505,7 @@ useEffect(() => {
         </div>
 
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
             <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -906,14 +906,14 @@ useEffect(() => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="py-2.5 px-5 w-full sm:w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+              className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex justify-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+              className="w-full sm:w-auto inline-flex justify-center px-3 py-2.5 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
             >
               Save Customer
             </button>

@@ -88,16 +88,16 @@ const AgencyView: React.FC = () => {
     }
   };
 
-    useEffect(() => {
-      function handleClickOutside(event: MouseEvent) {
-        if (menuRef.current && !(menuRef.current as HTMLElement).contains(event.target as Node)) {
-          setOpenMenu(null);
-        }
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !(menuRef.current as HTMLElement).contains(event.target as Node)) {
+        setOpenMenu(null);
       }
-  
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
 
 
@@ -107,81 +107,104 @@ const AgencyView: React.FC = () => {
   //const isAgency = organization.parentId !== null;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() =>
-            navigate(-1)
-          }
-          className="p-2 rounded-full hover:bg-gray-200 transition"
-        >
-          <ArrowLeft className="h-6 w-6 text-gray-700" />
-        </button>
-        {organizationLogo ? (
-          <img src={organizationLogo} alt="Organization Logo" className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white" />
-        ) : (
-          <Building className="h-6 w-6 text-blue-600" />
-        )}
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          Agency Details
-        </h1>
-        <button
-          onClick={() => navigate("/edit-agency", {
-            state: {
-              orgId: orgId,
-              agencyId: agencyId,
+    <div className="p-4 max-w-4xl mx-auto">
+      <div className="mb-3">
+        <div className="flex items-center justify-between flex-nowrap">
+
+          {/* Left Section */}
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="h-6 w-6 text-gray-700" />
+            </button>
+
+            {organizationLogo ? (
+              <img
+                src={organizationLogo}
+                alt="Organization Logo"
+                className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+              />
+            ) : (
+              <Building className="h-6 w-6 text-blue-600" />
+            )}
+
+            <h1 className="font-bold text-gray-900 truncate">
+              <span className="text-lg sm:text-2xl">
+                <span className="sm:hidden">Agency Details</span>
+                <span className="hidden sm:inline">Agency Details</span>
+              </span>
+            </h1>
+          </div>
+
+          {/* Right Section (Edit Button) */}
+          <button
+            onClick={() =>
+              navigate("/edit-agency", {
+                state: {
+                  orgId: orgId,
+                  agencyId: agencyId,
+                },
+              })
             }
-          })}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-        >
-          <Edit className="h-4 w-4" />
-          Edit
-        </button>
+            className="
+        bg-blue-600 text-white px-3 py-2 rounded-lg
+        flex items-center gap-1 hover:bg-blue-700
+        shrink-0
+      "
+          >
+            <Edit className="h-4 w-4" />
+            <span className="hidden sm:inline">Edit</span>
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name (Short Name)</label>
-            <p className="text-gray-900">{organization.name}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Legal Name</label>
+            <p className="text-sm text-gray-800">{organization.legalName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-            <p className="text-gray-900">{organization.displayName || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Display Name</label>
+            <p className="text-sm text-gray-800">{organization.displayName || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Legal Name</label>
-            <p className="text-gray-900">{organization.legalName || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Name (Short Name)</label>
+            <p className="text-sm text-gray-800">{organization.name}</p>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <p className="text-gray-900">
+            <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
+            <p className="text-sm text-gray-800">
               {`${organization.addressLine1}, ${organization.villageName}, ${organization.talukaName}, ${organization.districtName}, ${organization.pinCode}`}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-            <p className="text-gray-900">{organization.contactNumber || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Contact Number</label>
+            <p className="text-sm text-gray-800">{organization.contactNumber || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-            <p className="text-gray-900">{organization.gstNumber || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">GST Number</label>
+            <p className="text-sm text-gray-800">{organization.gstNumber || '-'}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Government Registration Number</label>
-            <p className="text-gray-900">{organization.govtRegNumber || '-'}</p>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Government Registration Number</label>
+            <p className="text-sm text-gray-800">{organization.govtRegNumber || '-'}</p>
           </div>
 
           {organization.createdAt && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
-              <p className="text-gray-900">{new Date(organization.createdAt).toLocaleDateString()}</p>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
+              <p className="text-sm text-gray-800">{new Date(organization.createdAt).toLocaleDateString()}</p>
             </div>
           )}
         </div>
@@ -189,20 +212,40 @@ const AgencyView: React.FC = () => {
       </div>
 
       {/* Organization Users Section */}
-      <div className="bg-white rounded-lg shadow p-6 mt-6">
+      <div className="bg-white rounded-lg shadow p-4 mt-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Agency Members ({orgUsers.length})
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-1 sm:gap-2">
+            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+
+            {/* Mobile */}
+            <span className="sm:hidden">
+              Agency Members ({orgUsers.length})
+            </span>
+
+            {/* Desktop */}
+            <span className="hidden sm:inline">
+              Agency Members ({orgUsers.length})
+            </span>
           </h2>
 
           <button
             onClick={() => navigate("/user-form")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="
+      px-2.5 py-1.5 sm:px-4 sm:py-2
+      bg-blue-600 text-white
+      rounded-md sm:rounded-lg
+      hover:bg-blue-700 transition-colors
+      text-xs sm:text-sm font-medium
+    "
           >
-            + Add New User
+            {/* Mobile */}
+            <span className="sm:hidden">+ Add User</span>
+
+            {/* Desktop */}
+            <span className="hidden sm:inline">+ Add New User</span>
           </button>
         </div>
+
 
         {usersLoading ? (
           <div className="text-center py-4">Loading users...</div>
@@ -289,12 +332,11 @@ const AgencyView: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                No users assigned to this organization
+                No users assigned to this agency
               </div>
             )}
           </div>
         )}
-
       </div>
     </div>
   );

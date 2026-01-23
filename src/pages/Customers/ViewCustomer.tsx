@@ -132,17 +132,6 @@ export const ViewCustomer = () => {
 
         setInstallationsByConsumer(installationMap);
 
-        // Extract all space types (optional)
-        // const uniqueTypes = [
-        //   ...new Set(
-        //     data.connections
-        //       ?.flatMap((c: any) => c.installationSpaces?.map((s: any) => s.installationSpaceTypeName))
-        //       .filter(Boolean)
-        //   ),
-        // ];
-
-        // setSpaceTypes(uniqueTypes);
-
       } catch (error) {
         console.error("Error loading customer + connections + installations", error);
       }
@@ -531,7 +520,7 @@ export const ViewCustomer = () => {
 
 
                       {/* View/Edit Buttons */}
-                      <div className="w-full grid grid-cols-2 gap-4 md:flex md:justify-start md:gap-4">
+                      <div className="w-full grid grid-cols-2 gap-2 md:flex md:justify-start md:gap-4">
                         <button
                           onClick={() =>
                             navigate(`/edit-connection`, {
@@ -542,7 +531,14 @@ export const ViewCustomer = () => {
                               },
                             })
                           }
-                          className="w-full md:w-auto py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 flex items-center justify-center"
+                          className="
+      w-full md:w-auto 
+      py-1.5 px-3.5 sm:py-2 sm:px-5 
+      bg-blue-600 text-white font-semibold 
+      rounded-md hover:bg-blue-700 
+      flex items-center justify-center
+      text-sm 
+    "
                         >
                           Edit Connection
                         </button>
@@ -557,27 +553,39 @@ export const ViewCustomer = () => {
                               },
                             })
                           }
-                          className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
+                          className="
+      w-full md:w-auto 
+      py-1.5 px-3.5 sm:py-2 sm:px-
+      bg-green-600 text-white font-semibold 
+      rounded-md hover:bg-green-700 
+      flex items-center justify-center
+      text-sm 
+    "
                         >
-                          Get System Specs
+                          Get Sys Specs
                         </button>
                       </div>
+
 
 
 
                       {/* Nested Installations */}
                       {(installationsByConsumer[connection.connectionId] || []).map((installation, idx) => (
                         <details key={installation.id} className="group/installation bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
-                          <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group mt-2 mb-2">
-
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
-                                <HomeModernIcon className="w-4 h-4 text-yellow-600" />
+                          <summary className="flex items-center justify-between cursor-pointer mt-2 mb-2 group">
+                            {/* Left section */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <HomeModernIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600" />
                               </div>
-                              <span className="text-base font-semibold">Installation {idx + 1} - On {installation.installationSpaceTypeName} ({installation.installationSpaceTitle})</span>
+                              <span className="text-sm sm:text-base font-semibold leading-snug">
+                                Installation {idx + 1} - On {installation.installationSpaceTypeName}
+                              </span>
                             </div>
+
+                            {/* Chevron */}
                             <svg
-                              className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open/installation:rotate-180"
+                              className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open/installation:rotate-180 flex-shrink-0"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -589,10 +597,10 @@ export const ViewCustomer = () => {
 
                           {/* Full Installation Info Block */}
                           <div className="mt-4">
-                            <div className="border-b border-gray-200 mb-2 mt-2" />
-                            <div className="p-4 w-full">
-
-                              <div className="grid grid-cols-2 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
+                            <div className="border-b border-gray-200 mb-4 mt-2" />
+                            <div className="w-full">
+                              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
 
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
@@ -618,10 +626,8 @@ export const ViewCustomer = () => {
                                     {installation.availableSouthNorthLengthFt || "NA"}
                                   </p>
                                 </div>
-                              </div>
+                       
 
-                              {/* Row 2 */}
-                              <div className="grid grid-cols-2 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
                                 <div>
                                   <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
@@ -658,10 +664,12 @@ export const ViewCustomer = () => {
                                     {installation.descriptionOfInstallation || "NA"}
                                   </p>
                                 </div>
+                                       </div>
+                          
                               </div>
 
                               {/* Optional Edit Button */}
-                              <div className="flex mt-6">
+                              <div className="flex mt-4">
                                 <button
                                   onClick={() =>
                                     navigate(`/edit-installation`, {

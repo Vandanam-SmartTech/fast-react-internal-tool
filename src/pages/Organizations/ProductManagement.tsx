@@ -1547,7 +1547,7 @@ const ProductManagement: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Product Management</h1>
 
       {/* 4 Sections Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
         {/* Battery */}
         <Card
@@ -1557,8 +1557,8 @@ const ProductManagement: React.FC = () => {
           border-success-200 dark:border-success-700 
           hover:shadow-medium transition-all duration-200 cursor-pointer"
         >
-          <CardBody className="p-4">
-            <div className="flex items-start gap-4">
+          <CardBody className="p-3 md:p-4 flex items-center">
+            <div className="flex items-start gap-3">
               <div className="p-2 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                 <BatteryCharging className="h-8 w-8 text-success-600" />
               </div>
@@ -1576,13 +1576,13 @@ const ProductManagement: React.FC = () => {
         <Card
           onClick={() => handleSectionClick("panel")}
           className="bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 border-warning-200 dark:border-warning-700 hover:shadow-medium transition-all duration-200 cursor-pointer">
-          <CardBody className="p-4">
-            <div className="flex items-start gap-4">
+          <CardBody className="p-3 md:p-4 flex items-center">
+            <div className="flex items-start gap-3">
               <div className="p-2 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                 <PanelTop className="h-8 w-8 text-warning-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 mb-1">Panel</h2>
+                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">Panel</h2>
                 <p className="text-secondary-700 dark:text-secondary-300 text-sm">
                   Manage all panel-related products here.
                 </p>
@@ -1595,13 +1595,13 @@ const ProductManagement: React.FC = () => {
         <Card
           onClick={() => handleSectionClick("inverter")}
           className="bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700 hover:shadow-medium transition-all duration-200 cursor-pointer">
-          <CardBody className="p-4">
-            <div className="flex items-start gap-4">
+          <CardBody className="p-3 md:p-4 flex items-center">
+            <div className="flex items-start gap-3">
               <div className="p-2 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                 <CircuitBoard className="h-8 w-8 text-error-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 mb-1">Inverter</h2>
+                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">Inverter</h2>
                 <p className="text-secondary-700 dark:text-secondary-300 text-sm">
                   Manage all inverter-related products here.
                 </p>
@@ -1614,13 +1614,13 @@ const ProductManagement: React.FC = () => {
         <Card
           onClick={() => handleSectionClick("pipe")}
           className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700 hover:shadow-medium transition-all duration-200 cursor-pointer">
-          <CardBody className="p-4">
-            <div className="flex items-start gap-4">
+          <CardBody className="p-3 md:p-4 flex items-center">
+            <div className="flex items-start gap-3">
               <div className="p-2 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                 <Hammer className="h-8 w-8 text-primary-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 mb-1">Pipes</h2>
+                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">Pipes</h2>
                 <p className="text-secondary-700 dark:text-secondary-300 text-sm">
                   Manage all pipe-related products here.
                 </p>

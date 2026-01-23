@@ -701,7 +701,7 @@ export const EditConnection = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-18">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-18">
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-2">
@@ -714,14 +714,14 @@ export const EditConnection = () => {
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
 
-              <h1 className="text-2xl font-bold text-gray-700">Update Connection</h1>
+              <h1 className="text-xl font-bold text-gray-700">Update Connection</h1>
             </div>
 
           </div>
         </div>
 
 
-        <div className="w-full max-w-4xl mx-auto mb-6 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+        <div className="w-full max-w-4xl mx-auto mb-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
             <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
@@ -781,13 +781,13 @@ export const EditConnection = () => {
 
           {/* MSEB Connection Question */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <BoltIcon className="w-5 h-5 text-blue-500" />
               Connection Status
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Does the customer currently have an active grid connection?
                 </label>
                 <div className="flex items-center space-x-6">
@@ -822,7 +822,7 @@ export const EditConnection = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <UserCircleIcon className="w-5 h-5 text-green-500" />
-              Consumer Information
+              Connection Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1000,7 +1000,7 @@ export const EditConnection = () => {
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -1055,7 +1055,7 @@ export const EditConnection = () => {
 
           {/* Address Information */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1293,7 +1293,7 @@ export const EditConnection = () => {
 
           {/* Name Correction and Correction Type */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -1301,7 +1301,7 @@ export const EditConnection = () => {
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Does the connection require a name correction?
                 </label>
                 <div className="flex items-center space-x-5">
@@ -1364,14 +1364,14 @@ export const EditConnection = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="py-2 px-5 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+              className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
+              className="w-full sm:w-auto inline-flex justify-center px-3 py-2.5 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
             >
               Update Connection
             </button>
