@@ -372,11 +372,11 @@ export const ViewConnection = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
-                <h5 className="text-sm font-medium text-gray-500">Consumer Number</h5>
+                <h5 className="text-sm font-medium text-gray-500">Consumer #</h5>
                 <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
               </div>
               <div>
-                <h5 className="text-sm font-medium text-gray-500">Avg Monthly Units</h5>
+                <h5 className="text-sm font-medium text-gray-500">Avg Units/Month</h5>
                 <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "NA"}</p>
               </div>
               <div>
@@ -442,7 +442,7 @@ export const ViewConnection = () => {
 
               {/* Latitude, Longitude */}
               <div>
-                <h5 className="text-sm font-medium text-gray-500">Latitude, Longitude</h5>
+                <h5 className="text-sm font-medium text-gray-500">Lat, Long</h5>
                 <p className="text-sm text-gray-800 mt-1">
                   {connection.latitude || "NA"}, {connection.longitude || "NA"}
                 </p>
@@ -531,31 +531,31 @@ export const ViewConnection = () => {
                   <p className="text-sm text-gray-800 mt-1">{installation.installationSpaceTitle || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">East-West Length (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">East-West Length (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.availableEastWestLengthFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">South-North Length (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">South-North Length (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.availableSouthNorthLengthFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.structureInverterDistanceFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.inverterMeterDistanceFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.inverterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.arresterEarthDistanceFt || "NA"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
+                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Ft)</h3>
                   <p className="text-sm text-gray-800 mt-1">{installation.minimumElevationFt || "NA"}</p>
                 </div>
                 <div className="md:col-span-2">

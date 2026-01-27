@@ -152,6 +152,15 @@ export default function GenerateDocuments() {
     },
     {
       id: 4,
+      title: "Payments",
+      documents: [
+        { label: "Payment Receipts", name: "Payment Receipt", canGenerate: false, canPreview: false },
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 5,
       title: "Sanction Letter",
       documents: [
         { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50) }
@@ -160,7 +169,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 5,
+      id: 6,
       title: "Meter Testing",
       documents: [
         { label: "Gen Meter Testing Letter", name: "Gen Meter Testing Letter", canGenerate: true, canPreview: true },
@@ -171,7 +180,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 6,
+      id: 7,
       title: "Installation",
       documents: [
         { label: "Panel Serial Number Photos", name: "Panel SN", canGenerate: false, canPreview: false },
@@ -183,7 +192,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 7,
+      id: 8,
       title: "MNRE and Discom Documents",
       documents: [
         { label: "WCR (Draft)", name: "WCR Draft", canGenerate: true, canPreview: true },
@@ -194,6 +203,7 @@ export default function GenerateDocuments() {
         { label: "Annexure-I (Signed)", name: "Annexure-I Signed", canGenerate: false, canPreview: false },
         { label: "RTS Declaration (Draft)", name: "RTS Declaration Draft", canGenerate: true, canPreview: true },
         { label: "RTS Declaration (Signed)", name: "RTS Declaration Signed", canGenerate: false, canPreview: false },
+        { label: "Datasheet", name: "Datasheet", canGenerate: false, canPreview: false },
         { label: "Earthing Report", name: "Earthing Report", canGenerate: true, canPreview: true },
         { label: "Geo Tag Photo", name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] },
         { label: "D1-Form", name: "D1Form", canGenerate: false, canPreview: false },
@@ -204,7 +214,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 8,
+      id: 9,
       title: "DCR & Warranty Certificates",
       documents: [
         { label: "DCR Certificate", name: "DCR Certificate", canGenerate: false, canPreview: false },
@@ -215,7 +225,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 9,
+      id: 10,
       title: "Release Order",
       documents: [
         { label: "Release Order", name: "Release Order", canGenerate: false, canPreview: false }

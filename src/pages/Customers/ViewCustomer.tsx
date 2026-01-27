@@ -219,7 +219,7 @@ export const ViewCustomer = () => {
             <div className="mb-1">
               <div className="flex items-start sm:items-center">
                 {/* Customer Details */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                     <UserCircleIcon className="w-4 h-4 text-green-600" />
                   </div>
@@ -323,36 +323,33 @@ export const ViewCustomer = () => {
 
 
 
-          <div className="flex gap-2 justify-start mt-4 max-w-4xl mx-auto">
-            <button
-              onClick={() =>
-                navigate(`/edit-customer`, {
-                  state: {
-                    customerId,
-                  },
-                })
-              }
-              className="py-2 px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition"
-            >
-              Edit Customer
-            </button>
+          <div className="flex flex-row flex-wrap gap-2 justify-start mt-4 max-w-4xl mx-auto">
+  <button
+    onClick={() =>
+      navigate(`/edit-customer`, {
+        state: { customerId },
+      })
+    }
+    className="py-2 px-4 sm:px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition text-sm sm:text-sm md:text-base"
+  >
+    Edit Customer
+  </button>
 
-            {connections.length === 0 && (
-              <button
-                onClick={() =>
-                  navigate(`/connection-form`, {
-                    state: {
-                      customerId,
-                      govIdName: customer.govIdName,
-                    },
-                  })
-                }
-                className="py-2 px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition"
-              >
-                Add New Connection
-              </button>
-            )}
-          </div>
+  {connections.length === 0 && (
+    <button
+      onClick={() =>
+        navigate(`/connection-form`, {
+          state: { customerId, govIdName: customer.govIdName },
+        })
+      }
+      className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
+    >
+      Add New Connection
+    </button>
+  )}
+</div>
+
+
         </div>
 
 
@@ -375,7 +372,7 @@ export const ViewCustomer = () => {
                       </div>
 
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -414,7 +411,7 @@ export const ViewCustomer = () => {
                       <div className="border-b border-gray-200" />
 
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-2">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2 mb-3">
                           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                             <UserCircleIcon className="w-4 h-4 text-green-600" />
                           </div>
@@ -422,11 +419,11 @@ export const ViewCustomer = () => {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                           <div>
-                            <h5 className="text-sm font-medium text-gray-500">Consumer Number</h5>
-                            <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
+                            <h5 className="text-sm font-medium text-gray-500">Consumer #</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.consumerNumber || "NA"}</p>
                           </div>
                           <div>
-                            <h5 className="text-sm font-medium text-gray-500">Avg Monthly Units</h5>
+                            <h5 className="text-sm font-medium text-gray-500">Avg Units/Month</h5>
                             <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "NA"}</p>
                           </div>
                           <div>
@@ -446,7 +443,7 @@ export const ViewCustomer = () => {
 
                       {/* Business Information */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2 mb-3">
                           <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
                             <Cog6ToothIcon className="w-4 h-4 text-orange-600" />
                           </div>
@@ -459,14 +456,14 @@ export const ViewCustomer = () => {
                           </div>
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
-                            <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gstNumber || "NA"}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Address Information */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2 mb-3">
                           <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                             <HomeModernIcon className="w-4 h-4 text-blue-600" />
                           </div>
@@ -492,7 +489,7 @@ export const ViewCustomer = () => {
 
                           {/* Latitude, Longitude */}
                           <div>
-                            <h5 className="text-sm font-medium text-gray-500">Latitude, Longitude</h5>
+                            <h5 className="text-sm font-medium text-gray-500">Lat, Long</h5>
                             <p className="text-sm text-gray-800 mt-1">
                               {connection.latitude || "NA"}, {connection.longitude || "NA"}
                             </p>
@@ -615,13 +612,13 @@ export const ViewCustomer = () => {
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">East-West-Length (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">East-West-Length (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.availableEastWestLengthFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">South-North-Length (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">South-North-Length (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.availableSouthNorthLengthFt || "NA"}
                                   </p>
@@ -629,31 +626,31 @@ export const ViewCustomer = () => {
                        
 
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.structureInverterDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.inverterMeterDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.inverterEarthDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.arresterEarthDistanceFt || "NA"}
                                   </p>
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Ft)</h3>
                                   <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
                                     {installation.minimumElevationFt || "NA"}
                                   </p>
@@ -719,7 +716,7 @@ export const ViewCustomer = () => {
                       },
                     })
                   }
-                  className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                 className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
                 >
                   Add New Connection
                 </button>
