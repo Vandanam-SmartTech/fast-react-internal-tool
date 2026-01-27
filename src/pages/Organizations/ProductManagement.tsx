@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Card, { CardBody } from "../../components/ui/Card";
-import { BatteryCharging, PanelTop, CircuitBoard, Hammer } from 'lucide-react';
+import { BatteryCharging, PanelTop, CircuitBoard, Hammer, PencilIcon } from 'lucide-react';
 import {
   addBatteryBrand, fetchAllBatteryBrands, addBatterySpec, fetchBatterySpecs, getMaterialOrigins,
   updateBatteryBrand, updateBatterySpec, fetchAllInverterBrands, addInverterBrand, addPanelBrand, addPanelType, addPanelSpec,
@@ -1547,8 +1547,8 @@ const ProductManagement: React.FC = () => {
       <h1 className="font-bold text-secondary-900
                      text-xl sm:text-2xl lg:text-2xl
                      leading-tight mb-4">
-              Product Management
-            </h1>
+        Product Management
+      </h1>
 
       {/* 4 Sections Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1567,11 +1567,11 @@ const ProductManagement: React.FC = () => {
                 <BatteryCharging className="h-8 w-8 text-success-600" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-semibold text-secondary-900
+                <h3 className="font-semibold text-secondary-900
                      text-sm sm:text-base lg:text-lg
                      leading-tight">
-                      Battery
-                    </h3>
+                  Battery
+                </h3>
                 <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2">
@@ -1592,11 +1592,11 @@ const ProductManagement: React.FC = () => {
                 <PanelTop className="h-8 w-8 text-warning-600" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-semibold text-secondary-900
+                <h3 className="font-semibold text-secondary-900
                      text-sm sm:text-base lg:text-lg
                      leading-tight">
-                      Panel
-                    </h3>
+                  Panel
+                </h3>
                 <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2">
@@ -1617,11 +1617,11 @@ const ProductManagement: React.FC = () => {
                 <CircuitBoard className="h-8 w-8 text-error-600" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-semibold text-secondary-900
+                <h3 className="font-semibold text-secondary-900
                      text-sm sm:text-base lg:text-lg
                      leading-tight">
-                      Inverter
-                    </h3>
+                  Inverter
+                </h3>
                 <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2">
@@ -1642,11 +1642,11 @@ const ProductManagement: React.FC = () => {
                 <Hammer className="h-8 w-8 text-primary-600" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-semibold text-secondary-900
+                <h3 className="font-semibold text-secondary-900
                      text-sm sm:text-base lg:text-lg
                      leading-tight">
-                      Pipes
-                    </h3>
+                  Pipes
+                </h3>
                 <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2">
@@ -1700,7 +1700,7 @@ const ProductManagement: React.FC = () => {
 
                         {/* BRAND HEADER */}
                         <div
-                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                          className="flex justify-between items-center p-2 cursor-pointer hover:bg-gray-50"
                           onClick={() =>
                             setExpandedSelectedBrand(
                               expandedSelectedBrand === brand.brandId
@@ -1722,46 +1722,101 @@ const ProductManagement: React.FC = () => {
 
                         {/* SPECS TABLE */}
                         {expandedSelectedBrand === brand.brandId && (
-                          <div className="p-4 bg-gray-50">
-                            <table className="min-w-full text-left mb-4 border rounded bg-white">
-                              <thead className="bg-gray-200">
-                                <tr>
-                                  <th className="p-2 border">Wattage</th>
-                                  <th className="p-2 border">Voltage</th>
-                                  <th className="p-2 border">Base Price</th>
-                                  <th className="p-2 border">MFG Date</th>
-                                  <th className="p-2 border">Model Number</th>
-                                  <th className="p-2 border text-center">Action</th>
-                                </tr>
-                              </thead>
+                          <div className="p-3 bg-gray-50">
 
-                              <tbody>
-                                {brand.selectedSpecs.map((spec: any) => (
-                                  <tr key={spec.id}>
-                                    <td className="p-2 border">{spec.wattage} W</td>
-                                    <td className="p-2 border">{spec.voltage} V</td>
-                                    <td className="p-2 border">₹ {spec.basePrice}</td>
-                                    <td className="p-2 border">{spec.mfgMonthYear}</td>
-                                    <td className="p-2 border">{spec.modelNumber}</td>
-
-                                    <td className="p-2 border text-center flex gap-3 justify-center">
-                                      <button
-                                        className="text-yellow-600 hover:underline"
-                                        onClick={() => {
-                                          handleEditSelectedSpec(spec);
-                                          setShowFormForBrand(null);
-                                          setShowSelectedSpecModal(true);
-                                        }}
-                                      >
-                                        Edit
-                                      </button>
-                                    </td>
+                            {/* DESKTOP TABLE */}
+                            <div className="hidden md:block">
+                              <table className="min-w-full text-left mb-2 border rounded bg-white">
+                                <thead className="bg-gray-200">
+                                  <tr>
+                                    <th className="p-2 border">Wattage</th>
+                                    <th className="p-2 border">Voltage</th>
+                                    <th className="p-2 border">Base Price</th>
+                                    <th className="p-2 border">MFG Date</th>
+                                    <th className="p-2 border">Model Number</th>
+                                    <th className="p-2 border text-center">Action</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+
+                                <tbody>
+                                  {brand.selectedSpecs.map((spec: any) => (
+                                    <tr key={spec.id}>
+                                      <td className="p-2 border">{spec.wattage} W</td>
+                                      <td className="p-2 border">{spec.voltage} V</td>
+                                      <td className="p-2 border">₹ {spec.basePrice}</td>
+                                      <td className="p-2 border">{spec.mfgMonthYear}</td>
+                                      <td className="p-2 border">{spec.modelNumber}</td>
+                                      <td className="p-2 border text-center">
+                                        <button
+                                          className="text-yellow-600 hover:underline"
+                                          onClick={() => {
+                                            handleEditSelectedSpec(spec);
+                                            setShowFormForBrand(null);
+                                            setShowSelectedSpecModal(true);
+                                          }}
+                                        >
+                                          Edit
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* MOBILE CARDS */}
+                            <div className="space-y-3 md:hidden">
+                              {brand.selectedSpecs.map((spec: any) => (
+                                <div
+                                  key={spec.id}
+                                  className="relative bg-white border rounded-lg p-3 shadow-sm"
+                                >
+                                  {/* EDIT ICON */}
+                                  <button
+                                    className="absolute top-3 right-3 text-yellow-600 hover:text-yellow-700"
+                                    onClick={() => {
+                                      handleEditSelectedSpec(spec);
+                                      setShowFormForBrand(null);
+                                      setShowSelectedSpecModal(true);
+                                    }}
+                                  >
+                                    <PencilIcon className="w-4 h-4" />
+                                  </button>
+
+                                  {/* CONTENT */}
+                                  <div className="flex flex-col gap-2 text-sm">
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-semibold">Wattage:</span>
+                                      <span>{spec.wattage} W</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-semibold">Voltage:</span>
+                                      <span>{spec.voltage} V</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-semibold">Base Price:</span>
+                                      <span>₹ {spec.basePrice}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-semibold">MFG Date:</span>
+                                      <span>{spec.mfgMonthYear}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 w-full">
+                                      <span className="font-semibold">Model Number:</span>
+                                      <span>{spec.modelNumber}</span>
+                                    </div>
+                                  </div>
+
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
+
                       </div>
                     )
                   )}
@@ -1779,9 +1834,9 @@ const ProductManagement: React.FC = () => {
 
                   {/* HEADER */}
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">
-                      Edit Selected Specification
-                    </h2>
+                    <h1 className="text-xl font-semibold">
+                      Edit Selected Specs
+                    </h1>
 
                     <button
                       className="text-red-600 text-lg font-bold"
@@ -1795,7 +1850,8 @@ const ProductManagement: React.FC = () => {
                   </div>
 
                   {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
                     {/* Wattage */}
                     <div>
                       <label className="block text-sm font-medium">Wattage (W) <span className="text-red-500">*</span></label>
@@ -1929,7 +1985,7 @@ const ProductManagement: React.FC = () => {
                     {/* ... all remaining fields SAME as before ... */}
 
                     {/* Description */}
-                    <div className="col-span-2">
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium">Description</label>
                       <textarea
                         className="border p-2 rounded w-full"
@@ -1985,20 +2041,31 @@ const ProductManagement: React.FC = () => {
 
           <div className="mt-6 p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Battery Brands</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base sm:text-lg font-semibold">
+                Battery Brands
+              </h2>
 
-              {(userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN") && <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
-              >
-                + Add New Battery
-              </button>)}
+              {userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN") && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="
+        bg-success-600 hover:bg-success-700 text-white
+        px-3 py-1.5 sm:px-4 sm:py-2
+        text-sm sm:text-base
+        rounded
+      "
+                >
+                  <span className="hidden sm:inline">+ Add New Battery</span>
+                  <span className="sm:hidden">＋ Add New</span>
+                </button>
+              )}
             </div>
 
+
             {showAddModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded shadow-lg w-[450px]">
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-3">
+                <div className="bg-white p-4 sm:p-6 rounded shadow-lg w-full sm:w-[450px]">
 
                   <h3 className="text-lg font-semibold mb-4">
                     {isEditingBatteryBrand ? "Edit Battery Brand" : "Add Battery Brand"}
@@ -2058,7 +2125,7 @@ const ProductManagement: React.FC = () => {
 
                   {/* Brand Header */}
                   <div
-                    className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 cursor-pointer hover:bg-gray-50 gap-3"
                     onClick={async () => {
                       setExpandedBrandId(expandedBrandId === brand.id ? null : brand.id);
 
@@ -2069,18 +2136,20 @@ const ProductManagement: React.FC = () => {
                     }}
                   >
                     {/* Brand Name or Editable Input */}
-                    {editingBrandId === brand.id ? (
-                      <input
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="border px-2 py-1 rounded w-48"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <h3 className="font-semibold text-lg">{brand.brandName}</h3>
-                    )}
+                    <div className="flex items-center">
+                      {editingBrandId === brand.id ? (
+                        <input
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          className="border px-2 py-1 rounded w-full sm:w-48"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <h3 className="font-semibold text-base sm:text-lg">{brand.brandName}</h3>
+                      )}
+                    </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
 
                       {editingBrandId === brand.id ? (
                         <>
@@ -2090,7 +2159,7 @@ const ProductManagement: React.FC = () => {
                               e.stopPropagation();
                               handleSaveBrand(brand.id);
                             }}
-                            className="text-green-600 text-sm hover:underline"
+                            className="text-green-600 hover:underline"
                           >
                             Save
                           </button>
@@ -2102,7 +2171,7 @@ const ProductManagement: React.FC = () => {
                               resetBatteryBrandForm();
                             }}
 
-                            className="text-red-600 text-sm hover:underline"
+                            className="text-red-600 hover:underline"
                           >
                             Cancel
                           </button>
@@ -2115,20 +2184,20 @@ const ProductManagement: React.FC = () => {
                               e.stopPropagation();
                               handleEditBrand(brand);
                             }}
-                            className="text-yellow-600 text-sm hover:underline"
+                            className="text-yellow-600 hover:underline"
                           >
                             Edit Brand
                           </button>)}
 
                           {(userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN") && <button
-                            className="text-green-600 text-sm hover:underline"
+                            className="text-green-600 hover:underline"
                             onClick={() => openAddSpecForm(brand.id)}
                           >
                             Add Specs
                           </button>)}
 
                           <span
-                            className="text-primary-600 text-sm cursor-pointer"
+                            className="text-primary-600 cursor-pointer whitespace-nowrap"
                             onClick={() => {
                               if (expandedBrandId === brand.id) {
                                 setExpandedBrandId(null);
@@ -2140,7 +2209,7 @@ const ProductManagement: React.FC = () => {
                               }
                             }}
                           >
-                            {expandedBrandId === brand.id ? "Hide Specs" : "View Available Specs"}
+                            {expandedBrandId === brand.id ? "Hide Specs" : "View Specs"}
                           </span>
 
                         </>
@@ -2153,56 +2222,46 @@ const ProductManagement: React.FC = () => {
                   {expandedBrandId === brand.id && (
                     <div className="p-4 bg-gray-50">
 
-                      {/* Existing Specs Table */}
-                      <table className="min-w-full text-left mb-4 border rounded bg-white">
-                        <thead className="bg-gray-200">
-                          <tr>
-                            <th className="p-2 border">Wattage</th>
-                            <th className="p-2 border">Voltage</th>
-                            <th className="p-2 border">Warranty</th>
-                            <th className="p-2 border">Charging Current</th>
-                            <th className="p-2 border">Discharging Current</th>
-                            <th className="p-2 border">Model</th>
-                            {/* <th className="p-2 border">Price</th> */}
-                            <th className="p-2 border text-center">Action</th>
-                          </tr>
-                        </thead>
+                      {/* ================= DESKTOP VIEW ================= */}
+                      <div className="hidden md:block">
+                        <table className="min-w-full text-left mb-4 border rounded bg-white">
+                          <thead className="bg-gray-200">
+                            <tr>
+                              <th className="p-2 border">Wattage</th>
+                              <th className="p-2 border">Voltage</th>
+                              <th className="p-2 border">Warranty</th>
+                              <th className="p-2 border">Charging Current</th>
+                              <th className="p-2 border">Discharging Current</th>
+                              <th className="p-2 border">Model</th>
+                              <th className="p-2 border text-center">Action</th>
+                            </tr>
+                          </thead>
 
-                        <tbody>
-                          {brandSpecs[brand.id]?.map((spec: any) => (
-                            <tr key={spec.id} className="border-b">
+                          <tbody>
+                            {brandSpecs[brand.id]?.map((spec: any) => (
+                              <tr key={spec.id} className="border-b">
+                                <td className="p-2 border">{spec.wattage}W</td>
+                                <td className="p-2 border">{spec.voltage}V</td>
+                                <td className="p-2 border">{spec.productWarranty}</td>
+                                <td className="p-2 border">{spec.chargingCurrent}</td>
+                                <td className="p-2 border">{spec.dischargingCurrent}</td>
+                                <td className="p-2 border">{spec.modelNumber}</td>
 
-                              <td className="p-2 border">{spec.wattage}W</td>
-                              <td className="p-2 border">{spec.voltage}V</td>
-                              <td className="p-2 border">{spec.productWarranty}</td>
-                              <td className="p-2 border font-medium">{spec.chargingCurrent}</td>
-                              <td className="p-2 border font-medium">{spec.dischargingCurrent}</td>
-                              <td className="p-2 border font-medium">{spec.modelNumber}</td>
-                              {/* <td className="p-2 border">₹ {spec.basePrice}</td> */}
-
-                              <td className="p-2 border text-center flex gap-3 justify-center">
-                                {userInfo?.role === "ROLE_ORG_ADMIN" ? (
-                                  <button
-                                    className="text-blue-600 hover:underline"
-                                    onClick={() => {
-                                      // prefill spec data
-                                      setNewSpec({
-                                        ...spec,
-                                        basePrice: "",
-                                        mfgMonthYear: "",
-                                      });
-
-                                      setSelectedSpecId(spec.id);
-                                      setEditingSpecId(null);
-                                      setShowFormForBrand(brand.id);
-                                      setShowSpecModal(true);
-                                    }}
-                                  >
-                                    Select Specification
-                                  </button>
-                                ) : (
-                                  <>
-                                    {/* EDIT */}
+                                <td className="p-2 border text-center">
+                                  {userInfo?.role === "ROLE_ORG_ADMIN" ? (
+                                    <button
+                                      className="text-blue-600 hover:underline"
+                                      onClick={() => {
+                                        setNewSpec({ ...spec, basePrice: "", mfgMonthYear: "" });
+                                        setSelectedSpecId(spec.id);
+                                        setEditingSpecId(null);
+                                        setShowFormForBrand(brand.id);
+                                        setShowSpecModal(true);
+                                      }}
+                                    >
+                                      Select Specification
+                                    </button>
+                                  ) : (
                                     <button
                                       className="text-yellow-600 hover:underline"
                                       onClick={() => {
@@ -2213,14 +2272,81 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-                                  </>
-                                )}
-                              </td>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {/* ================= MOBILE VIEW ================= */}
+                      <div className="md:hidden space-y-4">
+                        {brandSpecs[brand.id]?.map((spec: any) => (
+                          <div
+                            key={spec.id}
+                            className="border rounded-lg p-4 bg-white shadow-sm"
+                          >
+
+                            <div className="flex flex-col gap-2 text-sm">
+                              <div className="flex items-center gap-1">
+                                <span className="font-semibold">Wattage:</span>
+                                <span>{spec.wattage} W</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <span className="font-semibold">Voltage:</span>
+                                <span>{spec.voltage} V</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <span className="font-semibold">Warranty:</span>
+                                <span>{spec.productWarranty}</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <span className="font-semibold">Charging Current:</span>
+                                <span>{spec.chargingCurrent}</span>
+                              </div>
+
+                              <div className="flex items-center gap-1 w-full">
+                                <span className="font-semibold">Model Number:</span>
+                                <span>{spec.modelNumber}</span>
+                              </div>
+                            </div>
+
+
+                            <div className="mt-3 flex justify-end">
+                              {userInfo?.role === "ROLE_ORG_ADMIN" ? (
+                                <button
+                                  className="text-blue-600 text-sm font-medium"
+                                  onClick={() => {
+                                    setNewSpec({ ...spec, basePrice: "", mfgMonthYear: "" });
+                                    setSelectedSpecId(spec.id);
+                                    setEditingSpecId(null);
+                                    setShowFormForBrand(brand.id);
+                                    setShowSpecModal(true);
+                                  }}
+                                >
+                                  Select Specification
+                                </button>
+                              ) : (
+                                <button
+                                  className="text-yellow-600 text-sm font-medium"
+                                  onClick={() => {
+                                    handleEditSpec(spec);
+                                    setShowFormForBrand(brand.id);
+                                    setShowSpecModal(true);
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
 
                       {/* === SPEC MODAL === */}
                       {showSpecModal && (
@@ -2250,7 +2376,7 @@ const ProductManagement: React.FC = () => {
                             </div>
 
                             {/* FORM CONTENT (MOVE YOUR EXISTING FORM HERE) */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {/* Wattage */}
                               <div>
                                 <label className="block text-sm font-medium">Wattage (W) <span className="text-red-500">*</span></label>
@@ -2407,7 +2533,7 @@ const ProductManagement: React.FC = () => {
                               {/* ... all remaining fields SAME as before ... */}
 
                               {/* Description */}
-                              <div className="col-span-2">
+                              <div className="md:col-span-2">
                                 <label className="block text-sm font-medium">Description</label>
                                 <textarea
                                   className="border p-2 rounded w-full"
@@ -3448,7 +3574,6 @@ const ProductManagement: React.FC = () => {
 
       {/*-----------------------------------------------------------------------------------------------------------------*/}
 
-
       {/*--------------------------------------Panel Section--------------------------------------------------------------*/}
 
       {activeSection === "panel" && (
@@ -3459,102 +3584,137 @@ const ProductManagement: React.FC = () => {
 
           {(isSuperAdmin && <div className="p-4 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Panel Types</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+              <h2 className="text-base sm:text-lg font-semibold">
+                Panel Types
+              </h2>
 
-              <div className="flex gap-4">
-
+              <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
                 <button
                   onClick={() => {
                     setShowPanelTypes((prev) => !prev);
                     setShowAddPanelTypeModal(false);
                   }}
-                  className="px-4 py-2 rounded border border-primary-600 text-primary-600 hover:bg-primary-50"
+                  className="px-3 py-2 rounded border border-primary-600 text-primary-600 hover:bg-primary-50 text-sm sm:text-base"
                 >
                   {showPanelTypes ? "Hide Types" : "View Types"}
                 </button>
 
                 <button
                   onClick={() => {
-                    setEditingPanelType(null);      // ensure it's NOT edit mode
-                    setTypeName("");                // clear old values
+                    setEditingPanelType(null);
+                    setTypeName("");
                     setTypeDescription("");
                     setTypicalEfficiency("");
                     setYearIntroduced("");
                     setShowAddPanelTypeModal(true);
-                    //setShowPanelTypes(false);
                   }}
-                  className="px-4 py-2 rounded bg-success-600 hover:bg-success-700 text-white"
+                  className="px-3 py-2 rounded bg-success-600 hover:bg-success-700 text-white text-sm sm:text-base"
                 >
                   + Add Panel Type
                 </button>
-
               </div>
             </div>
 
+
             {showPanelTypes && (
               <div className="mb-8 border rounded p-4 bg-gray-50 dark:bg-secondary-800">
-                {panelTypes?.length > 0 ? (
-                  <table className="min-w-full border rounded bg-white dark:bg-secondary-900">
-                    <thead className="bg-gray-200 dark:bg-secondary-700">
-                      <tr>
-                        <th className="p-2 border">Type Name</th>
-                        <th className="p-2 border">Efficiency (%)</th>
-                        <th className="p-2 border">Year</th>
-                        <th className="p-2 border">Description</th>
-                        <th className="p-2 border text-center">Action</th>
-
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {panelTypes.map((type) => (
-                        <tr key={type.id} className="border-b">
-                          <td className="p-2 border">{type.typeName}</td>
-                          <td className="p-2 border">{type.typicalEfficiency}</td>
-                          <td className="p-2 border">{type.yearIntroduced}</td>
-                          <td className="p-2 border">{type.typeDescription}</td>
-                          <td className="p-2 border text-center flex gap-3 justify-center">
-
-                            {/* EDIT */}
-                            <button
-                              className="text-yellow-600 hover:underline"
-                              onClick={() => {
-                                setEditingPanelType(type); // store selected type for edit mode
-
-                                // prefill modal fields
-                                setTypeName(type.typeName);
-                                setTypeDescription(type.typeDescription);
-                                setTypicalEfficiency(type.typicalEfficiency);
-                                setYearIntroduced(type.yearIntroduced);
-                                setShowPanelTypes(false); // hide table while editing
-                                setShowAddPanelTypeModal(true); // open modal
-                              }}
-                            >
-                              Edit
-                            </button>
-                          </td>
-
+                <div className="hidden md:block">
+                  {panelTypes?.length > 0 ? (
+                    <table className="min-w-full border rounded bg-white dark:bg-secondary-900">
+                      <thead className="bg-gray-200 dark:bg-secondary-700">
+                        <tr>
+                          <th className="p-2 border">Type Name</th>
+                          <th className="p-2 border">Efficiency (%)</th>
+                          <th className="p-2 border">Year</th>
+                          <th className="p-2 border">Description</th>
+                          <th className="p-2 border text-center">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p className="text-sm text-secondary-600">No panel types available.</p>
-                )}
+                      </thead>
+
+                      <tbody>
+                        {panelTypes.map((type) => (
+                          <tr key={type.id} className="border-b">
+                            <td className="p-2 border">{type.typeName}</td>
+                            <td className="p-2 border">{type.typicalEfficiency}</td>
+                            <td className="p-2 border">{type.yearIntroduced}</td>
+                            <td className="p-2 border">{type.typeDescription}</td>
+                            <td className="p-2 border text-center">
+                              <button
+                                className="text-yellow-600 hover:underline"
+                                onClick={() => {
+                                  setEditingPanelType(type);
+                                  setTypeName(type.typeName);
+                                  setTypeDescription(type.typeDescription);
+                                  setTypicalEfficiency(type.typicalEfficiency);
+                                  setYearIntroduced(type.yearIntroduced);
+                                  setShowPanelTypes(false);
+                                  setShowAddPanelTypeModal(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className="text-sm text-secondary-600">No panel types available.</p>
+                  )}
+                </div>
+
+                <div className="md:hidden space-y-3">
+                  {panelTypes?.length > 0 ? (
+                    panelTypes.map((type) => (
+                      <div
+                        key={type.id}
+                        className="bg-white dark:bg-secondary-900 border rounded p-3 space-y-2"
+                      >
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-semibold">{type.typeName}</h3>
+                          <button
+                            className="text-yellow-600 text-sm hover:underline"
+                            onClick={() => {
+                              setEditingPanelType(type);
+                              setTypeName(type.typeName);
+                              setTypeDescription(type.typeDescription);
+                              setTypicalEfficiency(type.typicalEfficiency);
+                              setYearIntroduced(type.yearIntroduced);
+                              setShowPanelTypes(false);
+                              setShowAddPanelTypeModal(true);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+
+                        <div className="text-sm text-secondary-700 space-y-1">
+                          <p><span className="font-semibold">Efficiency:</span> {type.typicalEfficiency}%</p>
+                          <p><span className="font-semibold">Year:</span> {type.yearIntroduced}</p>
+                          <p><span className="font-semibold">Description:</span> {type.typeDescription}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-secondary-600">No panel types available.</p>
+                  )}
+                </div>
+
               </div>
             )}
 
             {/* Panel Type Modal */}
             {showAddPanelTypeModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded shadow-lg w-[700px]">
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-3">
+                <div className="bg-white p-4 sm:p-6 rounded shadow-lg w-full sm:w-[700px] max-h-[90vh] overflow-y-auto">
 
                   <h3 className="text-lg font-semibold mb-4">
                     {editingPanelType ? "Edit Panel Type" : "Add Panel Type"}
                   </h3>
 
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                     {/* Type Name */}
                     <div>
@@ -3694,6 +3854,7 @@ const ProductManagement: React.FC = () => {
             {showSelectedPanelBrands && (
               hasSelectedPanels ? (
                 <div className="border rounded-lg">
+
                   {Object.values(groupByPanelBrand(selectedPanelSpecs)).map(
                     (panelBrand: any) => (
                       <div key={panelBrand.panelBrandId} className="border-b">
@@ -3709,64 +3870,85 @@ const ProductManagement: React.FC = () => {
                             )
                           }
                         >
-                          <h3 className="font-semibold text-lg">
-                            {panelBrand.panelBrandName}
-                          </h3>
-
+                          <h3 className="font-semibold text-lg">{panelBrand.panelBrandName}</h3>
                           <span className="text-primary-600 text-sm">
-                            {expandedSelectedPanelBrand === panelBrand.panelBrandId
-                              ? "Hide Specs"
-                              : "View Specs"}
+                            {expandedSelectedPanelBrand === panelBrand.panelBrandId ? "Hide Specs" : "View Specs"}
                           </span>
                         </div>
 
-                        {/* SPECS TABLE */}
+                        {/* DESKTOP TABLE */}
                         {expandedSelectedPanelBrand === panelBrand.panelBrandId && (
-                          <div className="p-4 bg-gray-50">
-                            <table className="min-w-full text-left mb-4 border rounded bg-white">
-                              <thead className="bg-gray-200">
-                                <tr>
-                                  <th className="p-2 border">Panel Wattage</th>
-                                  <th className="p-2 border">Material Origin & Panel Type</th>
-                                  <th className="p-2 border">Base Price</th>
-                                  <th className="p-2 border">Model Number</th>
-                                  <th className="p-2 border text-center">Action</th>
-                                </tr>
-                              </thead>
-
-                              <tbody>
-                                {panelBrand.selectedPanelSpecs.map((panelSpec: any) => (
-                                  <tr key={panelSpec.id}>
-                                    <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
-                                    <td className="p-2 border">{panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</td>
-                                    <td className="p-2 border">₹ {panelSpec.basePrice}</td>
-                                    <td className="p-2 border">{panelSpec.modelNumber}</td>
-
-                                    <td className="p-2 border text-center flex gap-3 justify-center">
-                                      <button
-                                        className="text-yellow-600 hover:underline"
-                                        //onClick={() => handleEditSelectedPanelSpec(panelSpec)}
-                                        onClick={() => {
-                                          handleEditSelectedPanelSpec(panelSpec);
-                                          setShowFormForPanelBrand(null);
-                                          setShowSelectedPanelSpecModal(true);
-                                        }}
-                                      >
-                                        Edit
-                                      </button>
-                                    </td>
+                          <>
+                            <div className="hidden md:block p-4 bg-gray-50">
+                              <table className="min-w-full text-left mb-4 border rounded bg-white">
+                                <thead className="bg-gray-200">
+                                  <tr>
+                                    <th className="p-2 border">Panel Wattage</th>
+                                    <th className="p-2 border">Material Origin & Panel Type</th>
+                                    <th className="p-2 border">Base Price</th>
+                                    <th className="p-2 border">Model Number</th>
+                                    <th className="p-2 border text-center">Action</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                </thead>
+
+                                <tbody>
+                                  {panelBrand.selectedPanelSpecs.map((panelSpec: any) => (
+                                    <tr key={panelSpec.id}>
+                                      <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
+                                      <td className="p-2 border">{panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</td>
+                                      <td className="p-2 border">₹ {panelSpec.basePrice}</td>
+                                      <td className="p-2 border">{panelSpec.modelNumber}</td>
+                                      <td className="p-2 border text-center">
+                                        <button
+                                          className="text-yellow-600 hover:underline"
+                                          onClick={() => {
+                                            handleEditSelectedPanelSpec(panelSpec);
+                                            setShowFormForPanelBrand(null);
+                                            setShowSelectedPanelSpecModal(true);
+                                          }}
+                                        >
+                                          Edit
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* MOBILE CARD VIEW */}
+                            <div className="md:hidden p-4 bg-gray-50 space-y-3">
+                              {panelBrand.selectedPanelSpecs.map((panelSpec: any) => (
+                                <div key={panelSpec.id} className="border rounded-lg p-3 bg-white shadow-sm">
+                                  <div className="text-sm space-y-1">
+                                    <div><span className="font-semibold">Wattage:</span> {panelSpec.ratedWattageW} W</div>
+                                    <div><span className="font-semibold">Material / Type:</span> {panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</div>
+                                    <div><span className="font-semibold">Base Price:</span> ₹ {panelSpec.basePrice}</div>
+                                    <div><span className="font-semibold">Model:</span> {panelSpec.modelNumber}</div>
+                                  </div>
+
+                                  <div className="mt-2 flex justify-end">
+                                    <button
+                                      className="text-yellow-600 text-sm font-medium"
+                                      onClick={() => {
+                                        handleEditSelectedPanelSpec(panelSpec);
+                                        setShowFormForPanelBrand(null);
+                                        setShowSelectedPanelSpecModal(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
                     )
                   )}
+
                 </div>
-
-
               ) : (
                 <div className="text-center text-gray-500 italic">
                   No panel brands selected yet
@@ -3774,29 +3956,36 @@ const ProductManagement: React.FC = () => {
               )
             )}
 
-            {showSelectedPanelSpecModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-6 rounded-lg w-[90%] max-w-3xl max-h-[90vh] overflow-y-auto">
 
-                  {/* HEADER */}
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">
+            {showSelectedPanelSpecModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
+                <div className="
+    bg-white
+    w-full
+    sm:w-[90%]
+    sm:max-w-3xl
+    max-h-[95vh]
+    overflow-y-auto
+    rounded-t-2xl sm:rounded-lg
+    p-4 sm:p-6
+  ">
+
+                  <div className="sticky top-0 bg-white z-10 flex justify-between items-center pb-3 mb-4 border-b">
+                    <h2 className="text-base sm:text-xl font-semibold">
                       Edit Selected Specification
                     </h2>
 
-
-
                     <button
-                      className="text-red-600 text-lg font-bold"
+                      className="text-red-600 text-xl font-bold"
                       onClick={() => {
                         setShowSelectedPanelSpecModal(false);
-                        //setShowFormForPanelBrand(null);
                         setEditingSelectedPanelSpecId(null);
                       }}
                     >
                       ✕
                     </button>
                   </div>
+
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -4027,24 +4216,29 @@ const ProductManagement: React.FC = () => {
           <div className="p-5 border rounded-lg shadow-sm bg-white dark:bg-secondary-900">
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Panel Brands</h2>
+              <h2 className="text-base sm:text-lg font-semibold">
+                Panel Brands
+              </h2>
 
               {isSuperAdmin && (
                 <button
                   onClick={() => setShowPanelBrandModal(true)}
-                  className="bg-success-600 hover:bg-success-700 text-white px-4 py-2 rounded"
+                  className="bg-success-600 hover:bg-success-700 text-white
+                 px-3 py-1.5 sm:px-4 sm:py-2 rounded
+                 text-sm sm:text-base whitespace-nowrap"
                 >
-                  + Add New Panel Brand
+                  <span className="sm:hidden">+ Add Panel Brand</span>
+                  <span className="hidden sm:inline">+ Add New Panel Brand</span>
                 </button>
               )}
-
             </div>
+
 
             {/* Panel Brand Modal */}
             {showPanelBrandModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded shadow-lg w-[450px]">
-
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-3">
+                <div className="bg-white p-4 sm:p-6 rounded shadow-lg
+                    w-full sm:w-[500px] max-h-[90vh] overflow-y-auto">
                   <h3 className="text-lg font-semibold mb-4">
                     {isEditingBrand ? "Update Panel Brand" : "Add Panel Brand"}
                   </h3>
@@ -4112,7 +4306,8 @@ const ProductManagement: React.FC = () => {
 
                   {/* Brand Header */}
                   <div
-                    className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row sm:justify-between sm:items-center
+             p-3 cursor-pointer hover:bg-gray-50 gap-2"
                     onClick={async () => {
                       setExpandedPanelBrandId(expandedPanelBrandId === panelBrand.id ? null : panelBrand.id);
 
@@ -4123,10 +4318,12 @@ const ProductManagement: React.FC = () => {
                     }}
                   >
                     {/* Brand Name or Editable Input */}
-                    <h3 className="font-semibold text-lg">{panelBrand.brandFullname}</h3>
+                    <h3 className="font-semibold text-base sm:text-lg">
+                      {panelBrand.brandFullname}
+                    </h3>
 
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
 
                       {/* Edit Brand (always modal only) */}
                       {isSuperAdmin && (
@@ -4139,7 +4336,7 @@ const ProductManagement: React.FC = () => {
                             setIsEditingBrand(true);
                             setShowPanelBrandModal(true);
                           }}
-                          className="text-yellow-600 text-sm hover:underline"
+                          className="text-yellow-600 hover:underline whitespace-nowrap"
                         >
                           Edit Brand
                         </button>
@@ -4147,14 +4344,14 @@ const ProductManagement: React.FC = () => {
 
 
                       {(isSuperAdmin && <button
-                        className="text-green-600 text-sm hover:underline"
+                        className="text-green-600 hover:underline whitespace-nowrap"
                         onClick={() => openAddPanelSpecForm(panelBrand.id)}
                       >
                         Add Specs
                       </button>)}
 
                       <span
-                        className="text-primary-600 text-sm cursor-pointer"
+                        className="text-primary-600 cursor-pointer whitespace-nowrap"
                         onClick={() => {
                           if (expandedPanelBrandId === panelBrand.id) {
                             setExpandedPanelBrandId(null);
@@ -4166,66 +4363,56 @@ const ProductManagement: React.FC = () => {
                           }
                         }}
                       >
-                        {expandedPanelBrandId === panelBrand.id ? "Hide Specs" : "View Available Specs"}
+                        {expandedPanelBrandId === panelBrand.id ? "Hide Specs" : "View Specs"}
                       </span>
 
                     </div>
-
                   </div>
-
 
                   {expandedPanelBrandId === panelBrand.id && (
                     <div className="p-4 bg-gray-50">
 
                       {/* Existing Specs Table */}
-                      <table className="min-w-full text-left mb-4 border rounded bg-white">
-                        <thead className="bg-gray-200">
-                          <tr>
-                            <th className="p-2 border">Panel Wattage</th>
-                            <th className="p-2 border">Material Origin & Panel Type</th>
-                            <th className="p-2 border">Product + Efficiency Warranty</th>
-                            <th className="p-2 border">Model</th>
-                            {/* <th className="p-2 border">Price</th> */}
-                            <th className="p-2 border text-center">Action</th>
-                          </tr>
-                        </thead>
+                      {/* DESKTOP TABLE */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="min-w-full text-left mb-4 border rounded bg-white">
+                          <thead className="bg-gray-200">
+                            <tr>
+                              <th className="p-2 border">Panel Wattage</th>
+                              <th className="p-2 border">Material Origin & Panel Type</th>
+                              <th className="p-2 border">Product + Efficiency Warranty</th>
+                              <th className="p-2 border">Model</th>
+                              <th className="p-2 border text-center">Action</th>
+                            </tr>
+                          </thead>
 
-                        <tbody>
-                          {panelBrandSpecs[panelBrand.id]?.map((panelSpec: any) => (
-                            <tr key={panelSpec.id} className="border-b">
+                          <tbody>
+                            {panelBrandSpecs[panelBrand.id]?.map((panelSpec: any) => (
+                              <tr key={panelSpec.id} className="border-b">
+                                <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
+                                <td className="p-2 border">
+                                  {panelSpec.materialOriginCode} ({panelSpec.panelTypeName})
+                                </td>
+                                <td className="p-2 border">
+                                  {panelSpec.productWarrantyYrs} yrs (Product) + {panelSpec.efficiencyWarrantyYrs} yrs (Efficiency)
+                                </td>
+                                <td className="p-2 border font-medium">{panelSpec.modelNumber}</td>
 
-                              <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
-                              <td className="p-2 border">{panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</td>
-                              <td className="p-2 border">
-                                {panelSpec.productWarrantyYrs} yrs (Product) + {panelSpec.efficiencyWarrantyYrs} yrs (Efficiency)
-                              </td>
-
-                              <td className="p-2 border font-medium">{panelSpec.modelNumber}</td>
-                              {/* <td className="p-2 border">₹ {panelSpec.basePrice}</td> */}
-
-                              <td className="p-2 border text-center flex gap-3 justify-center">
-                                {userInfo?.role === "ROLE_ORG_ADMIN" ? (
-                                  <button
-                                    className="text-blue-600 hover:underline"
-                                    onClick={() => {
-                                      // prefill spec data
-                                      setNewPanelSpec({
-                                        ...panelSpec,
-                                        basePrice: "",
-                                      });
-
-                                      setSelectedPanelSpecId(panelSpec.id);
-                                      setEditingPanelSpecId(null);
-                                      setShowFormForPanelBrand(panelBrand.id);
-                                      setShowPanelSpecModal(true);
-
-                                    }}
-                                  >
-                                    Select Specification
-                                  </button>
-                                ) : (
-                                  <>
-                                    {/* EDIT */}
+                                <td className="p-2 border text-center">
+                                  {userInfo?.role === "ROLE_ORG_ADMIN" ? (
+                                    <button
+                                      className="text-blue-600 hover:underline"
+                                      onClick={() => {
+                                        setNewPanelSpec({ ...panelSpec, basePrice: "" });
+                                        setSelectedPanelSpecId(panelSpec.id);
+                                        setEditingPanelSpecId(null);
+                                        setShowFormForPanelBrand(panelBrand.id);
+                                        setShowPanelSpecModal(true);
+                                      }}
+                                    >
+                                      Select Specification
+                                    </button>
+                                  ) : (
                                     <button
                                       className="text-yellow-600 hover:underline"
                                       onClick={() => {
@@ -4236,33 +4423,96 @@ const ProductManagement: React.FC = () => {
                                     >
                                       Edit
                                     </button>
-                                  </>
-                                )}
-                              </td>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {/* MOBILE VIEW */}
+                      <div className="md:hidden space-y-4">
+                        {panelBrandSpecs[panelBrand.id]?.map((panelSpec: any) => (
+                          <div
+                            key={panelSpec.id}
+                            className="border rounded-lg p-4 bg-white shadow-sm"
+                          >
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="font-semibold">Panel Wattage:</span>{" "}
+                                {panelSpec.ratedWattageW} W
+                              </div>
+
+                              <div>
+                                <span className="font-semibold">Material & Panel Type:</span>{" "}
+                                {panelSpec.materialOriginCode} ({panelSpec.panelTypeName})
+                              </div>
+
+                              <div>
+                                <span className="font-semibold">Warranty:</span>{" "}
+                                {panelSpec.productWarrantyYrs} yrs (Product) +{" "}
+                                {panelSpec.efficiencyWarrantyYrs} yrs (Efficiency)
+                              </div>
+
+                              <div>
+                                <span className="font-semibold">Model:</span>{" "}
+                                {panelSpec.modelNumber}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex justify-end">
+                              {userInfo?.role === "ROLE_ORG_ADMIN" ? (
+                                <button
+                                  className="text-blue-600 text-sm font-medium"
+                                  onClick={() => {
+                                    setNewPanelSpec({ ...panelSpec, basePrice: "" });
+                                    setSelectedPanelSpecId(panelSpec.id);
+                                    setEditingPanelSpecId(null);
+                                    setShowFormForPanelBrand(panelBrand.id);
+                                    setShowPanelSpecModal(true);
+                                  }}
+                                >
+                                  Select Specification
+                                </button>
+                              ) : (
+                                <button
+                                  className="text-yellow-600 text-sm font-medium"
+                                  onClick={() => {
+                                    handleEditPanelSpec(panelSpec);
+                                    setShowFormForPanelBrand(panelBrand.id);
+                                    setShowPanelSpecModal(true);
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
 
 
                       {showPanelSpecModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                          <div className="bg-white p-6 rounded-lg w-[90%] max-w-3xl max-h-[90vh] overflow-y-auto">
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 px-3">
+                          <div className="bg-white rounded-lg shadow-lg
+                    w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto
+                    p-4 sm:p-6">
+
 
                             {/* HEADER */}
-                            <div className="flex justify-between items-center mb-4">
-                              <h2 className="text-xl font-semibold">
+                            {/* HEADER */}
+                            <div className="flex items-start sm:items-center justify-between mb-4 gap-3">
+                              <h2 className="text-base sm:text-xl font-semibold leading-tight">
                                 {isOrgAdminSelectModeForPanel
-                                  ? "Select Specification for Organization"
+                                  ? "Select Specs for Organization"
                                   : editingPanelSpecId
                                     ? "Edit Specification"
                                     : "Add New Specification"}
                               </h2>
 
-
                               <button
-                                className="text-red-600 text-lg font-bold"
+                                className="text-red-600 text-xl font-bold shrink-0"
                                 onClick={() => {
                                   setShowPanelSpecModal(false);
                                   setShowFormForPanelBrand(null);
@@ -4273,7 +4523,9 @@ const ProductManagement: React.FC = () => {
                               </button>
                             </div>
 
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
 
                               <div>
                                 <label className="block text-sm font-medium">
@@ -4508,36 +4760,34 @@ const ProductManagement: React.FC = () => {
                               </div>)}
 
                             </div>
-
-                            {isOrgAdminSelectModeForPanel ? (
-                              <button
-                                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-                                onClick={handleSelectPanelSpecs}
-                              >
-                                Select Specification
-                              </button>
-                            ) : editingPanelSpecId ? (
-                              <button
-                                className="mt-4 bg-yellow-600 text-white px-4 py-2 rounded"
-                                onClick={() => {
-                                  handleUpdatePanelSpec(editingPanelSpecId, panelBrand.id);
-                                  //setShowPanelSpecModal(false);
-                                }}
-                              >
-                                Update Specification
-                              </button>
-                            ) : (
-                              <button
-                                className="mt-4 bg-success-600 text-white px-4 py-2 rounded"
-                                onClick={() => {
-                                  handleAddNewPanelSpec(panelBrand.id);
-                                  //setShowPanelSpecModal(false);
-                                }}
-                              >
-                                Save Specification
-                              </button>
-                            )}
-
+                            <div className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-3">
+                              {isOrgAdminSelectModeForPanel ? (
+                                <button
+                                  className="bg-blue-600 text-white px-4 py-2 rounded w-full sm:w-auto"
+                                  onClick={handleSelectPanelSpecs}
+                                >
+                                  Select Specification
+                                </button>
+                              ) : editingPanelSpecId ? (
+                                <button
+                                  className="bg-yellow-600 text-white px-4 py-2 rounded w-full sm:w-auto"
+                                  onClick={() => {
+                                    handleUpdatePanelSpec(editingPanelSpecId, panelBrand.id);
+                                  }}
+                                >
+                                  Update Specification
+                                </button>
+                              ) : (
+                                <button
+                                  className="bg-success-600 text-white px-4 py-2 rounded w-full sm:w-auto"
+                                  onClick={() => {
+                                    handleAddNewPanelSpec(panelBrand.id);
+                                  }}
+                                >
+                                  Save Specification
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}

@@ -331,50 +331,79 @@ const Header: React.FC = () => {
               >
                 <span className="hidden sm:inline">Switch Org</span>
               </Button>
+{showOrgDropdown && (
+  <div
+    className="
+      fixed sm:absolute
+      inset-x-3 sm:inset-x-auto
+      top-16 sm:top-full
+      sm:right-0
+      mt-2
+      w-auto sm:w-72
+      max-h-[80vh]
+      bg-white dark:bg-secondary-800
+      rounded-xl
+      shadow-large
+      border border-secondary-200 dark:border-secondary-700
+      z-50
+      animate-slide-down
+      overflow-hidden
+    "
+  >
+    <div className="py-2">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
+        <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">
+          Select Organization
+        </h3>
+        <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+          Choose your organization and role
+        </p>
+      </div>
 
-              {showOrgDropdown && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
-                  <div className="py-2">
-                    <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
-                      <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">Select Organization</h3>
-                      <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">Choose your organization and role</p>
+      {/* List */}
+      <div className="max-h-[60vh] overflow-y-auto">
+        {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
+          orgData.roles.map(role => {
+            const isSelected =
+              orgData.org_name === selectedOrgName &&
+              role === selectedRole;
+
+            return (
+              <button
+                key={`${orgId}-${role}`}
+                onClick={() =>
+                  handleOrgChange(orgId, orgData.org_name, role)
+                }
+                className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${
+                  isSelected
+                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
+                    : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="font-medium">
+                      {orgData.org_name}
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
-                        orgData.roles.map(role => {
-                          const isSelected = orgData.org_name === selectedOrgName && role === selectedRole;
-
-                          return (
-                            <button
-                              key={`${orgId}-${role}`}
-                              onClick={() => handleOrgChange(orgId, orgData.org_name, role)}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${isSelected
-                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
-                                : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
-                                }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium">{orgData.org_name}</div>
-                                  <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
-                                    {role.replace("ROLE_", "").replace("_", " ")}
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <div className="flex items-center">
-                                    <Check className="h-4 w-4 text-primary-600" />
-                                  </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })
-                      )}
-
+                    <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                      {role.replace("ROLE_", "").replace("_", " ")}
                     </div>
                   </div>
+
+                  {isSelected && (
+                    <Check className="h-4 w-4 text-primary-600 flex-shrink-0" />
+                  )}
                 </div>
-              )}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
             </div>
           )}
 

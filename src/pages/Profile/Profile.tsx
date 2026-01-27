@@ -176,8 +176,8 @@ const Profile: React.FC = () => {
     if (file) {
 
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file',{
-          autoClose:1000,
+        toast.error('Please select an image file', {
+          autoClose: 1000,
           hideProgressBar: true
         });
         return;
@@ -185,8 +185,8 @@ const Profile: React.FC = () => {
 
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB',{
-          autoClose:1000,
+        toast.error('File size should be less than 5MB', {
+          autoClose: 1000,
           hideProgressBar: true
         });
         return;
@@ -284,7 +284,7 @@ const Profile: React.FC = () => {
 
   const handleCropSave = async () => {
     if (!croppedAreaPixels || !previewUrl) {
-      toast.error('Please adjust the crop area first',{
+      toast.error('Please adjust the crop area first', {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -304,7 +304,7 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      toast.error('Failed to crop image',{
+      toast.error('Failed to crop image', {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -338,8 +338,8 @@ const Profile: React.FC = () => {
 
       await uploadUserSignature(file);
 
-      toast.success("Signature uploaded successfully",{
-        autoClose:1000,
+      toast.success("Signature uploaded successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -351,7 +351,7 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Upload failed:", err);
-      toast.error("Failed to upload signature",{
+      toast.error("Failed to upload signature", {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -372,8 +372,8 @@ const Profile: React.FC = () => {
 
       await editUserSignature(file);
 
-      toast.success("Signature updated successfully",{
-        autoClose:1000,
+      toast.success("Signature updated successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -385,8 +385,8 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Edit failed:", err);
-      toast.error("Failed to update signature",{
-        autoClose:1000,
+      toast.error("Failed to update signature", {
+        autoClose: 1000,
         hideProgressBar: true
       });
     } finally {
@@ -403,8 +403,8 @@ const Profile: React.FC = () => {
       // Call API to delete signature
       await deleteUserSignaturePhoto();
 
-      toast.success("Signature removed successfully",{
-        autoClose:1000,
+      toast.success("Signature removed successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -419,7 +419,7 @@ const Profile: React.FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error("Failed to remove signature:", err);
-      toast.error("Failed to remove signature",{
+      toast.error("Failed to remove signature", {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -449,58 +449,45 @@ const Profile: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        {/* <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="text-gray-600">Manage your account information and signature</p>
-          </div>
-        </div> */}
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Personal Information Card */}
           <Card>
             <CardBody className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                {/* Left Section - Profile Info */}
-                <div className="flex items-center gap-4 group relative">
-                  {/* Profile Photo Section */}
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative">
-                    {profilePhoto ? (
-                      <img
-                        src={profilePhoto}
-                        alt="User"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-6 h-6 text-gray-600" />
-                    )}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
 
+                {/* Left Section - Profile Info */}
+                <div className="flex items-center gap-4 group relative justify-center sm:justify-start text-center sm:text-left">
+
+                  {/* Profile Photo Section */}
+                  <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative flex-shrink-0">
+          {profilePhoto ? (
+            <img
+              src={profilePhoto}
+              alt="User"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-6 h-6 text-gray-600" />
+          )}
                     {/* Overlay for Edit / Upload */}
                     <div
-                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                      onClick={() => {
-                        if (profilePhoto) {
-                          setCrop({ x: 0, y: 0 });
-                          setZoom(1);
-                          setRotation(0);
-                          setCroppedAreaPixelsForProfile(null);
-
-                          setPreviewUrlForProfile(profilePhoto);
-                          setShowCropModalForProfile(true);
-                        } else {
-                          document.getElementById("profile-file-input")?.click();
-                        }
-                      }}
-                    >
-                      <Camera className="w-5 h-5 text-white" />
-                    </div>
+            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+            onClick={() => {
+              if (profilePhoto) {
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setRotation(0);
+                setCroppedAreaPixelsForProfile(null);
+                setPreviewUrlForProfile(profilePhoto);
+                setShowCropModalForProfile(true);
+              } else {
+                document.getElementById("profile-file-input")?.click();
+              }
+            }}
+          >
+            <Camera className="w-5 h-5 text-white" />
+          </div>
 
                     {/* Hidden File Input */}
                     <input
@@ -513,19 +500,20 @@ const Profile: React.FC = () => {
                   </div>
 
                   {/* User Info Section */}
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {user?.name_as_per_gov_id || "Not provided"}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      {user?.preferred_name || "Not provided"}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {user?.email_address || "Not provided"}
-                      {user?.email_address && user?.contact_number ? " | " : ""}
-                      {user?.contact_number || ""}
-                    </p>
-                  </div>
+                  <div className="flex flex-col items-start sm:items-start">
+          <p className="text-base sm:text-lg font-semibold text-gray-900">
+            {user?.name_as_per_gov_id || "Not provided"}
+          </p>
+          <p className="text-sm text-gray-700">
+            {user?.preferred_name || "Not provided"}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-600 break-all text-start sm:text-left">
+            {user?.email_address || "Not provided"}
+            {user?.email_address && user?.contact_number ? " | " : ""}
+            {user?.contact_number || ""}
+          </p>
+        </div>
+
                 </div>
 
                 {/* Right Section - Change Password Button */}
