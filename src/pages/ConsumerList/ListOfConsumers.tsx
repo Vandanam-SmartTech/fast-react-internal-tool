@@ -604,187 +604,60 @@ const ListOfConsumers: React.FC = () => {
                      leading-tight">
               Customer Directory
             </h1>
-
           </div>
 
-          {/* Organization + Agency Selects */}
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
 
+            {/* Checkbox */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <input
+                type="checkbox"
+                id="viewGharkulCustomer"
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label
+                htmlFor="viewGharkulCustomer"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
+                Gharkul Customers
+              </label>
+            </div>
 
-            {userRole === "ROLE_SUPER_ADMIN" && (
-              <div className="relative w-60">
-                <select
-                  name="organization"
-                  value={selectedOrgId ?? ""}
-                  onChange={async (e) => {
-                    const value = e.target.value ? Number(e.target.value) : null;
-                    setSelectedOrgId(value);
-
-                    setSelectedUserId(null);
-
-                    if (value) {
-                      const childOrgs = await getChildOrganizations(value);
-                      setAgencies(childOrgs);
-                      setSelectedAgencyId(null);
-                    } else {
-                      setAgencies([]);
-                      setSelectedAgencyId(null);
-                      loadConsumers(0);
-                    }
-                  }}
-                  className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
-                >
-                  <option value="">Select Organization</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Custom dropdown arrow (only when no org is selected) */}
-                {!selectedOrgId && (
-                  <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-900">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* X button to clear selection */}
-                {selectedOrgId && (
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={async () => {
-                      setSelectedOrgId(null);
-                      setSelectedAgencyId(null);
-                      setAgencies([]);
-                      setSelectedUserId(null);
-                      loadConsumers(0);
-                    }}
-                    className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
-                    title="Clear selection"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            )}
-
-
-
-            {agencies.length > 0 && (
-              <div className="relative w-60">
-                <select
-                  name="agency"
-                  value={selectedAgencyId ?? ""}
-                  onChange={(e) => {
-                    const agencyId = e.target.value ? Number(e.target.value) : null;
-                    setSelectedAgencyId(agencyId);
-
-                    // reset user when agency changes
-                    setSelectedUserId(null);
-                  }}
-                  disabled={agencies.length === 0}
-                  className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
-                >
-                  <option value="">All</option>
-                  {agencies.map((agency) => (
-                    <option key={agency.id} value={agency.id}>
-                      {agency.name}
-                    </option>
-                  ))}
-                </select>
-
-
-                {!selectedAgencyId && (
-                  <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
-          ${agencies.length === 0 ? "text-gray-400" : "text-gray-900"}
-        `}>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                )}
-
-                {selectedAgencyId && (
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setSelectedAgencyId(null)}
-                    className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
-                    title="Clear selection"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            )}
-
-
-            {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" &&
-              userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
+            <div className="flex gap-4">
+              {userRole === "ROLE_SUPER_ADMIN" && (
                 <div className="relative w-60">
                   <select
-                    name="customer"
-                    value={selectedUserId ?? ""}
-                    onChange={(e) => {
-                      const userId = e.target.value ? Number(e.target.value) : null;
-                      setSelectedUserId(userId);
+                    name="organization"
+                    value={selectedOrgId ?? ""}
+                    onChange={async (e) => {
+                      const value = e.target.value ? Number(e.target.value) : null;
+                      setSelectedOrgId(value);
+
+                      setSelectedUserId(null);
+
+                      if (value) {
+                        const childOrgs = await getChildOrganizations(value);
+                        setAgencies(childOrgs);
+                        setSelectedAgencyId(null);
+                      } else {
+                        setAgencies([]);
+                        setSelectedAgencyId(null);
+                        loadConsumers(0);
+                      }
                     }}
-                    disabled={users.length === 0}
                     className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
                   >
-                    <option value="">All</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {`${user.nameAsPerGovId} (${user.username})`}
+                    <option value="">Select Organization</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name}
                       </option>
                     ))}
                   </select>
 
-
-                  {!selectedUserId && (
-                    <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
-          ${users.length === 0 ? "text-gray-400" : "text-gray-900"}
-        `}>
+                  {/* Custom dropdown arrow (only when no org is selected) */}
+                  {!selectedOrgId && (
+                    <div className="pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-900">
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -798,11 +671,86 @@ const ListOfConsumers: React.FC = () => {
                   )}
 
                   {/* X button to clear selection */}
-                  {selectedUserId && (
+                  {selectedOrgId && (
                     <button
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setSelectedUserId(null)}
+                      onClick={async () => {
+                        setSelectedOrgId(null);
+                        setSelectedAgencyId(null);
+                        setAgencies([]);
+                        setSelectedUserId(null);
+                        loadConsumers(0);
+                      }}
+                      className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
+                      title="Clear selection"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  )}
+
+                </div>
+              )}
+
+
+
+              {agencies.length > 0 && (
+                <div className="relative w-60">
+                  <select
+                    name="agency"
+                    value={selectedAgencyId ?? ""}
+                    onChange={(e) => {
+                      const agencyId = e.target.value ? Number(e.target.value) : null;
+                      setSelectedAgencyId(agencyId);
+
+                      // reset user when agency changes
+                      setSelectedUserId(null);
+                    }}
+                    disabled={agencies.length === 0}
+                    className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+                  >
+                    <option value="">All</option>
+                    {agencies.map((agency) => (
+                      <option key={agency.id} value={agency.id}>
+                        {agency.name}
+                      </option>
+                    ))}
+                  </select>
+
+
+                  {!selectedAgencyId && (
+                    <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
+          ${agencies.length === 0 ? "text-gray-400" : "text-gray-900"}
+        `}>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {selectedAgencyId && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSelectedAgencyId(null)}
                       className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
                       title="Clear selection"
                     >
@@ -823,6 +771,73 @@ const ListOfConsumers: React.FC = () => {
                   )}
                 </div>
               )}
+
+
+              {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" &&
+                userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
+                  <div className="relative w-60">
+                    <select
+                      name="customer"
+                      value={selectedUserId ?? ""}
+                      onChange={(e) => {
+                        const userId = e.target.value ? Number(e.target.value) : null;
+                        setSelectedUserId(userId);
+                      }}
+                      disabled={users.length === 0}
+                      className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
+                    >
+                      <option value="">All</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {`${user.nameAsPerGovId} (${user.username})`}
+                        </option>
+                      ))}
+                    </select>
+
+
+                    {!selectedUserId && (
+                      <div className={`pointer-events-none absolute top-1/2 right-2 transform -translate-y-1/2 
+          ${users.length === 0 ? "text-gray-400" : "text-gray-900"}
+        `}>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* X button to clear selection */}
+                    {selectedUserId && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => setSelectedUserId(null)}
+                        className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
+                        title="Clear selection"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+            </div>
           </div>
         </div>
       </div>
