@@ -454,6 +454,12 @@ export const ViewCustomer = () => {
                             <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
                             <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
                           </div>
+
+                          {(connection.isGharkulCustomer &&<div>
+                            <h5 className="text-sm font-medium text-gray-500">Gharkul Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gharkulNumber || "NA"}</p>
+                          </div>)}
+
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
                             <p className="text-sm text-gray-800 mt-1">{connection.gstNumber || "NA"}</p>
@@ -510,7 +516,7 @@ export const ViewCustomer = () => {
                           </div>
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">Correction Name</h5>
-                            <p className="text-sm text-gray-800 mt-1">{connection.correctionTypeName || "....."}</p>
+                            <p className="text-sm text-gray-800 mt-1">{connection.correctionTypeName || "NA"}</p>
                           </div>
                         </div>
                       )}

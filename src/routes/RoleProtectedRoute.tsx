@@ -109,6 +109,12 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         case 'ROLE_CUSTOMER':
           setRedirectPath('/manage-customers');
           break;
+        case 'ROLE_GRAMSEVAK':
+          setRedirectPath('/grampanchayat-dashboard');
+          break;
+        case 'ROLE_BDO':
+          setRedirectPath('/bdo-dashboard');
+          break;
         default:
           localStorage.removeItem('jwtToken');
           localStorage.removeItem('selectedOrg');

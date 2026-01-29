@@ -147,6 +147,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         case "ROLE_ORG_ADMIN":
           navigate("/org-admin-dashboard");
           break;
+        case "ROLE_GRAMSEVAK":
+          navigate("/grampanchayat-dashboard");
+          break;
+        case "ROLE_BDO":
+          navigate("/bdo-dashboard");
+          break;
         case "ROLE_AGENCY_ADMIN":
           navigate("/agency-admin-dashboard");
           break;
@@ -220,6 +226,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             "/representative-dashboard",
             "/agency-admin-dashboard",
             "/staff-dashboard",
+            "/grampanchayat-dashboard",
+            "/bdo-dashboard",
           ];
 
           if (restrictedPages.includes(currentPath)) {
@@ -261,6 +269,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         navigate("/staff-dashboard");
       } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
         navigate("/staff-dashboard");
+      }else if (allRoles.includes("ROLE_GRAMSEVAK")) {
+        navigate("/grampanchayat-dashboard");
+      }else if (allRoles.includes("ROLE_BDO")) {
+        navigate("/bdo-dashboard");
       } else {
         navigate("/login");
       }
@@ -337,7 +349,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   "/representative-dashboard",
                   "/super-admin-dashboard",
                   "/agency-admin-dashboard",
-                  "/staff-dashboard"
+                  "/staff-dashboard",
+                  "/grampanchayat-dashboard",
+                  "/bdo-dashboard"
                 ])
                   ? "nav-link-active"
                   : "nav-link-inactive"

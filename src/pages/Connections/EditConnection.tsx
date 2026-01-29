@@ -201,6 +201,8 @@ export const EditConnection = () => {
     isOnboardedCustomers: false,
     discomId: "",
     isActive: true,
+    isGharkulCustomer: "No",
+    gharkulNumber: ""
   });
 
 
@@ -358,6 +360,10 @@ export const EditConnection = () => {
 
     if (formData.isNameCorrection === "Yes" && !formData.correctionTypeId) {
       errors.push("Please select a correction type.");
+    }
+
+    if (formData.isGharkulCustomer === "Yes" && !formData.gharkulNumber) {
+      errors.push("Please provide gharkul number.");
     }
 
     if (!formData.billedTo) {
@@ -536,6 +542,8 @@ export const EditConnection = () => {
           longitude: data.longitude,
           isOnboardedCustomers: data.isOnboardedCustomers ?? false,
           discomId: data.discomId,
+          isGharkulCustomer: data.isGharkulCustomer ? "Yes": "No",
+          gharkulNumber: data.gharkulNumber,
         });
         setDistrictCode(data.districtCode);
         setTalukaCode(data.talukaCode);
@@ -615,6 +623,16 @@ export const EditConnection = () => {
     });
   };
 
+  const handleGharkulChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      isGharkulCustomer: value,
+      gharkulNumber: value === "Yes" ? prev.gharkulNumber : "",
+    }));
+  };
+
 
   const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmConsumerNumber(e.target.value.trim());
@@ -647,10 +665,12 @@ export const EditConnection = () => {
       consumerId: formData.consumerId,
       isDiscomConsumer,
       isNameCorrectionRequired: formData.isNameCorrection === "Yes",
+      isGharkulCustomer: formData.isGharkulCustomer === "Yes",
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
       correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
+      gharkulNumber: formData.isGharkulCustomer === "Yes"? formData.gharkulNumber : null,
       avgMonthlyConsumption: formData.avgMonthlyConsumption,
       villageCode: formData.villageCode,
       pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
@@ -1293,60 +1313,118 @@ export const EditConnection = () => {
 
           {/* Name Correction and Correction Type */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Name Correction
-            </h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* LEFT SIDE – Gharkul Connection */}
               <div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h5v-6h4v6h5a1 1 0 001-1V10"
+                    />
+                  </svg>
+                  Gharkul Connection
+                </h3>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Is Gharkul Connection?
+                </label>
+
+                <div className="flex items-center space-x-5 mb-3">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isGharkulCustomer"
+                      value="Yes"
+                      onChange={handleGharkulChange}
+                      checked={formData.isGharkulCustomer === "Yes"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isGharkulCustomer"
+                      value="No"
+                      onChange={handleGharkulChange}
+                      checked={formData.isGharkulCustomer === "No"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+
+                {formData.isGharkulCustomer === "Yes" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Gharkul Number
+                    </label>
+                    <input
+                      type="text"
+                      name="gharkulNumber"
+                      value={formData.gharkulNumber || ""}
+                      onChange={handleChange}
+                      placeholder="Enter Gharkul Number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT SIDE – Name Correction */}
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Name Correction
+                </h3>
+
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Does the connection require a name correction?
                 </label>
-                <div className="flex items-center space-x-5">
+
+                <div className="flex items-center space-x-5 mb-3">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
                       name="nameCorrection"
                       value="Yes"
                       onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       checked={formData.isNameCorrection === "Yes"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
+
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
                       name="nameCorrection"
                       value="No"
                       onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       checked={formData.isNameCorrection === "No"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
                 </div>
-              </div>
 
-              {formData.isNameCorrection === "Yes" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Correction Type
-                  </label>
+                {formData.isNameCorrection === "Yes" && (
                   <ReusableDropdown
                     name="correctionTypeId"
                     value={formData.correctionTypeId || ""}
                     onChange={(val) =>
-                      setFormData((prev) => ({
+                      setFormData(prev => ({
                         ...prev,
-                        correctionTypeId: val ? Number(val) : "",
+                        correctionTypeId: val ? Number(val) : null,
                       }))
                     }
                     options={[
                       { value: "", label: "Select an option" },
-                      ...correctionTypes.map((type) => ({
+                      ...correctionTypes.map(type => ({
                         value: type.id,
                         label: type.nameEn,
                       })),
@@ -1354,8 +1432,9 @@ export const EditConnection = () => {
                     placeholder="Select an option"
                     className="w-full"
                   />
-                </div>
-              )}
+                )}
+              </div>
+
             </div>
           </div>
 
@@ -1421,6 +1500,8 @@ export const EditConnection = () => {
                         addressTypeId: connection.addressTypeId,
                         correctionTypeId: connection.correctionTypeId,
                         isNameCorrection: connection.isNameCorrectionRequired ? "Yes" : "No",
+                        isGharkulCustomer: connection.isGharkulCustomer ? "Yes" : "No",
+                        gharkulNumber: connection.gharkulNumber || "",
                         avgMonthlyConsumption: connection.avgMonthlyConsumption || "",
                         gstIn: connection.gstIn || "",
                         billedTo: connection.billedTo || "",

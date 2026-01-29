@@ -25,6 +25,8 @@ import  Verification  from './pages/Auth/Verification';
 import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import SuperAdminDashboard from './pages/Dashboard/SuperAdminDashboard';
+import BDODashboard from './pages/Dashboard/BDODashboard';
+import GramPanchayatDashboard from './pages/Dashboard/GramPanchayatDashboard';
 import AgencyAdminDashboard from './pages/Dashboard/AgencyAdminDashboard';
 import StaffDashboard from './pages/Dashboard/StaffDashboard';
 import { EditCustomer } from './pages/Customers/EditCustomer';
@@ -164,6 +166,24 @@ const AppContent: React.FC = () => {
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
                   <AdminDashboard />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bdo-dashboard"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_BDO']}>
+                  <BDODashboard />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/grampanchayat-dashboard"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_GRAMSEVAK']}>
+                  <GramPanchayatDashboard />
                 </RoleProtectedRoute>
               }
             />

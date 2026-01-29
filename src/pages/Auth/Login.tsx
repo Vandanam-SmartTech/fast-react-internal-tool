@@ -155,6 +155,12 @@ const Login = () => {
       case 'ROLE_CUSTOMER':
         navigate('/manage-customers');
         break;
+      case 'ROLE_BDO':
+        navigate('/bdo-dashboard');
+        break;
+      case 'ROLE_GRAMSEVAK':
+        navigate('/grampanchayat-dashboard');
+        break;
       default:
         navigate('/login');
     }

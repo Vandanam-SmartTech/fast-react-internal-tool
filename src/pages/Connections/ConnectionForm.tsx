@@ -226,6 +226,10 @@ export const ConnectionForm = () => {
       errors.push("Please select a correction type.");
     }
 
+    if (formData.isGharkulCustomer === "Yes" && !formData.gharkulNumber) {
+      errors.push("Please provide gharkul number.");
+    }
+
     if (!formData.billedTo) {
       errors.push("Billed To is required");
     } else {
@@ -614,8 +618,6 @@ export const ConnectionForm = () => {
       return;
     }
 
-
-
     const isDiscomConsumer = formData.isDiscomConsumer === "Yes";
 
     const connectionData = {
@@ -624,6 +626,8 @@ export const ConnectionForm = () => {
       isDiscomConsumer,
       isNameCorrectionRequired: formData.isNameCorrection === "Yes",
       correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
+      isGharkulCustomer: formData.isGharkulCustomer === "Yes",
+      gharkulNumber: formData.isGharkulCustomer ==="Yes" ? formData.gharkulNumber : null,
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
@@ -1386,7 +1390,6 @@ export const ConnectionForm = () => {
                   </svg>
                   Gharkul Connection
                 </h3>
-
 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Is Gharkul Connection?

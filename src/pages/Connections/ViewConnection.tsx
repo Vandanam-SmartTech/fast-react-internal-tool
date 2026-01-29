@@ -340,7 +340,7 @@ export const ViewConnection = () => {
         <div className="bg-white shadow-lg rounded-lg p-4 w-full mx-auto max-w-4xl">
           <div className="flex items-center justify-between gap-3 mb-3">
             {/* Left: Icon + Title */}
-            <div className="flex items-center gap-3 whitespace-nowrap">
+            <div className="flex items-center gap-2 whitespace-nowrap">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <BoltIcon className="w-5 h-5 text-white" />
               </div>
@@ -351,20 +351,21 @@ export const ViewConnection = () => {
             </div>
 
             {/* Right: Status */}
-            <div className="text-right leading-tight">
-              {/* Mobile: short | Desktop: full */}
-              <p className="text-xs sm:text-sm text-green-700">
-                <span className="sm:hidden">Active Grid Connection</span>
-                <span className="hidden sm:inline">Active Grid Connection</span>
-              </p>
-            </div>
+            <div className="text-center leading-tight">
+  <p className="text-xs sm:text-sm text-green-700">
+    {connection.isGharkulCustomer
+      ? "Active Grid Gharkul Connection"
+      : "Active Grid Connection"}
+  </p>
+</div>
+
           </div>
 
           <div className="border-b border-gray-200 mb-4" />
 
           {/* Consumer Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                 <UserCircleIcon className="w-4 h-4 text-green-600" />
               </div>
@@ -396,17 +397,23 @@ export const ViewConnection = () => {
 
           {/* Business Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
                 <Cog6ToothIcon className="w-4 h-4 text-orange-600" />
               </div>
               <h4 className="text-base font-medium text-gray-900">Business Information</h4>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
                 <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
               </div>
+
+              {(connection.isGharkulCustomer && <div>
+                <h5 className="text-sm font-medium text-gray-500">Gharkul Number</h5>
+                <p className="text-sm text-gray-800 mt-1">{connection.gharkulNumber || "NA"}</p>
+              </div>)}
+
               <div>
                 <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
                 <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
@@ -416,7 +423,7 @@ export const ViewConnection = () => {
 
           {/* Address Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                 <HomeModernIcon className="w-4 h-4 text-blue-600" />
               </div>
@@ -454,7 +461,7 @@ export const ViewConnection = () => {
           {/* Name Correction */}
           {connection.isNameCorrectionRequired && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
                   <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
