@@ -354,12 +354,12 @@ export const CustomerForm = () => {
     }
 
     if (formData.isLoanCustomer && !formData.emailAddress) {
-      toast.error("Email is required when loan is required.", {
-        autoClose: 1000,
-        hideProgressBar: true
-      });
-      return;
-    }
+  toast.error("Email is required when loan is required.",{
+    autoClose:1000,
+    hideProgressBar:true
+  });
+  return;
+}
 
 
 
@@ -562,7 +562,6 @@ export const CustomerForm = () => {
               </div>
             </div>
 
-            <div className="border rounded-md p-3 sm:p-4 shadow-sm">
               {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
                 selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && selectedOrg?.role !== "ROLE_GRAMSEVAK" && selectedOrg?.role !== "ROLE_BDO" && (<div className="col-span-2 w-full">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
@@ -725,8 +724,7 @@ export const CustomerForm = () => {
                   </div>
                 </div>
               )}
-            </div>
-
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
