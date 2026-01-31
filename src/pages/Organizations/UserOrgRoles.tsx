@@ -204,7 +204,6 @@ const UserOrgRoles: React.FC = () => {
         return;
       }
 
-      // Assign role
       await assignUserOrgRole(
         parseInt(userId!),
         parseInt(organizationIdToSend!),
