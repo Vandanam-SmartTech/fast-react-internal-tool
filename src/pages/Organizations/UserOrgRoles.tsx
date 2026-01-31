@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { getUserById, getAllRoles, getUserOrgRolesById } from '../../services/jwtService';
 import { fetchOrganizations, Organization, UserOrgRole, assignUserOrgRole, removeUserOrgRole, getChildOrganizations } from '../../services/organizationService';
 import { toast } from 'react-toastify';
@@ -198,7 +198,7 @@ const UserOrgRoles: React.FC = () => {
       if (roleExists) {
         toast.error("This role is already assigned to the selected organization/agency", {
           hideProgressBar: true,
-          autoClose: 1000,
+          autoClose: 3000,
         });
         setLoading(false);
         return;
@@ -208,7 +208,8 @@ const UserOrgRoles: React.FC = () => {
       await assignUserOrgRole(
         parseInt(userId!),
         parseInt(organizationIdToSend!),
-        parseInt(newAssignment.roleId)
+        parseInt(newAssignment.roleId),
+        null
       );
 
       // Reload data based on user role
@@ -220,7 +221,7 @@ const UserOrgRoles: React.FC = () => {
 
       toast.success("Role assigned successfully", {
         hideProgressBar: true,
-        autoClose: 1000,
+        autoClose: 2000,
       });
 
       setNewAssignment({ organizationId: "", roleId: "", agencyId: "" });

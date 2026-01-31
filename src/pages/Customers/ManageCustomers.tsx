@@ -9,21 +9,21 @@ const ManageCustomers: React.FC = () => {
     {
       title: 'Add New Customer',
       description: 'Create a new customer record',
-      icon: <UserPlus className="h-12 w-12 text-blue-600" />,
+      icon: <UserPlus className="h-8 w-8 text-blue-600" />,
       path: '/customer-form',
       color: 'bg-blue-50 hover:bg-blue-100'
     },
     {
       title: 'List of Customers',
       description: 'View all customers',
-      icon: <Users className="h-12 w-12 text-green-600" />,
+      icon: <Users className="h-8 w-8 text-green-600" />,
       path: '/list-of-consumers',
       color: 'bg-green-50 hover:bg-green-100'
     },
     {
       title: 'Onboarded Consumers',
       description: 'View onboarded consumers',
-      icon: <UserRoundCheck className="h-12 w-12 text-purple-600" />,
+      icon: <UserRoundCheck className="h-8 w-8 text-purple-600" />,
       path: '/onboarded-consumers',
       color: 'bg-purple-50 hover:bg-purple-100'
     }
@@ -64,7 +64,10 @@ return (
                       border border-gray-200`}
         >
           <div className="flex items-start gap-3 sm:gap-4">
-            {action.icon}
+            {/* {action.icon} */}
+            <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
+                    {action.icon}
+                  </div>
 
             <div className="flex-1 min-w-0">
               <h2 className="font-semibold text-gray-900

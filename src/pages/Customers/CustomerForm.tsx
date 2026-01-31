@@ -24,10 +24,10 @@ export const CustomerForm = () => {
   const [emailExists, setEmailExists] = useState(false);
 
   const [showMobile,] = useState(false);
-  
-  const [showEmail, ] = useState(false);
 
-  const [activeTab, ] = useState("Customer Details");
+  const [showEmail,] = useState(false);
+
+  const [activeTab,] = useState("Customer Details");
 
   const [, setNavigateAfterClose] = useState(false);
   const [, setCreatedCustomerId] = useState<number | null>(null);
@@ -69,6 +69,7 @@ export const CustomerForm = () => {
     preferredName: "",
     isActive: true,
     referredByUserId: null,
+    isLoanCustomer: false,
   });
 
   useEffect(() => {
@@ -165,56 +166,58 @@ export const CustomerForm = () => {
   }, [selectedOrg]);
 
   useEffect(() => {
-  const getParentOrg = async (agencyId: number) => {
-    try {
-      const data = await fetchParentOrgDetails(agencyId);
-      setOrganizationId(Number(data.id));
-    } catch (error) {
-      console.error("Error loading parent organization:", error);
-    }
-  };
+    const getParentOrg = async (agencyId: number) => {
+      try {
+        const data = await fetchParentOrgDetails(agencyId);
+        setOrganizationId(Number(data.id));
+      } catch (error) {
+        console.error("Error loading parent organization:", error);
+      }
+    };
 
-  if (!selectedOrg?.role) return;
+    if (!selectedOrg?.role) return;
 
-  if (
-    [
-      "ROLE_AGENCY_STAFF",
-      "ROLE_AGENCY_REPRESENTATIVE",
-      "ROLE_AGENCY_ADMIN",
-    ].includes(selectedOrg.role)
-  ) {
-    if (selectedOrg.orgId) {
-      setAgencyId(Number(selectedOrg.orgId));
-      getParentOrg(Number(selectedOrg.orgId));
+    if (
+      [
+        "ROLE_AGENCY_STAFF",
+        "ROLE_AGENCY_REPRESENTATIVE",
+        "ROLE_AGENCY_ADMIN",
+      ].includes(selectedOrg.role)
+    ) {
+      if (selectedOrg.orgId) {
+        setAgencyId(Number(selectedOrg.orgId));
+        getParentOrg(Number(selectedOrg.orgId));
+      }
+    } else if (
+      [
+        "ROLE_ORG_STAFF",
+        "ROLE_ORG_REPRESENTATIVE",
+        "ROLE_ORG_ADMIN",
+        "ROLE_BDO",
+        "ROLE_GRAMSEVAK"
+      ].includes(selectedOrg.role)
+    ) {
+      if (selectedOrg.orgId) {
+        setOrganizationId(Number(selectedOrg.orgId));
+      }
     }
-  } else if (
-    [
-      "ROLE_ORG_STAFF",
-      "ROLE_ORG_REPRESENTATIVE",
-      "ROLE_ORG_ADMIN",
-    ].includes(selectedOrg.role)
-  ) {
-    if (selectedOrg.orgId) {
-      setOrganizationId(Number(selectedOrg.orgId));
-    }
-  }
-}, [selectedOrg]);
+  }, [selectedOrg]);
 
-useEffect(() => {
-  if (selectedOrg?.role === "ROLE_ORG_STAFF") {
-    setRepresentativeType("organization");
-  } else if (selectedOrg?.role === "ROLE_AGENCY_STAFF") {
-    setRepresentativeType("agency");
-    setAgencyId(Number(selectedOrg?.orgId)); 
-  }
-  else if(selectedOrg?.role === "ROLE_AGENCY_ADMIN") {
-    setRepresentativeType("agency");
-    setAgencyId(Number(selectedOrg?.orgId));
-  }
-  if(selectedOrg?.role === "ROLE_AGENCY_REPRESENTTAIVE"){
-    setAgencyId(Number(selectedOrg?.orgId));
-  }
-}, [selectedOrg]);
+  useEffect(() => {
+    if (selectedOrg?.role === "ROLE_ORG_STAFF") {
+      setRepresentativeType("organization");
+    } else if (selectedOrg?.role === "ROLE_AGENCY_STAFF") {
+      setRepresentativeType("agency");
+      setAgencyId(Number(selectedOrg?.orgId));
+    }
+    else if (selectedOrg?.role === "ROLE_AGENCY_ADMIN") {
+      setRepresentativeType("agency");
+      setAgencyId(Number(selectedOrg?.orgId));
+    }
+    if (selectedOrg?.role === "ROLE_AGENCY_REPRESENTTAIVE") {
+      setAgencyId(Number(selectedOrg?.orgId));
+    }
+  }, [selectedOrg]);
 
 
 
@@ -350,6 +353,15 @@ useEffect(() => {
       return;
     }
 
+    if (formData.isLoanCustomer && !formData.emailAddress) {
+      toast.error("Email is required when loan is required.", {
+        autoClose: 1000,
+        hideProgressBar: true
+      });
+      return;
+    }
+
+
 
     if (userRole === "ROLE_SUPER_ADMIN") {
       if (!representativeType) {
@@ -386,6 +398,18 @@ useEffect(() => {
       }
     }
 
+    if (selectedOrg?.role === "ROLE_ORG_ADMIN") {
+      if (representativeType === "agency") {
+        if (!agencyId) {
+          toast.error("Please select an agency.", {
+            autoClose: 1000,
+            hideProgressBar: true,
+          });
+          return;
+        }
+      }
+    }
+
     try {
       const customerData: any = {
         ...formData,
@@ -401,6 +425,8 @@ useEffect(() => {
       }
 
       customerData.emailAddress = formData.emailAddress || null;
+      customerData.isLoanCustomer = formData.isLoanCustomer; // true or false
+
 
       const result = await saveCustomer(customerData);
 
@@ -508,134 +534,85 @@ useEffect(() => {
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <UserCircleIcon className="w-5 h-5 text-green-500" />
-              Customer Details
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              {/* Left: Heading */}
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+                <UserCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 text-green-500" />
+                Customer Details
+              </h3>
 
-
-
-            {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
-              selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" &&  selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && selectedOrg?.role !== "ROLE_GRAMSEVAK" && selectedOrg?.role !== "ROLE_BDO" && (<div className="col-span-2 w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-                  Select Referrer User Type <span className="text-red-500">*</span>
+              {/* Right: Checkbox */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <input
+                  type="checkbox"
+                  id="loanRequired"
+                  name="isLoanCustomer"
+                  checked={formData.isLoanCustomer} // boolean
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isLoanCustomer: e.target.checked, // true if checked, false if unchecked
+                    })
+                  }
+                  className="w-4 sm:w-4 h-4 sm:h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="loanRequired" className="text-xs sm:text-sm text-gray-700">
+                  Is Loan Required?
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
-                  {[
-                    { value: "organization", label: "Organization Level User" },
-                    { value: "agency", label: "Agency Level User" }
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="repType"
-                        value={option.value}
-                        checked={representativeType === option.value}
-                        onChange={(e) =>
-                          setRepresentativeType(
-                            representativeType === e.target.value ? "" : e.target.value
-                          )
-                        }
-                        className="text-blue-600 focus:ring-blue-500"
-                      />
-                      {option.label}
-                    </label>
-                  ))}
-                </div>
-              </div>)}
-
-
-            {representativeType === "agency" && (
-              <div className="col-span-2 grid grid-cols-1 rounded-md shadow-sm md:grid-cols-2 gap-3 border rounded-md p-3 sm:p-4 shadow-sm mt-3 sm:mt-4">
-                {!selectedOrg && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Select Organization
-                    </label>
-                    <ReusableDropdown
-                      value={organizationId || ""}
-                      onChange={(val) => {
-                        setOrganizationId(Number(val));
-                        setAgencyId("");
-                        setAgencyUser("");
-                      }}
-                      options={[
-                        { value: "", label: "-- Select Organization --" },
-                        ...organizations.map((org) => ({
-                          value: org.id,
-                          label: org.name,
-                        })),
-                      ]}
-                      placeholder="Select Organization"
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-
-                {selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Select Agency
-                  </label>
-                  <ReusableDropdown
-                    value={agencyId || ""}
-                    onChange={(val) => {
-                      setAgencyId(Number(val));
-                      setAgencyUser("");
-                    }}
-                    options={[
-                      { value: "", label: "-- Select Agency --" },
-                      ...agencyList.map((agency) => ({
-                        value: agency.id,
-                        label: agency.name,
-                      })),
-                    ]}
-                    placeholder="Select Agency"
-                    className="mt-1"
-                  />
-                </div>
-                )}
-
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Select Agency User
-                  </label>
-                  <ReusableDropdown
-                    value={agencyUser || ""}
-                    onChange={(val) => setAgencyUser(Number(val))}
-                    options={[
-                      { value: "", label: "-- Select User --" },
-                      ...agencyUsers.map((user) => ({
-                        value: user.id,
-                        label: `${user.nameAsPerGovId} (${user.username})`,
-                      })),
-                    ]}
-                    placeholder="Select User"
-                    className="mt-1"
-                  />
-                </div>
               </div>
-            )}
+            </div>
+
+            <div className="border rounded-md p-3 sm:p-4 shadow-sm">
+              {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
+                selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && selectedOrg?.role !== "ROLE_GRAMSEVAK" && selectedOrg?.role !== "ROLE_BDO" && (<div className="col-span-2 w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                    Select Referrer User Type
+                    {userRole === "ROLE_SUPER_ADMIN" && (
+                      <span className="text-red-500"> *</span>
+                    )}
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
+                    {[
+                      { value: "organization", label: "Organization Level User" },
+                      { value: "agency", label: "Agency Level User" }
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="repType"
+                          value={option.value}
+                          checked={representativeType === option.value}
+                          onChange={(e) =>
+                            setRepresentativeType(
+                              representativeType === e.target.value ? "" : e.target.value
+                            )
+                          }
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        {option.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>)}
 
 
-            {representativeType === "organization" && (
-              <div className="col-span-2 mt-3 sm:mt-4 border rounded-md p-3 sm:p-4 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-
+              {representativeType === "agency" && (
+                <div className="col-span-2 grid grid-cols-1 rounded-md shadow-sm md:grid-cols-2 gap-3 border rounded-md p-3 sm:p-4 shadow-sm mt-3 sm:mt-4">
                   {!selectedOrg && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Select Organization Name
+                        Select Organization
                       </label>
                       <ReusableDropdown
                         value={organizationId || ""}
                         onChange={(val) => {
                           setOrganizationId(Number(val));
-                          setOrganizationUser("");
+                          setAgencyId("");
+                          setAgencyUser("");
                         }}
                         options={[
                           { value: "", label: "-- Select Organization --" },
@@ -650,17 +627,41 @@ useEffect(() => {
                     </div>
                   )}
 
+                  {selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Select Agency
+                      </label>
+                      <ReusableDropdown
+                        value={agencyId || ""}
+                        onChange={(val) => {
+                          setAgencyId(Number(val));
+                          setAgencyUser("");
+                        }}
+                        options={[
+                          { value: "", label: "-- Select Agency --" },
+                          ...agencyList.map((agency) => ({
+                            value: agency.id,
+                            label: agency.name,
+                          })),
+                        ]}
+                        placeholder="Select Agency"
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Select Organization User
+                      Select Agency User
                     </label>
                     <ReusableDropdown
-                      value={organizationUser || ""}
-                      onChange={(val) => setOrganizationUser(Number(val))}
+                      value={agencyUser || ""}
+                      onChange={(val) => setAgencyUser(Number(val))}
                       options={[
                         { value: "", label: "-- Select User --" },
-                        ...organizationUsers.map((user) => ({
+                        ...agencyUsers.map((user) => ({
                           value: user.id,
                           label: `${user.nameAsPerGovId} (${user.username})`,
                         })),
@@ -668,11 +669,63 @@ useEffect(() => {
                       placeholder="Select User"
                       className="mt-1"
                     />
-
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+
+              {representativeType === "organization" && (
+                <div className="col-span-2 mt-3 sm:mt-4 border rounded-md p-3 sm:p-4 shadow-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+
+                    {!selectedOrg && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Select Organization Name
+                        </label>
+                        <ReusableDropdown
+                          value={organizationId || ""}
+                          onChange={(val) => {
+                            setOrganizationId(Number(val));
+                            setOrganizationUser("");
+                          }}
+                          options={[
+                            { value: "", label: "-- Select Organization --" },
+                            ...organizations.map((org) => ({
+                              value: org.id,
+                              label: org.name,
+                            })),
+                          ]}
+                          placeholder="Select Organization"
+                          className="mt-1"
+                        />
+                      </div>
+                    )}
+
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Select Organization User
+                      </label>
+                      <ReusableDropdown
+                        value={organizationUser || ""}
+                        onChange={(val) => setOrganizationUser(Number(val))}
+                        options={[
+                          { value: "", label: "-- Select User --" },
+                          ...organizationUsers.map((user) => ({
+                            value: user.id,
+                            label: `${user.nameAsPerGovId} (${user.username})`,
+                          })),
+                        ]}
+                        placeholder="Select User"
+                        className="mt-1"
+                      />
+
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
               <div>

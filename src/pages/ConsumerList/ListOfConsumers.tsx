@@ -208,6 +208,7 @@ const ListOfConsumers: React.FC = () => {
         agencyId,
         userRole: userRole || userInfo?.role || null,
         userId,
+        isGharkulCustomer: false
       };
 
       console.log("Fetching consumers with params:", params);
@@ -609,19 +610,20 @@ const ListOfConsumers: React.FC = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
 
             {/* Checkbox */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="viewGharkulCustomer"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label
-                htmlFor="viewGharkulCustomer"
-                className="text-sm font-medium text-gray-700 cursor-pointer"
-              >
-                Gharkul Customers
-              </label>
-            </div>
+            {userRoleFromLocalStorage !== "ROLE_GRAMSEVAK" &&
+              userRoleFromLocalStorage !== "ROLE_BDO" && (<div className="flex items-center gap-2 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  id="viewGharkulCustomer"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="viewGharkulCustomer"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Gharkul Customers
+                </label>
+              </div>)}
 
             <div className="flex gap-4">
               {userRole === "ROLE_SUPER_ADMIN" && (

@@ -20,6 +20,7 @@ export const EditCustomer = () => {
     preferredName: "",
     mobileNumber: "",
     emailAddress: null,
+    isLoanCustomer: false,
   });
   const [confirmMobileNumber, setConfirmMobileNumber] = useState("");
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
@@ -31,10 +32,10 @@ export const EditCustomer = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
-  const [showMobile, ] = useState(false);
+  const [showMobile,] = useState(false);
 
 
-  const [showEmail, ] = useState(false);
+  const [showEmail,] = useState(false);
 
 
   const [originalMobile, setOriginalMobile] = useState("");
@@ -42,8 +43,6 @@ export const EditCustomer = () => {
 
   const [originalEmail, setOriginalEmail] = useState("");
   const [emailExists, setEmailExists] = useState(false);
-
-
 
   const tabs = [
     "Customer Details",
@@ -65,6 +64,7 @@ export const EditCustomer = () => {
           preferredName: data.preferredName || "",
           mobileNumber: data.mobileNumber || "",
           emailAddress: data.emailAddress || null,
+          isLoanCustomer: !!data.isLoanCustomer,
 
         });
 
@@ -182,6 +182,14 @@ export const EditCustomer = () => {
       return;
     }
 
+    if (formData.isLoanCustomer && !formData.emailAddress) {
+      toast.error("Email is required when loan is required.", {
+        autoClose: 1000,
+        hideProgressBar: true
+      });
+      return;
+    }
+
     // Show confirm dialog
     setDialogType("confirm");
     setDialogMessage("Do you want to update the customer details?");
@@ -291,10 +299,33 @@ export const EditCustomer = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <UserCircleIcon className="w-5 h-5 text-green-500" />
-              Customer Details
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              {/* Left: Heading */}
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
+                <UserCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 text-green-500" />
+                Customer Details
+              </h3>
+
+              {/* Right: Checkbox */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                <input
+                  type="checkbox"
+                  id="loanRequired"
+                  name="isLoanCustomer"
+                  checked={formData.isLoanCustomer} // boolean
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isLoanCustomer: e.target.checked, // true if checked, false if unchecked
+                    })
+                  }
+                  className="w-4 sm:w-4 h-4 sm:h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="loanRequired" className="text-xs sm:text-sm text-gray-700">
+                  Is Loan Required?
+                </label>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
               <div>

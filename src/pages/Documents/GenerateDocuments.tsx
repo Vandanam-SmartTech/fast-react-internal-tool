@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Download, Trash2, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Download, Trash2, Pencil, Eye } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
@@ -99,7 +99,7 @@ export default function GenerateDocuments() {
     "Gen Meter Testing Letter"
   ];
 
-  
+
   // const checkMaterialDataExists = async (connectionId: number): Promise<boolean> => {
   //   try {
   //     const [module, inverter, installation] = await Promise.all([
@@ -163,7 +163,7 @@ export default function GenerateDocuments() {
       id: 5,
       title: "Sanction Letter",
       documents: [
-        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50) }
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(200) }
       ],
       isCompleted: false,
       isExpanded: false
@@ -358,6 +358,28 @@ export default function GenerateDocuments() {
       })
     }
   };
+
+  const handleView = async (id: number) => {
+    try {
+      const blob = await downloadDocumentById(id);
+      const url = window.URL.createObjectURL(blob);
+
+      // Open in new tab for preview
+      window.open(url, "_blank");
+
+      // Cleanup later (not immediately, otherwise tab may fail)
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10000);
+    } catch (error) {
+      console.error("Preview failed:", error);
+      toast.error("Failed to preview file", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    }
+  };
+
 
 
   const proceedWithGenerate = async (doc: string) => {
@@ -871,9 +893,14 @@ export default function GenerateDocuments() {
                           <div className="mb-2">
                             {/* Row with filename + actions */}
                             <div className="flex items-center">
-                              <span className="flex-1 truncate" title={doc.fileName}>
-                                {formatFileTail(doc.fileName, 18)}
-                              </span>
+                             <span
+  className="flex-1 truncate text-blue-600 hover:text-blue-800 cursor-pointer underline underline-offset-2"
+  title={`View ${doc.fileName}`}
+  onClick={() => handleView(doc.id)}
+>
+  {formatFileTail(doc.fileName, 18)}
+</span>
+
 
                               <div className="flex items-center gap-1.5 flex-shrink-0">
                                 {/* Hidden file input for Update */}
@@ -902,6 +929,17 @@ export default function GenerateDocuments() {
                                     e.currentTarget.value = "";
                                   }}
                                 />
+
+                                {/* <IconButton
+                                  aria-label={`View ${doc.fileName}`}
+                                  title="View"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                                  icon={<Eye className="w-4 h-4" />}
+                                  onClick={() => handleView(doc.id)}
+                                /> */}
+
 
                                 {/* View */}
                                 <IconButton
@@ -1110,9 +1148,9 @@ export default function GenerateDocuments() {
                           : "bg-white border-gray-200 hover:bg-gray-50";
 
                     const isStepDisabled =
-                      (step.id >= 3 && !isConnectionOnboarded) 
-                      {/* || */}
-                      // (step.id > 4 && !hasSanctionLetter);         
+                      (step.id >= 3 && !isConnectionOnboarded)
+                    {/* || */ }
+                    // (step.id > 4 && !hasSanctionLetter);         
 
 
                     const disabledClasses = isStepDisabled ? "opacity-50 cursor-not-allowed" : "";
@@ -1208,37 +1246,37 @@ export default function GenerateDocuments() {
               <section className="hidden lg:block lg:col-span-8">
                 <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4
                   max-h-[90vh] overflow-y-auto">
-                {(() => {
-                  const activeStep =
-                    documentSteps.find((s) => s.id === currentStep) ||
-                    documentSteps[0];
-                  const isActiveStepDisabled = activeStep.id >= 3 && !isConnectionOnboarded;
+                  {(() => {
+                    const activeStep =
+                      documentSteps.find((s) => s.id === currentStep) ||
+                      documentSteps[0];
+                    const isActiveStepDisabled = activeStep.id >= 3 && !isConnectionOnboarded;
 
-                  if (isActiveStepDisabled) {
+                    if (isActiveStepDisabled) {
 
-                    const fallbackStep = documentSteps.find((s) => s.id < 3) || documentSteps[0];
-                    return (
-                      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-                        <div className="text-center py-8">
-                          <p className="text-gray-600 mb-4">
-                            This step is disabled. Connection must be onboarded to access steps 3 and above.
-                          </p>
-                          <button
-                            onClick={() => {
-                              setCurrentStep(fallbackStep.id);
-                              toggleStepExpansion(fallbackStep.id);
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                          >
-                            Go to Step {fallbackStep.id}: {fallbackStep.title}
-                          </button>
+                      const fallbackStep = documentSteps.find((s) => s.id < 3) || documentSteps[0];
+                      return (
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+                          <div className="text-center py-8">
+                            <p className="text-gray-600 mb-4">
+                              This step is disabled. Connection must be onboarded to access steps 3 and above.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setCurrentStep(fallbackStep.id);
+                                toggleStepExpansion(fallbackStep.id);
+                              }}
+                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                            >
+                              Go to Step {fallbackStep.id}: {fallbackStep.title}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }
+                      );
+                    }
 
-                  return renderStepContent(activeStep);
-                })()}
+                    return renderStepContent(activeStep);
+                  })()}
                 </div>
               </section>
             </>

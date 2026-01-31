@@ -335,50 +335,8 @@ const GramPanchayatDashboard: React.FC = () => {
         </Card>
       </div>
 
-
       </div>
 
-
-      {/* Progress Chart */}
-      {/* {count !== 0 && (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Customer Progress Trend
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-              <CartesianGrid stroke="#e0e0e0" strokeDasharray="4 4" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(dateStr) => format(parseISO(dateStr), 'MMM yyyy')}
-                tick={{ fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                label={{ value: 'Month & Year', position: 'insideBottom', offset: -10 }}
-              />
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 12 }}
-                label={{ value: 'Customer Count', angle: -90, position: 'insideLeft', offset: 10 }}
-              />
-              <Tooltip
-                formatter={(value: number) => [`${value} customers`, 'Count']}
-                labelFormatter={(label: string) => `Date: ${label}`}
-              />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#2563eb"
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )} */}
     </div>
   );
 

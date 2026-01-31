@@ -280,12 +280,16 @@ export const fetchUserOrgRoles = async (userId: number, organizations: { id?: nu
 export const assignUserOrgRole = async (
   userId: number,
   organizationId: number,
-  roleId: number
+  roleId: number,
+  deptCode: number | null
 ): Promise<void> => {
   const orgAPI = getOrgAPI();
   await orgAPI.post(
     `/api/users/${userId}/organizations/${organizationId}/roles`,
-    roleId
+    {
+      roleId,
+      deptCode,
+    }
   );
 };
 
