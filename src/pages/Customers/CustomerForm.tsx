@@ -563,40 +563,36 @@ export const CustomerForm = () => {
             </div>
 
               {selectedOrg?.role !== "ROLE_ORG_REPRESENTATIVE" &&
-                selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && selectedOrg?.role !== "ROLE_GRAMSEVAK" && selectedOrg?.role !== "ROLE_BDO" && (<div className="col-span-2 w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-                    Select Referrer User Type
-                    {userRole === "ROLE_SUPER_ADMIN" && (
-                      <span className="text-red-500"> *</span>
-                    )}
-                  </label>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
-                    {[
-                      { value: "organization", label: "Organization Level User" },
-                      { value: "agency", label: "Agency Level User" }
-                    ].map((option) => (
-                      <label
-                        key={option.value}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="repType"
-                          value={option.value}
-                          checked={representativeType === option.value}
-                          onChange={(e) =>
-                            setRepresentativeType(
-                              representativeType === e.target.value ? "" : e.target.value
-                            )
-                          }
-                          className="text-blue-600 focus:ring-blue-500"
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>)}
+              selectedOrg?.role !== "ROLE_AGENCY_REPRESENTATIVE" && selectedOrg?.role !== "ROLE_ORG_STAFF" &&  selectedOrg?.role !== "ROLE_AGENCY_STAFF" && selectedOrg?.role !== "ROLE_AGENCY_ADMIN" && selectedOrg?.role !== "ROLE_GRAMSEVAK" && selectedOrg?.role !== "ROLE_BDO" &&(<div className="col-span-2 w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                  Select Referrer User Type <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 justify-items-center">
+                  {[
+                    { value: "organization", label: "Organization Level User" },
+                    { value: "agency", label: "Agency Level User" }
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="repType"
+                        value={option.value}
+                        checked={representativeType === option.value}
+                        onChange={(e) =>
+                          setRepresentativeType(
+                            representativeType === e.target.value ? "" : e.target.value
+                          )
+                        }
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              </div>)}
 
 
               {representativeType === "agency" && (

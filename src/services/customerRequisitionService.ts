@@ -148,7 +148,7 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 export const fetchDistricts = async (): Promise<District[]> => {
   const crsAPI = getCrsAPI();
   try {
-    const response = await crsAPI.get('/api/district/27');
+    const response = await crsAPI.get('/api/district/1');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching districts:', error);
