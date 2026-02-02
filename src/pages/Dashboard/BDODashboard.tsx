@@ -223,7 +223,7 @@ const BDODashboard: React.FC = () => {
         <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
           Management Tools
         </h2>
-      {/* Stats Cards */}
+    
 
             {/* Dashboard Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
