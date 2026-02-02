@@ -303,11 +303,11 @@ const Login = () => {
             ) : (
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input
-                  label="Login ID"
+                  label="Username"
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value.trim())}
-                  placeholder="Enter username or email or contact number"
+                  placeholder="Enter username"
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
