@@ -19,7 +19,6 @@ interface ReusableDropdownProps {
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
-  name,
   value,
   onChange,
   options,
@@ -30,10 +29,9 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
-  const [typedText, setTypedText] = useState(""); // <-- NEW
+  const [, setTypedText] = useState(""); // <-- NEW
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredOptions = options.filter((opt) =>

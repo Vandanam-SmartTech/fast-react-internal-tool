@@ -73,6 +73,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
               orgId,
               orgName: orgData.org_name,
               role: roleToUse,
+              deptCode: orgData.dept_code ?? null ,
             })
           );
 

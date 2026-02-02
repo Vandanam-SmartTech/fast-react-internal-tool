@@ -95,7 +95,7 @@ const SuperAdminDashboard: React.FC = () => {
   <div className="p-4 max-w-7xl mx-auto space-y-2">
     {/* Header */}
     <div className="space-y-3 sm:space-y-4">
-      
+       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div>
         <h1 className="font-bold text-secondary-900
                      text-lg sm:text-xl lg:text-2xl
@@ -123,6 +123,7 @@ const SuperAdminDashboard: React.FC = () => {
           <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span>{currentTime.toLocaleDateString()}</span>
         </div>
+      </div>
       </div>
     </div>
 

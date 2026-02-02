@@ -12,12 +12,14 @@ import ReusableDropdown from '../../components/ReusableDropdown';
 interface OrgRoleData {
   roles: string[];
   org_name: string;
+  dept_code: number | null;
 }
 
 interface RoleOption {
   orgId: string;
   orgName: string;
   role: string;
+  deptCode: number | null;
 }
 
 interface UserClaims {
@@ -110,12 +112,13 @@ const Login = () => {
         orgId,
         orgName: orgData.org_name,
         role,
+        deptCode: orgData.dept_code ?? null,
       }))
     );
 
     if (options.length === 1) {
-      const { role, orgId, orgName } = options[0];
-      routeByOrgRole(role, orgId, orgName);
+      const { role, orgId, orgName, deptCode } = options[0];
+      routeByOrgRole(role, orgId, orgName, deptCode!);
       return;
     }
 
@@ -124,11 +127,11 @@ const Login = () => {
   };
 
 
-  const routeByOrgRole = (role: string, orgId?: string, orgName?: string) => {
+  const routeByOrgRole = (role: string, orgId?: string, orgName?: string, deptCode?: number | null) => {
     if (orgId && orgName && role) {
       localStorage.setItem(
         'selectedOrg',
-        JSON.stringify({ orgId, orgName, role })
+        JSON.stringify({ orgId, orgName, role, deptCode: deptCode ?? null })
       );
     }
 
@@ -257,8 +260,8 @@ const Login = () => {
                 <ReusableDropdown
                   value={selectedRole}
                   onChange={(val) => setSelectedRole(String(val))}
-                  options={roleOptions.map(({ orgId, orgName, role }) => ({
-                    value: `${role}|${orgId}|${orgName}`,
+                  options={roleOptions.map(({ orgId, orgName, role, deptCode }) => ({
+                    value: `${role}|${orgId}|${orgName}|${deptCode ?? ''}`,
                     label: `${orgName} (${role.replace("ROLE_", "").replace(/_/g, " ")})`,
                   }))}
                   placeholder="Select Role & Organization"
@@ -286,8 +289,8 @@ const Login = () => {
                         setError('Please select a role before continuing.');
                         return;
                       }
-                      const [role, orgId, orgName] = selectedRole.split('|');
-                      routeByOrgRole(role, orgId, orgName);
+                      const [role, orgId, orgName, deptCode] = selectedRole.split('|');
+                      routeByOrgRole(role, orgId, orgName, Number(deptCode));
                     }}
                     className="flex-1"
                     leftIcon={<Sun className="h-4 w-4" />}

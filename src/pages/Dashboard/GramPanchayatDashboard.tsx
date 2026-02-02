@@ -52,10 +52,12 @@ const GramPanchayatDashboard: React.FC = () => {
     if (
       selectedOrg.role === "ROLE_ORG_STAFF" ||
       selectedOrg.role === "ROLE_ORG_REPRESENTATIVE" ||
-      selectedOrg.role === "ROLE_GRAMSEVAK"
+      selectedOrg.role === "ROLE_GRAMSEVAK" || 
+      selectedOrg.role === "ROLE_BDO"
     ) {
       params.orgId = selectedOrg.orgId;
       params.userRole = selectedOrg.role;
+      params.deptCode = selectedOrg.deptCode;
     } else if (
       selectedOrg.role === "ROLE_AGENCY_STAFF" ||
       selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
@@ -229,8 +231,8 @@ const GramPanchayatDashboard: React.FC = () => {
             <Card
               key={index}
               hover
-              onClick={() => navigate(item.path, { state: item.state })}
-              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+              onClick={() => navigate(item.path)}
+              className={`bg-gradient-to-br ${item.color}`}
             >
               <CardBody className="p-3 md:p-4 flex items-center">
                 <div className="flex items-center gap-2 w-full">

@@ -6,11 +6,13 @@ interface SelectedOrg {
   orgId?: string;
   orgName: string;
   role: string;
+  deptCode: number | null;
 }
 
 interface OrgRole {
   roles: string[];
   org_name: string;
+  dept_code: number | null;
 }
 
 interface UserClaims {

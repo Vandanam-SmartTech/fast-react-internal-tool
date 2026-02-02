@@ -331,9 +331,9 @@ const Header: React.FC = () => {
               >
                 <span className="hidden sm:inline">Switch Org</span>
               </Button>
-{showOrgDropdown && (
-  <div
-    className="
+              {showOrgDropdown && (
+                <div
+                  className="
       fixed sm:absolute
       inset-x-3 sm:inset-x-auto
       top-16 sm:top-full
@@ -349,60 +349,59 @@ const Header: React.FC = () => {
       animate-slide-down
       overflow-hidden
     "
-  >
-    <div className="py-2">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
-        <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">
-          Select Organization
-        </h3>
-        <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
-          Choose your organization and role
-        </p>
-      </div>
-
-      {/* List */}
-      <div className="max-h-[60vh] overflow-y-auto">
-        {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
-          orgData.roles.map(role => {
-            const isSelected =
-              orgData.org_name === selectedOrgName &&
-              role === selectedRole;
-
-            return (
-              <button
-                key={`${orgId}-${role}`}
-                onClick={() =>
-                  handleOrgChange(orgId, orgData.org_name, role)
-                }
-                className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${
-                  isSelected
-                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
-                    : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="font-medium">
-                      {orgData.org_name}
+                >
+                  <div className="py-2">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
+                      <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">
+                        Select Organization
+                      </h3>
+                      <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                        Choose your organization and role
+                      </p>
                     </div>
-                    <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
-                      {role.replace("ROLE_", "").replace("_", " ")}
+
+                    {/* List */}
+                    <div className="max-h-[60vh] overflow-y-auto">
+                      {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
+                        orgData.roles.map(role => {
+                          const isSelected =
+                            orgData.org_name === selectedOrgName &&
+                            role === selectedRole;
+
+                          return (
+                            <button
+                              key={`${orgId}-${role}`}
+                              onClick={() =>
+                                handleOrgChange(orgId, orgData.org_name, role)
+                              }
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${isSelected
+                                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
+                                  : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
+                                }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1">
+                                  <div className="font-medium">
+                                    {orgData.org_name}
+                                  </div>
+                                  <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                                    {role.replace("ROLE_", "").replace("_", " ")}
+                                  </div>
+                                </div>
+
+                                {isSelected && (
+                                  <Check className="h-4 w-4 text-primary-600 flex-shrink-0" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
-
-                  {isSelected && (
-                    <Check className="h-4 w-4 text-primary-600 flex-shrink-0" />
-                  )}
                 </div>
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  </div>
-)}
+              )}
 
             </div>
           )}
@@ -454,18 +453,6 @@ const Header: React.FC = () => {
                           <User className="h-5 w-5 text-white" />
                         )}
                       </div>
-
-                      {/*<label
-                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                      >
-                        <Camera className="w-5 h-5 text-white" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-                      </label>*/}
 
                       <div
                         className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"

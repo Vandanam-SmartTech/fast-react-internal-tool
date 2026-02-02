@@ -11,8 +11,8 @@ const AdminDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
   const { userClaims } = useUser();
-  const [organization, setOrganization] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setOrganization] = useState<any>(null);
+  const [, setLoading] = useState(true);
   const [gstNumber, setGstNumber] = useState<string | null>(null);
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
@@ -48,7 +48,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const org = await getOrganizationById(orgId);
       setOrganization(org);
-      setGstNumber(org.gstNumber);
+      setGstNumber(org.gstNumber!);
     } catch (error) {
       toast.error('Failed to load organization');
       navigate('/organizations');
@@ -153,7 +153,7 @@ const AdminDashboard: React.FC = () => {
               key={index}
               hover
               onClick={() => navigate(item.path, { state: item.state })}
-              className={`bg-gradient-to-br ${item.color} ${item.borderColor}`}
+              className={`bg-gradient-to-br ${item.color}`}
             >
               <CardBody className="p-3 md:p-4 flex items-center">
                 <div className="flex items-center gap-2 w-full">

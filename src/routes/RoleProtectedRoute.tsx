@@ -73,6 +73,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
             orgId,
             orgName: orgData.org_name,
             role: currentRole,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 

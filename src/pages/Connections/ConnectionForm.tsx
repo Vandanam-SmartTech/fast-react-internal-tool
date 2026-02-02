@@ -583,7 +583,7 @@ export const ConnectionForm = () => {
   };
 
 
-  const handleNameCorrection = (e) => {
+  const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,

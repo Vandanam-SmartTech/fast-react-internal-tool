@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchConsumersWithConnections, searchCustomers } from "../../services/customerRequisitionService";
+import { fetchConsumersWithConnections, searchCustomers, fetchVillages } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
@@ -15,7 +15,7 @@ interface Consumer {
   govIdName: string;
   emailAddress: string;
   mobileNumber: string;
-  connections?: { id: number; consumerId: string; customerId: number }[];
+  connections?: { id: number; consumerId: string; customerId: number; gharkulNumber: string }[];
 }
 
 
@@ -29,6 +29,9 @@ const ListOfConsumers: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
   const [isLoadingAll,] = useState<boolean>(false);
   const [totalCustomers, setTotalCustomers] = useState(0);
+
+  const [villages, setVillages] = useState<any[]>([]);
+  const [selectedVillage, setSelectedVillage] = useState<number | "">("");
 
 
   // refs to handle debounced searching and race conditions
@@ -88,6 +91,18 @@ const ListOfConsumers: React.FC = () => {
 
     loadRoleAndOrganizations();
   }, []);
+
+  useEffect(() => {
+    if (userRoleFromLocalStorage === "ROLE_BDO" && userInfo?.deptCode) {
+      fetchVillages(userInfo.deptCode)
+        .then((data) => {
+          setVillages(data);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
+  }, [userRoleFromLocalStorage, userInfo?.deptCode]);
 
 
 
@@ -174,6 +189,7 @@ const ListOfConsumers: React.FC = () => {
       let orgId = selectedOrgId ?? null;
       let agencyId = selectedAgencyId ?? null;
       let userId = selectedUserId ?? null;
+      let deptCode = userInfo.deptCode ?? null;
 
       if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
         orgId = userInfo.orgId;
@@ -199,6 +215,7 @@ const ListOfConsumers: React.FC = () => {
 
       if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
         orgId = userInfo.orgId;
+        deptCode = userInfo.deptCode;
       }
 
       if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
@@ -212,7 +229,8 @@ const ListOfConsumers: React.FC = () => {
         agencyId,
         userRole: userRole || userInfo?.role || null,
         userId,
-        isGharkulCustomer: false
+        isGharkulCustomer: false,
+        deptCode,
       };
 
       console.log("Fetching consumers with params:", params);
@@ -261,6 +279,7 @@ const ListOfConsumers: React.FC = () => {
         let orgId = selectedOrgId ?? null;
         let agencyId = selectedAgencyId ?? null;
         let userId = selectedUserId ?? null;
+        let deptCode = userInfo.deptCode ?? null;
 
         if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
           orgId = userInfo.orgId;
@@ -279,8 +298,9 @@ const ListOfConsumers: React.FC = () => {
         if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
           orgId = userInfo.orgId;
         }
-         if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
+        if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
           orgId = userInfo.orgId;
+          deptCode = userInfo.deptCode;
         }
         if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
@@ -502,10 +522,14 @@ const ListOfConsumers: React.FC = () => {
                   <div className="text-xs font-medium text-primary-700 dark:text-primary-300">
                     Connection {index + 1}
                   </div>
+
                   <div className="text-[11px] text-secondary-700 dark:text-secondary-300 font-mono">
-                    {connection.consumerId}
+                    {userInfo?.role === 'ROLE_GRAMSEVAK' || userInfo?.role === "ROLE_BDO"
+                      ? connection.gharkulNumber
+                      : connection.consumerId}
                   </div>
                 </div>
+
 
                 <div className="flex items-center gap-2">
                   <Button
@@ -631,6 +655,32 @@ const ListOfConsumers: React.FC = () => {
                   Gharkul Customers
                 </label>
               </div>)}
+
+            {/* {userRoleFromLocalStorage === "ROLE_BDO" && (
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <label
+                  htmlFor="villageSelect"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Select Village
+                </label>
+
+                <select
+                  id="villageSelect"
+                  value={selectedVillage}
+                  onChange={(e) => setSelectedVillage(Number(e.target.value))}
+                  className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Villages</option>
+                  {villages.map((village) => (
+                    <option key={village.code} value={village.code}>
+                      {village.name_en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )} */}
+
 
             <div className="flex gap-4">
               {userRole === "ROLE_SUPER_ADMIN" && (

@@ -6,7 +6,7 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Mail, Phone, User, Zap, Search, Users, FileText, RefreshCw, Eye } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, fetchAllUsersByOrgId } from "../../services/organizationService";
+import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
 
 interface Consumer {
@@ -37,7 +37,7 @@ const OnboardedConsumers: React.FC = () => {
   const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
 
-  const [agencies, setAgencies] = useState<{ id: Number; name: string }[]>([]);
+  const [agencies, setAgencies] = useState<Organization[]>([]);
   const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -49,10 +49,10 @@ const OnboardedConsumers: React.FC = () => {
   const userRoleFromLocalStorage = userInfo?.role;
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [selectedConsumer, setSelectedConsumer] = useState<Consumer | null>(null);
-  const [selectedRole, setSelectedRole] = useState<"ELECTRICIAN" | "FABRICATOR" | null>(null);
+  const [selectedConsumer, ] = useState<Consumer | null>(null);
+  const [selectedRole, ] = useState<"ELECTRICIAN" | "FABRICATOR" | null>(null);
 
-  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [filteredUsers, ] = useState<any[]>([]);
 
   const [search, setSearch] = useState("");
 
@@ -87,33 +87,33 @@ const OnboardedConsumers: React.FC = () => {
     navigate(`/generate-documents`, { state: { consumer } });
   };
 
-  const openAssignModule = async (consumer: Consumer) => {
-    setSelectedConsumer(consumer);
-    setIsAssignOpen(true);
-    setSelectedRole(null);
-    setFilteredUsers([]);
+  // const openAssignModule = async (consumer: Consumer) => {
+  //   setSelectedConsumer(consumer);
+  //   setIsAssignOpen(true);
+  //   setSelectedRole(null);
+  //   setFilteredUsers([]);
 
-    const data = await fetchAllUsersByOrgId(userInfo.orgId);
-    setUsers(data || []);
-  };
+  //   const data = await fetchAllUsersByOrgId(userInfo.orgId);
+  //   setUsers(data || []);
+  // };
 
-  const ROLE_MAP = {
-    ELECTRICIAN: "ROLE_ORG_ELECTRICIAN",
-    FABRICATOR: "ROLE_ORG_FABRICATOR",
-  };
+  // const ROLE_MAP = {
+  //   ELECTRICIAN: "ROLE_ORG_ELECTRICIAN",
+  //   FABRICATOR: "ROLE_ORG_FABRICATOR",
+  // };
 
-  const handleRoleSelect = (role: "ELECTRICIAN" | "FABRICATOR") => {
-    setSelectedRole(role);
+  // const handleRoleSelect = (role: "ELECTRICIAN" | "FABRICATOR") => {
+  //   setSelectedRole(role);
 
-    const filtered = users.filter(user =>
-      user.organizationRoles?.some(r =>
-        Number(r.organizationId) === Number(userInfo.orgId) &&
-        r.roleName === ROLE_MAP[role]
-      )
-    );
+  //   const filtered = users.filter(user =>
+  //     user.organizationRoles?.some(r =>
+  //       Number(r.organizationId) === Number(userInfo.orgId) &&
+  //       r.roleName === ROLE_MAP[role]
+  //     )
+  //   );
 
-    setFilteredUsers(filtered);
-  };
+  //   setFilteredUsers(filtered);
+  // };
 
 
   const loadOnboardedConsumers = async (page: number) => {
@@ -282,7 +282,7 @@ const OnboardedConsumers: React.FC = () => {
 
 
           const orgs = await fetchOrganizations();
-          setOrganizations(orgs);
+          setOrganizations(orgs.map((o) => ({ id: o.id as number, name: o.name })));
         } else {
 
           setUserRole(claims.role || "");
@@ -323,8 +323,8 @@ const OnboardedConsumers: React.FC = () => {
 
 
       getChildOrganizations(userInfo.orgId).then((res) => {
-        if (res.data?.length) {
-          setAgencies(res.data);
+        if (res?.length) {
+          setAgencies(res);
         } else {
 
           loadOnboardedConsumers(0);
@@ -894,7 +894,7 @@ const OnboardedConsumers: React.FC = () => {
                 </div>
 
                 {/* Role Selection */}
-                <div className="flex gap-3 mb-3">
+                {/* <div className="flex gap-3 mb-3">
                   <Button
                     variant={selectedRole === "ELECTRICIAN" ? "primary" : "outline"}
                     onClick={() => handleRoleSelect("ELECTRICIAN")}
@@ -911,7 +911,7 @@ const OnboardedConsumers: React.FC = () => {
                     Fabricator
                   </Button>
 
-                </div>
+                </div> */}
 
                 {/* Assignment Duration */}
                 <div className="grid grid-cols-2 gap-3 mb-3">
@@ -977,7 +977,7 @@ const OnboardedConsumers: React.FC = () => {
                         <Button
                           size="sm"
                           disabled={!startDate || !endDate}
-                          onClick={() => assignUserToConsumer(user)}
+                          //onClick={() => assignUserToConsumer(user)}
                         >
                           Assign
                         </Button>

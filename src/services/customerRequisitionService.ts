@@ -145,7 +145,7 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 };
 
 
-export const fetchDistricts = async (): Promise<District[]> => {
+export const fetchDistricts = async () => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get('/api/district/1');
@@ -158,7 +158,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
   }
 };
 
-export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+export const fetchTalukas = async (districtCode: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/taluka/${districtCode}`);
@@ -171,7 +171,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   }
 };
 
-export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+export const fetchVillages = async (talukaCode: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/village/${talukaCode}`);
@@ -337,7 +337,7 @@ export const fetchConsumerNumber = async (customerId: number) => {
   }
 };
 
-export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null }) => {
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null, deptCode?:number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });

@@ -336,23 +336,10 @@ export const fetchRepresentativesPaginated = async (page = 0, role?: string) => 
   }
 };
 
-
-
-// export const updateUser = async (userId: number, data: any) => {
-//   const jwtAPI = getJwtAPI();
-//   try {
-//     const response = await jwtAPI.put(`/api/users/${userId}`, data);
-//     return response;
-//   } catch (error) {
-//     console.error("Update failed", error);
-//     return { message: "Update error" };
-//   }
-// };
-
-export const fetchDistricts = async (): Promise<District[]> => {
+export const fetchDistricts = async () => {
   const jwtAPI = getJwtAPI();
   try {
-    const response = await jwtAPI.get('/api/district/27');
+    const response = await jwtAPI.get('/api/district/1');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching districts:', error);
@@ -362,7 +349,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
   }
 };
 
-export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+export const fetchTalukas = async (districtCode: number) => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/taluka/${districtCode}`);
@@ -375,7 +362,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   }
 };
 
-export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+export const fetchVillages = async (talukaCode: number) => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/village/${talukaCode}`);

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Download, Trash2, Pencil, Eye } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, FileText, Upload, Play, Download, Trash2, Pencil } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
@@ -76,7 +76,7 @@ export default function GenerateDocuments() {
   const [isConnectionOnboarded, setIsConnectionOnboarded] = useState<boolean>(false);
   const [fileSizeError, setFileSizeError] = useState<Record<string, boolean>>({});
 
-  const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 1 MB
+  const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
 
   const connectionId = consumer?.id?.toString();
 
@@ -88,16 +88,16 @@ export default function GenerateDocuments() {
 
 
   // Documents that require material data (module, inverter, installation)
-  const documentsRequiringMaterialData = [
-    "Net Agreement",
-    "WCR",
-    "Annexure-I",
-    "RTS Declaration",
-    "Earthing Report",
-    "Vendor Feasibility",
-    "Consumer Vendor Agreement",
-    "Gen Meter Testing Letter"
-  ];
+  // const documentsRequiringMaterialData = [
+  //   "Net Agreement",
+  //   "WCR",
+  //   "Annexure-I",
+  //   "RTS Declaration",
+  //   "Earthing Report",
+  //   "Vendor Feasibility",
+  //   "Consumer Vendor Agreement",
+  //   "Gen Meter Testing Letter"
+  // ];
 
 
   // const checkMaterialDataExists = async (connectionId: number): Promise<boolean> => {
@@ -387,7 +387,11 @@ export default function GenerateDocuments() {
 
     let quotedTotal: number | undefined;
     if (doc === "Consumer Vendor Agreement Draft") {
-      quotedTotal = quotedTotals[doc];
+      quotedTotal =
+        quotedTotals[doc] === ""
+          ? undefined
+          : Number(quotedTotals[doc]);
+
       if (!quotedTotal || isNaN(quotedTotal)) {
         toast.error("Please enter a valid quoted total amount before generating.", {
           autoClose: 1000,
@@ -441,7 +445,11 @@ export default function GenerateDocuments() {
 
     let quotedTotal: number | undefined;
     if (doc === "Consumer Vendor Agreement Draft") {
-      quotedTotal = quotedTotals[doc];
+      quotedTotal =
+        quotedTotals[doc] === ""
+          ? undefined
+          : Number(quotedTotals[doc]);
+
       if (!quotedTotal || isNaN(quotedTotal)) {
         toast.error("Please enter a valid quoted total amount before previewing.", {
           autoClose: 1000,
@@ -760,7 +768,7 @@ export default function GenerateDocuments() {
                         }
                         // Check for file size validation (1MB limit)
                         if (file.size > MAX_FILE_SIZE_BYTES) {
-                          toast.error(`You can't upload file greater than 5 MB`, {
+                          toast.error(`You can't upload file greater than 1 MB`, {
                             hideProgressBar: true,
                           });
                           setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
@@ -893,13 +901,13 @@ export default function GenerateDocuments() {
                           <div className="mb-2">
                             {/* Row with filename + actions */}
                             <div className="flex items-center">
-                             <span
-  className="flex-1 truncate text-blue-600 hover:text-blue-800 cursor-pointer underline underline-offset-2"
-  title={`View ${doc.fileName}`}
-  onClick={() => handleView(doc.id)}
->
-  {formatFileTail(doc.fileName, 18)}
-</span>
+                              <span
+                                className="flex-1 truncate text-blue-600 hover:text-blue-800 cursor-pointer underline underline-offset-2"
+                                title={`View ${doc.fileName}`}
+                                onClick={() => handleView(doc.id)}
+                              >
+                                {formatFileTail(doc.fileName, 18)}
+                              </span>
 
 
                               <div className="flex items-center gap-1.5 flex-shrink-0">

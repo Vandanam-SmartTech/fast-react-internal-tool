@@ -51,6 +51,7 @@ const HomeRedirect: React.FC = () => {
             orgId,
             orgName: orgData.org_name,
             role,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 
@@ -93,6 +94,7 @@ const HomeRedirect: React.FC = () => {
             orgId,
             orgName: orgData.org_name,
             role: roleToUse,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 
