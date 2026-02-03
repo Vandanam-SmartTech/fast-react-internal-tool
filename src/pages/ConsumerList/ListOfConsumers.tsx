@@ -8,6 +8,7 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
+import { deprecate } from "util";
 
 interface Consumer {
   id: number;
@@ -313,44 +314,58 @@ const ListOfConsumers: React.FC = () => {
         let userId = selectedUserId ?? null;
         let deptCode: number | null = null;
 
-        if (userInfo?.role === "ROLE_BDO") {
-          deptCode =
-            selectedVillage !== ""
-              ? Number(selectedVillage)
-              : userInfo?.deptCode ?? null;
+      let effectiveUserRole = userRole || userInfo?.role || null;
+
+
+      if (userInfo?.role === "ROLE_BDO") {
+        if (selectedVillage !== "") {
+          deptCode = Number(selectedVillage);
+          effectiveUserRole = "ROLE_GRAMSEVAK";
+        } else {
+          deptCode = userInfo?.deptCode ?? null;
+          effectiveUserRole = "ROLE_BDO";
         }
+      }
 
         if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
           orgId = userInfo.orgId;
+          effectiveUserRole ="ROLE_ORG_ADMIN";
         }
         if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
+          effectiveUserRole = "ROLE_AGENCY_ADMIN";
           orgId = null;
         }
         if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
           orgId = userInfo.orgId;
+          effectiveUserRole= "ROLE_ORG_STAFF";
         }
         if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
           orgId = null;
+          effectiveUserRole = "ROLE_AGENCY_STAFF";
         }
         if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
           orgId = userInfo.orgId;
+          effectiveUserRole = "ROLE_ORG_REPRESENTATIVE";
         }
         if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
           orgId = userInfo.orgId;
           deptCode = userInfo.deptCode;
+          effectiveUserRole = "ROLE_GRAMSEVAK";
         }
         if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
+          effectiveUserRole = "ROLE_AGENCY_REPRESENTATIVE";
           orgId = null;
         }
 
         const params = {
           orgId,
           agencyId,
-          userRole: userRole || userInfo?.role || null,
+          userRole: userRole || effectiveUserRole || null,
           userId,
+          deptCode
         };
 
         console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
