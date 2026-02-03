@@ -577,6 +577,7 @@ export const updateMaterialData = async (
     console.error('Error updating material data:', error);
     throw error;
   }
+  
 };
 
 
