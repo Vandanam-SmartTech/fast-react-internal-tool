@@ -188,15 +188,6 @@ const EditUser: React.FC = () => {
         console.log("Current state PINcode:", value);
     };
 
-    // const loadOrganizations = async () => {
-    //     try {
-    //         const data = await fetchOrganizations();
-    //         setOrganizations(data);
-    //     } catch (error) {
-    //         console.error('Failed to load organizations');
-    //     }
-    // };
-
     const loadUser = async (userId: number) => {
         try {
             const { data } = await getUserById(userId);
