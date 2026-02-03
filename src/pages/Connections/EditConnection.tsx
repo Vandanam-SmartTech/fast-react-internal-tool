@@ -1137,7 +1137,7 @@ export const EditConnection = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Village
+                  Village <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
                   name="villageCode"

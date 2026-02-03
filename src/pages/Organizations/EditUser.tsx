@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateUser, getUserById } from '../../services/jwtService';
-import { fetchOrganizations, Organization } from '../../services/organizationService';
+//import { fetchOrganizations, Organization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -51,7 +51,7 @@ const EditUser: React.FC = () => {
     }
 
 
-    const [, setOrganizations] = useState<Organization[]>([]);
+    //const [, setOrganizations] = useState<Organization[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [showMobile,] = useState(false);
@@ -76,7 +76,7 @@ const EditUser: React.FC = () => {
     const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
     useEffect(() => {
-        loadOrganizations();
+        
         if (userId) {
             loadUser(parseInt(userId));
         }
@@ -188,14 +188,14 @@ const EditUser: React.FC = () => {
         console.log("Current state PINcode:", value);
     };
 
-    const loadOrganizations = async () => {
-        try {
-            const data = await fetchOrganizations();
-            setOrganizations(data);
-        } catch (error) {
-            console.error('Failed to load organizations');
-        }
-    };
+    // const loadOrganizations = async () => {
+    //     try {
+    //         const data = await fetchOrganizations();
+    //         setOrganizations(data);
+    //     } catch (error) {
+    //         console.error('Failed to load organizations');
+    //     }
+    // };
 
     const loadUser = async (userId: number) => {
         try {
@@ -226,7 +226,7 @@ const EditUser: React.FC = () => {
             }
         } catch (error) {
             toast.error('Failed to load user');
-            navigate('/user-management');
+            navigate(-1);
         }
     };
 
@@ -245,7 +245,7 @@ const EditUser: React.FC = () => {
                     autoClose: 1000,
                     hideProgressBar: true,
                 });
-                navigate("/user-management");
+                navigate(-1);
             } catch (error) {
                 toast.error("Failed to update user");
             } finally {
@@ -573,6 +573,7 @@ const EditUser: React.FC = () => {
                                     onCopy={(e) => e.preventDefault()}
                                     onCut={(e) => e.preventDefault()}
                                     onPaste={(e) => e.preventDefault()}
+                                    required
                                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
 
@@ -626,6 +627,7 @@ const EditUser: React.FC = () => {
                                     onCopy={(e) => e.preventDefault()}
                                     onCut={(e) => e.preventDefault()}
                                     onPaste={(e) => e.preventDefault()}
+                                    required
                                 />
                                 {formData.emailAddress &&
                                     confirmEmailAddress &&
@@ -747,19 +749,19 @@ const EditUser: React.FC = () => {
                                 />
                             </div>
                         </div>
-   </div>
-                        <div className="flex justify-center gap-4 mt-8">
-                            <button
-                                type="button"
-                                onClick={() => navigate(-1)}
-                                className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="
+                    </div>
+                    <div className="flex justify-center gap-4 mt-8">
+                        <button
+                            type="button"
+                            onClick={() => navigate(-1)}
+                            className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="
       w-full sm:w-auto inline-flex items-center justify-center gap-2
       px-3 py-2.5 sm:px-5 sm:py-2.5
       bg-blue-600 text-white font-semibold
@@ -767,11 +769,11 @@ const EditUser: React.FC = () => {
       rounded-md hover:bg-blue-700
       transition-colors shadow-sm hover:shadow-md
       disabled:opacity-50">
-                                <Save className="h-4 w-4" />
-                                {loading ? 'Updating User' : 'Update User'}
-                            </button>
-                        </div>
-                 
+                            <Save className="h-4 w-4" />
+                            {loading ? 'Updating User' : 'Update User'}
+                        </button>
+                    </div>
+
                 </form>
 
                 <Dialog

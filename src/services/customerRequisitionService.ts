@@ -337,6 +337,32 @@ export const fetchConsumerNumber = async (customerId: number) => {
   }
 };
 
+export const fetchConsumerData = async (consumerId: number) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(
+      `/api/customer-records/by-consumer-number/${consumerId}`
+    );
+
+    if (response.data?.success === false) {
+      console.warn(response.data.message);
+      return null;
+    }
+
+    return response.data; // ✅ return object
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      console.info("Consumer not found");
+    } else {
+      console.error("Error fetching consumer data", error.message);
+    }
+    return null;
+  }
+};
+
+
+
+
 export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null, deptCode?:number | null }) => {
   const crsAPI = getCrsAPI();
   try {

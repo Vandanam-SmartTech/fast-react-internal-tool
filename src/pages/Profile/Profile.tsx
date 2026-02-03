@@ -547,7 +547,7 @@ const Profile: React.FC = () => {
                     variant="outline"
                     leftIcon={<Pencil className="w-4 h-4" />}
                     className="w-full sm:w-auto whitespace-nowrap"
-                    // onClick={() => navigate("/edit-user")}
+                    onClick={() => navigate("/edit-user",{state:{userId:user?.id}})}
                   >
                     Edit Details
                   </Button>

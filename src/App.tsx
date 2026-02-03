@@ -484,9 +484,9 @@ const AppContent: React.FC = () => {
             <Route
               path="/edit-user"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <PrivateRoute>
                   <EditUser />
-                </RoleProtectedRoute>
+                </PrivateRoute>
               }
             />
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
+import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, 
+  fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType, fetchConsumerData } from '../../services/customerRequisitionService';
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
@@ -185,6 +186,8 @@ export const ConnectionForm = () => {
     addressLine1: "",
     addressLine2: "",
     villageCode: 0,
+    districtCode: 0,
+    talukaCode: 0,
     pinCode: "",
     isNameCorrection: "No",
     correctionTypeId: null as number | null,
@@ -450,7 +453,107 @@ export const ConnectionForm = () => {
     loadCorrectionTypes();
   }, []);
 
+  const resetConsumerAutoFill = () => {
+  setFormData((prev) => ({
+    ...prev,
+    latitude: "",
+    longitude: "",
+    districtCode: 0,
+    talukaCode: 0,
+    villageCode: 0,
+    addressLine1: "",
+    avgMonthlyConsumption: "",
+    discomId: "",
+  }));
+};
 
+
+  useEffect(() => {
+  const isValidConsumerNumber = /^[0-9]{12}$/.test(formData.consumerId);
+  const isConfirmed =
+    confirmConsumerNumber === formData.consumerId &&
+    confirmConsumerNumber !== "";
+
+  const shouldFetch =
+    formData.isDiscomConsumer === "Yes" &&
+    isValidConsumerNumber &&
+    isConfirmed &&
+    !consumerNumberExists;
+
+  // 🔴 RESET when conditions break
+  if (!shouldFetch) {
+    resetConsumerAutoFill();
+    return;
+  }
+
+  // 🟢 FETCH when conditions are correct
+  const fetchData = async () => {
+    try {
+      const data = await fetchConsumerData(Number(confirmConsumerNumber));
+
+      if (!data || Object.keys(data).length === 0) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        latitude: data.latitude?.toString() || "",
+        longitude: data.longitude?.toString() || "",
+        districtCode: data.districtCode || 0,
+        talukaCode: data.talukaCode || 0,
+        villageCode: data.villageCode || 0,
+        addressLine1: data.address || "",
+        avgMonthlyConsumption: data.avgConsumption?.toString() || "",
+        discomId: data.bu?.toString() || "",
+      }));
+    } catch (err) {
+      console.error("Failed to fetch consumer data", err);
+    }
+  };
+
+  fetchData();
+}, [
+  confirmConsumerNumber,
+  formData.consumerId,
+  formData.isDiscomConsumer,
+  consumerNumberExists,
+]);
+
+useEffect(() => {
+  if (formData.districtCode) {
+    setDistrictCode(formData.districtCode);
+  }
+
+  if (formData.talukaCode) {
+    setTalukaCode(formData.talukaCode);
+  }
+
+  if (formData.villageCode) {
+    setVillageCode(formData.villageCode);
+  }
+
+}, [
+  formData.districtCode,
+  formData.talukaCode,
+  formData.villageCode,
+
+]);
+
+useEffect(() => {
+  if (!villageCode || villages.length === 0) return;
+
+  const selectedVillage = villages.find(
+    (v) => v.code === villageCode
+  );
+
+  if (!selectedVillage) return;
+
+  const pin = String(selectedVillage.pinCode || "");
+
+  setPinCode(pin);
+  setFormData((prev) => ({
+    ...prev,
+    pinCode: pin,
+  }));
+}, [villageCode, villages]);
 
 
 
@@ -570,7 +673,7 @@ export const ConnectionForm = () => {
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pinCode: selectedVillage.pinCode,
+        pinCode: String(selectedVillage.pinCode || ""),
       }));
     }
   };
@@ -639,7 +742,7 @@ export const ConnectionForm = () => {
       longitude: formData.longitude,
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
-      addressLine2: formData.addressLine2,
+      addressLine2: formData.addressLine2 || null,
       discomId: formData.discomId,
       isActive: formData.isActive,
       isOnboardedCustomers: formData.isOnboardedCustomers,
@@ -1102,21 +1205,6 @@ export const ConnectionForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   District <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="district"
-                  value={districtCode}
-                  onChange={handleDistrictChange}
-                  required
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{districtName || "Select District"}</option>
-                  {districts.map((district) => (
-                    <option key={district.nameEnglish} value={district.code}>
-                      {district.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
-
                 <ReusableDropdown
                   name="districtCode"
                   value={districtCode}
@@ -1139,20 +1227,6 @@ export const ConnectionForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Taluka <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="talukaCode"
-                  value={talukaCode}
-                  onChange={handleTalukaChange}
-                  required
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{talukaName || "Select Taluka"}</option>
-                  {talukas.map((taluka) => (
-                    <option key={taluka.nameEnglish} value={taluka.code}>
-                      {taluka.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
@@ -1173,21 +1247,8 @@ export const ConnectionForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Village
+                  Village <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="villageCode"
-                  value={villageCode}
-                  onChange={handleVillageChange}
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{villageName || "Select Village"}</option>
-                  {villages.map((village) => (
-                    <option key={village.code} value={village.code}>
-                      {village.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
