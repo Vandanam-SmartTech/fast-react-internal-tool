@@ -376,8 +376,8 @@ const Header: React.FC = () => {
                                 handleOrgChange(orgId, orgData.org_name, role)
                               }
                               className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${isSelected
-                                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
-                                  : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
+                                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
+                                : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
                                 }`}
                             >
                               <div className="flex items-center justify-between gap-3">
@@ -440,7 +440,8 @@ const Header: React.FC = () => {
                   {/* Header */}
                   <div className="px-3 sm:px-4 py-3 border-b border-secondary-100 dark:border-secondary-700 flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="relative group w-10 h-10 sm:w-12 sm:h-12">
+                    <div className="relative group w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+
                       {/* Avatar */}
                       <div className="w-full h-full bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
                         {profilePhoto ? (
@@ -629,14 +630,20 @@ const Header: React.FC = () => {
 
 
                     {/* User Info */}
-                    <div>
-                      <div className="font-medium text-secondary-900 dark:text-secondary-100 text-sm">
-                        {userClaims?.name_as_per_gov_id}
+                    {/* User Info */}
+                    <div className="min-w-0">
+                      <div
+                        className="font-medium text-secondary-900 dark:text-secondary-100 text-sm truncate"
+                        title={userClaims?.name_as_per_gov_id}
+                      >
+                        {userClaims?.name_as_per_gov_id || "NA"}
                       </div>
-                      <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300">
-                        {isSuperAdmin ? 'Super Admin' : selectedOrgName}
+
+                      <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300 truncate">
+                        {isSuperAdmin ? "Super Admin" : selectedOrgName}
                       </div>
                     </div>
+
                   </div>
 
                   {/* Actions */}
