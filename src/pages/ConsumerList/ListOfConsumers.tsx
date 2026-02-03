@@ -31,7 +31,8 @@ const ListOfConsumers: React.FC = () => {
   const [totalCustomers, setTotalCustomers] = useState(0);
 
   const [villages, setVillages] = useState<any[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<number | "">("");
+  const [selectedVillage, setSelectedVillage] = useState<string>("");
+
 
 
   // refs to handle debounced searching and race conditions
@@ -103,6 +104,16 @@ const ListOfConsumers: React.FC = () => {
         });
     }
   }, [userRoleFromLocalStorage, userInfo?.deptCode]);
+
+  useEffect(() => {
+  if (!isInitialized) return;
+
+  // Only BDO reacts to village change
+  if (userInfo?.role !== "ROLE_BDO") return;
+
+  loadConsumers(0); // reset to first page
+}, [selectedVillage, isInitialized, userInfo?.role]);
+
 
 
 
@@ -189,37 +200,58 @@ const ListOfConsumers: React.FC = () => {
       let orgId = selectedOrgId ?? null;
       let agencyId = selectedAgencyId ?? null;
       let userId = selectedUserId ?? null;
-      let deptCode = userInfo.deptCode ?? null;
+      let deptCode: number | null = null;
+
+      let effectiveUserRole = userRole || userInfo?.role || null;
+
+
+      if (userInfo?.role === "ROLE_BDO") {
+        if (selectedVillage !== "") {
+          deptCode = Number(selectedVillage);
+          effectiveUserRole = "ROLE_GRAMSEVAK";
+        } else {
+          deptCode = userInfo?.deptCode ?? null;
+          effectiveUserRole = "ROLE_BDO";
+        }
+      }
+
 
       if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
         orgId = userInfo.orgId;
+        effectiveUserRole = "ROLE_ORG_ADMIN";
       }
 
       if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
         orgId = null;
+        effectiveUserRole = "ROLE_AGENCY_ADMIN";
       }
 
       if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
         orgId = userInfo.orgId;
+        effectiveUserRole = "ROLE_ORG_STAFF";
       }
 
       if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
+        effectiveUserRole = "ROLE_AGENCY_STAFF";
         orgId = null;
       }
 
       if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
         orgId = userInfo.orgId;
+        effectiveUserRole = "ROLE_ORG_REPRESENTATIVE"
       }
 
       if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
         orgId = userInfo.orgId;
         deptCode = userInfo.deptCode;
+        effectiveUserRole = "ROLE_GRAMSEVAK"
       }
 
       if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
+        effectiveUserRole = "ROLE_AGENCY_REPRESENTATIVE"
         orgId = null;
       }
 
@@ -227,7 +259,7 @@ const ListOfConsumers: React.FC = () => {
       const params = {
         orgId,
         agencyId,
-        userRole: userRole || userInfo?.role || null,
+        userRole: userRole || effectiveUserRole || null,
         userId,
         isGharkulCustomer: false,
         deptCode,
@@ -279,7 +311,14 @@ const ListOfConsumers: React.FC = () => {
         let orgId = selectedOrgId ?? null;
         let agencyId = selectedAgencyId ?? null;
         let userId = selectedUserId ?? null;
-        let deptCode = userInfo.deptCode ?? null;
+        let deptCode: number | null = null;
+
+        if (userInfo?.role === "ROLE_BDO") {
+          deptCode =
+            selectedVillage !== ""
+              ? Number(selectedVillage)
+              : userInfo?.deptCode ?? null;
+        }
 
         if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
           orgId = userInfo.orgId;
@@ -656,30 +695,25 @@ const ListOfConsumers: React.FC = () => {
                 </label>
               </div>)}
 
-            {/* {userRoleFromLocalStorage === "ROLE_BDO" && (
+            {userRoleFromLocalStorage === "ROLE_BDO" && (
               <div className="flex items-center gap-2 whitespace-nowrap">
-                <label
-                  htmlFor="villageSelect"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Select Village
-                </label>
 
                 <select
                   id="villageSelect"
                   value={selectedVillage}
-                  onChange={(e) => setSelectedVillage(Number(e.target.value))}
-                  className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => setSelectedVillage(e.target.value)}
+                  className="block w-full appearance-none p-2 pr-32 border rounded-md shadow-sm focus:border-blue-500"
                 >
                   <option value="">All Villages</option>
                   {villages.map((village) => (
                     <option key={village.code} value={village.code}>
-                      {village.name_en}
+                      {village.nameEnglish}
                     </option>
                   ))}
                 </select>
+
               </div>
-            )} */}
+            )}
 
 
             <div className="flex gap-4">

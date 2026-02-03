@@ -220,13 +220,11 @@ const GramPanchayatDashboard: React.FC = () => {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+        {/* <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
           Management Tools
-        </h2>
-      {/* Stats Cards */}
+        </h2> */}
 
-            {/* Dashboard Items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {dashboardItems.map((item, index) => (
             <Card
               key={index}
@@ -237,36 +235,29 @@ const GramPanchayatDashboard: React.FC = () => {
               <CardBody className="p-3 md:p-4 flex items-center">
                 <div className="flex items-center gap-2 w-full">
 
-                  {/* Icon */}
                   <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
                     {item.icon}
                   </div>
 
-                  {/* Text Content */}
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
 
-                    {/* Title */}
                     <h3 className="font-semibold text-secondary-900
                      text-sm sm:text-base lg:text-lg
                      leading-tight mb-0.5">
                       {item.title}
                     </h3>
 
-                    {/* Description */}
                     <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2 mb-1">
                       {item.description}
                     </p>
-
                   </div>
-
                 </div>
               </CardBody>
-
             </Card>
         ))}
-      </div>
+      </div> */}
 
       <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
           Customer Records
