@@ -293,8 +293,12 @@ const Header: React.FC = () => {
                 <div className="flex flex-col ml-[40px] md:ml-[0px] lg:ml-[0px]">
                   <span className="font-semibold text-sm">{selectedOrgName}</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">
-                    {selectedRole.replace('ROLE_', '').replace('_', ' ')}
+                    {{
+                      ROLE_BDO: "Panchayat Samiti Adhikari",
+                      ROLE_GRAMSEVAK: "Gram Adhikari",
+                    }[selectedRole] || selectedRole.replace("ROLE_", "").replace("_", " ")}
                   </span>
+
                 </div>
               </div>
             )}

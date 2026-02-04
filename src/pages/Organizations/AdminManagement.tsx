@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Building, Users, Shield, Edit, Eye, Plus, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, Eye, Plus } from 'lucide-react';
 import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole, fetchAllUsersByOrgId } from '../../services/organizationService';
-import { createRole, updateRole, deleteRole, RoleDto } from '../../services/roleService';
+import { createRole, RoleDto } from '../../services/roleService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers, assignUserRole } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
@@ -13,7 +13,7 @@ const AdminManagement: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
-  const [allRoles, setAllRoles] = useState([]);
+  const [, setAllRoles] = useState([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [newRole, setNewRole] = useState({ name: '' });
   const [editingRole, setEditingRole] = useState<RoleDto | null>(null);

@@ -464,6 +464,7 @@ export const ConnectionForm = () => {
     addressLine1: "",
     avgMonthlyConsumption: "",
     discomId: "",
+    billedTo: "",
   }));
 };
 
@@ -503,6 +504,7 @@ export const ConnectionForm = () => {
         addressLine1: data.address || "",
         avgMonthlyConsumption: data.avgConsumption?.toString() || "",
         discomId: data.bu?.toString() || "",
+        billedTo: data.consumerName || "",
       }));
     } catch (err) {
       console.error("Failed to fetch consumer data", err);

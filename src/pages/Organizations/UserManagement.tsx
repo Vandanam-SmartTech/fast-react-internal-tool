@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, User, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
 import { fetchOrganizations, Organization, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
@@ -363,7 +363,7 @@ const UserManagement: React.FC = () => {
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-4">
+      <div className="flex items-center justify-between gap-1 mb-2">
         {/* Title */}
         <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-1 sm:gap-2">
           <Users className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -375,7 +375,7 @@ const UserManagement: React.FC = () => {
           variant="primary"
           onClick={() => navigate("/user-form")}
           leftIcon={<Plus className="h-4 w-4 sm:h-4 sm:w-4" />}
-          className="px-2.5 py-1.5 sm:px-4 sm:py-3 text-sm sm:text-base shrink-0"
+          className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm sm:text-base shrink-0"
         >
           {/* Mobile text */}
           <span className="sm:hidden">Add</span>
