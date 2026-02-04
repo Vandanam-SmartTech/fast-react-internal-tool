@@ -292,7 +292,7 @@ const AdminManagement: React.FC = () => {
       let allUsers = [];
 
       if (userRole === "ROLE_SUPER_ADMIN") {
-        // Super Admin can see all users
+        
         allUsers = await fetchAllUsers();
       } else if (["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(userRole)) {
         // Org/Agency Admins can see users within their organization only
