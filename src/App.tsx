@@ -328,11 +328,7 @@ const AppContent: React.FC = () => {
                 </PrivateRoute>
               }
             />
-    
 
-
-
-            {/* Consumer Routes */}
             <Route
               path="/onboarded-consumers"
               element={
