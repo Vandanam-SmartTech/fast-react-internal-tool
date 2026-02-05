@@ -158,10 +158,10 @@ const Login = () => {
       case 'ROLE_CUSTOMER':
         navigate('/manage-customers');
         break;
-      case 'ROLE_BDO':
+      case 'ROLE_PANCHAYAT_SAMITI_ADHIKARI':
         navigate('/bdo-dashboard');
         break;
-      case 'ROLE_GRAMSEVAK':
+      case 'ROLE_GRAM_ADHIKARI':
         navigate('/grampanchayat-dashboard');
         break;
       default:
