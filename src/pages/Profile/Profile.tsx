@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
+import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { fetchConsumersWithConnections, searchCustomers, fetchVillages } from "../../services/customerRequisitionService";
+import { fetchConsumersWithConnections, searchCustomers, fetchVillages, fetchConsumersWithConnectionsOptimized } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
@@ -8,7 +8,6 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import { deprecate } from "util";
 
 interface Consumer {
   id: number;
@@ -16,7 +15,7 @@ interface Consumer {
   govIdName: string;
   emailAddress: string;
   mobileNumber: string;
-  connections?: { id: number; consumerId: string; customerId: number; gharkulNumber: string }[];
+  connectionData?: { id: number; consumerId: string; customerId: number; gharkulNumber: string }[];
 }
 
 
@@ -33,6 +32,8 @@ const ListOfConsumers: React.FC = () => {
 
   const [villages, setVillages] = useState<any[]>([]);
   const [selectedVillage, setSelectedVillage] = useState<string>("");
+
+  const [hasMore, setHasMore] = useState(true);
 
 
 
@@ -107,13 +108,13 @@ const ListOfConsumers: React.FC = () => {
   }, [userRoleFromLocalStorage, userInfo?.deptCode]);
 
   useEffect(() => {
-  if (!isInitialized) return;
+    if (!isInitialized) return;
 
-  // Only BDO reacts to village change
-  if (userInfo?.role !== "ROLE_BDO") return;
+    // Only BDO reacts to village change
+    if (userInfo?.role !== "ROLE_BDO") return;
 
-  loadConsumers(0); // reset to first page
-}, [selectedVillage, isInitialized, userInfo?.role]);
+    loadConsumers(0); // reset to first page
+  }, [selectedVillage, isInitialized, userInfo?.role]);
 
 
 
@@ -264,15 +265,20 @@ const ListOfConsumers: React.FC = () => {
         userId,
         isGharkulCustomer: false,
         deptCode,
+        limit: 9,
       };
 
       console.log("Fetching consumers with params:", params);
 
-      const data = await fetchConsumersWithConnections(page, params);
+      const data = await fetchConsumersWithConnectionsOptimized(page,9, params);
       setConsumers(data.content);
-      setTotalPages(data.totalPages);
-      setTotalCustomers(data.totalElements);
+
+      // ✅ Load-more logic
+      setHasMore(data.content.length > 0);
       setCurrentPage(page);
+      // setTotalPages(data.totalPages);
+      // setTotalCustomers(data.totalElements);
+      // setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
@@ -314,22 +320,22 @@ const ListOfConsumers: React.FC = () => {
         let userId = selectedUserId ?? null;
         let deptCode: number | null = null;
 
-      let effectiveUserRole = userRole || userInfo?.role || null;
+        let effectiveUserRole = userRole || userInfo?.role || null;
 
 
-      if (userInfo?.role === "ROLE_BDO") {
-        if (selectedVillage !== "") {
-          deptCode = Number(selectedVillage);
-          effectiveUserRole = "ROLE_GRAMSEVAK";
-        } else {
-          deptCode = userInfo?.deptCode ?? null;
-          effectiveUserRole = "ROLE_BDO";
+        if (userInfo?.role === "ROLE_BDO") {
+          if (selectedVillage !== "") {
+            deptCode = Number(selectedVillage);
+            effectiveUserRole = "ROLE_GRAMSEVAK";
+          } else {
+            deptCode = userInfo?.deptCode ?? null;
+            effectiveUserRole = "ROLE_BDO";
+          }
         }
-      }
 
         if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
           orgId = userInfo.orgId;
-          effectiveUserRole ="ROLE_ORG_ADMIN";
+          effectiveUserRole = "ROLE_ORG_ADMIN";
         }
         if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
@@ -338,7 +344,7 @@ const ListOfConsumers: React.FC = () => {
         }
         if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
           orgId = userInfo.orgId;
-          effectiveUserRole= "ROLE_ORG_STAFF";
+          effectiveUserRole = "ROLE_ORG_STAFF";
         }
         if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
           agencyId = userInfo.orgId;
@@ -422,78 +428,40 @@ const ListOfConsumers: React.FC = () => {
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, [isInitialized]);
 
-  const renderPagination = () => {
-    if (searchQuery.trim() !== "") return null;
+const renderPagination = () => {
+  if (searchQuery.trim() !== "") return null;
 
-    const pages = [];
-    const maxVisiblePages = 5;
+  return (
+    <div className="flex justify-center gap-3 mt-4">
+      {/* Previous */}
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={loading || currentPage === 0}
+        onClick={() => loadConsumers(currentPage - 1)}
+      >
+        Previous
+      </Button>
 
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 0; i < totalPages; i++) {
-        pages.push(
-          <Button
-            key={i}
-            variant={i === currentPage ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setCurrentPage(i)}
-            className="min-w-[40px]"
-          >
-            {i + 1}
-          </Button>
-        );
-      }
-    } else {
-      // First page
-      pages.push(
-        <Button
-          key="first"
-          variant={currentPage === 0 ? "primary" : "outline"}
-          size="sm"
-          onClick={() => setCurrentPage(0)}
-        >
-          1
-        </Button>
-      );
+      {/* Page info */}
+      <span className="text-sm flex items-center px-2">
+        Page {currentPage + 1}
+      </span>
 
-      // Ellipsis if needed
-      if (currentPage > 2) {
-        pages.push(<span key="dots1" className="px-2">...</span>);
-      }
+      {/* Next */}
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={loading || !hasMore}
+        onClick={() => loadConsumers(currentPage + 1)}
+      >
+        Next
+      </Button>
+    </div>
+  );
+};
 
-      // Current page and neighbors
-      for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages - 2, currentPage + 1); i++) {
-        pages.push(
-          <Button
-            key={i}
-            variant={i === currentPage ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setCurrentPage(i)}
-          >
-            {i + 1}
-          </Button>
-        );
-      }
 
-      // Ellipsis if needed
-      if (currentPage < totalPages - 3) {
-        pages.push(<span key="dots2" className="px-2">...</span>);
-      }
-
-      // Last page
-      pages.push(
-        <Button
-          key="last"
-          variant={currentPage === totalPages - 1 ? "primary" : "outline"}
-          size="sm"
-          onClick={() => setCurrentPage(totalPages - 1)}
-        >
-          {totalPages}
-        </Button>
-      );
-    }
-
-    return pages;
-  };
 
   const renderConsumerCard = (consumer: Consumer) => (
     <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -539,13 +507,13 @@ const ListOfConsumers: React.FC = () => {
         </div>
 
         {/* Connections Section  */}
-        {consumer.connections && consumer.connections.length > 0 && (
+        {consumer.connectionData && consumer.connectionData.length > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between mb-1.5">
               <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-1.5">
                 <Zap className="w-4 h-4" />
-                {consumer.connections?.length || 0}{" "}
-                {(consumer.connections?.length || 0) === 1 ? "Connection" : "Connections"}
+                {consumer.connectionData?.length || 0}{" "}
+                {(consumer.connectionData?.length || 0) === 1 ? "Connection" : "Connections"}
 
               </h4>
 
@@ -567,7 +535,7 @@ const ListOfConsumers: React.FC = () => {
               </Button>
             </div>
 
-            {consumer.connections.map((connection, index) => (
+            {consumer.connectionData.map((connection, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
@@ -651,7 +619,7 @@ const ListOfConsumers: React.FC = () => {
           </div>
         )}
 
-        {consumer.connections && consumer.connections.length === 0 && (
+        {consumer.connectionData && consumer.connectionData.length === 0 && (
           <div className="mt-4">
             <Button
               variant="outline"
@@ -970,7 +938,7 @@ const ListOfConsumers: React.FC = () => {
 
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-secondary-700 dark:text-secondary-300">
+        {/* <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
           ) : searchQuery.trim() === "" ? (
@@ -979,7 +947,7 @@ const ListOfConsumers: React.FC = () => {
             `Showing ${displayData.length} customer${displayData.length !== 1 ? "s" : ""}`
           )}
 
-        </div>
+        </div> */}
 
         {!loading && !isLoadingAll && displayData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">

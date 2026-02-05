@@ -385,6 +385,38 @@ export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: 
   }
 };
 
+export const fetchConsumersWithConnectionsOptimized = async (
+  page = 0,
+  limit = 9,
+  params: {
+    orgId?: number | null;
+    orgName?: string | null;
+    agencyId?: number | null;
+    agencyName?: string | null;
+    userRole?: string | null;
+    userId?: number | null;
+    isGharkulCustomer: boolean | null;
+    deptCode?: number | null;
+  }
+) => {
+  const crsAPI = getCrsAPI();
+
+  const response = await crsAPI.get(
+    "/api/customers/with-connections/paginatedoptimized",
+    {
+      params: { page, limit, ...params },
+    }
+  );
+
+  return {
+    content: response.data,
+    currentPage: page,
+    size: response.data.length,
+    hasMore: response.data.length === limit, // 👈 important
+  };
+};
+
+
 
 export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
   const crsAPI = getCrsAPI();

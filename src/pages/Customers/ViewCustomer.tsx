@@ -141,10 +141,13 @@ export const ViewCustomer = () => {
   }, [customerId]);
 
 
+if (!customer)
+  return (
+    <div className="flex items-start justify-center h-screen">
+      <p>Loading...</p>
+    </div>
+  );
 
-
-
-  if (!customer) return <p>Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
