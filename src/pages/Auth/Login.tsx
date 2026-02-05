@@ -158,10 +158,10 @@ const Login = () => {
       case 'ROLE_CUSTOMER':
         navigate('/manage-customers');
         break;
-      case 'ROLE_PANCHAYAT_SAMITI_ADHIKARI':
+      case 'ROLE_BDO':
         navigate('/bdo-dashboard');
         break;
-      case 'ROLE_GRAM_ADHIKARI':
+      case 'ROLE_GRAMSEVAK':
         navigate('/grampanchayat-dashboard');
         break;
       default:
@@ -186,7 +186,7 @@ const Login = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-secondary-400/10 to-primary-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
       </div>
 
-      {/* Floating Particles Effect */}
+
       <div className="absolute inset-0">
         {[...Array(6)].map((_, i) => (
           <div
