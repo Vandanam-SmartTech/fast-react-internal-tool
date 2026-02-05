@@ -415,7 +415,6 @@ const UserOrgRoles: React.FC = () => {
               )}
 
 
-              {/* Agency Dropdown */}
               {userRole !== "ROLE_AGENCY_ADMIN" &&
                 !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_FABRICATOR", "ROLE_ORG_ELECTRICIAN"].includes(selectedRoleName) && (
                   <div>
