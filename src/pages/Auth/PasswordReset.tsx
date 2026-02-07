@@ -143,6 +143,7 @@ const PasswordReset: React.FC = () => {
               type="button"
               onClick={() => {
                 localStorage.removeItem('jwtToken');
+                localStorage.removeItem('refreshToken');
                 navigate('/login');
               }}
               className="text-sm text-blue-600 font-medium hover:underline"

@@ -5,7 +5,7 @@ import {
   generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
-  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId, getSavedSystemSpecPackages
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
 import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
-import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon, X } from "lucide-react";
+import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon, X, RefreshCw } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
 interface Inverter {
@@ -90,6 +90,7 @@ export const SystemSpecifications = () => {
   const [, setConnectionDetails] = useState<any>(null);
 
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
+  const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
   const [avgMonthlyConsumption, setAvgMonthlyConsumption] = useState<number | null>(null);
 
   const [materialOriginId, setMaterialOriginId] = useState<number | null>(null);
@@ -151,6 +152,12 @@ export const SystemSpecifications = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
+
+  const [stdSpecPackages, setStdSpecPackages] = useState<any[]>([]);
+
+  const [isLoadingStdSpecs, setIsLoadingStdSpecs] = useState(false);
+
+
 
   const tabs = [
     "Customer Details",
@@ -283,15 +290,17 @@ export const SystemSpecifications = () => {
         const data = await getConnectionByConnectionId(Number(connectionId));
         setConnectionDetails(data);
 
-        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null && data?.connectionTypeName) {
+        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null && data?.connectionTypeName && data?.isGharkulCustomer) {
           setPhaseTypeId(data.phaseTypeId);
           setAvgMonthlyConsumption(data.avgMonthlyConsumption);
-          setConnectionType(data.connectionTypeName)
+          setConnectionType(data.connectionTypeName);
+          setIsGharkulCustomer(!!data?.isGharkulCustomer);
           console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
         } else {
           setPhaseTypeId(null);
           setAvgMonthlyConsumption(null);
           setConnectionType("");
+          setIsGharkulCustomer(false);
         }
       } catch (error) {
         console.error("Failed to fetch connection details", error);
@@ -300,6 +309,28 @@ export const SystemSpecifications = () => {
 
     fetchConnection();
   }, [connectionId]);
+
+  useEffect(() => {
+    const fetchSystemSpecPackages = async () => {
+      if (isGharkulCustomer === null) return;
+
+      setIsLoadingStdSpecs(true);
+
+      try {
+        const packages = await getSavedSystemSpecPackages(isGharkulCustomer);
+        console.log("Fetched system spec packages:", packages);
+        setStdSpecPackages(packages);
+      } catch (error) {
+        console.error("Failed to fetch system spec packages", error);
+      } finally {
+        setIsLoadingStdSpecs(false);
+      }
+    };
+
+    fetchSystemSpecPackages();
+  }, [isGharkulCustomer]);
+
+
 
 
   const fetchSavedSpecs = async () => {
@@ -1395,7 +1426,7 @@ export const SystemSpecifications = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={(e) => {
                       if (canMarkFinal && !isFinalQuotation && secondaryIdForSpec) {
@@ -1437,13 +1468,72 @@ export const SystemSpecifications = () => {
     );
   };
 
+  const StdSpecCard = ({ stdSpec }: { stdSpec: any }) => {
+    return (
+      <div
+        onClick={() => {
+          handleSelectSpec(stdSpec);
+
+          setIsFormOpen(true);
+        }}
+        className="relative cursor-pointer border rounded-lg p-3 shadow transition
+      bg-gradient-to-br from-yellow-50 to-white border-yellow-400 hover:shadow-lg"
+      >
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-0.5">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex-1 truncate pr-2">
+            {stdSpec.panelBrandShortName}
+            <span className="text-sm font-medium text-gray-600">
+              {" "}({stdSpec.panelRatedWattageW}W)
+            </span>
+            <span className="text-gray-700"> - {stdSpec.systemCapacityKw} kW</span>
+          </h3>
+        </div>
+
+        <div className="space-y-0.5">
+          {stdSpec.inverters?.length > 0 ? (
+            stdSpec.inverters.map((inv: any, index: number) => (
+              <p key={index} className="text-sm text-gray-700">
+                ⚡ Inverter {index + 1}:{" "}
+                <span className="font-medium">{inv.inverterBrandName}</span>
+                {" "} - {inv.inverterCapacity} kW × {inv.inverterCount}
+              </p>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              No inverter details
+            </p>
+          )}
+
+          {stdSpec.inverters?.some((inv: any) => inv.gridTypeName === "Hybrid") && (
+            <p className="text-sm text-gray-700">
+              🔋 Battery:{" "}
+              <span className="font-medium">{stdSpec.batteryBrandName}</span>
+              {" "} - {stdSpec.batteryCapacityKw} kW
+            </p>
+          )}
+        </div>
+
+        <div className="mt-0.5">
+          <span className="text-sm font-semibold text-blue-800">
+            Total Cost: ₹
+            {((stdSpec.systemCost || 0) + (stdSpec.fabricationCost || 0))
+              .toLocaleString("en-IN")}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
 
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <div className="flex items-center gap-2">
+      <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 ${isGharkulCustomer ? "max-w-7xl" : "max-w-4xl"
+          }`}
+      >
+        <div className="flex items-center gap-2 mb-2">
           <button
             onClick={() =>
               navigate(-1)
@@ -1457,8 +1547,7 @@ export const SystemSpecifications = () => {
             System Specs Details
           </h1>
         </div>
-
-
+        {/* 
         <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
@@ -1519,7 +1608,7 @@ export const SystemSpecifications = () => {
               })}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {isLoadingSavedSpecs && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
@@ -1549,9 +1638,64 @@ export const SystemSpecifications = () => {
           </div>
         )}
 
-        <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            {/* Left side: Icon + Title */}
+        <div
+          className={`flex flex-col lg:flex-row gap-5 ${isGharkulCustomer ? "lg:items-start" : "lg:justify-center"
+            }`}
+        >
+          {/* Left card */}
+          {isGharkulCustomer && (
+            <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                Standard Packages
+              </h2>
+
+              <div className="relative">
+                {/* Right fade hint */}
+                {!isLoadingStdSpecs && stdSpecPackages.length > 1 && (
+                  <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white pointer-events-none lg:hidden" />
+                )}
+
+                <div
+                  className="
+          flex gap-3
+          overflow-x-auto pb-2
+          snap-x snap-mandatory
+          lg:flex-col lg:overflow-visible
+        "
+                >
+                  {isLoadingStdSpecs ? (
+                    <div className="flex justify-center items-center py-6 gap-2 min-w-full">
+                      <RefreshCw className="w-6 h-6 animate-spin text-gray-600" />
+                      Loading...
+                    </div>
+                  ) : stdSpecPackages.length > 0 ? (
+                    stdSpecPackages.map((spec) => (
+                      <div
+                        key={spec.id}
+                        className="min-w-[90%] sm:min-w-[80%] lg:min-w-0 snap-start"
+                      >
+                        <StdSpecCard stdSpec={spec} />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">
+                      No standard packages available
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+          <div
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 ${isGharkulCustomer ? "lg:w-3/4" : ""
+              }`}
+          >
+
+            {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
                 <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
@@ -1559,914 +1703,938 @@ export const SystemSpecifications = () => {
               <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
             </div>
 
-
           </div>
 
-          <div className="border-b border-gray-200 mb-4" />
+          <div className="border-b border-gray-200 mb-4" /> */}
 
-          {savedSpecs.length > 0 && (() => {
+            {savedSpecs.length > 0 && (() => {
 
-            const editableSpecs = savedSpecs.filter(s => s.isRunningCopy);
+              const editableSpecs = savedSpecs.filter(s => s.isRunningCopy);
 
-            const lockedSpecs = [...savedSpecs]
-              .filter(s => !s.isRunningCopy)
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-              );
+              const lockedSpecs = [...savedSpecs]
+                .filter(s => !s.isRunningCopy)
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                );
 
-            return (
-              <>
-                {/* ================= MOBILE VIEW ================= */}
-                <div className="block md:hidden space-y-4 mb-4">
+              return (
+                <>
+                  {/* ================= MOBILE VIEW ================= */}
+                  <div className="block md:hidden space-y-4 mb-4">
 
-                  {/* Editable Spec - Full Width */}
-                  {editableSpecs.map((spec) => (
-                    <SpecCard
-                      key={spec.id}
-                      spec={spec}
-                    />
-                  ))}
+                    {/* Editable Spec - Full Width */}
+                    {editableSpecs.map((spec) => (
+                      <SpecCard
+                        key={spec.id}
+                        spec={spec}
+                      />
+                    ))}
 
-                  {/* Locked Specs - Horizontal Scroll */}
-                  {lockedSpecs.length > 0 && (
-                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2">
-                      {lockedSpecs.map((spec) => (
-                        <div key={spec.id} className="min-w-full snap-center">
+                    {/* Locked Specs */}
+                    {lockedSpecs.length > 0 && (
+                      <div className="mt-3"> {/* ⬅ ensures it starts BELOW editable cards */}
 
-                          <SpecCard spec={spec} />
+                        <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory">
+                          {lockedSpecs.map((spec) => (
+                            <div
+                              key={spec.id}
+                              className="
+              min-w-[95%]
+              sm:min-w-[85%]
+              snap-start
+            "
+                            >
+                              <SpecCard spec={spec} />
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+                    )}
+
+                  </div>
+
+
+                  {/* ================= DESKTOP VIEW ================= */}
+                  <div className="hidden md:grid grid-cols-2 gap-2 mb-4">
+                    {[...editableSpecs, ...lockedSpecs].map((spec) => (
+                      <SpecCard
+                        key={spec.id}
+                        spec={spec}
+                      />
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+
+
+
+
+            {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="md:col-span-1">
+
+                <label className="block text-sm font-medium text-gray-700">Installation Space</label>
+
+                <div className="mt-1 relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsSpaceListOpen(!isSpaceListOpen)}
+                    className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <span className="flex items-center gap-2">
+
+                      <span>
+                        {formData.installationSpaceType
+                          ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
+                          : "Installations Not Available"}
+                      </span>
+                    </span>
+                    <svg className={`w-4 h-4 text-gray-500 transition-transform ${isSpaceListOpen ? "rotate-180" : "rotate-0"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isSpaceListOpen && (
+                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-auto">
+                      {availableSpaceTypes.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-gray-500">Installations Not Available</div>
+                      ) : (
+                        availableSpaceTypes.map((space) => (
+                          <div key={space.id} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
+                            <button
+                              type="button"
+                              className="text-left flex-1 flex items-center gap-2 text-sm text-gray-800"
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, installationSpaceType: space.installationSpaceType }));
+                                setSelectedSpace(space);
+                                setIsSpaceListOpen(false);
+                              }}
+                            >
+
+                              <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="ml-3 px-2 py-1 text-xs rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700"
+                              onClick={() => { setSelectedSpace(space); setShowModal(true); }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* ================= DESKTOP VIEW ================= */}
-                <div className="hidden md:grid grid-cols-2 gap-2 mb-4">
-                  {[...editableSpecs, ...lockedSpecs].map((spec) => (
-                    <SpecCard
-                      key={spec.id}
-                      spec={spec}
-                    />
-                  ))}
-                </div>
-              </>
-            );
-          })()}
+                {showModal && selectedSpace && (
+                  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
+                      <div className="absolute top-4 right-4 flex items-center space-x-4">
+                        {/* Edit Button */}
+                        <button
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-full shadow-sm transition-all"
+                          onClick={() =>
+                            navigate("/edit-installation", { state: { installationId: selectedSpace.id, connectionId: connectionId, consumerId: consumerId, customerId: customerId } })
+                          }
+                        >
+                          Edit
+                        </button>
 
 
+                        {/* Close Button */}
+                        <button
+                          className="text-gray-500 hover:text-gray-700 text-lg"
+                          onClick={() => setShowModal(false)}
+                        >
+                          ✖
+                        </button>
+                      </div>
+
+                      <h2 className="text-lg font-semibold mb-4">
+                        Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
+                      </h2>
+
+                      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+
+                        {(() => {
+                          const ew = selectedSpace.availableEastWestLengthFt;
+                          const sn = selectedSpace.availableSouthNorthLengthFt;
+
+                          let shapeClass = "w-16 h-16";
+                          if (ew > sn * 1.3) shapeClass = "w-24 h-16";
+                          else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
+
+                          return (
+                            <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
 
 
-          {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
+                                <span className="mr-1">N</span>
+                                <span className="text-base">↑</span>
+                              </div>
 
-            <div className="md:col-span-1">
+                              <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
+                                <span className="mb-[2px]">E</span>
+                                <span className="text-base">→</span>
+                              </div>
 
-              <label className="block text-sm font-medium text-gray-700">Installation Space</label>
+                              <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
+                                <span className="text-[10px] text-gray-800 font-semibold">
+                                  {ew * sn} ft²
+                                </span>
+                              </div>
 
-              <div className="mt-1 relative">
-                <button
-                  type="button"
-                  onClick={() => setIsSpaceListOpen(!isSpaceListOpen)}
-                  className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <span className="flex items-center gap-2">
 
-                    <span>
-                      {formData.installationSpaceType
-                        ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
-                        : "Installations Not Available"}
-                    </span>
-                  </span>
-                  <svg className={`w-4 h-4 text-gray-500 transition-transform ${isSpaceListOpen ? "rotate-180" : "rotate-0"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
+                                <span className="mr-1">←</span>
+                                <span>{ew} Ft</span>
+                                <span className="ml-1">→</span>
+                              </div>
 
-                {isSpaceListOpen && (
-                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-auto">
-                    {availableSpaceTypes.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-500">Installations Not Available</div>
-                    ) : (
-                      availableSpaceTypes.map((space) => (
-                        <div key={space.id} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
-                          <button
-                            type="button"
-                            className="text-left flex-1 flex items-center gap-2 text-sm text-gray-800"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, installationSpaceType: space.installationSpaceType }));
-                              setSelectedSpace(space);
-                              setIsSpaceListOpen(false);
-                            }}
-                          >
+                              <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
+                                <span>↑</span>
+                                <span>{sn} Ft</span>
+                                <span>↓</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
-                            <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="ml-3 px-2 py-1 text-xs rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700"
-                            onClick={() => { setSelectedSpace(space); setShowModal(true); }}
-                          >
-                            View
-                          </button>
+
+                        <div className="text-s text-gray-600 space-y-2">
+                          <div><strong>Structure to Inverter Distance:</strong> {selectedSpace.structureInverterDistanceFt || "..."} ft</div>
+                          <div><strong>Inverter to GenMeter Distance:</strong> {selectedSpace.inverterMeterDistanceFt || "..."} ft</div>
+                          <div><strong>Earthing Pit to Inverter Distance:</strong> {selectedSpace.inverterEarthDistanceFt || "..."} ft</div>
+                          <div><strong>Lightning Arrester to Ground Distance:</strong> {selectedSpace.arresterEarthDistanceFt || "..."} ft</div>
+                          <div><strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
+                          <div><strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
                         </div>
-                      ))
-                    )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+              <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
 
-              {showModal && selectedSpace && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
-                  <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
-                    <div className="absolute top-4 right-4 flex items-center space-x-4">
-                      {/* Edit Button */}
-                      <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-full shadow-sm transition-all"
-                        onClick={() =>
-                          navigate("/edit-installation", { state: { installationId: selectedSpace.id, connectionId: connectionId, consumerId: consumerId, customerId: customerId } })
-                        }
-                      >
-                        Edit
-                      </button>
-
-
-                      {/* Close Button */}
-                      <button
-                        className="text-gray-500 hover:text-gray-700 text-lg"
-                        onClick={() => setShowModal(false)}
-                      >
-                        ✖
-                      </button>
-                    </div>
-
-                    <h2 className="text-lg font-semibold mb-4">
-                      Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
-                    </h2>
-
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-
-                      {(() => {
-                        const ew = selectedSpace.availableEastWestLengthFt;
-                        const sn = selectedSpace.availableSouthNorthLengthFt;
-
-                        let shapeClass = "w-16 h-16";
-                        if (ew > sn * 1.3) shapeClass = "w-24 h-16";
-                        else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
-
-                        return (
-                          <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
-
-
-                            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
-                              <span className="mr-1">N</span>
-                              <span className="text-base">↑</span>
-                            </div>
-
-                            <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
-                              <span className="mb-[2px]">E</span>
-                              <span className="text-base">→</span>
-                            </div>
-
-                            <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
-                              <span className="text-[10px] text-gray-800 font-semibold">
-                                {ew * sn} ft²
-                              </span>
-                            </div>
-
-
-                            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
-                              <span className="mr-1">←</span>
-                              <span>{ew} Ft</span>
-                              <span className="ml-1">→</span>
-                            </div>
-
-                            <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
-                              <span>↑</span>
-                              <span>{sn} Ft</span>
-                              <span>↓</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-
-                      <div className="text-s text-gray-600 space-y-2">
-                        <div><strong>Structure to Inverter Distance:</strong> {selectedSpace.structureInverterDistanceFt || "..."} ft</div>
-                        <div><strong>Inverter to GenMeter Distance:</strong> {selectedSpace.inverterMeterDistanceFt || "..."} ft</div>
-                        <div><strong>Earthing Pit to Inverter Distance:</strong> {selectedSpace.inverterEarthDistanceFt || "..."} ft</div>
-                        <div><strong>Lightning Arrester to Ground Distance:</strong> {selectedSpace.arresterEarthDistanceFt || "..."} ft</div>
-                        <div><strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
-                        <div><strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
-
-              <button
-                type="button"
-                onClick={() =>
-                  navigate("/installation-form", {
-                    state: { connectionId, customerId, consumerId },
-                  })
-                }
-                className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Add New Installation</span>
-              </button>
-
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Grid Type
-              </label>
-              <ReusableDropdown
-                name="gridTypeId"
-                value={formData.gridTypeId ?? ""}
-                onChange={(val) => {
-                  const selectedId = val === "" ? null : Number(val);
-                  setGridTypeId(selectedId);
-                  handleChange({
-                    target: { name: "gridTypeId", value: selectedId },
-                  } as any);
-                }}
-                options={grids.map((grid) => ({
-                  value: grid.id,
-                  label: grid.gridType,
-                }))}
-                placeholder="Select Grid Type"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Material Origin Type
-              </label>
-              <ReusableDropdown
-                name="materialOriginId"
-                value={formData.materialOriginId ?? ""}
-                onChange={(val) => {
-                  const selectedId = val === "" ? null : Number(val);
-                  setMaterialOriginId(selectedId);
-                  handleChange({
-                    target: { name: "materialOriginId", value: selectedId },
-                  } as any);
-                }}
-                options={origins.map((origin) => ({
-                  value: origin.id,
-                  label: origin.originCode,
-                }))}
-                placeholder="Select Material Origin Type"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
-              <ReusableDropdown
-                name="orgPanelSpecId"
-                value={formData.orgPanelSpecId ?? ""}
-                onChange={(val) => {
-                  const selectedId = val === "" ? null : Number(val);
-                  setOrgPanelSpecId(selectedId);
-                  handleChange({
-                    target: { name: "orgPanelSpecId", value: selectedId },
-                  } as any);
-                }}
-
-                options={panels.map((panel) => {
-                  const parts = [
-                    panel.panelBrandName || null,
-                    panel.panelTypeName || null,
-                    panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
-                    panel.modelNumber ? `(${panel.modelNumber})` : null
-                  ];
-
-                  const label = parts.filter(Boolean).join(" - ");
-
-                  return {
-                    value: panel.id,
-                    label,
-                  };
-                })}
-
-                placeholder="Select PV System Brand"
-                className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
-              />
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
-              <ReusableDropdown
-                name="systemCapacityKw"
-                value={formData.systemCapacityKw ?? ""}
-                onChange={(val) => {
-                  const selectedValue = val === "" ? null : Number(val);
-                  setSystemCapacityKw(selectedValue);
-                  handleChange({
-                    target: { name: "systemCapacityKw", value: selectedValue },
-                  } as any);
-                }}
-                options={panelCapacities.map((panelCapacity) => ({
-                  value: panelCapacity,
-                  label: `${panelCapacity} kW`,
-                }))}
-                placeholder="Select PV System Capacity"
-                className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
-              />
-            </div>
-
-            <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
-
-            <div className="md:col-span-2">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3 flex-nowrap">
-                  <h3 className="text-base font-semibold text-gray-800 whitespace-nowrap">
-                    Inverter Details
-                  </h3>
-
-                  <button
-                    type="button"
-                    onClick={addNewInverter}
-                    disabled={
-                      formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false
-                    }
-                    className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap
-      ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
-                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                  >
-                    + Add More Inverter
-                  </button>
-                </div>
-
-
-                {formData.inverters.map((inv, index) => (
-                  <div
-                    key={index}
-                    className="md:col-span-2 grid grid-cols-12 gap-4 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
-                  >
-                    {formData.inverters.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeInverter(index)}
-                        className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                      >
-                        ✕
-                      </button>
-                    )}
-
-                    {/* Inverter Brand */}
-                    <div className="col-span-12 md:col-span-5">
-                      <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-                      <ReusableDropdown
-                        name="inverterBrandId"
-                        value={inv.inverterBrandId ?? ""}
-                        onChange={(val) =>
-                          handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
-                        }
-                        options={inverters.map((inv) => ({
-                          value: inv.inverterBrandId,
-                          label: inv.inverterBrandName,
-                        }))}
-                        placeholder="Select Inverter Brand"
-                      />
-                    </div>
-
-                    {/* Inverter Spec */}
-                    <div className="col-span-12 md:col-span-5">
-                      <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
-                      <ReusableDropdown
-                        name="orgInverterSpecId"
-                        value={inv.orgInverterSpecId ?? ""}
-                        onChange={(val) =>
-                          handleInverterChange(index, "orgInverterSpecId", val === "" ? null : Number(val))
-                        }
-
-                        options={(inverterCapacitiesMap[index] || []).map((spec) => {
-                          const parts = [
-                            spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
-                            spec.productWarranty ? `(${spec.productWarranty} )` : null,
-                            spec.almmModelNumber ? `(${spec.almmModelNumber})` : null
-                          ];
-
-                          const label = parts.filter(Boolean).join(" - ");
-
-                          return {
-                            value: spec.id,
-                            label,
-                          };
-                        })}
-                        disabled={!inv.inverterBrandId}
-                        placeholder="Select Inverter Spec"
-                      />
-                    </div>
-
-                    {/* Inverter Count */}
-                    <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
-                      <label className="block text-sm font-medium text-gray-700">Count</label>
-                      <div className="flex items-center border rounded-md shadow-sm bg-white">
-                        <button
-                          type="button"
-                          disabled={(inv.inverterCount ?? 1) <= 1}
-                          onClick={() =>
-                            handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
-                          }
-                          className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
-                            ? "text-gray-300 bg-gray-100 cursor-not-allowed"
-                            : "text-gray-600 hover:text-white hover:bg-red-500"
-                            }`}
-                        >
-                          −
-                        </button>
-
-                        <input
-                          type="text"
-                          name="inverterCount"
-                          inputMode="numeric"
-                          value={inv.inverterCount ?? 1}
-                          onChange={(e) => {
-                            const value = Math.max(Number(e.target.value) || 1, 1);
-                            handleInverterChange(index, "inverterCount", value);
-                          }}
-                          className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
-                          }
-                          className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-
-            {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Battery Brand
-                  </label>
-                  <ReusableDropdown
-                    name="batteryBrandId"
-                    value={formData.batteryBrandId ?? ""}
-                    onChange={(val) => {
-                      const selectedId = val === "" ? null : Number(val);
-                      setBatteryBrandId(selectedId);
-                      handleChange({
-                        target: { name: "batteryBrandId", value: selectedId },
-                      });
-                    }}
-                    options={batteryBrands.map((batteryBrand) => ({
-                      value: batteryBrand.brandId,
-                      label: batteryBrand.brandName,
-                    }))}
-                    placeholder="Select Battery Brand"
-                    className="mt-1"
-                  />
-
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
-                  <ReusableDropdown
-                    name="orgBatterySpecId"
-                    value={formData.orgBatterySpecId ?? ""}
-                    onChange={(val) => {
-                      const selectedId = val === "" ? null : Number(val);
-                      setOrgBatterySpecId(selectedId);
-                      handleChange({
-                        target: { name: "orgBatterySpecId", value: selectedId },
-                      });
-                    }}
-                    // options={batteryCapacities.map((batteryCapacity) => ({
-                    //   value: batteryCapacity.id,
-                    //   label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
-                    // }))}
-                    options={batteryCapacities.map((b) => {
-                      const parts = [
-                        b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
-                        b.voltage ? `${b.voltage} V` : null,
-                        b.modelNumber || null,
-                        b.productWarranty ? `(${b.productWarranty} )` : null
-                      ];
-
-                      // Filter out null/empty values and join with " - "
-                      const label = parts.filter(Boolean).join(" - ");
-
-                      return {
-                        value: b.id,
-                        label,
-                      };
-                    })}
-
-                    placeholder="Select Battery Capacity"
-                    className="mt-1"
-                  />
-
-                </div>
-              </>
-            )}
-
-            <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
-
-            <div className="md:col-span-2">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-semibold text-gray-800">Pipe Details</h3>
-                  <button
-                    type="button"
-                    onClick={addNewPipe}
-                    disabled={
-                      formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false
-                    }
-                    className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
-                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                  >
-                    + Add More Pipe
-                  </button>
-                </div>
-
-                {formData.pipes.map((pipe, index) => (
-                  <div
-                    key={index}
-                    className="md:col-span-2 grid grid-cols-12 items-center gap-6 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
-                  >
-                    {formData.pipes.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removePipe(index)}
-                        className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                      >
-                        ✕
-                      </button>
-                    )}
-
-
-
-                    {/* LEFT EMPTY SPACE (2 columns) */}
-                    <div className="hidden md:block md:col-span-2"></div>
-
-                    {/* Pipe Specification - 5 columns */}
-                    <div className="col-span-12 md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
-                      <ReusableDropdown
-                        name="orgPipeSpecId"
-                        value={pipe.orgPipeSpecId ?? ""}
-                        onChange={(val) =>
-                          handlePipeChange(index, "orgPipeSpecId", val === "" ? null : Number(val))
-                        }
-                        options={pipes.map((p) => ({
-                          value: p.id,
-                          label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
-                        }))}
-
-                        placeholder="Select Pipe Specification"
-                      />
-                    </div>
-
-                    {/* Pipe Count - 3 columns */}
-                    <div className="col-span-12 md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Count</label>
-                      <div className="flex items-center border rounded-md shadow-sm bg-white">
-                        <button
-                          type="button"
-                          disabled={(pipe.pipeCount ?? 1) <= 1}
-                          onClick={() =>
-                            handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
-                          }
-                          className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
-                            ? "text-gray-300 bg-gray-100 cursor-not-allowed"
-                            : "text-gray-600 hover:text-white hover:bg-red-500"
-                            }`}
-                        >
-                          −
-                        </button>
-
-                        <input
-                          type="text"
-                          name="pipeCount"
-                          inputMode="numeric"
-                          value={pipe.pipeCount ?? 1}
-                          onChange={(e) => {
-                            const value = Math.max(Number(e.target.value) || 1, 1);
-                            handlePipeChange(index, "pipeCount", value);
-                          }}
-                          className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
-                          }
-                          className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* RIGHT EMPTY SPACE (2 columns) */}
-                    <div className="hidden md:block md:col-span-2"></div>
-                  </div>
-                ))}
-
-              </div>
-            </div>
-
-            <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
-
-            <div className="col-span-full space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    name="hasWaterSprinkler"
-                    checked={formData.hasWaterSprinkler || false}
-                    onChange={handleChange}
-                    className="h-5 w-5 text-blue-600"
-                  />
-                  <span className="text-base text-gray-800">Water Sprinkler System</span>
-                </label>
-
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    name="hasHeavydutyRamp"
-                    checked={formData.hasHeavydutyRamp || false}
-                    onChange={handleChange}
-                    className="h-5 w-5 text-blue-600"
-                  />
-                  <span className="text-base text-gray-800">Heavy Duty Ramp</span>
-                </label>
-
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    name="hasHeavydutyStairs"
-                    checked={formData.hasHeavydutyStairs || false}
-                    onChange={handleChange}
-                    className="h-5 w-5 text-blue-600"
-                  />
-                  <span className="text-base text-gray-800">Heavy Duty Stairs</span>
-                </label>
-              </div>
-            </div>
-
-
-            <div className="col-span-full space-y-4 mt-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
-                </div>
-
-                {/* Horizontal line */}
-                <div className="mt-2 border-b border-gray-200"></div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Solar System Cost (₹)
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    name="systemCost"
-                    value={
-                      isEditing
-                        ? (formData.systemCost === 0 ? "" : String(formData.systemCost))
-                        : formatIndianNumber(formData.systemCost)
-                    }
-
-                    onFocus={() => setIsEditing(true)}
-                    onBlur={() => setIsEditing(false)}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData({
-                        ...formData,
-                        systemCost: rawValue,
-                      });
-                    }}
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Solar System Cost"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Fabrication Cost (₹)
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    name="fabricationCost"
-                    value={
-                      isEditingFabrication
-                        ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
-                        : formatIndianNumber(formData.fabricationCost)
-                    }
-
-                    onFocus={() => setIsEditingFabrication(true)}
-                    onBlur={() => setIsEditingFabrication(false)}
-                    onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
-                      setFormData({
-                        ...formData,
-                        fabricationCost: rawValue,
-                      });
-                    }}
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Fabrication Cost"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Total Cost (₹)
-                  </label>
-                  <input
-                    type="text"
-                    name="totalCost"
-                    value={formatIndianNumber(formData.totalCost)}
-                    readOnly
-                    className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Total Cost"
-                  />
-                </div>
-              </div>
-
-
-              <div className="flex flex-wrap gap-4 justify-center">
                 <button
                   type="button"
-                  onClick={handleSaveButtonClick}
-                  disabled={isSubmitting}
-                  className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
+                  onClick={() =>
+                    navigate("/installation-form", {
+                      state: { connectionId, customerId, consumerId },
+                    })
+                  }
+                  className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  <span>Add New Installation</span>
+                </button>
+
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Grid Type
+                </label>
+                <ReusableDropdown
+                  name="gridTypeId"
+                  value={formData.gridTypeId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setGridTypeId(selectedId);
+                    handleChange({
+                      target: { name: "gridTypeId", value: selectedId },
+                    } as any);
+                  }}
+                  options={grids.map((grid) => ({
+                    value: grid.id,
+                    label: grid.gridType,
+                  }))}
+                  placeholder="Select Grid Type"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Material Origin Type
+                </label>
+                <ReusableDropdown
+                  name="materialOriginId"
+                  value={formData.materialOriginId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setMaterialOriginId(selectedId);
+                    handleChange({
+                      target: { name: "materialOriginId", value: selectedId },
+                    } as any);
+                  }}
+                  options={origins.map((origin) => ({
+                    value: origin.id,
+                    label: origin.originCode,
+                  }))}
+                  placeholder="Select Material Origin Type"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
+                <ReusableDropdown
+                  name="orgPanelSpecId"
+                  value={formData.orgPanelSpecId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setOrgPanelSpecId(selectedId);
+                    handleChange({
+                      target: { name: "orgPanelSpecId", value: selectedId },
+                    } as any);
+                  }}
+
+                  options={panels.map((panel) => {
+                    const parts = [
+                      panel.panelBrandName || null,
+                      panel.panelTypeName || null,
+                      panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
+                      panel.modelNumber ? `(${panel.modelNumber})` : null
+                    ];
+
+                    const label = parts.filter(Boolean).join(" - ");
+
+                    return {
+                      value: panel.id,
+                      label,
+                    };
+                  })}
+
+                  placeholder="Select PV System Brand"
+                  className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
+                />
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
+                <ReusableDropdown
+                  name="systemCapacityKw"
+                  value={formData.systemCapacityKw ?? ""}
+                  onChange={(val) => {
+                    const selectedValue = val === "" ? null : Number(val);
+                    setSystemCapacityKw(selectedValue);
+                    handleChange({
+                      target: { name: "systemCapacityKw", value: selectedValue },
+                    } as any);
+                  }}
+                  options={panelCapacities.map((panelCapacity) => ({
+                    value: panelCapacity,
+                    label: `${panelCapacity} kW`,
+                  }))}
+                  placeholder="Select PV System Capacity"
+                  className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+                />
+              </div>
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="md:col-span-2">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-nowrap">
+                    <h3 className="text-base font-semibold text-gray-800 whitespace-nowrap">
+                      Inverter Details
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={addNewInverter}
+                      disabled={
+                        formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false
+                      }
+                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap
+      ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
+                          ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                    >
+                      + Add More Inverter
+                    </button>
+                  </div>
+
+
+                  {formData.inverters.map((inv, index) => (
+                    <div
+                      key={index}
+                      className="md:col-span-2 grid grid-cols-12 gap-4 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                    >
+                      {formData.inverters.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeInverter(index)}
+                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      {/* Inverter Brand */}
+                      <div className="col-span-12 md:col-span-5">
+                        <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+                        <ReusableDropdown
+                          name="inverterBrandId"
+                          value={inv.inverterBrandId ?? ""}
+                          onChange={(val) =>
+                            handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
+                          }
+                          options={inverters.map((inv) => ({
+                            value: inv.inverterBrandId,
+                            label: inv.inverterBrandName,
+                          }))}
+                          placeholder="Select Inverter Brand"
+                        />
+                      </div>
+
+                      {/* Inverter Spec */}
+                      <div className="col-span-12 md:col-span-5">
+                        <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
+                        <ReusableDropdown
+                          name="orgInverterSpecId"
+                          value={inv.orgInverterSpecId ?? ""}
+                          onChange={(val) =>
+                            handleInverterChange(index, "orgInverterSpecId", val === "" ? null : Number(val))
+                          }
+
+                          options={(inverterCapacitiesMap[index] || []).map((spec) => {
+                            const parts = [
+                              spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
+                              spec.productWarranty ? `(${spec.productWarranty} )` : null,
+                              spec.almmModelNumber ? `(${spec.almmModelNumber})` : null
+                            ];
+
+                            const label = parts.filter(Boolean).join(" - ");
+
+                            return {
+                              value: spec.id,
+                              label,
+                            };
+                          })}
+                          disabled={!inv.inverterBrandId}
+                          placeholder="Select Inverter Spec"
+                        />
+                      </div>
+
+                      {/* Inverter Count */}
+                      <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
+                        <label className="block text-sm font-medium text-gray-700">Count</label>
+                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                          <button
+                            type="button"
+                            disabled={(inv.inverterCount ?? 1) <= 1}
+                            onClick={() =>
+                              handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
+                            }
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
+                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                              : "text-gray-600 hover:text-white hover:bg-red-500"
+                              }`}
+                          >
+                            −
+                          </button>
+
+                          <input
+                            type="text"
+                            name="inverterCount"
+                            inputMode="numeric"
+                            value={inv.inverterCount ?? 1}
+                            onChange={(e) => {
+                              const value = Math.max(Number(e.target.value) || 1, 1);
+                              handleInverterChange(index, "inverterCount", value);
+                            }}
+                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
+                            }
+                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+
+              {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Battery Brand
+                    </label>
+                    <ReusableDropdown
+                      name="batteryBrandId"
+                      value={formData.batteryBrandId ?? ""}
+                      onChange={(val) => {
+                        const selectedId = val === "" ? null : Number(val);
+                        setBatteryBrandId(selectedId);
+                        handleChange({
+                          target: { name: "batteryBrandId", value: selectedId },
+                        });
+                      }}
+                      options={batteryBrands.map((batteryBrand) => ({
+                        value: batteryBrand.brandId,
+                        label: batteryBrand.brandName,
+                      }))}
+                      placeholder="Select Battery Brand"
+                      className="mt-1"
+                    />
+
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
+                    <ReusableDropdown
+                      name="orgBatterySpecId"
+                      value={formData.orgBatterySpecId ?? ""}
+                      onChange={(val) => {
+                        const selectedId = val === "" ? null : Number(val);
+                        setOrgBatterySpecId(selectedId);
+                        handleChange({
+                          target: { name: "orgBatterySpecId", value: selectedId },
+                        });
+                      }}
+                      // options={batteryCapacities.map((batteryCapacity) => ({
+                      //   value: batteryCapacity.id,
+                      //   label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
+                      // }))}
+                      options={batteryCapacities.map((b) => {
+                        const parts = [
+                          b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
+                          b.voltage ? `${b.voltage} V` : null,
+                          b.modelNumber || null,
+                          b.productWarranty ? `(${b.productWarranty} )` : null
+                        ];
+
+                        // Filter out null/empty values and join with " - "
+                        const label = parts.filter(Boolean).join(" - ");
+
+                        return {
+                          value: b.id,
+                          label,
+                        };
+                      })}
+
+                      placeholder="Select Battery Capacity"
+                      className="mt-1"
+                    />
+
+                  </div>
+                </>
+              )}
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="md:col-span-2">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-semibold text-gray-800">Pipe Details</h3>
+                    <button
+                      type="button"
+                      onClick={addNewPipe}
+                      disabled={
+                        formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false
+                      }
+                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
+                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                    >
+                      + Add More Pipe
+                    </button>
+                  </div>
+
+                  {formData.pipes.map((pipe, index) => (
+                    <div
+                      key={index}
+                      className="md:col-span-2 grid grid-cols-12 items-center gap-6 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                    >
+                      {formData.pipes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePipe(index)}
+                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+
+
+                      {/* LEFT EMPTY SPACE (2 columns) */}
+                      <div className="hidden md:block md:col-span-2"></div>
+
+                      {/* Pipe Specification - 5 columns */}
+                      <div className="col-span-12 md:col-span-6">
+                        <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
+                        <ReusableDropdown
+                          name="orgPipeSpecId"
+                          value={pipe.orgPipeSpecId ?? ""}
+                          onChange={(val) =>
+                            handlePipeChange(index, "orgPipeSpecId", val === "" ? null : Number(val))
+                          }
+                          options={pipes.map((p) => ({
+                            value: p.id,
+                            label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
+                          }))}
+
+                          placeholder="Select Pipe Specification"
+                        />
+                      </div>
+
+                      {/* Pipe Count - 3 columns */}
+                      <div className="col-span-12 md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700">Count</label>
+                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                          <button
+                            type="button"
+                            disabled={(pipe.pipeCount ?? 1) <= 1}
+                            onClick={() =>
+                              handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
+                            }
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
+                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                              : "text-gray-600 hover:text-white hover:bg-red-500"
+                              }`}
+                          >
+                            −
+                          </button>
+
+                          <input
+                            type="text"
+                            name="pipeCount"
+                            inputMode="numeric"
+                            value={pipe.pipeCount ?? 1}
+                            onChange={(e) => {
+                              const value = Math.max(Number(e.target.value) || 1, 1);
+                              handlePipeChange(index, "pipeCount", value);
+                            }}
+                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
+                            }
+                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* RIGHT EMPTY SPACE (2 columns) */}
+                      <div className="hidden md:block md:col-span-2"></div>
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="col-span-full space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasWaterSprinkler"
+                      checked={formData.hasWaterSprinkler || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Water Sprinkler System</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasHeavydutyRamp"
+                      checked={formData.hasHeavydutyRamp || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Heavy Duty Ramp</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasHeavydutyStairs"
+                      checked={formData.hasHeavydutyStairs || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Heavy Duty Stairs</span>
+                  </label>
+                </div>
+              </div>
+
+
+              <div className="col-span-full space-y-4 mt-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                      <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
+                  </div>
+
+                  {/* Horizontal line */}
+                  <div className="mt-2 border-b border-gray-200"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Solar System Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      name="systemCost"
+                      value={
+                        isEditing
+                          ? (formData.systemCost === 0 ? "" : String(formData.systemCost))
+                          : formatIndianNumber(formData.systemCost)
+                      }
+
+                      onFocus={() => setIsEditing(true)}
+                      onBlur={() => setIsEditing(false)}
+                      onChange={(e) => {
+                        const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                        setFormData({
+                          ...formData,
+                          systemCost: rawValue,
+                        });
+                      }}
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Solar System Cost"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Fabrication Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      name="fabricationCost"
+                      value={
+                        isEditingFabrication
+                          ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
+                          : formatIndianNumber(formData.fabricationCost)
+                      }
+
+                      onFocus={() => setIsEditingFabrication(true)}
+                      onBlur={() => setIsEditingFabrication(false)}
+                      onChange={(e) => {
+                        const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
+                        setFormData({
+                          ...formData,
+                          fabricationCost: rawValue,
+                        });
+                      }}
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Fabrication Cost"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Total Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      name="totalCost"
+                      value={formatIndianNumber(formData.totalCost)}
+                      readOnly
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Total Cost"
+                    />
+                  </div>
+                </div>
+
+
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <button
+                    type="button"
+                    onClick={handleSaveButtonClick}
+                    disabled={isSubmitting}
+                    className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
     bg-blue-600 hover:bg-blue-700
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
     disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isSubmitting ? "Saving..." : "Save System Specs"}
-                </button>
+                  >
+                    {isSubmitting ? "Saving..." : "Save System Specs"}
+                  </button>
 
 
 
-                {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-                  userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-                  userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Check if maximum limit of 5 quotations is reached
-                          if (savedSpecs.length >= 6) {
-                            setDialogType("error");
-                            setDialogMessage("You have reached the maximum limit of 5 quotations. Please delete an existing quotation to create a new one.");
-                            setDialogAction(null);
-                            setDialogOpen(true);
-                            return;
-                          }
-                          setSelectedDate(new Date());
-                          setShowDatePickModal(true);
+                  {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                    userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+                    userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Check if maximum limit of 5 quotations is reached
+                            if (savedSpecs.length >= 6) {
+                              setDialogType("error");
+                              setDialogMessage("You have reached the maximum limit of 5 quotations. Please delete an existing quotation to create a new one.");
+                              setDialogAction(null);
+                              setDialogOpen(true);
+                              return;
+                            }
+                            setSelectedDate(new Date());
+                            setShowDatePickModal(true);
 
-                        }}
-                        disabled={!selectedSpecId || isLoading}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoading ? "Generating..." : "Generate & Save Quotation"}
-                      </button>
+                          }}
+                          disabled={!selectedSpecId || isLoading}
+                          className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? "Generating..." : "Generate & Save Quotation"}
+                        </button>
 
-                      {/* Modal */}
-                      {showDatePickModal && (
-                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
-                          <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-                            <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                              Quotation Details
-                            </h2>
+                        {/* Modal */}
+                        {showDatePickModal && (
+                          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+                            <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+                              <h2 className="text-lg font-semibold mb-4 text-gray-800">
+                                Quotation Details
+                              </h2>
 
-                            {/* Native HTML Date Picker */}
-                            {/* Quotation Number */}
-                            <input
-                              type="text"
-                              placeholder="Enter Quotation Number"
-                              value={quotationNumber}
-                              onChange={(e) => setQuotationNumber(e.target.value)}
-                              className="border px-3 py-2 rounded w-full mb-4"
-                            />
+                              {/* Native HTML Date Picker */}
+                              {/* Quotation Number */}
+                              <input
+                                type="text"
+                                placeholder="Enter Quotation Number"
+                                value={quotationNumber}
+                                onChange={(e) => setQuotationNumber(e.target.value)}
+                                className="border px-3 py-2 rounded w-full mb-4"
+                              />
 
 
-                            <input
-                              type="date"
-                              value={
-                                selectedDate
-                                  ? selectedDate.toISOString().split("T")[0]
-                                  : ""
-                              }
-                              onChange={(e) => {
-                                const picked = e.target.value ? new Date(e.target.value) : null;
-                                setSelectedDate(picked);
-                              }}
-                              className="border px-3 py-2 rounded w-full"
-                            />
-
-                            <div className="flex justify-end space-x-3 mt-6">
-                              <button
-                                onClick={() => setShowDatePickModal(false)}
-                                className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
-                              >
-                                Cancel
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  if (selectedDate) {
-                                    setShowDatePickModal(false); // close modal first
-                                    // slight delay to ensure modal close before API call
-                                    setTimeout(() => {
-                                      handleGenerateQuotation(selectedDate, quotationNumber);
-                                    }, 300);
-                                  }
+                              <input
+                                type="date"
+                                value={
+                                  selectedDate
+                                    ? selectedDate.toISOString().split("T")[0]
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  const picked = e.target.value ? new Date(e.target.value) : null;
+                                  setSelectedDate(picked);
                                 }}
-                                disabled={!selectedDate || isLoading}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                              >
-                                {isLoading ? "Generating..." : "Confirm & Generate"}
-                              </button>
+                                className="border px-3 py-2 rounded w-full"
+                              />
+
+                              <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                  onClick={() => setShowDatePickModal(false)}
+                                  className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+                                >
+                                  Cancel
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    if (selectedDate) {
+                                      setShowDatePickModal(false); // close modal first
+                                      // slight delay to ensure modal close before API call
+                                      setTimeout(() => {
+                                        handleGenerateQuotation(selectedDate, quotationNumber);
+                                      }, 300);
+                                    }
+                                  }}
+                                  disabled={!selectedDate || isLoading}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {isLoading ? "Generating..." : "Confirm & Generate"}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </>
-                  )}
+                        )}
+                      </>
+                    )}
 
 
+                </div>
               </div>
-            </div>
 
-          </form>)}
+            </form>)}
 
-          <Dialog
-            open={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-            maxWidth="xs"
-            fullWidth
-          >
-            <DialogTitle id="alert-dialog-title">
-              {dialogType === "success" && "Success"}
-              {dialogType === "error" && "Error"}
-              {dialogType === "confirm" && "Confirm"}
-            </DialogTitle>
+            <Dialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+              maxWidth="xs"
+              fullWidth
+            >
+              <DialogTitle id="alert-dialog-title">
+                {dialogType === "success" && "Success"}
+                {dialogType === "error" && "Error"}
+                {dialogType === "confirm" && "Confirm"}
+              </DialogTitle>
 
-            <DialogContent dividers>
-              <Alert
-                severity={
-                  dialogType === "success"
-                    ? "success"
-                    : dialogType === "error"
-                      ? "error"
-                      : "info"
-                }
-              >
-                {dialogMessage}
-              </Alert>
-            </DialogContent>
+              <DialogContent dividers>
+                <Alert
+                  severity={
+                    dialogType === "success"
+                      ? "success"
+                      : dialogType === "error"
+                        ? "error"
+                        : "info"
+                  }
+                >
+                  {dialogMessage}
+                </Alert>
+              </DialogContent>
 
-            <DialogActions>
-              {dialogType === "confirm" ? (
-                <>
-                  <Button
-                    onClick={() => setDialogOpen(false)}
-                  // color="error"
-                  >
-                    No
-                  </Button>
+              <DialogActions>
+                {dialogType === "confirm" ? (
+                  <>
+                    <Button
+                      onClick={() => setDialogOpen(false)}
+                    // color="error"
+                    >
+                      No
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setDialogOpen(false);
+                        if (dialogAction) {
+                          await dialogAction();
+                        }
+                      }}
+                      autoFocus
+                    >
+                      Yes
+                    </Button>
+
+                  </>
+                ) : (
                   <Button
                     onClick={async () => {
                       setDialogOpen(false);
@@ -2476,27 +2644,14 @@ export const SystemSpecifications = () => {
                     }}
                     autoFocus
                   >
-                    Yes
+                    OK
                   </Button>
 
-                </>
-              ) : (
-                <Button
-                  onClick={async () => {
-                    setDialogOpen(false);
-                    if (dialogAction) {
-                      await dialogAction();
-                    }
-                  }}
-                  autoFocus
-                >
-                  OK
-                </Button>
+                )}
+              </DialogActions>
+            </Dialog>
 
-              )}
-            </DialogActions>
-          </Dialog>
-
+          </div>
         </div>
       </div>
 

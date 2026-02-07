@@ -55,6 +55,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
             console.warn('Selected org not in user claims. Forcing logout.');
             localStorage.removeItem('selectedOrg');
             localStorage.removeItem('jwtToken');
+            localStorage.removeItem('refreshToken');
             setRedirectPath('/login');
             return;
           }
@@ -97,7 +98,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   }
 
   if (authorized === null) {
-    return <div>Loading...</div>; // you can replace with a spinner/loader
+    return <div>Loading...</div>;
   }
 
   return <>{children}</>;

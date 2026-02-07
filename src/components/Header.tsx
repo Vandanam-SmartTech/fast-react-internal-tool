@@ -126,6 +126,7 @@ const Header: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("selectedOrg");
     clearUserClaims();
     navigate("/login");

@@ -416,7 +416,7 @@ const UserOrgRoles: React.FC = () => {
 
 
               {userRole !== "ROLE_AGENCY_ADMIN" &&
-                !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_FABRICATOR", "ROLE_ORG_ELECTRICIAN"].includes(selectedRoleName) && (
+                !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_FABRICATOR", "ROLE_ORG_ELECTRICIAN","ROLE_BDO","ROLE_GRAMSEVAK"].includes(selectedRoleName) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Agency

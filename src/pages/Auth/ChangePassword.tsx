@@ -54,6 +54,7 @@ const Verification: React.FC = () => {
       await verifyAndChangePassword(email, newPassword);
       setSuccess('Password changed successfully!');
       localStorage.removeItem("jwtToken");
+      localStorage.removeItem("refreshToken");
 
       setTimeout(() => navigate('/login'), 1500);
     } catch (error) {

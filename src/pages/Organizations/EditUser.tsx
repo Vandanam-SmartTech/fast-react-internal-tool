@@ -2,20 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateUser, getUserById } from '../../services/jwtService';
-//import { fetchOrganizations, Organization } from '../../services/organizationService';
 import { toast } from 'react-toastify';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, refreshToken } from '../../services/jwtService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import ReusableDropdown from '../../components/ReusableDropdown';
+import { useUser } from '../../contexts/UserContext';
 
 const EditUser: React.FC = () => {
-    //const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    //const isEdit = Boolean(id);
     const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
     const [confirmContactNumber, setConfirmContactNumber] = useState("");
     const userId = location.state?.userId;
+    const { userClaims: user } = useUser(); // logged-in user
+    const contextUserId = user?.id;
+
 
     const [formData, setFormData] = useState({
         username: '',
@@ -76,7 +77,7 @@ const EditUser: React.FC = () => {
     const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
     useEffect(() => {
-        
+
         if (userId) {
             loadUser(parseInt(userId));
         }
@@ -232,6 +233,13 @@ const EditUser: React.FC = () => {
             try {
                 const userData = { ...formData };
                 await updateUser(userId, userData);
+                if (contextUserId === userId) {
+                    const tokenResponse = await refreshToken();
+
+                    // store new access token
+                    localStorage.setItem("jwtToken", tokenResponse.jwt);
+                }
+
                 toast.success("User updated successfully", {
                     autoClose: 1000,
                     hideProgressBar: true,

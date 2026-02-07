@@ -7,6 +7,7 @@ import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
 import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto, deleteUserSignaturePhoto } from '../../services/documentManagerService';
 import { useUser } from '../../contexts/UserContext';
+import { fetchClaims } from '../../services/jwtService';
 import { croppedImg } from '../../utils/croppedImage';
 
 const Profile: React.FC = () => {
@@ -19,7 +20,7 @@ const Profile: React.FC = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
 
-  const { userClaims: user, loading } = useUser();
+  const { userClaims: user } = useUser();
 
   const [showCropModalForProfile, setShowCropModalForProfile] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -31,6 +32,8 @@ const Profile: React.FC = () => {
   const [removingPhoto, setRemovingPhoto] = useState(false);
 
   const navigate = useNavigate();
+  const [claims, setClaims] = useState<any>(null);
+  const [loadingClaims, setLoadingClaims] = useState(false);
 
 
   // Cropping states
@@ -60,6 +63,22 @@ const Profile: React.FC = () => {
       setHasUploadedPhoto(false);
     }
   };
+
+  useEffect(() => {
+    const loadClaims = async () => {
+      try {
+        setLoadingClaims(true);
+        const data = await fetchClaims();
+        setClaims(data);
+      } catch (err) {
+        console.error("Failed to load claims", err);
+      } finally {
+        setLoadingClaims(false);
+      }
+    };
+
+    loadClaims();
+  }, []);
 
 
   useEffect(() => {
@@ -435,7 +454,7 @@ const Profile: React.FC = () => {
 
 
 
-  if (loading) {
+  if (loadingClaims) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -445,6 +464,11 @@ const Profile: React.FC = () => {
       </div>
     );
   }
+
+  // if (loadingClaims) {
+  //   return <p>Loading...</p>;
+  // }
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
@@ -504,14 +528,14 @@ const Profile: React.FC = () => {
                   <div className="flex flex-col">
                     {/* Full Name */}
                     <p className="text-lg sm:text-xl font-semibold text-gray-900">
-                      {user?.name_as_per_gov_id || "NA"}
+                      {claims?.name_as_per_gov_id || "NA"}
                     </p>
 
                     {/* Preferred Name */}
                     <p className="text-sm text-gray-700">
                       <span className="font-medium text-gray-500">Preferred Name:</span>{" "}
                       <span className="text-gray-800">
-                        {user?.preferred_name || "NA"}
+                        {claims?.preferred_name || "NA"}
                       </span>
                     </p>
 
@@ -522,16 +546,16 @@ const Profile: React.FC = () => {
 
                         <span
                           className="text-gray-800 truncate max-w-[160px] sm:max-w-full"
-                          title={user?.email_address || "NA"}
+                          title={claims?.email_address || "NA"}
                         >
-                          {user?.email_address || "NA"}
+                          {claims?.email_address || "NA"}
                         </span>
                       </p>
 
                       <p className="text-sm text-gray-700">
                         <span className="font-medium text-gray-500">Mobile:</span>{" "}
                         <span className="text-gray-800">
-                          {user?.contact_number || "NA"}
+                          {claims?.contact_number || "NA"}
                         </span>
                       </p>
                     </div>

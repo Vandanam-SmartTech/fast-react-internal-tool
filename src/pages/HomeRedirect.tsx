@@ -75,6 +75,7 @@ const HomeRedirect: React.FC = () => {
         if (!matchingOrg) {
           // Invalid org -> logout
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
           return;
@@ -134,6 +135,7 @@ const HomeRedirect: React.FC = () => {
         default:
           // Invalid role -> logout
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
       }

@@ -55,6 +55,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         if (!matchingOrg) {
 
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
           return;
@@ -118,6 +119,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
           break;
         default:
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
       }

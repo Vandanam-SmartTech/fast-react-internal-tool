@@ -26,20 +26,36 @@ export const login = async (credentials: { identifier: string; password: string;
   return response.data;
 };
 
-export const setAuthToken = (token: string) => {
+export const setAuthToken = (jwt: string, refreshToken: string) => {
   const jwtAPI = getJwtAPI();
-  if (token) {
-    localStorage.setItem('jwtToken', token);
-    jwtAPI.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  if (jwt) {
+    localStorage.setItem('jwtToken', jwt);
+    localStorage.setItem('refreshToken',refreshToken);
+    jwtAPI.defaults.headers.common['Authorization'] = `Bearer ${jwt}`;
   } else {
     localStorage.removeItem('jwtToken');
+    localStorage.removeItem('refreshToken');
     delete jwtAPI.defaults.headers.common['Authorization'];
   }
 };
 
-
-
 export const getAuthToken = () => localStorage.getItem('jwtToken');
+
+export const refreshToken = async () => {
+  const jwtAPI = getJwtAPI();
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    throw new Error("No refresh token found");
+  }
+
+  const response = await jwtAPI.post("/auth/refresh-token", {
+    refreshToken,
+  });
+
+  return response.data; // { accessToken, refreshToken: null }
+};
+
 
 
 export const fetchClaims = async () => {

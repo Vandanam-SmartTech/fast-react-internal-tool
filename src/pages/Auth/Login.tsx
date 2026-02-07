@@ -68,9 +68,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { jwt } = await login({ identifier, password });
+      const { jwt, refreshToken } = await login({ identifier, password });
       localStorage.setItem('jwtToken', jwt);
-      setAuthToken(jwt);
+      localStorage.setItem('refreshToken',refreshToken);
+      setAuthToken(jwt, refreshToken);
 
       window.dispatchEvent(new Event('userUpdated'));
 
@@ -273,6 +274,7 @@ const Login = () => {
                     variant="outline"
                     onClick={() => {
                       localStorage.removeItem("jwtToken");
+                      localStorage.removeItem("refreshToken");
                       setShowOrgSelection(false);
                       setSelectedRole('');
                       setError('');
