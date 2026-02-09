@@ -18,7 +18,12 @@ import { toast } from "react-toastify";
 
 const ProductManagement: React.FC = () => {
 
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>("battery");
+
+  useEffect(() => {
+  handleSectionClick("battery");
+}, []);
+
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
