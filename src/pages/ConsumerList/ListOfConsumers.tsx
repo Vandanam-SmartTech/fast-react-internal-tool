@@ -270,7 +270,7 @@ const ListOfConsumers: React.FC = () => {
 
       console.log("Fetching consumers with params:", params);
 
-      const data = await fetchConsumersWithConnectionsOptimized(page,9, params);
+      const data = await fetchConsumersWithConnectionsOptimized(page, 9, params);
       setConsumers(data.content);
 
       // ✅ Load-more logic
@@ -428,38 +428,38 @@ const ListOfConsumers: React.FC = () => {
     return () => window.removeEventListener('organizationChanged', handleOrgChange);
   }, [isInitialized]);
 
-const renderPagination = () => {
-  if (searchQuery.trim() !== "") return null;
+  const renderPagination = () => {
+    if (searchQuery.trim() !== "") return null;
 
-  return (
-    <div className="flex justify-center gap-3 mt-4">
-      {/* Previous */}
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={loading || currentPage === 0}
-        onClick={() => loadConsumers(currentPage - 1)}
-      >
-        Previous
-      </Button>
+    return (
+      <div className="flex justify-center gap-3 mt-4">
+        {/* Previous */}
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={loading || currentPage === 0}
+          onClick={() => loadConsumers(currentPage - 1)}
+        >
+          Previous
+        </Button>
 
-      {/* Page info */}
-      <span className="text-sm flex items-center px-2">
-        Page {currentPage + 1}
-      </span>
+        {/* Page info */}
+        <span className="text-sm flex items-center px-2">
+          Page {currentPage + 1}
+        </span>
 
-      {/* Next */}
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={loading || !hasMore}
-        onClick={() => loadConsumers(currentPage + 1)}
-      >
-        Next
-      </Button>
-    </div>
-  );
-};
+        {/* Next */}
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={loading || !hasMore}
+          onClick={() => loadConsumers(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    );
+  };
 
 
 
@@ -546,10 +546,9 @@ const renderPagination = () => {
                   </div>
 
                   <div className="text-[11px] text-secondary-700 dark:text-secondary-300 font-mono">
-                    {userInfo?.role === 'ROLE_GRAMSEVAK' || userInfo?.role === "ROLE_BDO"
-                      ? connection.gharkulNumber
-                      : connection.consumerId}
+                    {connection.consumerId ?? connection.gharkulNumber}
                   </div>
+
                 </div>
 
 

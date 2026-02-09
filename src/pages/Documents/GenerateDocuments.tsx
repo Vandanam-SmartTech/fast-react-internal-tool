@@ -163,7 +163,7 @@ export default function GenerateDocuments() {
       id: 5,
       title: "Sanction Letter",
       documents: [
-        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(200) }
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(300) }
       ],
       isCompleted: false,
       isExpanded: false
