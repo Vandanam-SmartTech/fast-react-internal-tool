@@ -799,7 +799,7 @@ const OnboardedConsumers: React.FC = () => {
 
 
       <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-secondary-700 dark:text-secondary-300">
+        {/* <div className="text-sm text-secondary-700 dark:text-secondary-300">
           {loading || isLoadingAll ? (
             isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
           ) : searchQuery.trim() === "" ? (
@@ -808,7 +808,7 @@ const OnboardedConsumers: React.FC = () => {
             `Showing ${displayData.length} customer${displayData.length !== 1 ? "s" : ""}`
           )}
 
-        </div>
+        </div> */}
 
         {!loading && !isLoadingAll && displayData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">

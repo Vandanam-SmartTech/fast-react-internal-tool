@@ -359,26 +359,37 @@ export default function GenerateDocuments() {
     }
   };
 
-  const handleView = async (id: number) => {
-    try {
-      const blob = await downloadDocumentById(id);
-      const url = window.URL.createObjectURL(blob);
+const handleView = async (id: number, fileName: string) => {
+  try {
+    const blob = await downloadDocumentById(id);
+    const url = window.URL.createObjectURL(blob);
 
-      // Open in new tab for preview
-      window.open(url, "_blank");
+    const newTab = window.open();
+    if (!newTab) return;
 
-      // Cleanup later (not immediately, otherwise tab may fail)
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 10000);
-    } catch (error) {
-      console.error("Preview failed:", error);
-      toast.error("Failed to preview file", {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
+    const extension = fileName.split(".").pop()?.toLowerCase();
+
+    if (["jpg", "jpeg", "png", "webp"].includes(extension || "")) {
+      newTab.document.write(`
+        <html>
+          <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#000;">
+            <img src="${url}" style="max-width:100%; max-height:100%;" />
+          </body>
+        </html>
+      `);
+    } else {
+      newTab.location.href = url;
     }
-  };
+
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 10000);
+
+  } catch (error) {
+    console.error("Preview failed:", error);
+  }
+};
+
 
 
 
@@ -904,7 +915,7 @@ export default function GenerateDocuments() {
                               <span
                                 className="flex-1 truncate text-blue-600 hover:text-blue-800 cursor-pointer underline underline-offset-2"
                                 title={`View ${doc.fileName}`}
-                                onClick={() => handleView(doc.id)}
+                                onClick={() => handleView(doc.id, doc.fileName)}
                               >
                                 {formatFileTail(doc.fileName, 18)}
                               </span>

@@ -942,7 +942,7 @@ export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> 
 };
 
 export const getSavedSystemSpecPackages = async (
-  isGharkulPackage: boolean
+  isGharkulPackage?: boolean
 ): Promise<any[]> => {
   const quotationAPI = getQuotationAPI();
 
@@ -950,17 +950,19 @@ export const getSavedSystemSpecPackages = async (
     const response = await quotationAPI.get(
       `/api/system-packages/system-specs`,
       {
-        params: {
-          isGharkulPackage: isGharkulPackage
-        }
+        params: isGharkulPackage !== undefined
+          ? { isGharkulPackage }
+          : {}
       }
     );
+
     return response.data;
   } catch (error) {
     console.error("Error fetching saved system spec packages:", error);
     return [];
   }
 };
+
 
 
 export const getSecondaryId = async (systemSpecificationId: number): Promise<any[]> => {

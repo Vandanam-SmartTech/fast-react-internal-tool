@@ -650,7 +650,7 @@ export const ViewConnection = () => {
 
 
       {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-        userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+        userInfo?.role === "ROLE_AGENCY_ADMIN" || userInfo?.role === "ROLE_ORG_STAFF" || userInfo?.role === "ROLE_AGENCY_STAFF" ||
         userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) &&
         connection && (
           <div className="col-span-1 md:col-span-2 flex flex-col items-center">

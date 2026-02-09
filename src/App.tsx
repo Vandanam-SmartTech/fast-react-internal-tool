@@ -467,6 +467,15 @@ const AppContent: React.FC = () => {
               }
             />
 
+             <Route
+              path="/package-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <PackageManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
             <Route
               path="/user-form"
               element={
