@@ -115,13 +115,13 @@ const ListOfConsumers: React.FC = () => {
   }, [userRoleFromLocalStorage, userInfo?.deptCode]);
 
   const resetAndLoad = async () => {
-  setAllConsumers([]);
-  setCurrentPage(0);
-  setBackendPage(0);
-  setHasMoreBackend(true);
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
 
-  await loadConsumers(0);
-};
+    await loadConsumers(0);
+  };
 
 
   useEffect(() => {
@@ -134,44 +134,44 @@ const ListOfConsumers: React.FC = () => {
   }, [selectedVillage, isInitialized, userInfo?.role]);
 
 
-useEffect(() => {
-  setAllConsumers([]);
-  setCurrentPage(0);
-  setBackendPage(0);
-  setHasMoreBackend(true);
+  useEffect(() => {
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
 
-  resetAndLoad();
-}, []);
+    resetAndLoad();
+  }, []);
 
-const displayDataForCustomers = allConsumers.slice(
-  currentPage * ITEMS_PER_PAGE,
-  currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-);
+  const displayDataForCustomers = allConsumers.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
 
-const totalPagesLoaded = Math.ceil(
-  allConsumers.length / ITEMS_PER_PAGE
-);
+  const totalPagesLoaded = Math.ceil(
+    allConsumers.length / ITEMS_PER_PAGE
+  );
 
-const handleNextPage = async () => {
-  const nextPage = currentPage + 1;
+  const handleNextPage = async () => {
+    const nextPage = currentPage + 1;
 
-  // If next page exceeds loaded pages → fetch next 90
-  if (
-    nextPage >= totalPagesLoaded &&
-    hasMoreBackend &&
-    !loading
-  ) {
-    await loadConsumers(backendPage + 1);
-  }
+    // If next page exceeds loaded pages → fetch next 90
+    if (
+      nextPage >= totalPagesLoaded &&
+      hasMoreBackend &&
+      !loading
+    ) {
+      await loadConsumers(backendPage + 1);
+    }
 
-  setCurrentPage(nextPage);
-};
+    setCurrentPage(nextPage);
+  };
 
-const handlePreviousPage = () => {
-  if (currentPage > 0) {
-    setCurrentPage(prev => prev - 1);
-  }
-};
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
 
 
 
@@ -247,6 +247,26 @@ const handlePreviousPage = () => {
     }
   }, [selectedUserId, isInitialized]);
 
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (!userInfo?.role) return;
+
+    // For roles that should auto load on page mount
+    if (
+      userInfo.role === "ROLE_GRAMSEVAK" ||
+      userInfo.role === "ROLE_ORG_ADMIN" ||
+      userInfo.role === "ROLE_AGENCY_ADMIN" ||
+      userInfo.role === "ROLE_ORG_STAFF" ||
+      userInfo.role === "ROLE_AGENCY_STAFF" ||
+      userInfo.role === "ROLE_ORG_REPRESENTATIVE" ||
+      userInfo.role === "ROLE_AGENCY_REPRESENTATIVE"
+    ) {
+      resetAndLoad();
+    }
+
+  }, [isInitialized, userInfo?.role]);
+
+
 
   const loadConsumers = async (pageNumber: number) => {
     if (!isInitialized) {
@@ -302,8 +322,7 @@ const handlePreviousPage = () => {
         effectiveUserRole = "ROLE_ORG_REPRESENTATIVE"
       }
 
-      if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
-        orgId = userInfo.orgId;
+      if (userInfo?.role === "ROLE_GRAMSEVAK") {
         deptCode = userInfo.deptCode;
         effectiveUserRole = "ROLE_GRAMSEVAK"
       }
@@ -328,10 +347,10 @@ const handlePreviousPage = () => {
       console.log("Fetching consumers with params:", params);
 
       const data = await fetchConsumersWithConnectionsOptimized(
-      pageNumber,
-      BATCH_SIZE,
-      params
-    );
+        pageNumber,
+        BATCH_SIZE,
+        params
+      );
       // Append new data
       setAllConsumers(prev => [...prev, ...data.content]);
 
@@ -354,36 +373,29 @@ const handlePreviousPage = () => {
 
   // Debounced remote search with race protection
   useEffect(() => {
-    // Clear any pending timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+  if (searchTimeoutRef.current) {
+    clearTimeout(searchTimeoutRef.current);
+  }
 
-    const trimmed = searchQuery.trim();
+  const trimmed = searchQuery.trim();
 
-    // If query is empty, clear results immediately
-    if (trimmed === "") {
-      setSearchResults([]);
-      return;
-    }
+  if (trimmed === "") {
+    setSearchResults([]);
+    return;
+  }
 
-    // Avoid firing for very short inputs
-    if (trimmed.length < 2) {
-      return;
-    }
+  if (trimmed.length < 2) return;
 
-    // Debounce actual API search
-    searchTimeoutRef.current = setTimeout(async () => {
-      const currentSeq = ++latestSearchSeqRef.current;
+  searchTimeoutRef.current = setTimeout(async () => {
+    const currentSeq = ++latestSearchSeqRef.current;
 
       try {
-        let orgId = selectedOrgId ?? null;
-        let agencyId = selectedAgencyId ?? null;
-        let userId = selectedUserId ?? null;
-        let deptCode: number | null = null;
+      let orgId = selectedOrgId ?? null;
+      let agencyId = selectedAgencyId ?? null;
+      let userId = selectedUserId ?? null;
+      let deptCode: number | null = null;
 
-        let effectiveUserRole = userRole || userInfo?.role || null;
-
+      let effectiveUserRole = userRole || userInfo?.role || null;
 
         if (userInfo?.role === "ROLE_BDO") {
           if (selectedVillage !== "") {
@@ -417,8 +429,7 @@ const handlePreviousPage = () => {
           orgId = userInfo.orgId;
           effectiveUserRole = "ROLE_ORG_REPRESENTATIVE";
         }
-        if (userInfo?.role === "ROLE_GRAMSEVAK" && userInfo?.orgId) {
-          orgId = userInfo.orgId;
+        if (userInfo?.role === "ROLE_GRAMSEVAK") {
           deptCode = userInfo.deptCode;
           effectiveUserRole = "ROLE_GRAMSEVAK";
         }
@@ -437,28 +448,50 @@ const handlePreviousPage = () => {
         };
 
         console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
-        const results = await searchCustomers(trimmed, params);
+        const data = await searchCustomers(
+          trimmed,
+          0,                 // page number
+          BATCH_SIZE,        // limit
+          params
+        );
 
-        // Only apply results if this is the latest search
-        if (currentSeq === latestSearchSeqRef.current) {
-          setSearchResults(results);
-        }
-      } catch (error) {
-        console.error("Error searching customers:", error);
-        if (currentSeq === latestSearchSeqRef.current) {
-          setSearchResults([]);
-        }
+              if (currentSeq === latestSearchSeqRef.current) {
+  if (Array.isArray(data)) {
+    setSearchResults(data);
+  } else {
+    setSearchResults(data.content ?? []);
+  }
+}
+
+
+    } catch (error) {
+      if (currentSeq === latestSearchSeqRef.current) {
+        setSearchResults([]);
       }
-    }, 100);
+    }
+  }, 300); // increased debounce slightly
 
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole]);
+  return () => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+  };
+}, [
+  searchQuery,
+  selectedOrgId,
+  selectedAgencyId,
+  selectedUserId,
+  userRole,
+  userInfo?.role,
+  userInfo?.deptCode,
+  selectedVillage
+]);
 
-  const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
+  const finalDisplayData =
+  searchQuery.trim() !== ""
+    ? searchResults
+    : displayDataForCustomers;
+
 
 
   useEffect(() => {
@@ -493,7 +526,7 @@ const handlePreviousPage = () => {
           variant="outline"
           size="sm"
           disabled={currentPage === 0}
-        onClick={handlePreviousPage}
+          onClick={handlePreviousPage}
         >
           Previous
         </Button>
@@ -508,10 +541,10 @@ const handlePreviousPage = () => {
           variant="outline"
           size="sm"
           disabled={
-          loading ||
-          (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
-        }
-        onClick={handleNextPage}
+            loading ||
+            (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
+          }
+          onClick={handleNextPage}
         >
           Next
         </Button>
@@ -552,14 +585,14 @@ const handlePreviousPage = () => {
           <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-xs text-secondary-700 dark:text-secondary-300 truncate">
-              {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "No email provided"}
+              {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "Email not provided"}
             </span>
           </div>
 
           <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-sm text-secondary-700 dark:text-secondary-300">
-              {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "No mobile number provided"}
+              {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "Mobile not provided"}
             </span>
           </div>
         </div>
@@ -720,7 +753,7 @@ const handlePreviousPage = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
 
             {/* Checkbox */}
-            {userRoleFromLocalStorage !== "ROLE_GRAMSEVAK" &&
+            {/* {userRoleFromLocalStorage !== "ROLE_GRAMSEVAK" &&
               userRoleFromLocalStorage !== "ROLE_BDO" && (<div className="flex items-center gap-2 whitespace-nowrap">
                 <input
                   type="checkbox"
@@ -733,7 +766,7 @@ const handlePreviousPage = () => {
                 >
                   Gharkul Customers
                 </label>
-              </div>)}
+              </div>)} */}
 
             {userRoleFromLocalStorage === "ROLE_BDO" && (
               <div className="flex items-center gap-2 whitespace-nowrap">
@@ -1006,7 +1039,7 @@ const handlePreviousPage = () => {
 
         </div> */}
 
-        {!loading && !isLoadingAll && displayData.length > 0 && (
+        {!loading && !isLoadingAll && finalDisplayData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">
             {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
           </div>
@@ -1036,7 +1069,7 @@ const handlePreviousPage = () => {
       {/* Results Grid */}
       {!loading && !isLoadingAll && (
         <>
-          {displayDataForCustomers.length === 0 ? (
+          {finalDisplayData.length === 0 ? (
             <Card className="text-center py-12">
               <CardBody>
                 <Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
@@ -1053,7 +1086,7 @@ const handlePreviousPage = () => {
             </Card>
           ) : (
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {displayDataForCustomers.map(renderConsumerCard)}
+              {finalDisplayData.map(renderConsumerCard)}
             </div>
           )}
 

@@ -469,7 +469,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
+              {/* {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToPackageManagement}
                   className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
@@ -478,7 +478,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   <Layers size={20} />
                   <span>Package Management</span>
                 </button>
-              )}
+              )} */}
 
             </nav>
 

@@ -641,31 +641,40 @@ export const updateMaterialData = async (
 
 export const searchCustomers = async (
   searchTerm: string,
-  params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
-): Promise<any[]> => {
+  page: number,
+  limit: number,
+  params: {
+    orgId?: number | null;
+    agencyId?: number | null;
+    userRole?: string | null;
+    userId?: number | null;
+    deptCode?: number | null;
+  }
+): Promise<any> => {
   const crsAPI = getCrsAPI();
-  try {
-    console.log("CRS API Request Body for searchCustomers:", { searchTerm, ...params });
 
-    // Changed from GET (with query params) to POST (with JSON body)
-    const response = await crsAPI.post(`/api/customers/search`, {
+  try {
+    console.log("CRS API Request Body for searchCustomers:", {
       searchTerm,
+      page,
+      limit,
       ...params,
     });
 
-    const data = response.data;
+    const response = await crsAPI.post(`/api/customers/search`, {
+      searchTerm,
+      page,
+      limit,
+      ...params,
+    });
 
-    if (Array.isArray(data)) {
-      return data;
-    } else {
-      console.error("Invalid API response format:", data);
-      throw new Error("Failed to parse search results");
-    }
+    return response.data; // Expecting pageable response
   } catch (error) {
     console.error("Error fetching search results:", error);
     throw new Error("Failed to fetch search results");
   }
 };
+
 
 
 export const searchOnboardedConsumers = async (

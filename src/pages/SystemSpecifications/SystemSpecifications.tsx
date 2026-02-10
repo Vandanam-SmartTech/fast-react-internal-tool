@@ -1557,9 +1557,12 @@ export const SystemSpecifications = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
-      <div
+      {/* <div
         className={`mx-auto px-4 sm:px-6 lg:px-8 ${isGharkulCustomer ? "max-w-7xl" : "max-w-4xl"
           }`}
+      > */}
+      <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl`}
       >
         <div className="flex items-center gap-2 mb-2">
           <button
@@ -1572,7 +1575,7 @@ export const SystemSpecifications = () => {
           </button>
 
           <h1 className="text-xl font-bold text-gray-700">
-            System Specs Details
+            System Configurations
           </h1>
         </div>
         {/* 
@@ -1666,19 +1669,22 @@ export const SystemSpecifications = () => {
           </div>
         )}
 
-        <div
+        {/* <div
           className={`flex flex-col lg:flex-row gap-5 ${isGharkulCustomer ? "lg:items-start" : "lg:justify-center"
             }`}
+        > */}
+        <div
+          className={`flex flex-col lg:flex-row gap-5lg:justify-center`}
         >
-          {/* Left card */}
-          {isGharkulCustomer && (
+          
+          {/* {isGharkulCustomer && (
             <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
               <h2 className="text-lg font-semibold text-gray-800 mb-2">
                 Standard Packages
               </h2>
 
               <div className="relative">
-                {/* Right fade hint */}
+
                 {!isLoadingStdSpecs && stdSpecPackages.length > 1 && (
                   <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white pointer-events-none lg:hidden" />
                 )}
@@ -1714,14 +1720,21 @@ export const SystemSpecifications = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
 
 
-          <div
+          {/* <div
             className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 ${isGharkulCustomer ? "lg:w-3/4" : ""
               }`}
+          > */}
+
+                    <div
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
           >
+
+
+
 
             {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
 

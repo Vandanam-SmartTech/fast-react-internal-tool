@@ -318,11 +318,7 @@ export const ConnectionForm = () => {
   };
 
 
-  useEffect(() => {
-    if (govIdName) {
-      setFormData((prev) => ({ ...prev, billedTo: govIdName }));
-    }
-  }, [govIdName]);
+
 
   useEffect(() => {
     const checkConsumerIdExists = async () => {
@@ -453,6 +449,12 @@ export const ConnectionForm = () => {
     loadCorrectionTypes();
   }, []);
 
+    useEffect(() => {
+    if (govIdName) {
+      setFormData((prev) => ({ ...prev, billedTo: govIdName }));
+    }
+  }, [govIdName]);
+
   const resetConsumerAutoFill = () => {
   setFormData((prev) => ({
     ...prev,
@@ -464,8 +466,12 @@ export const ConnectionForm = () => {
     addressLine1: "",
     avgMonthlyConsumption: "",
     discomId: "",
-    billedTo: "",
+    billedTo: govIdName || "",
   }));
+  setDistrictCode(0);
+  setTalukaCode(0);
+  setVillageCode(0);
+  setPinCode("");
 };
 
 
@@ -481,7 +487,6 @@ export const ConnectionForm = () => {
     isConfirmed &&
     !consumerNumberExists;
 
-  // 🔴 RESET when conditions break
   if (!shouldFetch) {
     resetConsumerAutoFill();
     return;
@@ -504,7 +509,8 @@ export const ConnectionForm = () => {
         addressLine1: data.address || "",
         avgMonthlyConsumption: data.avgConsumption?.toString() || "",
         discomId: data.bu?.toString() || "",
-        billedTo: data.consumerName || "",
+        billedTo: data.consumerName ?? govIdName ?? ""
+
       }));
     } catch (err) {
       console.error("Failed to fetch consumer data", err);
@@ -1160,7 +1166,7 @@ useEffect(() => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Billed To <span className="text-red-500">*</span>
+                  Name on Electricity Bill <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1212,7 +1218,7 @@ useEffect(() => {
                   value={districtCode}
                   onChange={(val) => handleDistrictChange(Number(val))}
                   options={[
-                    { value: 0, label: districtName || "Select District" },
+                    { value: 0, label: "Select District" },
                     ...districts.map((district) => ({
                       value: district.code,
                       label: district.nameEnglish,
@@ -1234,7 +1240,7 @@ useEffect(() => {
                   value={talukaCode}
                   onChange={(val) => handleTalukaChange(Number(val))}
                   options={[
-                    { value: 0, label: talukaName || "Select Taluka" },
+                    { value: 0, label: "Select Taluka" },
                     ...talukas.map((taluka) => ({
                       value: taluka.code,
                       label: taluka.nameEnglish,
@@ -1256,7 +1262,7 @@ useEffect(() => {
                   value={villageCode}
                   onChange={(val) => handleVillageChange(Number(val))}
                   options={[
-                    { value: 0, label: villageName || "Select Village" },
+                    { value: 0, label: "Select Village" },
                     ...villages.map((village) => ({
                       value: village.code,
                       label: village.nameEnglish,

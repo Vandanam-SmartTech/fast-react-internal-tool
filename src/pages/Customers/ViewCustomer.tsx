@@ -29,124 +29,126 @@ export const ViewCustomer = () => {
     "System Specifications",
   ];
 
-  // useEffect(() => {
-  //   const fetchAllInstallations = async () => {
-  //     if (!connections || connections.length === 0) return;
+  useEffect(() => {
+    const fetchAllInstallations = async () => {
+      if (!connections || connections.length === 0) return;
 
-  //     const newInstallationsMap: Record<string, any[]> = {};
+      const newInstallationsMap: Record<string, any[]> = {};
 
-  //     for (const connection of connections) {
-  //       if (!connection.id) continue;
+      for (const connection of connections) {
+        if (!connection.id) continue;
 
-  //       try {
-  //         const data = await getInstallationByConnectionId(Number(connection.id));
-  //         newInstallationsMap[connection.id] = data || [];
-  //       } catch (error) {
-  //         console.log("No installations found for consumer:", connection.id);
-  //         newInstallationsMap[connection.id] = [];
-  //       }
-  //     }
+        try {
+          const data = await getInstallationByConnectionId(Number(connection.id));
+          newInstallationsMap[connection.id] = data || [];
+        } catch (error) {
+          console.log("No installations found for consumer:", connection.id);
+          newInstallationsMap[connection.id] = [];
+        }
+      }
 
-  //     setInstallationsByConsumer(newInstallationsMap);
-  //   };
+      setInstallationsByConsumer(newInstallationsMap);
+    };
 
-  //   fetchAllInstallations();
-  // }, [connections]);
+    fetchAllInstallations();
+  }, [connections]);
 
-  // useEffect(() => {
-  //   const loadSpaceTypes = async () => {
-  //     try {
-  //       const types = await fetchInstallationSpaceTypesNames();
-  //       setSpaceTypes(types);
-  //     } catch (error) {
-  //       console.error("Failed to load space types", error);
-  //     }
-  //   };
+  const getSpaceTypeName = (typeId: number) => {
+    const type = spaceTypes.find(t => t.id === typeId);
+    return type ? type.nameEnglish : "Unknown";
+  };
 
-  //   loadSpaceTypes();
-  // }, []);
-
-
-  // useEffect(() => {
-  //   console.log("Fetch Consumer Number API is used");
-
-  //   const fetchCustomer = async () => {
-  //     if (customerId) {
-  //       const data = await getCustomerById(Number(customerId));
-  //       setCustomer(data);
-
-  //       if (data?.referredByUserId) {
-  //         const userResponse = await getUserById(data.referredByUserId);
-  //         if (userResponse.data) {
-  //           setReferredByUser(userResponse.data);
-  //         } else {
-  //           setReferredByUser(null);
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   const fetchConnections = async () => {
-  //     if (customerId) {
-  //       try {
-  //         const data = await fetchConsumerNumber(Number(customerId));
-  //         setConnections(data || []);
-  //       } catch (error) {
-  //         console.log("No connections found for customer:", customerId);
-  //         setConnections([]);
-  //       }
-  //     }
-  //   };
-
-  //   fetchCustomer();
-  //   fetchConnections();
-  // }, [customerId]);
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      if (!customerId) return;
-
+    const loadSpaceTypes = async () => {
       try {
-        const data = await getCustomerConnectionInstallationById(Number(customerId));
-
-        if (!data) return;
-
-        // Set Customer details
-        setCustomer(data);
-
-        // Set referred by user if exists
-        if (data.referredByUserId) {
-          const userResponse = await getUserById(data.referredByUserId);
-          setReferredByUser(userResponse?.data || null);
-        }
-
-        // Set all connections directly from response
-        setConnections(data.connections || []);
-
-        // Prepare installation map
-        const installationMap: Record<string, any[]> = {};
-
-        data.connections?.forEach((conn: any) => {
-          installationMap[conn.connectionId] = conn.installationSpaces || [];
-        });
-
-        setInstallationsByConsumer(installationMap);
-
+        const types = await fetchInstallationSpaceTypesNames();
+        setSpaceTypes(types);
       } catch (error) {
-        console.error("Error loading customer + connections + installations", error);
+        console.error("Failed to load space types", error);
       }
     };
 
-    fetchAllData();
+    loadSpaceTypes();
+  }, []);
+
+
+  useEffect(() => {
+    console.log("Fetch Consumer Number API is used");
+
+    const fetchCustomer = async () => {
+      if (customerId) {
+        const data = await getCustomerById(Number(customerId));
+        setCustomer(data);
+
+        if (data?.referredByUserId) {
+          const userResponse = await getUserById(data.referredByUserId);
+          if (userResponse.data) {
+            setReferredByUser(userResponse.data);
+          } else {
+            setReferredByUser(null);
+          }
+        }
+      }
+    };
+
+    const fetchConnections = async () => {
+      if (customerId) {
+        try {
+          const data = await fetchConsumerNumber(Number(customerId));
+          setConnections(data || []);
+        } catch (error) {
+          console.log("No connections found for customer:", customerId);
+          setConnections([]);
+        }
+      }
+    };
+
+    fetchCustomer();
+    fetchConnections();
   }, [customerId]);
 
+  // useEffect(() => {
+  //   const fetchAllData = async () => {
+  //     if (!customerId) return;
 
-if (!customer)
-  return (
-    <div className="flex items-start justify-center h-screen">
-      <p>Loading...</p>
-    </div>
-  );
+  //     try {
+  //       const data = await getCustomerConnectionInstallationById(Number(customerId));
+
+  //       if (!data) return;
+
+  //       setCustomer(data);
+
+  //       if (data.referredByUserId) {
+  //         const userResponse = await getUserById(data.referredByUserId);
+  //         setReferredByUser(userResponse?.data || null);
+  //       }
+
+  //       setConnections(data.connections || []);
+
+  //       const installationMap: Record<string, any[]> = {};
+
+  //       data.connections?.forEach((conn: any) => {
+  //         installationMap[conn.connectionId] = conn.installationSpaces || [];
+  //       });
+
+  //       setInstallationsByConsumer(installationMap);
+
+  //     } catch (error) {
+  //       console.error("Error loading customer + connections + installations", error);
+  //     }
+  //   };
+
+  //   fetchAllData();
+  // }, [customerId]);
+
+
+  if (!customer)
+    return (
+      <div className="flex items-start justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
 
 
   return (
@@ -245,7 +247,7 @@ if (!customer)
                   <span className="font-medium">
                     Ref:&nbsp;
                     <span className="sm:whitespace-nowrap break-words">
-                      {referredByUser?.nameAsPerGovId || "User"}
+                      {referredByUser?.nameAsPerGovId || "Not Available"}
                     </span>
                   </span>
                 </div>
@@ -327,30 +329,30 @@ if (!customer)
 
 
           <div className="flex flex-row flex-wrap gap-2 justify-start mt-4 max-w-4xl mx-auto">
-  <button
-    onClick={() =>
-      navigate(`/edit-customer`, {
-        state: { customerId },
-      })
-    }
-    className="py-2 px-4 sm:px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition text-sm sm:text-sm md:text-base"
-  >
-    Edit Customer
-  </button>
+            <button
+              onClick={() =>
+                navigate(`/edit-customer`, {
+                  state: { customerId },
+                })
+              }
+              className="py-2 px-4 sm:px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition text-sm sm:text-sm md:text-base"
+            >
+              Edit Customer
+            </button>
 
-  {connections.length === 0 && (
-    <button
-      onClick={() =>
-        navigate(`/connection-form`, {
-          state: { customerId, govIdName: customer.govIdName },
-        })
-      }
-      className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
-    >
-      Add New Connection
-    </button>
-  )}
-</div>
+            {connections.length === 0 && (
+              <button
+                onClick={() =>
+                  navigate(`/connection-form`, {
+                    state: { customerId, govIdName: customer.govIdName },
+                  })
+                }
+                className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
+              >
+                Add New Connection
+              </button>
+            )}
+          </div>
 
 
         </div>
@@ -363,7 +365,7 @@ if (!customer)
               <div className="space-y-6">
                 {connections.map((connection, index) => (
                   <details
-                    key={connection.connectionId}
+                    key={connection.id}
                     className="group/connection rounded-xl border border-gray-200 bg-white shadow-lg"
                   >
                     <summary className="cursor-pointer flex justify-between items-center px-6 py-4 text-base font-semibold text-gray-800">
@@ -381,9 +383,9 @@ if (!customer)
                             e.stopPropagation();
                             navigate(`/view-connection`, {
                               state: {
-                                consumerId: connection.consumerNumber,
+                                consumerId: connection.consumerId,
                                 customerId,
-                                connectionId: connection.connectionId,
+                                connectionId: connection.id,
                               },
                             });
                           }}
@@ -423,7 +425,7 @@ if (!customer)
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">Consumer #</h5>
-                            <p className="text-sm text-gray-800 mt-1">{connection.consumerNumber || "NA"}</p>
+                            <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
                           </div>
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">Avg Units/Month</h5>
@@ -452,21 +454,21 @@ if (!customer)
                           </div>
                           <h4 className="text-base font-medium text-gray-900">Business Information</h4>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                           <div>
                             <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
                             <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
                           </div>
 
-                          {(connection.isGharkulCustomer &&<div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
+                          </div>
+
+                          {(connection.isGharkulCustomer && <div>
                             <h5 className="text-sm font-medium text-gray-500">Gharkul Number</h5>
                             <p className="text-sm text-gray-800 mt-1">{connection.gharkulNumber || "NA"}</p>
                           </div>)}
-
-                          <div>
-                            <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
-                            <p className="text-sm text-gray-800 mt-1">{connection.gstNumber || "NA"}</p>
-                          </div>
                         </div>
                       </div>
 
@@ -531,8 +533,8 @@ if (!customer)
                           onClick={() =>
                             navigate(`/edit-connection`, {
                               state: {
-                                consumerId: connection.consumerNumber,
-                                connectionId: connection.connectionId,
+                                consumerId: connection.consumerId,
+                                connectionId: connection.id,
                                 customerId: customerId,
                               },
                             })
@@ -553,8 +555,8 @@ if (!customer)
                           onClick={() =>
                             navigate(`/system-specifications`, {
                               state: {
-                                connectionId: connection.connectionId,
-                                consumerId: connection.consumerNumber,
+                                connectionId: connection.id,
+                                consumerId: connection.consumerId,
                                 customerId,
                               },
                             })
@@ -576,7 +578,7 @@ if (!customer)
 
 
                       {/* Nested Installations */}
-                      {(installationsByConsumer[connection.connectionId] || []).map((installation, idx) => (
+                      {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
                         <details key={installation.id} className="group/installation bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
                           <summary className="flex items-center justify-between cursor-pointer mt-2 mb-2 group">
                             {/* Left section */}
@@ -585,9 +587,11 @@ if (!customer)
                                 <HomeModernIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600" />
                               </div>
                               <span className="text-sm sm:text-base font-semibold leading-snug">
-                                Installation {idx + 1} - On {installation.installationSpaceTypeName}
+                                Installation {idx + 1} - On{" "}
+                                {getSpaceTypeName(installation.installationSpaceTypeId)}
                               </span>
                             </div>
+
 
                             {/* Chevron */}
                             <svg
@@ -606,72 +610,76 @@ if (!customer)
                             <div className="border-b border-gray-200 mb-4 mt-2" />
                             <div className="w-full">
                               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
 
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.installationSpaceTypeName || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.installationSpaceTitle || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">East-West-Length (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.availableEastWestLengthFt || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">South-North-Length (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.availableSouthNorthLengthFt || "NA"}
-                                  </p>
-                                </div>
-                       
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                      Installation Space Type
+                                    </h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {getSpaceTypeName(installation.installationSpaceTypeId) || "NA"}
+                                    </p>
+                                  </div>
 
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.structureInverterDistanceFt || "NA"}
-                                  </p>
+
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.installationSpaceTitle || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">East-West-Length (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.availableEastWestLengthFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">South-North-Length (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.availableSouthNorthLengthFt || "NA"}
+                                    </p>
+                                  </div>
+
+
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.structureInverterDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.inverterMeterDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.inverterEarthDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.arresterEarthDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Height of Structure (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.minimumElevationFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.descriptionOfInstallation || "NA"}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterMeterDistanceFt || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterEarthDistanceFt || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.arresterEarthDistanceFt || "NA"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Ft)</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.minimumElevationFt || "NA"}
-                                  </p>
-                                </div>
-                                <div className="md:col-span-2">
-                                  <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
-                                  <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
-                                    {installation.descriptionOfInstallation || "NA"}
-                                  </p>
-                                </div>
-                                       </div>
-                          
+
                               </div>
 
                               {/* Optional Edit Button */}
@@ -680,9 +688,9 @@ if (!customer)
                                   onClick={() =>
                                     navigate(`/edit-installation`, {
                                       state: {
-                                        installationId: installation.installationSpaceId,
-                                        connectionId: connection.connectionId,
-                                        consumerId: connection.consumerNumber,
+                                        installationId: installation.id,
+                                        connectionId: connection.id,
+                                        consumerId: connection.consumerId,
                                         customerId,
                                       }
                                     })
@@ -699,7 +707,7 @@ if (!customer)
 
                       <button
                         onClick={() => {
-                          navigate(`/installation-form`, { state: { connectionId: connection.connectionId, consumerId: connection.consumerNumber, customerId } });
+                          navigate(`/installation-form`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
                         }}
                         className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
                       >
@@ -725,7 +733,7 @@ if (!customer)
                       },
                     })
                   }
-                 className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
+                  className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
                 >
                   Add New Connection
                 </button>
