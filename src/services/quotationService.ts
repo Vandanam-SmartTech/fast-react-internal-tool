@@ -948,7 +948,7 @@ export const getSavedSystemSpecPackages = async (
 
   try {
     const response = await quotationAPI.get(
-      `/api/system-packages/system-specs`,
+      `/api/system-packages/with-specs`,
       {
         params: isGharkulPackage !== undefined
           ? { isGharkulPackage }

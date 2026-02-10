@@ -768,110 +768,111 @@ const PackageManagement: React.FC = () => {
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-        {savedSpecs.length > 0 ? (
-          savedSpecs.map((pkg) => (
-            <Card
-              key={pkg.id}
-              // onClick={() => handleView(pkg)}
-              className="group relative cursor-pointer rounded-xl border border-slate-200
-        bg-white shadow-sm hover:shadow-xl hover:-translate-y-1
-        transition-all duration-300 overflow-hidden"
-            >
-              {/* Edit Icon */}
-              <button
-                // onClick={(e) => {
-                //   e.stopPropagation(); 
-                //   handleEdit(pkg);
-                // }}
-                className="absolute top-3 right-3 p-1.5 rounded-full
-          bg-slate-100 hover:bg-amber-100 text-slate-600
-          hover:text-amber-600 transition"
-              >
-                <Pencil size={16} />
-              </button>
+  {savedSpecs.length > 0 ? (
+    savedSpecs.map((pkg) => {
+      const specs = pkg.systemSpecs;
 
-              <div className="p-4">
+      return (
+        <Card
+          key={pkg.id}
+          className="group relative cursor-pointer rounded-2xl
+          bg-gradient-to-br from-blue-50 via-white to-emerald-50
+          border border-blue-100
+          shadow-md hover:shadow-2xl hover:-translate-y-1
+          transition-all duration-300 overflow-hidden"
+        >
+          {/* Edit Icon */}
+          <button
+            className="absolute top-3 right-3 p-1.5 rounded-full
+            bg-slate-100 hover:bg-amber-100 text-slate-600
+            hover:text-amber-600 transition"
+          >
+            <Pencil size={16} />
+          </button>
 
-                {/* Title */}
-                <h2 className="text-lg font-bold text-slate-900 truncate pr-8">
-                  {pkg.title}
-                </h2>
+          <div className="p-4">
 
-                {/* Panel + Capacity */}
-                <p className="mt-1 text-sm text-slate-600 truncate">
-                  <span className="font-semibold text-slate-800">
-                    {pkg.panelBrandShortName}
-                  </span>
-                  {" "}
-                  ({pkg.panelRatedWattageW}W)
-                  {" "} -{" "}
-                  <span className="font-semibold text-slate-800">
-                    {pkg.systemCapacityKw} kW
-                  </span>
-                </p>
+            {/* Title */}
+            <h2 className="text-lg font-bold text-slate-900 truncate pr-8">
+              {pkg.title}
+            </h2>
 
-
-                {/* Inverters */}
-                <div className="mt-2 space-y-1 text-sm text-slate-700">
-                  {pkg.inverters?.length > 0 ? (
-                    pkg.inverters.map((inv: any, index: number) => (
-                      <p key={index} className="truncate">
-                        ⚡{" "}
-                        <span className="font-semibold text-slate-900">
-                          {inv.inverterBrandName}
-                        </span>
-                        {" "} - {inv.inverterCapacity}kW × {inv.inverterCount}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="italic text-slate-400">
-                      No inverter details
-                    </p>
-                  )}
-
-                  {pkg.inverters?.some(
-                    (inv: any) => inv.gridTypeName === "Hybrid"
-                  ) && (
-                      <p className="truncate">
-                        🔋{" "}
-                        <span className="font-semibold text-slate-900">
-                          {pkg.batteryBrandName}
-                        </span>
-                        {" "} - {pkg.batteryCapacityKw} kW
-                      </p>
-                    )}
-                </div>
-
-
-                {/* Price */}
-                <div className="mt-3 pt-2 border-t flex justify-between items-center">
-                  <span className="text-sm text-slate-500 font-bold">
-                    Total Cost
-                  </span>
-                  <span className="text-sm font-semibold text-blue-700">
-                    ₹{(
-                      Number(pkg.systemCost ?? 0) +
-                      Number(pkg.fabricationCost ?? 0)
-                    ).toLocaleString("en-IN")}
-                  </span>
-                </div>
-
-              </div>
-
-              {/* Subtle bottom accent on hover */}
-              <div className="absolute bottom-0 left-0 w-0 h-1 bg-blue-500 
-          group-hover:w-full transition-all duration-300"></div>
-
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
-            <p className="text-gray-400 text-sm">
-              No packages found. Click "Add New Package" to create one.
+            {/* Panel + Capacity */}
+            <p className="mt-1 text-sm text-slate-700 truncate">
+              <span className="font-semibold text-blue-700">
+                {specs?.panelBrandShortName}
+              </span>{" "}
+              ({specs?.panelRatedWattageW}W) -{" "}
+              <span className="font-semibold text-emerald-700">
+                {specs?.systemCapacityKw} kW
+              </span>
             </p>
+
+            {/* Inverters */}
+            <div className="mt-2 space-y-1 text-sm text-slate-700">
+              {specs?.inverters?.length > 0 ? (
+                specs.inverters.map((inv: any, index: number) => (
+                  <p key={index} className="truncate">
+                    ⚡{" "}
+                    <span className="font-semibold text-slate-900">
+                      {inv.inverterBrandName}
+                    </span>{" "}
+                    - {inv.inverterCapacity}kW × {inv.inverterCount}
+                  </p>
+                ))
+              ) : (
+                <p className="italic text-slate-400">
+                  No inverter details
+                </p>
+              )}
+
+              {/* Show battery only if Hybrid */}
+              {specs?.inverters?.some(
+                (inv: any) => inv.gridTypeName === "Hybrid"
+              ) && specs?.batteryBrandName && (
+                <p className="truncate">
+                  🔋{" "}
+                  <span className="font-semibold text-slate-900">
+                    {specs?.batteryBrandName}
+                  </span>{" "}
+                  - {specs?.batteryCapacityKw} kW
+                </p>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="mt-3 pt-2 border-t border-blue-100 flex justify-between items-center">
+              <span className="text-sm font-semibold text-slate-600">
+                Total Cost
+              </span>
+              <span className="text-lg font-bold text-blue-700">
+                ₹{(
+                  Number(specs?.systemCost ?? 0) +
+                  Number(specs?.fabricationCost ?? 0)
+                ).toLocaleString("en-IN")}
+              </span>
+            </div>
+
           </div>
-        )}
-      </div>
+
+          {/* Bottom Accent */}
+          <div
+            className="absolute bottom-0 left-0 w-0 h-1
+            bg-gradient-to-r from-blue-500 via-emerald-500 to-teal-500
+            group-hover:w-full transition-all duration-500"
+          ></div>
+
+        </Card>
+      );
+    })
+  ) : (
+    <div className="col-span-full text-center py-8 bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-dashed border-gray-300">
+      <p className="text-gray-400 text-sm">
+        No packages found. Click "Add New Package" to create one.
+      </p>
+    </div>
+  )}
+</div>
 
 
 

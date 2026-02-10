@@ -1468,29 +1468,44 @@ export const SystemSpecifications = () => {
     );
   };
 
-  const StdSpecCard = ({ stdSpec }: { stdSpec: any }) => {
+  const StdSpecCard = ({ pkg }: { pkg: any }) => {
+    const stdSpec = pkg.systemSpecs;
+
+    if (!stdSpec) return null;
+
     return (
       <div
         onClick={() => {
-          handleSelectSpec(stdSpec);
-
+          handleSelectSpec(stdSpec);   // pass systemSpecs
           setIsFormOpen(true);
         }}
         className="relative cursor-pointer border rounded-lg p-3 shadow transition
       bg-gradient-to-br from-yellow-50 to-white border-yellow-400 hover:shadow-lg"
       >
+        {/* PACKAGE TITLE */}
+        <div className="mb-1">
+          <h2 className="text-sm font-semibold text-blue-700">
+            {pkg.title}
+          </h2>
+          <p className="text-xs text-gray-500 truncate">
+            {pkg.description}
+          </p>
+        </div>
+
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-0.5">
+        <div className="flex justify-between items-center mb-1">
           <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex-1 truncate pr-2">
             {stdSpec.panelBrandShortName}
             <span className="text-sm font-medium text-gray-600">
               {" "}({stdSpec.panelRatedWattageW}W)
             </span>
-            <span className="text-gray-700"> - {stdSpec.systemCapacityKw} kW</span>
+            <span className="text-gray-700">
+              {" "} - {stdSpec.systemCapacityKw} kW
+            </span>
           </h3>
         </div>
 
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           {stdSpec.inverters?.length > 0 ? (
             stdSpec.inverters.map((inv: any, index: number) => (
               <p key={index} className="text-sm text-gray-700">
@@ -1505,22 +1520,35 @@ export const SystemSpecifications = () => {
             </p>
           )}
 
-          {stdSpec.inverters?.some((inv: any) => inv.gridTypeName === "Hybrid") && (
-            <p className="text-sm text-gray-700">
-              🔋 Battery:{" "}
-              <span className="font-medium">{stdSpec.batteryBrandName}</span>
-              {" "} - {stdSpec.batteryCapacityKw} kW
-            </p>
-          )}
+          {/* Battery only if Hybrid inverter exists */}
+          {stdSpec.inverters?.some(
+            (inv: any) => inv.gridTypeName === "Hybrid"
+          ) && stdSpec.batteryBrandName && (
+              <p className="text-sm text-gray-700">
+                🔋 Battery:{" "}
+                <span className="font-medium">
+                  {stdSpec.batteryBrandName}
+                </span>
+                {" "} - {stdSpec.batteryCapacityKw} kW
+              </p>
+            )}
         </div>
 
-        <div className="mt-0.5">
+        {/* COST */}
+        <div className="mt-2">
           <span className="text-sm font-semibold text-blue-800">
             Total Cost: ₹
-            {((stdSpec.systemCost || 0) + (stdSpec.fabricationCost || 0))
-              .toLocaleString("en-IN")}
+            {(
+              (stdSpec.systemCost || 0) +
+              (stdSpec.fabricationCost || 0)
+            ).toLocaleString("en-IN")}
           </span>
         </div>
+
+        {/* VALIDITY */}
+        {/* <div className="mt-1 text-xs text-gray-500">
+          Valid: {pkg.validFrom} → {pkg.validThrough}
+        </div> */}
       </div>
     );
   };
@@ -1669,12 +1697,12 @@ export const SystemSpecifications = () => {
                       Loading...
                     </div>
                   ) : stdSpecPackages.length > 0 ? (
-                    stdSpecPackages.map((spec) => (
+                    stdSpecPackages.map((pkg) => (
                       <div
-                        key={spec.id}
+                        key={pkg.id}
                         className="min-w-[90%] sm:min-w-[80%] lg:min-w-0 snap-start"
                       >
-                        <StdSpecCard stdSpec={spec} />
+                        <StdSpecCard pkg={pkg} />
                       </div>
                     ))
                   ) : (
@@ -1682,6 +1710,7 @@ export const SystemSpecifications = () => {
                       No standard packages available
                     </p>
                   )}
+
                 </div>
               </div>
             </div>
