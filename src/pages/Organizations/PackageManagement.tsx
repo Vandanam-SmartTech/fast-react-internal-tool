@@ -743,31 +743,28 @@ const PackageManagement: React.FC = () => {
 
 
   return (
-     <div className="p-4 max-w-7xl mx-auto space-y-2">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
 
       <div className="flex items-center justify-between gap-4 mb-3">
 
-  {/* Left Side - Title */}
-  <h1 className="font-bold text-secondary-900
+        {/* Left Side - Title */}
+        <h1 className="font-bold text-secondary-900
                  text-lg sm:text-2xl
                  leading-tight">
-    Package Management
-  </h1>
+          Package Management
+        </h1>
 
-  {/* Right Side - Add Button */}
-  <Button
-    onClick={handleOpenSpecsModal}
-    variant="primary"
-    leftIcon={<Plus className="h-4 w-4" />}
-  >
-    <span className="sm:hidden">Add</span>
-    <span className="hidden sm:inline">Add New Package</span>
-  </Button>
+        {/* Right Side - Add Button */}
+        <Button
+          onClick={handleOpenSpecsModal}
+          variant="primary"
+          leftIcon={<Plus className="h-4 w-4" />}
+        >
+          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">Add New Package</span>
+        </Button>
 
-</div>
-
-
-
+      </div>
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">

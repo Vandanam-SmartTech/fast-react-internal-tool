@@ -56,6 +56,13 @@ const ListOfConsumers: React.FC = () => {
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
   const userRoleFromLocalStorage = userInfo?.role;
 
+  const ITEMS_PER_PAGE = 9;     // UI pagination
+  const BATCH_SIZE = 90;        // Backend fetch size
+
+  const [allConsumers, setAllConsumers] = useState<any[]>([]);
+  const [backendPage, setBackendPage] = useState(0);
+  const [hasMoreBackend, setHasMoreBackend] = useState(true);
+
   const handleViewConsumer = (consumer: Consumer) => {
     const customerId = consumer.customerId || consumer.id;
     console.log('Viewing consumer:', { consumer, customerId });
@@ -107,14 +114,64 @@ const ListOfConsumers: React.FC = () => {
     }
   }, [userRoleFromLocalStorage, userInfo?.deptCode]);
 
+  const resetAndLoad = async () => {
+  setAllConsumers([]);
+  setCurrentPage(0);
+  setBackendPage(0);
+  setHasMoreBackend(true);
+
+  await loadConsumers(0);
+};
+
+
   useEffect(() => {
     if (!isInitialized) return;
 
     // Only BDO reacts to village change
     if (userInfo?.role !== "ROLE_BDO") return;
 
-    loadConsumers(0); // reset to first page
+    resetAndLoad();
   }, [selectedVillage, isInitialized, userInfo?.role]);
+
+
+useEffect(() => {
+  setAllConsumers([]);
+  setCurrentPage(0);
+  setBackendPage(0);
+  setHasMoreBackend(true);
+
+  resetAndLoad();
+}, []);
+
+const displayDataForCustomers = allConsumers.slice(
+  currentPage * ITEMS_PER_PAGE,
+  currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+);
+
+const totalPagesLoaded = Math.ceil(
+  allConsumers.length / ITEMS_PER_PAGE
+);
+
+const handleNextPage = async () => {
+  const nextPage = currentPage + 1;
+
+  // If next page exceeds loaded pages → fetch next 90
+  if (
+    nextPage >= totalPagesLoaded &&
+    hasMoreBackend &&
+    !loading
+  ) {
+    await loadConsumers(backendPage + 1);
+  }
+
+  setCurrentPage(nextPage);
+};
+
+const handlePreviousPage = () => {
+  if (currentPage > 0) {
+    setCurrentPage(prev => prev - 1);
+  }
+};
 
 
 
@@ -146,7 +203,7 @@ const ListOfConsumers: React.FC = () => {
         if (res?.length) {
           setAgencies(res);
         } else {
-          loadConsumers(0);
+          resetAndLoad
         }
       });
     }
@@ -186,12 +243,12 @@ const ListOfConsumers: React.FC = () => {
     if (!isInitialized) return;
 
     if (selectedUserId !== null) {
-      loadConsumers(0);
+      resetAndLoad();
     }
   }, [selectedUserId, isInitialized]);
 
 
-  const loadConsumers = async (page: number) => {
+  const loadConsumers = async (pageNumber: number) => {
     if (!isInitialized) {
       return;
     }
@@ -265,20 +322,25 @@ const ListOfConsumers: React.FC = () => {
         userId,
         isGharkulCustomer: false,
         deptCode,
-        limit: 9,
+        limit: BATCH_SIZE,
       };
 
       console.log("Fetching consumers with params:", params);
 
-      const data = await fetchConsumersWithConnectionsOptimized(page, 9, params);
-      setConsumers(data.content);
+      const data = await fetchConsumersWithConnectionsOptimized(
+      pageNumber,
+      BATCH_SIZE,
+      params
+    );
+      // Append new data
+      setAllConsumers(prev => [...prev, ...data.content]);
 
-      // ✅ Load-more logic
-      setHasMore(data.content.length > 0);
-      setCurrentPage(page);
-      // setTotalPages(data.totalPages);
-      // setTotalCustomers(data.totalElements);
-      // setCurrentPage(page);
+      // If returned less than 90 → no more backend data
+      if (data.content.length < BATCH_SIZE) {
+        setHasMoreBackend(false);
+      }
+
+      setBackendPage(pageNumber);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
@@ -399,19 +461,12 @@ const ListOfConsumers: React.FC = () => {
   const displayData = searchQuery.trim() !== "" ? searchResults : consumers;
 
 
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    loadConsumers(currentPage);
-  }, [currentPage, isInitialized]);
-
   useEffect(() => {
     if (!isInitialized) return;
 
     if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
 
-    loadConsumers(0);
+    resetAndLoad();
   }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
 
 
@@ -420,8 +475,8 @@ const ListOfConsumers: React.FC = () => {
   useEffect(() => {
     const handleOrgChange = () => {
       if (!isInitialized) return;
-      setCurrentPage(0);
-      loadConsumers(0);
+
+      resetAndLoad();
     };
 
     window.addEventListener('organizationChanged', handleOrgChange);
@@ -437,8 +492,8 @@ const ListOfConsumers: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          disabled={loading || currentPage === 0}
-          onClick={() => loadConsumers(currentPage - 1)}
+          disabled={currentPage === 0}
+        onClick={handlePreviousPage}
         >
           Previous
         </Button>
@@ -452,8 +507,11 @@ const ListOfConsumers: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          disabled={loading || !hasMore}
-          onClick={() => loadConsumers(currentPage + 1)}
+          disabled={
+          loading ||
+          (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
+        }
+        onClick={handleNextPage}
         >
           Next
         </Button>
@@ -717,7 +775,7 @@ const ListOfConsumers: React.FC = () => {
                       } else {
                         setAgencies([]);
                         setSelectedAgencyId(null);
-                        loadConsumers(0);
+                        resetAndLoad();
                       }
                     }}
                     className="block w-full appearance-none p-2 pr-10 border rounded-md shadow-sm focus:border-blue-500"
@@ -755,7 +813,7 @@ const ListOfConsumers: React.FC = () => {
                         setSelectedAgencyId(null);
                         setAgencies([]);
                         setSelectedUserId(null);
-                        loadConsumers(0);
+                        resetAndLoad();
                       }}
                       className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-900 hover:text-red-500 transition"
                       title="Clear selection"
@@ -978,7 +1036,7 @@ const ListOfConsumers: React.FC = () => {
       {/* Results Grid */}
       {!loading && !isLoadingAll && (
         <>
-          {displayData.length === 0 ? (
+          {displayDataForCustomers.length === 0 ? (
             <Card className="text-center py-12">
               <CardBody>
                 <Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
@@ -995,7 +1053,7 @@ const ListOfConsumers: React.FC = () => {
             </Card>
           ) : (
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {displayData.map(renderConsumerCard)}
+              {displayDataForCustomers.map(renderConsumerCard)}
             </div>
           )}
 
