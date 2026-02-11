@@ -58,8 +58,8 @@ const GramPanchayatDashboard: React.FC = () => {
     } else if(
       selectedOrg.role === "ROLE_GRAMSEVAK"
     ){
-      params.role === "ROLE_GRAMSEVAK";
-      params.villageCode === selectedOrg.deptCode;
+      params.userRole = selectedOrg.role;
+      params.villageCode = selectedOrg.deptCode;
     }else if (
       selectedOrg.role === "ROLE_AGENCY_STAFF" ||
       selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
