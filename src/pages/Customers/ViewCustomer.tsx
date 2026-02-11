@@ -20,6 +20,7 @@ export const ViewCustomer = () => {
   const [showUserModal, setShowUserModal] = useState(false);
 
   const [referredByUser, setReferredByUser] = useState<any | null>(null);
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
   const tabs = [
@@ -340,7 +341,7 @@ export const ViewCustomer = () => {
               Edit Customer
             </button>
 
-            {connections.length === 0 && (
+            {connections.length === 0 && !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && (
               <button
                 onClick={() =>
                   navigate(`/connection-form`, {
@@ -723,7 +724,7 @@ export const ViewCustomer = () => {
               </div>
 
               {/* Add New Connection button below the collapsibles */}
-              <div className="flex justify-start mt-6">
+              { !(userInfo?.role =="ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <div className="flex justify-start mt-6">
                 <button
                   onClick={() =>
                     navigate(`/connection-form`, {
@@ -737,11 +738,10 @@ export const ViewCustomer = () => {
                 >
                   Add New Connection
                 </button>
-              </div>
+              </div>}
             </div>
           </div>
         )}
-
 
       </div>
     </div>

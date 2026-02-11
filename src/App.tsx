@@ -8,7 +8,7 @@ import PrivateRoute from './routes/PrivateRoute';
 import RoleProtectedRoute from './routes/RoleProtectedRoute';
 import HomeRedirect from './pages/HomeRedirect';
 import Sidebar from './components/Sidebar';
-import ListOfConsumers from './pages/ConsumerList/ListOfConsumers';
+import { ListOfConsumers } from './pages/ConsumerList/ListOfConsumers';
 import GenerateDocuments from './pages/Documents/GenerateDocuments';
 import { CustomerForm } from './pages/Customers/CustomerForm';
 import { ViewCustomer } from './pages/Customers/ViewCustomer';

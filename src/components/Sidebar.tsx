@@ -384,7 +384,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 {customersExpanded && (
                   <div className="ml-6 space-y-1 mt-2">
 
-                    <button
+                    {!(roles.includes("ROLE_BDO") || roles.includes("ROLE_GRAMSEVAK")) && (<button
                       onClick={goToCustomerForm}
                       className={`nav-link w-full justify-start ${location.pathname === "/customer-form"
                         ? "nav-link-active"
@@ -393,7 +393,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     >
                       <UserPlus size={18} />
                       <span>Add Customer</span>
-                    </button>
+                    </button>)}
 
 
                     <button

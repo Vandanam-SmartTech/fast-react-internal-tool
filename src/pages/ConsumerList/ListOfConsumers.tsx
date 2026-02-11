@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchConsumersWithConnections, searchCustomers, fetchVillages, fetchConsumersWithConnectionsOptimized } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
@@ -19,7 +19,7 @@ interface Consumer {
 }
 
 
-const ListOfConsumers: React.FC = () => {
+export const ListOfConsumers = () => {
   const navigate = useNavigate();
   const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -152,10 +152,21 @@ const ListOfConsumers: React.FC = () => {
     allConsumers.length / ITEMS_PER_PAGE
   );
 
-  const handleNextPage = async () => {
-    const nextPage = currentPage + 1;
+  const displaySearchData = searchResults.slice(
+  currentPage * ITEMS_PER_PAGE,
+  currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+);
 
-    // If next page exceeds loaded pages → fetch next 90
+const totalSearchPages = Math.ceil(
+  searchResults.length / ITEMS_PER_PAGE
+);
+
+
+const handleNextPage = async () => {
+  const nextPage = currentPage + 1;
+  const isSearching = searchQuery.trim() !== "";
+
+  if (!isSearching) {
     if (
       nextPage >= totalPagesLoaded &&
       hasMoreBackend &&
@@ -163,9 +174,11 @@ const ListOfConsumers: React.FC = () => {
     ) {
       await loadConsumers(backendPage + 1);
     }
+  }
 
-    setCurrentPage(nextPage);
-  };
+  setCurrentPage(nextPage);
+};
+
 
   const handlePreviousPage = () => {
     if (currentPage > 0) {
@@ -489,8 +502,13 @@ const ListOfConsumers: React.FC = () => {
 
   const finalDisplayData =
   searchQuery.trim() !== ""
-    ? searchResults
+    ? displaySearchData
     : displayDataForCustomers;
+
+    useEffect(() => {
+  setCurrentPage(0);
+}, [searchQuery]);
+
 
 
 
@@ -517,7 +535,13 @@ const ListOfConsumers: React.FC = () => {
   }, [isInitialized]);
 
   const renderPagination = () => {
-    if (searchQuery.trim() !== "") return null;
+    const isSearching = searchQuery.trim() !== "";
+
+  const totalPages = isSearching
+    ? totalSearchPages
+    : totalPagesLoaded;
+
+  if (totalPages <= 1) return null;
 
     return (
       <div className="flex justify-center gap-3 mt-4">
@@ -541,9 +565,11 @@ const ListOfConsumers: React.FC = () => {
           variant="outline"
           size="sm"
           disabled={
-            loading ||
-            (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
-          }
+          isSearching
+            ? currentPage >= totalPages - 1
+            : loading ||
+              (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
+        }
           onClick={handleNextPage}
         >
           Next
@@ -608,7 +634,7 @@ const ListOfConsumers: React.FC = () => {
 
               </h4>
 
-              <Button
+              { !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
@@ -623,7 +649,7 @@ const ListOfConsumers: React.FC = () => {
                 className="whitespace-nowrap"
               >
                 Add Connection
-              </Button>
+              </Button>}
             </div>
 
             {consumer.connectionData.map((connection, index) => (
@@ -1041,7 +1067,7 @@ const ListOfConsumers: React.FC = () => {
 
         {!loading && !isLoadingAll && finalDisplayData.length > 0 && (
           <div className="text-sm text-secondary-700 dark:text-secondary-300">
-            {searchQuery.trim() !== "" && `Search results for "${searchQuery}"`}
+            {searchQuery.trim() !== ""}
           </div>
         )}
       </div>
@@ -1102,4 +1128,3 @@ const ListOfConsumers: React.FC = () => {
   );
 };
 
-export default ListOfConsumers;
