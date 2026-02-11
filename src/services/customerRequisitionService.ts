@@ -396,7 +396,8 @@ export const fetchConsumersWithConnectionsOptimized = async (
     userRole?: string | null;
     userId?: number | null;
     isGharkulCustomer: boolean | null;
-    deptCode?: number | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
   }
 ) => {
   const crsAPI = getCrsAPI();
@@ -648,7 +649,8 @@ export const searchCustomers = async (
     agencyId?: number | null;
     userRole?: string | null;
     userId?: number | null;
-    deptCode?: number | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
   }
 ): Promise<any> => {
   const crsAPI = getCrsAPI();

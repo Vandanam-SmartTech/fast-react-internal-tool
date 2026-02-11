@@ -116,6 +116,10 @@ const Header: React.FC = () => {
       navigate('/staff-dashboard');
     } else if (role === 'ROLE_SUPER_ADMIN') {
       navigate('/super-admin-dashboard');
+    } else if (role === 'ROLE_BDO') {
+      navigate ('/bdo-dashboard');
+    } else if (role === 'ROLE_GRAMSEVAK'){
+      navigate('/grampanchayat-dashboard');
     }
 
     window.location.reload();

@@ -8,6 +8,7 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
+import ReusableDropdown from "../../components/ReusableDropdown";
 
 interface Consumer {
   id: number;
@@ -165,6 +166,15 @@ export const ListOfConsumers = () => {
     loadUsers();
   }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
 
+  const villageOptions = [
+  { value: "", label: "All Villages" }, // optional if you want default
+  ...villages.map((village) => ({
+    value: village.code,
+    label: village.nameEnglish,
+  })),
+];
+
+
   useEffect(() => {
     if (userRoleFromLocalStorage === "ROLE_BDO" && userInfo?.deptCode) {
       fetchVillages(userInfo.deptCode)
@@ -312,17 +322,18 @@ export const ListOfConsumers = () => {
       let orgId = selectedOrgId ?? null;
       let agencyId = selectedAgencyId ?? null;
       let userId = selectedUserId ?? null;
-      let deptCode: number | null = null;
+      let villageCode: number | null = null;
+      let talukaCode: number | null = null;
 
       let effectiveUserRole = userRole || userInfo?.role || null;
 
 
       if (userInfo?.role === "ROLE_BDO") {
         if (selectedVillage !== "") {
-          deptCode = Number(selectedVillage);
-          effectiveUserRole = "ROLE_GRAMSEVAK";
+          villageCode = Number(selectedVillage);
+          effectiveUserRole = "ROLE_BDO"
         } else {
-          deptCode = userInfo?.deptCode ?? null;
+          talukaCode = userInfo?.deptCode ?? null;
           effectiveUserRole = "ROLE_BDO";
         }
       }
@@ -356,7 +367,7 @@ export const ListOfConsumers = () => {
       }
 
       if (userInfo?.role === "ROLE_GRAMSEVAK") {
-        deptCode = userInfo.deptCode;
+        villageCode = userInfo.deptCode;
         effectiveUserRole = "ROLE_GRAMSEVAK"
       }
 
@@ -373,7 +384,8 @@ export const ListOfConsumers = () => {
         userRole: userRole || effectiveUserRole || null,
         userId,
         isGharkulCustomer: false,
-        deptCode,
+        villageCode,
+        talukaCode,
         limit: BATCH_SIZE,
       };
 
@@ -426,16 +438,17 @@ export const ListOfConsumers = () => {
         let orgId = selectedOrgId ?? null;
         let agencyId = selectedAgencyId ?? null;
         let userId = selectedUserId ?? null;
-        let deptCode: number | null = null;
+        let villageCode: number | null = null;
+        let talukaCode: number | null = null;
 
         let effectiveUserRole = userRole || userInfo?.role || null;
 
         if (userInfo?.role === "ROLE_BDO") {
           if (selectedVillage !== "") {
-            deptCode = Number(selectedVillage);
-            effectiveUserRole = "ROLE_GRAMSEVAK";
+            villageCode = Number(selectedVillage);
+            effectiveUserRole = "ROLE_BDO";
           } else {
-            deptCode = userInfo?.deptCode ?? null;
+            talukaCode = userInfo?.deptCode ?? null;
             effectiveUserRole = "ROLE_BDO";
           }
         }
@@ -463,7 +476,7 @@ export const ListOfConsumers = () => {
           effectiveUserRole = "ROLE_ORG_REPRESENTATIVE";
         }
         if (userInfo?.role === "ROLE_GRAMSEVAK") {
-          deptCode = userInfo.deptCode;
+          villageCode = userInfo.deptCode;
           effectiveUserRole = "ROLE_GRAMSEVAK";
         }
         if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
@@ -477,7 +490,8 @@ export const ListOfConsumers = () => {
           agencyId,
           userRole: userRole || effectiveUserRole || null,
           userId,
-          deptCode
+          villageCode,
+          talukaCode
         };
 
         console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
@@ -791,7 +805,7 @@ export const ListOfConsumers = () => {
                 </label>
               </div>)} */}
 
-            {userRoleFromLocalStorage === "ROLE_BDO" && (
+            {/* {userRoleFromLocalStorage === "ROLE_BDO" && (
               <div className="flex items-center gap-2 whitespace-nowrap">
 
                 <select
@@ -809,7 +823,19 @@ export const ListOfConsumers = () => {
                 </select>
 
               </div>
+            )} */}
+
+            {userRoleFromLocalStorage === "ROLE_BDO" && (
+              <div className="flex items-center gap-2 whitespace-nowrap w-64">
+                <ReusableDropdown
+                  value={selectedVillage || ""}
+                  onChange={(value) => setSelectedVillage(value as string)}
+                  options={villageOptions}
+                  placeholder="All Villages"
+                />
+              </div>
             )}
+
 
 
             <div className="flex gap-4">

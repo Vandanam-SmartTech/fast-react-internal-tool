@@ -51,14 +51,16 @@ const GramPanchayatDashboard: React.FC = () => {
 
     if (
       selectedOrg.role === "ROLE_ORG_STAFF" ||
-      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE" ||
-      selectedOrg.role === "ROLE_GRAMSEVAK" || 
-      selectedOrg.role === "ROLE_BDO"
+      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
     ) {
       params.orgId = selectedOrg.orgId;
       params.userRole = selectedOrg.role;
-      params.deptCode = selectedOrg.deptCode;
-    } else if (
+    } else if(
+      selectedOrg.role === "ROLE_GRAMSEVAK"
+    ){
+      params.role === "ROLE_GRAMSEVAK";
+      params.villageCode === selectedOrg.deptCode;
+    }else if (
       selectedOrg.role === "ROLE_AGENCY_STAFF" ||
       selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
     ) {
