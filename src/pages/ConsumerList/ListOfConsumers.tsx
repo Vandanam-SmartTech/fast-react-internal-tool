@@ -103,93 +103,6 @@ export const ListOfConsumers = () => {
   }, []);
 
   useEffect(() => {
-    if (userRoleFromLocalStorage === "ROLE_BDO" && userInfo?.deptCode) {
-      fetchVillages(userInfo.deptCode)
-        .then((data) => {
-          setVillages(data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [userRoleFromLocalStorage, userInfo?.deptCode]);
-
-  const resetAndLoad = async () => {
-    setAllConsumers([]);
-    setCurrentPage(0);
-    setBackendPage(0);
-    setHasMoreBackend(true);
-
-    await loadConsumers(0);
-  };
-
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    // Only BDO reacts to village change
-    if (userInfo?.role !== "ROLE_BDO") return;
-
-    resetAndLoad();
-  }, [selectedVillage, isInitialized, userInfo?.role]);
-
-
-  useEffect(() => {
-    setAllConsumers([]);
-    setCurrentPage(0);
-    setBackendPage(0);
-    setHasMoreBackend(true);
-
-    resetAndLoad();
-  }, []);
-
-  const displayDataForCustomers = allConsumers.slice(
-    currentPage * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  );
-
-  const totalPagesLoaded = Math.ceil(
-    allConsumers.length / ITEMS_PER_PAGE
-  );
-
-  const displaySearchData = searchResults.slice(
-  currentPage * ITEMS_PER_PAGE,
-  currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-);
-
-const totalSearchPages = Math.ceil(
-  searchResults.length / ITEMS_PER_PAGE
-);
-
-
-const handleNextPage = async () => {
-  const nextPage = currentPage + 1;
-  const isSearching = searchQuery.trim() !== "";
-
-  if (!isSearching) {
-    if (
-      nextPage >= totalPagesLoaded &&
-      hasMoreBackend &&
-      !loading
-    ) {
-      await loadConsumers(backendPage + 1);
-    }
-  }
-
-  setCurrentPage(nextPage);
-};
-
-
-  const handlePreviousPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-
-
-
-
-  useEffect(() => {
     const loadAgencies = async () => {
       try {
         if (!selectedOrgId) return;
@@ -251,6 +164,113 @@ const handleNextPage = async () => {
     };
     loadUsers();
   }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
+
+  useEffect(() => {
+    if (userRoleFromLocalStorage === "ROLE_BDO" && userInfo?.deptCode) {
+      fetchVillages(userInfo.deptCode)
+        .then((data) => {
+          setVillages(data);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
+  }, [userRoleFromLocalStorage, userInfo?.deptCode]);
+
+  const resetAndLoad = async () => {
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
+
+    await loadConsumers(0);
+  };
+
+  useEffect(() => {
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
+
+    resetAndLoad();
+  }, []);
+
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    // Only BDO reacts to village change
+    if (userInfo?.role !== "ROLE_BDO") return;
+
+    resetAndLoad();
+  }, [selectedVillage, isInitialized, userInfo?.role]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
+
+    resetAndLoad();
+  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
+
+
+  useEffect(() => {
+    const handleOrgChange = () => {
+      if (!isInitialized) return;
+
+      resetAndLoad();
+    };
+
+    window.addEventListener('organizationChanged', handleOrgChange);
+    return () => window.removeEventListener('organizationChanged', handleOrgChange);
+  }, [isInitialized]);
+
+
+
+
+  const displayDataForCustomers = allConsumers.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
+
+  const totalPagesLoaded = Math.ceil(
+    allConsumers.length / ITEMS_PER_PAGE
+  );
+
+  const displaySearchData = searchResults.slice(
+    currentPage * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
+
+  const totalSearchPages = Math.ceil(
+    searchResults.length / ITEMS_PER_PAGE
+  );
+
+
+  const handleNextPage = async () => {
+    const nextPage = currentPage + 1;
+    const isSearching = searchQuery.trim() !== "";
+
+    if (!isSearching) {
+      if (
+        nextPage >= totalPagesLoaded &&
+        hasMoreBackend &&
+        !loading
+      ) {
+        await loadConsumers(backendPage + 1);
+      }
+    }
+
+    setCurrentPage(nextPage);
+  };
+
+
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -386,29 +406,29 @@ const handleNextPage = async () => {
 
   // Debounced remote search with race protection
   useEffect(() => {
-  if (searchTimeoutRef.current) {
-    clearTimeout(searchTimeoutRef.current);
-  }
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-  const trimmed = searchQuery.trim();
+    const trimmed = searchQuery.trim();
 
-  if (trimmed === "") {
-    setSearchResults([]);
-    return;
-  }
+    if (trimmed === "") {
+      setSearchResults([]);
+      return;
+    }
 
-  if (trimmed.length < 2) return;
+    if (trimmed.length < 2) return;
 
-  searchTimeoutRef.current = setTimeout(async () => {
-    const currentSeq = ++latestSearchSeqRef.current;
+    searchTimeoutRef.current = setTimeout(async () => {
+      const currentSeq = ++latestSearchSeqRef.current;
 
       try {
-      let orgId = selectedOrgId ?? null;
-      let agencyId = selectedAgencyId ?? null;
-      let userId = selectedUserId ?? null;
-      let deptCode: number | null = null;
+        let orgId = selectedOrgId ?? null;
+        let agencyId = selectedAgencyId ?? null;
+        let userId = selectedUserId ?? null;
+        let deptCode: number | null = null;
 
-      let effectiveUserRole = userRole || userInfo?.role || null;
+        let effectiveUserRole = userRole || userInfo?.role || null;
 
         if (userInfo?.role === "ROLE_BDO") {
           if (selectedVillage !== "") {
@@ -468,80 +488,57 @@ const handleNextPage = async () => {
           params
         );
 
-              if (currentSeq === latestSearchSeqRef.current) {
-  if (Array.isArray(data)) {
-    setSearchResults(data);
-  } else {
-    setSearchResults(data.content ?? []);
-  }
-}
+        if (currentSeq === latestSearchSeqRef.current) {
+          if (Array.isArray(data)) {
+            setSearchResults(data);
+          } else {
+            setSearchResults(data.content ?? []);
+          }
+        }
 
 
-    } catch (error) {
-      if (currentSeq === latestSearchSeqRef.current) {
-        setSearchResults([]);
+      } catch (error) {
+        if (currentSeq === latestSearchSeqRef.current) {
+          setSearchResults([]);
+        }
       }
-    }
-  }, 300); // increased debounce slightly
+    }, 300); // increased debounce slightly
 
-  return () => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-  };
-}, [
-  searchQuery,
-  selectedOrgId,
-  selectedAgencyId,
-  selectedUserId,
-  userRole,
-  userInfo?.role,
-  userInfo?.deptCode,
-  selectedVillage
-]);
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [
+    searchQuery,
+    selectedOrgId,
+    selectedAgencyId,
+    selectedUserId,
+    userRole,
+    userInfo?.role,
+    userInfo?.deptCode,
+    selectedVillage
+  ]);
 
   const finalDisplayData =
-  searchQuery.trim() !== ""
-    ? displaySearchData
-    : displayDataForCustomers;
-
-    useEffect(() => {
-  setCurrentPage(0);
-}, [searchQuery]);
-
-
-
+    searchQuery.trim() !== ""
+      ? displaySearchData
+      : displayDataForCustomers;
 
   useEffect(() => {
-    if (!isInitialized) return;
-
-    if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
-
-    resetAndLoad();
-  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
+    setCurrentPage(0);
+  }, [searchQuery]);
 
 
-
-
-  useEffect(() => {
-    const handleOrgChange = () => {
-      if (!isInitialized) return;
-
-      resetAndLoad();
-    };
-
-    window.addEventListener('organizationChanged', handleOrgChange);
-    return () => window.removeEventListener('organizationChanged', handleOrgChange);
-  }, [isInitialized]);
 
   const renderPagination = () => {
     const isSearching = searchQuery.trim() !== "";
 
-  const totalPages = isSearching
-    ? totalSearchPages
-    : totalPagesLoaded;
+    const totalPages = isSearching
+      ? totalSearchPages
+      : totalPagesLoaded;
 
-  if (totalPages <= 1) return null;
+    if (totalPages <= 1) return null;
 
     return (
       <div className="flex justify-center gap-3 mt-4">
@@ -565,11 +562,11 @@ const handleNextPage = async () => {
           variant="outline"
           size="sm"
           disabled={
-          isSearching
-            ? currentPage >= totalPages - 1
-            : loading ||
+            isSearching
+              ? currentPage >= totalPages - 1
+              : loading ||
               (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
-        }
+          }
           onClick={handleNextPage}
         >
           Next
@@ -634,7 +631,7 @@ const handleNextPage = async () => {
 
               </h4>
 
-              { !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <Button
+              {!(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
