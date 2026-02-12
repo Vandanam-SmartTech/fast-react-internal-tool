@@ -795,11 +795,13 @@ export const SystemSpecifications = () => {
 
       // ---------------------- REFRESH & SUCCESS ------------------------------
 
-      await fetchSavedSpecs();
-
-      toast.success("System Specification saved successfully!", {
-        autoClose: 1000,
-        hideProgressBar: true,
+      // Navigate immediately to Preview System Specification
+      navigate("/preview-system-specification", {
+        state: {
+          consumerId,
+          connectionId,
+          customerId,
+        },
       });
 
     } catch (error) {
@@ -1676,7 +1678,7 @@ export const SystemSpecifications = () => {
         <div
           className={`flex flex-col lg:flex-row gap-5lg:justify-center`}
         >
-          
+
           {/* {isGharkulCustomer && (
             <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
               <h2 className="text-lg font-semibold text-gray-800 mb-2">
@@ -1729,7 +1731,7 @@ export const SystemSpecifications = () => {
               }`}
           > */}
 
-                    <div
+          <div
             className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
           >
 

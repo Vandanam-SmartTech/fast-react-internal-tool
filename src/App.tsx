@@ -18,11 +18,14 @@ import { ViewConnection } from './pages/Connections/ViewConnection';
 import { InstallationForm } from './pages/Installations/InstallationForm';
 import { ViewInstallation } from './pages/Installations/ViewInstallation';
 import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
-import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
-import  PasswordReset  from './pages/Auth/PasswordReset'; 
+import { ViewSystemSpecifications } from './pages/SystemSpecifications/ViewSystemSpecifications';
+import { PaymentPlaceholder } from './pages/Payment/PaymentPlaceholder';
+import { PreviewSystemSpecification } from './pages/SystemSpecifications/PreviewSystemSpecification';
+import OnboardedConsumers from './pages/ConsumerList/OnboardedConsumers';
+import PasswordReset from './pages/Auth/PasswordReset';
 import ChangePassword from './pages/Auth/ChangePassword';
-import  Verification  from './pages/Auth/Verification';
-import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
+import Verification from './pages/Auth/Verification';
+import RepresentativeDashboard from './pages/Dashboard/RepresentativeDashboard';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import SuperAdminDashboard from './pages/Dashboard/SuperAdminDashboard';
 import BDODashboard from './pages/Dashboard/BDODashboard';
@@ -95,12 +98,12 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex flex-col transition-colors duration-200">
       {/* Sidebar - Always render but control visibility */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
-      
+
       {/* Header - Always render but control visibility */}
       {showSidebar && <Header />}
 
-      <ToastContainer 
-        position="top-right" 
+      <ToastContainer
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -112,13 +115,12 @@ const AppContent: React.FC = () => {
         theme="light"
         toastClassName="rounded-lg shadow-soft"
       />
-      
+
       <EnvBanner />
 
       {/* Main content area */}
-      <main className={`flex-1 transition-all duration-300 ${
-        showSidebar && sidebarOpen ? 'md:ml-64' : ''
-      }`}>
+      <main className={`flex-1 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''
+        }`}>
         <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
@@ -126,8 +128,8 @@ const AppContent: React.FC = () => {
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/verification" element={<Verification />} />
             <Route path="/change-password" element={<ChangePassword />} />
-            
-            
+
+
             <Route
               path="/profile"
               element={
@@ -136,7 +138,7 @@ const AppContent: React.FC = () => {
                 </PrivateRoute>
               }
             />
-            
+
             <Route path="*" element={<PageNotFound />} />
 
             {/* Customer Management Routes */}
@@ -158,7 +160,7 @@ const AppContent: React.FC = () => {
               }
             />
 
-          
+
 
             {/* Dashboard Routes */}
             <Route
@@ -200,7 +202,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/representative-dashboard"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE','ROLE_AGENCY_REPRESENTATIVE']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE', 'ROLE_AGENCY_REPRESENTATIVE']}>
                   <RepresentativeDashboard />
                 </RoleProtectedRoute>
               }
@@ -218,7 +220,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/staff-dashboard"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF','ROLE_AGENCY_STAFF']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF', 'ROLE_AGENCY_STAFF']}>
                   <StaffDashboard />
                 </RoleProtectedRoute>
               }
@@ -330,6 +332,33 @@ const AppContent: React.FC = () => {
             />
 
             <Route
+              path="/view-system-specifications"
+              element={
+                <PrivateRoute>
+                  <ViewSystemSpecifications />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/payment"
+              element={
+                <PrivateRoute>
+                  <PaymentPlaceholder />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/preview-system-specification"
+              element={
+                <PrivateRoute>
+                  <PreviewSystemSpecification />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/onboarded-consumers"
               element={
                 <PrivateRoute>
@@ -368,18 +397,18 @@ const AppContent: React.FC = () => {
             />
 
             <Route
-            path="/edit-organization"
-            element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}>
+              path="/edit-organization"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
                   <EditOrganization />
                 </RoleProtectedRoute>
               }
             />
 
             <Route
-            path="/edit-agency"
-            element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}>
+              path="/edit-agency"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <EditAgency />
                 </RoleProtectedRoute>
               }
@@ -388,7 +417,7 @@ const AppContent: React.FC = () => {
             <Route
               path="/admin-management"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}>
                   <AdminManagement />
                 </RoleProtectedRoute>
               }
@@ -467,7 +496,7 @@ const AppContent: React.FC = () => {
               }
             />
 
-             <Route
+            <Route
               path="/package-management"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
@@ -516,24 +545,24 @@ const AppContent: React.FC = () => {
             <Route
               path="/user-org-roles"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}>
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
                   <UserOrgRoles />
                 </RoleProtectedRoute>
               }
             />
           </Routes>
         </div>
-      </main>
-      
-      
+      </main >
+
+
       {showSidebar && <Footer />}
-    </div>
+    </div >
   );
 };
 
 function App({ basePath }: { basePath: string }) {
   return (
-    
+
     <UserProvider>
       <Router basename={basePath}>
         <ScrollToTop />
