@@ -23,6 +23,53 @@ interface Village {
   pinCode: string;
 }
 
+const validationRules = {
+  gstNumber: {
+    pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    message: "GSTIN must be in format: 22AAAAA0000A1Z6"
+  },
+
+  addressLine1: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  addressLine2: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  pinCode: {
+    pattern: /^[0-9]{6}$/,
+    message: "Pincode must be exactly 6 digits (0-9)"
+  }
+};
+
+const validateField = (fieldName: string, value: string | number): { isValid: boolean; message: string } => {
+  const rule = validationRules[fieldName as keyof typeof validationRules];
+  if (!rule) return { isValid: true, message: "" };
+
+  if (fieldName === 'gstNumber') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'addressLine1' || fieldName === 'addressLine2') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'pinCode') {
+    if (!value) return { isValid: false, message: "pinCode is required" }; // Required field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  return { isValid: true, message: "" };
+};
+
 const AgencyForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,13 +103,15 @@ const AgencyForm: React.FC = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
 
   const [isDisplayNameManuallyEdited, setIsDisplayNameManuallyEdited] = useState(false);
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { userClaims } = useUser();
 
@@ -120,8 +169,8 @@ const AgencyForm: React.FC = () => {
     fetchVillagesData();
   }, [talukaCode]);
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleDistrictChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
@@ -137,8 +186,8 @@ const AgencyForm: React.FC = () => {
     }));
   };
 
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleTalukaChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
 
     setVillageCode(0);
@@ -152,8 +201,8 @@ const AgencyForm: React.FC = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleVillageChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     const selectedVillage = villages.find((village) => village.code === value);
 
     if (selectedVillage) {
@@ -181,6 +230,15 @@ const AgencyForm: React.FC = () => {
   }, [gstNumber]);
 
 
+  const validateFieldOnChange = (fieldName: string, value: string | number) => {
+    const validation = validateField(fieldName, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: validation.message
+    }));
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -192,7 +250,7 @@ const AgencyForm: React.FC = () => {
         ...formData,
         parentId: parseInt(orgId!),
         createdBy: userId,
-        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
+        pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : undefined,
       };
 
       await createOrganization(agencyData);
@@ -202,7 +260,7 @@ const AgencyForm: React.FC = () => {
       });
 
       navigate("/agencies", {
-        state: { orgId: orgId },
+        state: { orgId: orgId, gstNumber:gstNumber },
       });
 
     } catch (error) {
@@ -236,28 +294,31 @@ const AgencyForm: React.FC = () => {
         ...prev,
         [name]: value,
       }));
+
+      validateFieldOnChange(name, value);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() =>
-            navigate(-1)
-          }
-
-          className="p-2 rounded-full hover:bg-gray-200 transition"
-        >
+     <div className="min-h-screen bg-gray-50 py-4">
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+             <div className="flex items-center gap-2">
+         <button
+           onClick={() => navigate(-1)}
+           className="p-2 rounded-full hover:bg-gray-200 transition"
+         >
           <ArrowLeft className="w-6 h-6 text-gray-700" />
-        </button>
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
-          Add Agency
-        </h1>
-      </div>
+         </button>
+         <h1 className="text-xl font-bold text-gray-700">
+           Add New Agency
+         </h1>
+       </div>
+       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Legal Name <span className="text-red-500">*</span>
@@ -405,20 +466,30 @@ const AgencyForm: React.FC = () => {
             <input
               type="text"
               name="gstNumber"
-              value={formData.gstNumber || ''}
-              onChange={handleChange}
-              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-              title="GSTIN must be in format: 22AAAAA0000A1Z6"
-              placeholder="e.g. 22AAAAA0000A1Z6"
+              value={formData.gstNumber}
+              onChange={(e) =>
+                handleChange({
+                  target: {
+                    name: "gstNumber",
+                    value: e.target.value.toUpperCase()
+                  }
+                } as React.ChangeEvent<HTMLInputElement>)
+              }
               maxLength={15}
-              required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              placeholder="e.g. 22AAAAA0000A1Z6"
+              className={`w-full px-3 py-2.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+                }`}
             />
+
+            {fieldErrors.gstNumber && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.gstNumber}</p>
+            )}
+
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
+              Government Registration Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -436,7 +507,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="district"
               value={districtCode}
-              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              onChange={(val) => handleDistrictChange(Number(val))}
               options={[
                 { value: 0, label: districtName || "Select District" },
                 ...districts.map((district) => ({
@@ -454,7 +525,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="talukaCode"
               value={talukaCode}
-              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              onChange={(val) => handleTalukaChange(Number(val))}
               options={[
                 { value: 0, label: talukaName || "Select Taluka" },
                 ...talukas.map((taluka) => ({
@@ -472,7 +543,7 @@ const AgencyForm: React.FC = () => {
             <ReusableDropdown
               name="villageCode"
               value={villageCode}
-              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              onChange={(val) => handleVillageChange(Number(val))}
               options={[
                 { value: 0, label: villageName || "Select Village" },
                 ...villages.map((village) => ({
@@ -509,8 +580,11 @@ const AgencyForm: React.FC = () => {
               name="addressLine1"
               value={formData.addressLine1 || ''}
               onChange={handleChange}
-
               placeholder="e.g. Flat No, House No, Street Name"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+              maxLength={100}
+              required
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
@@ -522,35 +596,42 @@ const AgencyForm: React.FC = () => {
             <input
               type="text"
               name="addressLine2"
-              placeholder="e.g. Apartment, Suite, Unit, Building"
               value={formData.addressLine2 || ''}
               onChange={handleChange}
+              placeholder="e.g. Apartment, Suite, Unit, Building"
+              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
               className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
-
-
-
+        </div>
         </div>
 
-        <div className="col-span-2 flex justify-center gap-6 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+           className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
+           className="
+      w-full sm:w-auto inline-flex items-center justify-center gap-2
+      px-3 py-2.5 sm:px-5 sm:py-2.5
+      bg-blue-600 text-white font-semibold
+      text-sm sm:text-base
+      rounded-md hover:bg-blue-700
+      transition-colors shadow-sm hover:shadow-md
+      disabled:opacity-50">
             <Save className="h-4 w-4" />
             {loading ? 'Saving...' : 'Save Agency'}
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 };

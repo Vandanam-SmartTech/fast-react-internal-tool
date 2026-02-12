@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { UserProvider } from './contexts/UserContext';
+import ScrollToTop from './components/ScrollToTop';
 
 import Login from './pages/Auth/Login';
 import PrivateRoute from './routes/PrivateRoute';
 import RoleProtectedRoute from './routes/RoleProtectedRoute';
 import HomeRedirect from './pages/HomeRedirect';
 import Sidebar from './components/Sidebar';
-import ListOfConsumers from './pages/ConsumerList/ListOfConsumers';
+import { ListOfConsumers } from './pages/ConsumerList/ListOfConsumers';
 import GenerateDocuments from './pages/Documents/GenerateDocuments';
 import { CustomerForm } from './pages/Customers/CustomerForm';
 import { ViewCustomer } from './pages/Customers/ViewCustomer';
@@ -24,6 +25,8 @@ import  Verification  from './pages/Auth/Verification';
 import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
 import AdminDashboard from './pages/Dashboard/AdminDashboard';
 import SuperAdminDashboard from './pages/Dashboard/SuperAdminDashboard';
+import BDODashboard from './pages/Dashboard/BDODashboard';
+import GramPanchayatDashboard from './pages/Dashboard/GramPanchayatDashboard';
 import AgencyAdminDashboard from './pages/Dashboard/AgencyAdminDashboard';
 import StaffDashboard from './pages/Dashboard/StaffDashboard';
 import { EditCustomer } from './pages/Customers/EditCustomer';
@@ -42,6 +45,7 @@ import EditOrganization from './pages/Organizations/EditOrganization';
 import UserManagement from './pages/Organizations/UserManagement';
 import UserFormManagement from './pages/Organizations/UserFormManagement';
 import PackageManagement from './pages/Organizations/PackageManagement';
+import ProductManagement from './pages/Organizations/ProductManagement';
 import EditUser from './pages/Organizations/EditUser';
 import UserView from './pages/Organizations/UserView';
 import RoleManagement from './pages/Organizations/RoleManagement';
@@ -162,6 +166,24 @@ const AppContent: React.FC = () => {
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
                   <AdminDashboard />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bdo-dashboard"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_BDO']}>
+                  <BDODashboard />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/grampanchayat-dashboard"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_GRAMSEVAK']}>
+                  <GramPanchayatDashboard />
                 </RoleProtectedRoute>
               }
             />
@@ -306,11 +328,7 @@ const AppContent: React.FC = () => {
                 </PrivateRoute>
               }
             />
-    
 
-
-
-            {/* Consumer Routes */}
             <Route
               path="/onboarded-consumers"
               element={
@@ -441,6 +459,24 @@ const AppContent: React.FC = () => {
             />
 
             <Route
+              path="/product-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <ProductManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/package-management"
+              element={
+                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                  <PackageManagement />
+                </RoleProtectedRoute>
+              }
+            />
+
+            <Route
               path="/user-form"
               element={
                 <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
@@ -453,9 +489,9 @@ const AppContent: React.FC = () => {
             <Route
               path="/edit-user"
               element={
-                <RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}>
+                <PrivateRoute>
                   <EditUser />
-                </RoleProtectedRoute>
+                </PrivateRoute>
               }
             />
 
@@ -497,8 +533,10 @@ const AppContent: React.FC = () => {
 
 function App({ basePath }: { basePath: string }) {
   return (
+    
     <UserProvider>
       <Router basename={basePath}>
+        <ScrollToTop />
         <AppContent />
       </Router>
     </UserProvider>

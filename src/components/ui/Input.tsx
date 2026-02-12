@@ -48,7 +48,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           type={inputType}
           className={`
             form-input
-            py-2.5
+            py-2
             ${leftIcon ? 'pl-10' : ''}
             ${rightIcon || showPasswordToggle ? 'pr-10' : ''}
             ${error ? 'form-input-error' : ''}
@@ -66,9 +66,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className="flex items-center justify-center h-5 w-5  dark:hover:text-secondary-300 transition-colors"
       >
         {showPassword ? (
-          <FaEyeSlash className="h-4 w-4" />
-        ) : (
           <FaEye className="h-4 w-4" />
+        ) : (
+          <FaEyeSlash className="h-4 w-4" />
         )}
       </button>
     ) : (

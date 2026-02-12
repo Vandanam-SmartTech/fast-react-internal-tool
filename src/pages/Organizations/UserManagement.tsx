@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, User, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
 import { fetchOrganizations, Organization, fetchAllUsersByOrgId } from '../../services/organizationService';
 import { toast } from 'react-toastify';
-import Card, { CardBody, CardHeader } from '../../components/ui/Card';
+import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';
@@ -15,14 +15,13 @@ const UserManagement: React.FC = () => {
   const { userClaims } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [, setOrganizations] = useState<Organization[]>([]);
   const [userRole, setUserRole] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   //const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters,] = useState(false);
   const navigate = useNavigate();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,7 +55,7 @@ const UserManagement: React.FC = () => {
       loadUsersByOrg(storedUserInfo.orgId);
     }
 
-    
+
     loadRoles();
   }, [userClaims]);
 
@@ -83,6 +82,8 @@ const UserManagement: React.FC = () => {
             "ROLE_ORG_ADMIN",
             "ROLE_ORG_STAFF",
             "ROLE_ORG_REPRESENTATIVE",
+            "ROLE_ORG_ELECTRICIAN",
+            "ROLE_ORG_FABRICATOR"
           ].includes(r.name)
       );
     } else {
@@ -114,33 +115,33 @@ const UserManagement: React.FC = () => {
     }
   };
 
-const loadUsersByOrg = async (organizationId: string | number) => {
-  try {
-    setLoading(true);
-    const data = await fetchAllUsersByOrgId(organizationId);
+  const loadUsersByOrg = async (organizationId: string | number) => {
+    try {
+      setLoading(true);
+      const data = await fetchAllUsersByOrgId(organizationId);
 
-    if (data?.success === false && data?.message?.includes("Users not found")) {
-      setUsers([]);
-      setFilteredUsers([]);
-      return;
-    }
+      if (data?.success === false && data?.message?.includes("Users not found")) {
+        setUsers([]);
+        setFilteredUsers([]);
+        return;
+      }
 
-    setUsers(data);
-    setFilteredUsers(data);
-  } catch (error: any) {
-    if (!error.response?.data?.message?.includes("Users not found")) {
-      toast.error("Failed to load organization users",{
-        autoClose:1000,
-        hideProgressBar:true
-      });
-    } else {
-      setUsers([]);
-      setFilteredUsers([]);
+      setUsers(data);
+      setFilteredUsers(data);
+    } catch (error: any) {
+      if (!error.response?.data?.message?.includes("Users not found")) {
+        toast.error("Failed to load organization users", {
+          autoClose: 1000,
+          hideProgressBar: true
+        });
+      } else {
+        setUsers([]);
+        setFilteredUsers([]);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const handleSearch = (term: string) => {
@@ -189,7 +190,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
         const result = await deleteUser(userId);
 
         if (result.success) {
-          toast.success(result.message || "User deactivated successfully", {
+          toast.success("User deactivated successfully", {
             autoClose: 1000,
             hideProgressBar: true,
           });
@@ -203,7 +204,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
             await loadUsersByOrg(userInfo?.orgId);
           }
         } else {
-          toast.error(result.message || "Failed to deactivate user");
+          toast.error("Failed to deactivate user");
         }
       } catch (error) {
         toast.error("An error occurred while deactivating the user");
@@ -222,24 +223,33 @@ const loadUsersByOrg = async (organizationId: string | number) => {
     if (roleName.includes('AGENCY_ADMIN')) return 'badge-success';
     if (roleName.includes('STAFF')) return 'badge-primary';
     if (roleName.includes('REPRESENTATIVE')) return 'badge-secondary';
+    if (roleName.includes('ELECTRICIAN')) return 'badge-secondary';
+    if (roleName.includes('FABRICATOR')) return 'badge-primary';
     return 'badge-ghost';
   };
 
   const UserCard: React.FC<{ user: any }> = ({ user }) => (
     <Card className="hover:shadow-medium transition-all duration-200" hover={true}>
-      <CardBody className="p-6">
+      <CardBody className="p-4">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
-              <User className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-xs tracking-wide uppercase">
+                {user.username?.slice(0, 2)}
+              </span>
+
             </div>
+
             <div>
               <h3 className="font-semibold text-secondary-900">
                 {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
               </h3>
-              <p className="text-sm text-secondary-600 dark:text-secondary-300">@{user.username}</p>
+              <p className="text-sm text-secondary-600 dark:text-secondary-300">
+                @{user.username}
+              </p>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             {user.isActive ? (
               <CheckCircle className="h-5 w-5 text-success-600" />
@@ -249,22 +259,27 @@ const loadUsersByOrg = async (organizationId: string | number) => {
           </div>
         </div>
 
-        <div className="space-y-3 mb-4">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
           {user.emailAddress && (
-            <div className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
-              <Mail className="h-4 w-4" />
-              <span>{user.emailAddress}</span>
+            <div className="flex items-start gap-2 text-sm text-secondary-700 dark:text-secondary-300">
+              <Mail className="h-4 w-4 shrink-0 mt-0.5" />
+              <span className="break-all sm:break-words">
+                {user.emailAddress}
+              </span>
             </div>
           )}
+
           {user.contactNumber && (
-            <div className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
-              <Phone className="h-4 w-4" />
+            <div className="flex items-start gap-2 text-sm text-secondary-700 dark:text-secondary-300">
+              <Phone className="h-4 w-4 shrink-0 mt-0.5" />
               <span>+91 {user.contactNumber}</span>
             </div>
           )}
         </div>
 
-        <div className="mb-4">
+
+        <div className="mb-2">
           <h4 className="text-sm font-medium text-secondary-700 mb-2">Roles</h4>
           <div className="flex flex-wrap gap-1">
             {user.roles?.map((role: any, index: number) => (
@@ -283,7 +298,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-secondary-200">
+        <div className="flex items-center justify-between pt-2 border-t border-secondary-200">
           <span className={`badge ${user.isActive ? 'badge-success' : 'badge-error'}`}>
             {user.isActive ? 'Active' : 'Inactive'}
           </span>
@@ -346,44 +361,34 @@ const loadUsersByOrg = async (organizationId: string | number) => {
   }
 
   return (
-    <div className="p-5 max-w-7xl mx-auto space-y-4">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            User Management
-          </h1>
-          <p className="text-secondary-700 dark:text-secondary-300 mt-1">Manage system users, roles, and permissions</p>
-        </div>
+      <div className="flex items-center justify-between gap-1 mb-2">
+        {/* Title */}
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-1 sm:gap-2">
+          <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+          <span>User Management</span>
+        </h1>
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        {/* Add User Button */}
+        <Button
+          variant="primary"
+          onClick={() => navigate("/user-form")}
+          leftIcon={<Plus className="h-4 w-4 sm:h-4 sm:w-4" />}
+          className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm sm:text-base shrink-0"
+        >
+          {/* Mobile text */}
+          <span className="sm:hidden">Add</span>
 
-          {/* <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode(viewMode === 'table' ? 'cards' : 'table')}
-            leftIcon={viewMode === 'table' ? <Users className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          >
-            {viewMode === 'table' ? 'Card View' : 'Table View'}
-          </Button> */}
-
-
-          <Button
-            variant="primary"
-            onClick={() => navigate('/user-form')}
-            leftIcon={<Plus className="h-5 w-5" />}
-            className="px-6 py-3 text-base"
-          >
-            Add User
-          </Button>
-
-        </div>
+          {/* Desktop text */}
+          <span className="hidden sm:inline">Add User</span>
+        </Button>
       </div>
+
 
       {/* Search and Filters */}
       <Card>
-        <CardBody className="p-6">
+        <CardBody className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-2">
               <Input
@@ -403,6 +408,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+
               </select>
             </div>
 
@@ -454,9 +460,9 @@ const loadUsersByOrg = async (organizationId: string | number) => {
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
-          <CardBody className="p-4">
+          <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-primary-600">Total Users</p>
@@ -470,7 +476,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
         </Card>
 
         <Card className="bg-gradient-to-r from-success-50 to-success-100 border-success-200">
-          <CardBody className="p-4">
+          <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-success-600">Active Users</p>
@@ -484,7 +490,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
         </Card>
 
         <Card className="bg-gradient-to-r from-warning-50 to-warning-100 border-warning-200">
-          <CardBody className="p-4">
+          <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-warning-600">Inactive Users</p>
@@ -498,7 +504,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
         </Card>
 
         <Card className="bg-gradient-to-r from-secondary-50 to-secondary-100 border-secondary-200">
-          <CardBody className="p-4">
+          <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-secondary-600">Filtered Results</p>
@@ -631,7 +637,7 @@ const loadUsersByOrg = async (organizationId: string | number) => {
       )} */}
 
       {/*-------Showing users in card view only---------*/}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredUsers.map((user) => (
           <UserCard key={user.id} user={user} />
         ))}
@@ -640,13 +646,13 @@ const loadUsersByOrg = async (organizationId: string | number) => {
       {/* Empty State */}
       {filteredUsers.length === 0 && (
         <Card>
-          <CardBody className="p-12 text-center">
+          <CardBody className="p-8 text-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="p-4 bg-secondary-100 rounded-full">
+              <div className="p-2 bg-secondary-100 rounded-full">
                 <Users className="h-8 w-8 text-secondary-400" />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-secondary-900 mb-2">
+                <h3 className="text-lg font-medium text-secondary-900">
                   {searchTerm || statusFilter !== 'all' || roleFilter !== 'all' ? 'No users found' : 'No users yet'}
                 </h3>
                 <p className="text-secondary-600 mb-4">

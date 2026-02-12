@@ -145,10 +145,10 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
 };
 
 
-export const fetchDistricts = async (): Promise<District[]> => {
+export const fetchDistricts = async () => {
   const crsAPI = getCrsAPI();
   try {
-    const response = await crsAPI.get('/api/district/27');
+    const response = await crsAPI.get('/api/district/1');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching districts:', error);
@@ -158,7 +158,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
   }
 };
 
-export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+export const fetchTalukas = async (districtCode: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/taluka/${districtCode}`);
@@ -171,7 +171,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   }
 };
 
-export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+export const fetchVillages = async (talukaCode: number) => {
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.get(`/api/village/${talukaCode}`);
@@ -275,6 +275,17 @@ export const getCustomerById = async (customerId: number): Promise<any> => {
   }
 };
 
+export const getCustomerConnectionInstallationById = async (customerId: number): Promise<any> => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(`/api/view-customer/${customerId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching customer details:', error);
+    return null;
+  }
+};
+
 
 export const getConnectionByConnectionId = async (connectionId: number): Promise<any> => {
   const crsAPI = getCrsAPI();
@@ -326,7 +337,33 @@ export const fetchConsumerNumber = async (customerId: number) => {
   }
 };
 
-export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
+export const fetchConsumerData = async (consumerId: number) => {
+  const crsAPI = getCrsAPI();
+  try {
+    const response = await crsAPI.get(
+      `/api/customer-records/by-consumer-number/${consumerId}`
+    );
+
+    if (response.data?.success === false) {
+      console.warn(response.data.message);
+      return null;
+    }
+
+    return response.data; // ✅ return object
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      console.info("Consumer not found");
+    } else {
+      console.error("Error fetching consumer data", error.message);
+    }
+    return null;
+  }
+};
+
+
+
+
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null, deptCode?:number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
@@ -347,6 +384,39 @@ export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: 
     throw new Error('Failed to fetch consumers with connections.');
   }
 };
+
+export const fetchConsumersWithConnectionsOptimized = async (
+  page = 0,
+  limit = 9,
+  params: {
+    orgId?: number | null;
+    orgName?: string | null;
+    agencyId?: number | null;
+    agencyName?: string | null;
+    userRole?: string | null;
+    userId?: number | null;
+    isGharkulCustomer: boolean | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
+  }
+) => {
+  const crsAPI = getCrsAPI();
+
+  const response = await crsAPI.get(
+    "/api/customers/with-connections/paginatedoptimized",
+    {
+      params: { page, limit, ...params },
+    }
+  );
+
+  return {
+    content: response.data,
+    currentPage: page,
+    size: response.data.length,
+    hasMore: response.data.length === limit, // 👈 important
+  };
+};
+
 
 
 export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
@@ -566,36 +636,47 @@ export const updateMaterialData = async (
     console.error('Error updating material data:', error);
     throw error;
   }
+  
 };
 
 
 export const searchCustomers = async (
   searchTerm: string,
-  params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
-): Promise<any[]> => {
+  page: number,
+  limit: number,
+  params: {
+    orgId?: number | null;
+    agencyId?: number | null;
+    userRole?: string | null;
+    userId?: number | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
+  }
+): Promise<any> => {
   const crsAPI = getCrsAPI();
-  try {
-    console.log("CRS API Request Body for searchCustomers:", { searchTerm, ...params });
 
-    // Changed from GET (with query params) to POST (with JSON body)
-    const response = await crsAPI.post(`/api/customers/search`, {
+  try {
+    console.log("CRS API Request Body for searchCustomers:", {
       searchTerm,
+      page,
+      limit,
       ...params,
     });
 
-    const data = response.data;
+    const response = await crsAPI.post(`/api/customers/search`, {
+      searchTerm,
+      page,
+      limit,
+      ...params,
+    });
 
-    if (Array.isArray(data)) {
-      return data;
-    } else {
-      console.error("Invalid API response format:", data);
-      throw new Error("Failed to parse search results");
-    }
+    return response.data; // Expecting pageable response
   } catch (error) {
     console.error("Error fetching search results:", error);
     throw new Error("Failed to fetch search results");
   }
 };
+
 
 
 export const searchOnboardedConsumers = async (
@@ -766,6 +847,46 @@ export const updateModule = async (connectionId: number, data: Record<string, an
     throw error;
   }
 };
+
+export const checkIsConnectionOnboarded = async (
+  connectionId: number
+): Promise<boolean> => {
+  const crsAPI = getCrsAPI();
+  try {
+    const { data } = await crsAPI.get(`/api/connections/is-onboarded/${connectionId}`);
+    return data === true;
+  } catch (error) {
+    console.error("Error checking is connection onboarded:", error);
+    return false;
+  }
+};
+
+export const saveSanctionDetails = async (
+  connectionId: string,
+  sanctionNo: string,
+  sanctionDate: string
+) => {
+  try {
+    const crsAPI = getCrsAPI();
+
+    const payload = {
+      sanctionNo,
+      sanctionDate,
+    };
+
+    const response = await crsAPI.post(`/api/sanction/${connectionId}`, payload);
+
+    console.log("Sanction details saved:", response.data);
+
+    return response.data;
+
+  } catch (err) {
+    console.error("Failed to save sanction details", err);
+    return null;
+  }
+}; 
+
+
 
 
 

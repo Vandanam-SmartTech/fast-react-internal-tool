@@ -302,3 +302,26 @@ export const uploadOrganizationImage = async (orgId: number, file: File): Promis
     throw error;
   }
 };
+
+export const fetchOrganizationImage = async (orgId: number): Promise<string> => {
+  try {
+    const docManagerAPI = getDocManagerAPI();
+
+    const response = await docManagerAPI.get(
+      `/api/document-manager/organization-media/${orgId}/logo/image`,
+      {
+        responseType: "blob", 
+      }
+    );
+
+    const imageUrl = URL.createObjectURL(response.data);
+
+    console.log(`Logo fetched successfully for organization ${orgId}`);
+
+    return imageUrl;
+  } catch (error: any) {
+    console.error("Failed to fetch logo:", error);
+    throw error;
+  }
+};
+

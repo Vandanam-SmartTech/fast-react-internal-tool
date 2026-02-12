@@ -51,6 +51,7 @@ const HomeRedirect: React.FC = () => {
             orgId,
             orgName: orgData.org_name,
             role,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 
@@ -74,6 +75,7 @@ const HomeRedirect: React.FC = () => {
         if (!matchingOrg) {
           // Invalid org -> logout
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
           return;
@@ -93,6 +95,7 @@ const HomeRedirect: React.FC = () => {
             orgId,
             orgName: orgData.org_name,
             role: roleToUse,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 
@@ -123,9 +126,16 @@ const HomeRedirect: React.FC = () => {
         case 'ROLE_CUSTOMER':
           setRedirectPath('/manage-customers');
           break;
+        case 'ROLE_GRAMSEVAK':
+          setRedirectPath('/grampanchayat-dashboard');
+          break;
+        case 'ROLE_BDO':
+          setRedirectPath('/bdo-dashboard');
+          break;
         default:
           // Invalid role -> logout
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
       }

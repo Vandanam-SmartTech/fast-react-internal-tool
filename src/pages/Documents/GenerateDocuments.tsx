@@ -5,9 +5,12 @@ import IconButton from "../../components/ui/IconButton";
 import { buildAcceptAttribute, isFileAllowed, buildAllowedOnlyMessage, kbToBytes, isFileSizeWithin, buildMaxSizeMessage } from "../../utils/fileValidation";
 import { fetchPdf } from "../../services/documentGeneratorService";
 import { uploadDocuments, downloadDocumentById, fetchUploadedDocuments, deleteDocumentById, updateDocumentById } from "../../services/documentManagerService";
+import { checkIsConnectionOnboarded, saveSanctionDetails } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { toast } from 'react-toastify';
 import { formatFileName } from "../../utils/formatFileName";
+import pdfToText from "react-pdftotext";
+
 
 export interface Consumer {
   id: number;
@@ -49,7 +52,7 @@ export default function GenerateDocuments() {
 
   const [loadingPreviewDoc, setLoadingPreviewDoc] = useState<string | null>(null);
   const [loadingGenerateDoc, setLoadingGenerateDoc] = useState<string | null>(null);
-  const [selectedSession, setSelectedSession] = useState<string>("");
+  const [, setSelectedSession] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -70,11 +73,48 @@ export default function GenerateDocuments() {
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
   const [quotedTotals, setQuotedTotals] = useState<Record<string, number | ''>>({});
+  const [isConnectionOnboarded, setIsConnectionOnboarded] = useState<boolean>(false);
+  const [fileSizeError, setFileSizeError] = useState<Record<string, boolean>>({});
 
-
-
+  const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
 
   const connectionId = consumer?.id?.toString();
+
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+  const userRoleFromLocalStorage = userInfo?.role;
+
+  const [, setSanctionNo] = useState<string | null>(null);
+  const [, setSanctionDate] = useState<string | null>(null);
+
+
+  // Documents that require material data (module, inverter, installation)
+  // const documentsRequiringMaterialData = [
+  //   "Net Agreement",
+  //   "WCR",
+  //   "Annexure-I",
+  //   "RTS Declaration",
+  //   "Earthing Report",
+  //   "Vendor Feasibility",
+  //   "Consumer Vendor Agreement",
+  //   "Gen Meter Testing Letter"
+  // ];
+
+
+  // const checkMaterialDataExists = async (connectionId: number): Promise<boolean> => {
+  //   try {
+  //     const [module, inverter, installation] = await Promise.all([
+  //       fetchModule(connectionId),
+  //       fetchInverter(connectionId),
+  //       fetchInstallation(connectionId)
+  //     ]);
+
+  //     // Return true only if all three exist (not null)
+  //     return module !== null && inverter !== null && installation !== null;
+  //   } catch (error) {
+  //     console.error("Error checking material data:", error);
+  //     return false;
+  //   }
+  // };
 
 
   const documentSteps: DocumentStep[] = [
@@ -104,25 +144,35 @@ export default function GenerateDocuments() {
       id: 3,
       title: "Consumer Vendor Agreement",
       documents: [
-        { label: "Consumer Vendor Agreement", name: "Consumer Vendor Agreement", canGenerate: true, canPreview: true }
+        { label: "Consumer Vendor Agreement (Draft)", name: "Consumer Vendor Agreement Draft", canGenerate: true, canPreview: true },
+        { label: "Consumer Vendor Agreement (Signed)", name: "Consumer Vendor Agreement Signed", canGenerate: false, canPreview: false }
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 4,
-      title: "Sanction Letter",
+      title: "Payments",
       documents: [
-        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(50) }
+        { label: "Payment Receipts", name: "Payment Receipt", canGenerate: false, canPreview: false },
       ],
       isCompleted: false,
       isExpanded: false
     },
     {
       id: 5,
+      title: "Sanction Letter",
+      documents: [
+        { label: "Sanction Letter", name: "Sanction Letter", canGenerate: false, canPreview: false, fileExtensions: ["pdf"], fileMimeTypes: ["application/pdf"], maxBytes: kbToBytes(300) }
+      ],
+      isCompleted: false,
+      isExpanded: false
+    },
+    {
+      id: 6,
       title: "Meter Testing",
       documents: [
-        { label: "Gen Meter Testing Letter", name: "Gen Meter Testing Letter", canGenerate: false, canPreview: false },
+        { label: "Gen Meter Testing Letter", name: "Gen Meter Testing Letter", canGenerate: true, canPreview: true },
         { label: "Gen Meter Testing Report", name: "Gen Meter Testing Report", canGenerate: false, canPreview: false },
         { label: "Fee Receipt", name: "Fee Receipt", canGenerate: false, canPreview: false }
       ],
@@ -130,7 +180,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 6,
+      id: 7,
       title: "Installation",
       documents: [
         { label: "Panel Serial Number Photos", name: "Panel SN", canGenerate: false, canPreview: false },
@@ -142,13 +192,18 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 7,
+      id: 8,
       title: "MNRE and Discom Documents",
       documents: [
-        { label: "Net Agreement", name: "Net Agreement", canGenerate: true, canPreview: true },
-        { label: "WCR", name: "WCR", canGenerate: true, canPreview: true },
-        { label: "Annexure-I", name: "Annexure-I", canGenerate: true, canPreview: true },
-        { label: "RTS Declaration", name: "RTS Declaration", canGenerate: true, canPreview: true },
+        { label: "WCR (Draft)", name: "WCR Draft", canGenerate: true, canPreview: true },
+        { label: "WCR (Signed)", name: "WCR Signed", canGenerate: false, canPreview: false },
+        { label: "Net Agreement (Draft)", name: "Net Agreement Draft", canGenerate: true, canPreview: true },
+        { label: "Net Agreement (Signed)", name: "Net Agreement Signed", canGenerate: false, canPreview: false },
+        { label: "Annexure-I (Draft)", name: "Annexure-I Draft", canGenerate: true, canPreview: true },
+        { label: "Annexure-I (Signed)", name: "Annexure-I Signed", canGenerate: false, canPreview: false },
+        { label: "RTS Declaration (Draft)", name: "RTS Declaration Draft", canGenerate: true, canPreview: true },
+        { label: "RTS Declaration (Signed)", name: "RTS Declaration Signed", canGenerate: false, canPreview: false },
+        { label: "Datasheet", name: "Datasheet", canGenerate: false, canPreview: false },
         { label: "Earthing Report", name: "Earthing Report", canGenerate: true, canPreview: true },
         { label: "Geo Tag Photo", name: "Geo Tag", canGenerate: false, canPreview: false, fileExtensions: ["jpeg", "jpg", "png"], fileMimeTypes: ["image/jpeg", "image/png", "image/jpg"] },
         { label: "D1-Form", name: "D1Form", canGenerate: false, canPreview: false },
@@ -159,7 +214,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 8,
+      id: 9,
       title: "DCR & Warranty Certificates",
       documents: [
         { label: "DCR Certificate", name: "DCR Certificate", canGenerate: false, canPreview: false },
@@ -170,7 +225,7 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
     {
-      id: 9,
+      id: 10,
       title: "Release Order",
       documents: [
         { label: "Release Order", name: "Release Order", canGenerate: false, canPreview: false }
@@ -179,6 +234,45 @@ export default function GenerateDocuments() {
       isExpanded: false
     },
   ];
+
+  // Filter steps based on role
+  let visibleSteps = documentSteps;
+
+  if (
+    userRoleFromLocalStorage === "ROLE_OR_REPRESENTATIVE" ||
+    userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE"
+  ) {
+    visibleSteps = documentSteps.filter(
+      (step) => step.title === "Identity & Financial Documents"
+    );
+  }
+
+  const extractSanctionNo = async (blob: Blob) => {
+    try {
+      const text = await pdfToText(blob);
+
+      const sanctionMatch = text.match(
+        /Sanction\s*No\s*[:\-]?\s*([\s\S]*?)(?=\s*Date\s*:)/i
+      );
+
+      const dateMatch = text.match(
+        /Date\s*[:\-]?\s*([0-9]{1,2}-[A-Za-z]{3}-[0-9]{4})/i
+      );
+
+      return {
+        sanctionNo: sanctionMatch ? sanctionMatch[1].trim() : null,
+        sanctionDate: dateMatch ? dateMatch[1].trim() : null,
+      };
+    } catch (err) {
+      console.error("Failed to extract data:", err);
+      return { sanctionNo: null, sanctionDate: null };
+    }
+  };
+
+
+
+  const [hasSanctionLetter, setHasSanctionLetter] = useState(false);
+
 
 
   const loadDocuments = useCallback(async () => {
@@ -192,6 +286,30 @@ export default function GenerateDocuments() {
       }, {});
 
       setUploadedDocuments(grouped);
+
+      // Check if sanction letter uploaded
+      const sanctionDocs = grouped["Sanction Letter"];
+      setHasSanctionLetter(!!sanctionDocs?.length);
+
+      if (sanctionDocs?.length) {
+        const blob = await downloadDocumentById(sanctionDocs[0].id);
+
+        // extract { sanctionNo, date }
+        const { sanctionNo, sanctionDate } = await extractSanctionNo(blob);
+
+        // Set state
+        setSanctionNo(sanctionNo);
+        setSanctionDate(sanctionDate);
+
+        console.log("Sanction No:", sanctionNo);
+        console.log("Sanction Date:", sanctionDate);
+
+        if (sanctionNo && sanctionDate) {
+          await saveSanctionDetails(connectionId, sanctionNo, sanctionDate);
+        }
+      }
+
+
     } catch (error) {
       console.error("Failed to fetch documents", error);
     }
@@ -204,7 +322,24 @@ export default function GenerateDocuments() {
   }, [connectionId, loadDocuments]);
 
 
-  const handleDownload = async (id:number, fileName: string) => {
+  useEffect(() => {
+    const checkOnboardedStatus = async () => {
+      if (consumer?.id) {
+        try {
+          const isOnboarded = await checkIsConnectionOnboarded(consumer.id);
+          setIsConnectionOnboarded(isOnboarded);
+        } catch (error) {
+          console.error("Error checking connection onboarded status:", error);
+          setIsConnectionOnboarded(false);
+        }
+      }
+    };
+
+    checkOnboardedStatus();
+  }, [consumer?.id]);
+
+
+  const handleDownload = async (id: number, fileName: string) => {
     try {
       const blob = await downloadDocumentById(id);
       const url = window.URL.createObjectURL(blob);
@@ -217,24 +352,61 @@ export default function GenerateDocuments() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
-      toast.error("Failed to download file",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to download file", {
+        autoClose: 1000,
+        hideProgressBar: true
       })
     }
   };
 
+const handleView = async (id: number, fileName: string) => {
+  try {
+    const blob = await downloadDocumentById(id);
+    const url = window.URL.createObjectURL(blob);
 
-  const handleGenerate = async (doc: string) => {
+    const newTab = window.open();
+    if (!newTab) return;
+
+    const extension = fileName.split(".").pop()?.toLowerCase();
+
+    if (["jpg", "jpeg", "png", "webp"].includes(extension || "")) {
+      newTab.document.write(`
+        <html>
+          <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#000;">
+            <img src="${url}" style="max-width:100%; max-height:100%;" />
+          </body>
+        </html>
+      `);
+    } else {
+      newTab.location.href = url;
+    }
+
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 10000);
+
+  } catch (error) {
+    console.error("Preview failed:", error);
+  }
+};
+
+
+
+
+  const proceedWithGenerate = async (doc: string) => {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
-    if (doc === "Consumer Vendor Agreement") {
-      quotedTotal = quotedTotals[doc];
+    if (doc === "Consumer Vendor Agreement Draft") {
+      quotedTotal =
+        quotedTotals[doc] === ""
+          ? undefined
+          : Number(quotedTotals[doc]);
+
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before generating.",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.error("Please enter a valid quoted total amount before generating.", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
         return;
       }
@@ -253,26 +425,46 @@ export default function GenerateDocuments() {
       document.body.removeChild(a);
     } catch (err) {
       console.error("Generate error:", err);
-      toast.error("Failed to generate document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to generate document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
     } finally {
       setLoadingGenerateDoc(null);
     }
   };
 
+  const handleGenerate = async (doc: string) => {
+    if (!consumer?.id) return;
 
-  const handlePreview = async (doc: string) => {
+    // Check if this document requires material data
+    // if (documentsRequiringMaterialData.includes(doc)) {
+    //   const hasMaterialData = await checkMaterialDataExists(consumer.id);
+    //   if (!hasMaterialData) {
+    //     setPendingDocAction({ type: 'generate', doc });
+    //     setMaterialDataDialogOpen(true);
+    //     return;
+    //   }
+    // }
+
+    await proceedWithGenerate(doc);
+  };
+
+
+  const proceedWithPreview = async (doc: string) => {
     if (!consumer?.id) return;
 
     let quotedTotal: number | undefined;
-    if (doc === "Consumer Vendor Agreement") {
-      quotedTotal = quotedTotals[doc];
+    if (doc === "Consumer Vendor Agreement Draft") {
+      quotedTotal =
+        quotedTotals[doc] === ""
+          ? undefined
+          : Number(quotedTotals[doc]);
+
       if (!quotedTotal || isNaN(quotedTotal)) {
-        toast.error("Please enter a valid quoted total amount before previewing.",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.error("Please enter a valid quoted total amount before previewing.", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
         return;
       }
@@ -285,13 +477,29 @@ export default function GenerateDocuments() {
       window.open(url, "_blank");
     } catch (err) {
       console.error("Preview error:", err);
-      toast.error("Failed to preview document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to preview document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
     } finally {
       setLoadingPreviewDoc(null);
     }
+  };
+
+  const handlePreview = async (doc: string) => {
+    if (!consumer?.id) return;
+
+    // Check if this document requires material data
+    // if (documentsRequiringMaterialData.includes(doc)) {
+    //   const hasMaterialData = await checkMaterialDataExists(consumer.id);
+    //   if (!hasMaterialData) {
+    //     setPendingDocAction({ type: 'preview', doc });
+    //     setMaterialDataDialogOpen(true);
+    //     return;
+    //   }
+    // }
+
+    await proceedWithPreview(doc);
   };
 
 
@@ -317,6 +525,11 @@ export default function GenerateDocuments() {
     setInputKeys((prev) => ({
       ...prev,
       [docName]: Date.now(),
+    }));
+
+    setFileSizeError((prev) => ({
+      ...prev,
+      [docName]: false,
     }));
   };
 
@@ -353,7 +566,7 @@ export default function GenerateDocuments() {
 
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error("Document Upload Failed!", { autoClose: 1000,hideProgressBar: true });
+      toast.error("Document Upload Failed!", { autoClose: 1000, hideProgressBar: true });
     } finally {
       setLoadingUploadDoc(null);
     }
@@ -384,7 +597,7 @@ export default function GenerateDocuments() {
     });
   };
 
-  const handleDeleteDocument = async (id:number, documentType: string) => {
+  const handleDeleteDocument = async (id: number, documentType: string) => {
     try {
 
       await deleteDocumentById(id);
@@ -401,9 +614,9 @@ export default function GenerateDocuments() {
 
     } catch (error) {
       console.error("Delete failed", error);
-      toast.error("Failed to delete document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to delete document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
       await loadDocuments();
     }
@@ -414,7 +627,7 @@ export default function GenerateDocuments() {
     setReplaceFiles((prev) => ({ ...prev, [docId]: file }));
   };
 
-  const handleUpdateDocument = async (id:number) => {
+  const handleUpdateDocument = async (id: number) => {
     const file = replaceFiles[id];
     if (!file) return;
     try {
@@ -426,14 +639,14 @@ export default function GenerateDocuments() {
       await loadDocuments();
     } catch (error) {
       console.error("Update failed", error);
-      toast.error("Failed to update document",{
-        autoClose:1000,
-        hideProgressBar:true
+      toast.error("Failed to update document", {
+        autoClose: 1000,
+        hideProgressBar: true
       });
-    }finally {
-    // Stop spinner
-    setLoadingUploadDoc(null);
-  }
+    } finally {
+      // Stop spinner
+      setLoadingUploadDoc(null);
+    }
   };
 
   const getStepStatus = (step: DocumentStep) => {
@@ -472,7 +685,11 @@ export default function GenerateDocuments() {
     }
   };
 
-  const totalSteps = documentSteps.length;
+  const isRepresentative =
+    userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+    userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE";
+
+  // const totalSteps = documentSteps.length;
   // Overall documents progress across all steps
   const totalDocs = documentSteps.reduce((sum, step) => sum + step.documents.length, 0);
   const completedDocs = documentSteps.reduce((sum, step) => {
@@ -497,294 +714,351 @@ export default function GenerateDocuments() {
     return `${base.length > keep ? '…' : ''}${suffix}${ext}`;
   };
 
+
+
   // Render step content - reusable for both mobile and desktop
   const renderStepContent = (step: DocumentStep, contentId?: string) => (
-    <div 
-      id={contentId || `step-content-${step.id}`} 
-      className="bg-white border border-gray-200 shadow-sm rounded-lg" 
+    <div
+      id={contentId || `step-content-${step.id}`}
+      className="bg-white border border-gray-200 shadow-sm rounded-lg"
       aria-expanded={expandedSteps.has(step.id)}
     >
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Step {step.id}: {step.title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          {userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+            userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE"
+            ? step.title
+            : `Step ${step.id}: ${step.title}`}
+        </h2>
         <p className="text-sm text-gray-600">Upload, generate, and manage documents for this step.</p>
       </div>
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-          {step.documents.map((docDef) => (
-            <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center space-x-3 mb-3">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h4 className="font-medium text-gray-900">{docDef.label}</h4>
-              </div>
+        <div
+          className={`grid gap-4 ${isRepresentative ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+            }`}
+        >
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div> */}
+          {step.documents.map((docDef) => {
 
-              {/* File Upload Section */}
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-700 mb-2">
-                  Choose File
-                </label>
+            const isSanction = docDef.name === "Sanction Letter";
+            const sanctionUploaded = isSanction && hasSanctionLetter;
 
-                <input
-                  key={inputKeys[docDef.name] || 0}
-                  type="file"
-                  accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    if (file) {
-                      if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-                        const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-                        if (!typeOk) {
-                          toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
-                          setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
-                          return;
-                        }
-                      }
-                      if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-                        toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
-                        setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
-                        return;
-                      }
-                    }
-                    handleDocumentFileChange(docDef.name, file);
-                  }}
-                  className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
-              </div>
+            return (
+              <div key={docDef.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-3 mb-3">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-medium text-gray-900">{docDef.label}</h4>
+                </div>
 
-              {docDef.name === "Consumer Vendor Agreement" && (
+                {/* File Upload Section */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-700 mb-2">
-                    Total Quoted Price (₹)
+                    Choose File
                   </label>
+
                   <input
-                    type="number"
-                    min="0"
-                    placeholder="Enter total quoted Price"
-                    value={quotedTotals[docDef.name] || ''}
-                    onChange={(e) =>
-                      setQuotedTotals((prev) => ({
-                        ...prev,
-                        [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
-                      }))
-                    }
-                    className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    key={inputKeys[docDef.name] || 0}
+                    type="file"
+                    disabled={sanctionUploaded}
+                    title={sanctionUploaded ? "You can upload only one sanction letter" : ""}
+                    accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                    onChange={(e) => {
+                      if (sanctionUploaded) return;
+
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        // Check for file type validation
+                        if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                          const typeOk = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                          if (!typeOk) {
+                            toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                            setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                            setFileSizeError((prev) => ({ ...prev, [docDef.name]: true })); // Set error for UI
+                            return;
+                          }
+                        }
+                        // Check for file size validation (1MB limit)
+                        if (file.size > MAX_FILE_SIZE_BYTES) {
+                          toast.error(`You can't upload file greater than 1 MB`, {
+                            hideProgressBar: true,
+                          });
+                          setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                          setFileSizeError((prev) => ({ ...prev, [docDef.name]: true }));
+                          return;
+                        }
+                        // Existing maxBytes validation (if defined for the document)
+                        if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                          toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
+                          setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));
+                          setFileSizeError((prev) => ({ ...prev, [docDef.name]: true }));
+                          return;
+                        }
+                        setFileSizeError((prev) => ({ ...prev, [docDef.name]: false })); // Clear any previous error
+                      }
+                      handleDocumentFileChange(docDef.name, file);
+                    }}
+                    className={`w-full text-xs border border-gray-300 rounded px-2 py-1
+    ${sanctionUploaded ? "bg-gray-100 opacity-60 cursor-not-allowed" : ""}
+    focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+    file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs
+    file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100
+  `}
                   />
                 </div>
-              )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2">
-
-                {docDef.canPreview && (
-                  <button
-                    onClick={() => handlePreview(docDef.name)}
-                    disabled={loadingPreviewDoc === docDef.name}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-                    title="Preview document"
-                  >
-                    {loadingPreviewDoc === docDef.name ? (
-                      <Play className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Play className="w-3 h-3" />
-                    )}
-                    <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
-                  </button>
+                {docDef.name === "Consumer Vendor Agreement Draft" && (
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Total Quoted Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Enter total quoted Price"
+                      value={quotedTotals[docDef.name] || ''}
+                      onChange={(e) =>
+                        setQuotedTotals((prev) => ({
+                          ...prev,
+                          [docDef.name]: e.target.value ? parseFloat(e.target.value) : '',
+                        }))
+                      }
+                      className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 )}
 
-                {docDef.canGenerate && (
-                  <button
-                    onClick={() => handleGenerate(docDef.name)}
-                    disabled={loadingGenerateDoc === docDef.name}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
-                    title="Generate document"
-                  >
-                    {loadingGenerateDoc === docDef.name ? (
-                      <Play className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Play className="w-3 h-3" />
-                    )}
-                    <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
-                  </button>
-                )}
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+
+                  {docDef.canPreview && (
+                    <button
+                      onClick={() => handlePreview(docDef.name)}
+                      disabled={loadingPreviewDoc === docDef.name}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                      title="Preview document"
+                    >
+                      {loadingPreviewDoc === docDef.name ? (
+                        <Play className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Play className="w-3 h-3" />
+                      )}
+                      <span>{loadingPreviewDoc === docDef.name ? "Previewing..." : "Preview"}</span>
+                    </button>
+                  )}
+
+                  {docDef.canGenerate && (
+                    <button
+                      onClick={() => handleGenerate(docDef.name)}
+                      disabled={loadingGenerateDoc === docDef.name}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                      title="Generate document"
+                    >
+                      {loadingGenerateDoc === docDef.name ? (
+                        <Play className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Play className="w-3 h-3" />
+                      )}
+                      <span>{loadingGenerateDoc === docDef.name ? "Generating..." : "Generate"}</span>
+                    </button>
+                  )}
+
+                  {documentFiles[docDef.name] && (
+                    <button
+                      onClick={() => handleDocumentUpload(docDef.name)}
+                      disabled={loadingUploadDoc === docDef.name || fileSizeError[docDef.name]}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
+                      title="Upload selected file"
+                    >
+                      {loadingUploadDoc === docDef.name ? (
+                        <>
+                          <Upload className="w-3 h-3 animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3 h-3" />
+                          <span>Upload</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
 
                 {documentFiles[docDef.name] && (
-                  <button
-                    onClick={() => handleDocumentUpload(docDef.name)}
-                    disabled={loadingUploadDoc === docDef.name}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
-                    title="Upload selected file"
-                  >
-                    {loadingUploadDoc === docDef.name ? (
-                      <>
-                        <Upload className="w-3 h-3 animate-spin" />
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-3 h-3" />
-                        <span>Upload</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="mt-2 text-xs text-gray-600 flex items-center">
+                    <span className="font-medium mr-1">Selected:</span>
+                    <span className="truncate flex-1">
+                      {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
+                    </span>
+                    <button
+                      onClick={() => clearSelectedFile(docDef.name)}
+                      className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
+                    >
+                      ✖
+                    </button>
+                  </div>
                 )}
-              </div>
-
-              {documentFiles[docDef.name] && (
-                <div className="mt-2 text-xs text-gray-600 flex items-center">
-                  <span className="font-medium mr-1">Selected:</span>
-                  <span className="truncate flex-1">
-                    {documentFiles[docDef.name]?.name ? formatFileName(documentFiles[docDef.name]!.name as string, 40) : ''}
-                  </span>
-                  <button
-                    onClick={() => clearSelectedFile(docDef.name)}
-                    className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
-                  >
-                    ✖
-                  </button>
-                </div>
-              )}
 
 
 
 
-              {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
-                <div className="mt-3">
-                  <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
-                  <ul className="space-y-1">
-                    {uploadedDocuments[docDef.name].map((doc) => (
-                      <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
+                {uploadedDocuments[docDef.name] && uploadedDocuments[docDef.name].length > 0 && (
+                  <div className="mt-3">
+                    <h5 className="text-xs font-medium text-gray-700 mb-1">Uploaded Files:</h5>
+                    <ul className="space-y-1">
+                      {uploadedDocuments[docDef.name].map((doc) => (
+                        <li key={doc.id} className="text-xs bg-gray-50 px-2 py-2 rounded">
 
-                        <div className="mb-2">
-                          {/* Row with filename + actions */}
-                          <div className="flex items-center">
-                            <span className="flex-1 truncate" title={doc.fileName}>
-                              {formatFileTail(doc.fileName, 18)}
-                            </span>
+                          <div className="mb-2">
+                            {/* Row with filename + actions */}
+                            <div className="flex items-center">
+                              <span
+                                className="flex-1 truncate text-blue-600 hover:text-blue-800 cursor-pointer underline underline-offset-2"
+                                title={`View ${doc.fileName}`}
+                                onClick={() => handleView(doc.id, doc.fileName)}
+                              >
+                                {formatFileTail(doc.fileName, 18)}
+                              </span>
 
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              {/* Hidden file input for Update */}
-                              <input
-                                id={`update-input-${doc.id}`}
-                                type="file"
-                                accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] || null;
-                                  if (!file) return;
-                                  if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
-                                    const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
-                                    if (!ok) {
-                                      toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {/* Hidden file input for Update */}
+                                <input
+                                  id={`update-input-${doc.id}`}
+                                  type="file"
+                                  accept={docDef.fileExtensions?.length ? buildAcceptAttribute(docDef.fileExtensions) : 'application/pdf,image/*'}
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    if (!file) return;
+                                    if (docDef.fileExtensions?.length || docDef.fileMimeTypes?.length) {
+                                      const ok = isFileAllowed(file, { mimeTypes: docDef.fileMimeTypes, extensions: docDef.fileExtensions });
+                                      if (!ok) {
+                                        toast.error(buildAllowedOnlyMessage(docDef.label, docDef.fileExtensions || []));
+                                        e.currentTarget.value = '';
+                                        return;
+                                      }
+                                    }
+                                    if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
+                                      toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
                                       e.currentTarget.value = '';
                                       return;
                                     }
-                                  }
-                                  if (docDef.maxBytes && !isFileSizeWithin(file, docDef.maxBytes)) {
-                                    toast.error(buildMaxSizeMessage(docDef.label, docDef.maxBytes));
-                                    e.currentTarget.value = '';
-                                    return;
-                                  }
-                                  handleReplaceFileChange(doc.id, file);
-                                  e.currentTarget.value = "";
-                                }}
-                              />
+                                    handleReplaceFileChange(doc.id, file);
+                                    e.currentTarget.value = "";
+                                  }}
+                                />
 
-                              {/* View */}
-                              <IconButton
-                                aria-label={`View ${doc.fileName}`}
-                                title="Download"
-                                size="sm"
-                                variant="outline"
-                                className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
-                                icon={<Download className="w-4 h-4" />}
-                                onClick={() => handleDownload(doc.id, doc.fileName)}
-                              />
+                                {/* <IconButton
+                                  aria-label={`View ${doc.fileName}`}
+                                  title="View"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                                  icon={<Eye className="w-4 h-4" />}
+                                  onClick={() => handleView(doc.id)}
+                                /> */}
 
-                              {/* Update */}
-                              <IconButton
-                                aria-label={`Update ${doc.fileName}`}
-                                title="Update"
-                                size="sm"
-                                variant="outline"
-                                className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
-                                icon={<Pencil className="w-4 h-4" />}
-                                onClick={() => {
-                                  setDialogMessage(`Do you want to replace the current file?`);
-                                  setDialogAction(() => () => {
-                                    const input = document.getElementById(
-                                      `update-input-${doc.id}`
-                                    ) as HTMLInputElement | null;
-                                    input?.click();
-                                  });
-                                  setDialogOpen(true);
-                                }}
-                              />
 
-                              {/* Delete */}
-                              <IconButton
-                                aria-label={`Delete ${doc.fileName}`}
-                                title="Delete"
-                                size="sm"
-                                variant="outline"
-                                className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
-                                icon={<Trash2 className="w-4 h-4" />}
-                                onClick={() => {
-                                  setDialogMessage(`Do you really want to delete the file?`);
-                                  setDialogAction(() => () => handleDeleteDocument(doc.id, docDef.name));
-                                  setDialogOpen(true);
-                                }}
-                              />
+                                {/* View */}
+                                <IconButton
+                                  aria-label={`View ${doc.fileName}`}
+                                  title="Download"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border border-gray-200 text-blue-600 hover:bg-blue-50"
+                                  icon={<Download className="w-4 h-4" />}
+                                  onClick={() => handleDownload(doc.id, doc.fileName)}
+                                />
+
+                                {/* Update */}
+                                <IconButton
+                                  aria-label={`Update ${doc.fileName}`}
+                                  title="Update"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border border-gray-200 text-amber-600 hover:bg-amber-50"
+                                  icon={<Pencil className="w-4 h-4" />}
+                                  onClick={() => {
+                                    setDialogMessage(`Do you want to replace the current file?`);
+                                    setDialogAction(() => () => {
+                                      const input = document.getElementById(
+                                        `update-input-${doc.id}`
+                                      ) as HTMLInputElement | null;
+                                      input?.click();
+                                    });
+                                    setDialogOpen(true);
+                                  }}
+                                />
+
+                                {/* Delete */}
+                                <IconButton
+                                  aria-label={`Delete ${doc.fileName}`}
+                                  title="Delete"
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-white border border-gray-200 text-rose-600 hover:bg-rose-50"
+                                  icon={<Trash2 className="w-4 h-4" />}
+                                  onClick={() => {
+                                    setDialogMessage(`Do you really want to delete the file?`);
+                                    setDialogAction(() => () => handleDeleteDocument(doc.id, docDef.name));
+                                    setDialogOpen(true);
+                                  }}
+                                />
+                              </div>
                             </div>
+
+                            {replaceFiles[doc.id] && (
+                              <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <span className="font-medium">Selected:</span>{" "}
+                                  <span className="truncate inline-block max-w-[180px] align-bottom">
+                                    {replaceFiles[doc.id]?.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2 flex-shrink-0">
+                                  <button
+                                    onClick={() => handleUpdateDocument(doc.id)}
+                                    disabled={loadingUploadDoc === doc.id}
+                                    className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
+                                    title="Update selected file"
+                                  >
+                                    {loadingUploadDoc === doc.id ? (
+                                      <>
+                                        <Upload className="w-3 h-3 animate-spin" />
+                                        <span className="truncate max-w-[80px]">Updating...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Upload className="w-3 h-3" />
+                                        <span>Update</span>
+                                      </>
+                                    )}
+                                  </button>
+
+                                  <button
+                                    onClick={() =>
+                                      setReplaceFiles((prev) => ({ ...prev, [doc.id]: null }))
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                                  >
+                                    ✖
+                                  </button>
+                                </div>
+                              </div>
+
+                            )}
                           </div>
 
-                          {replaceFiles[doc.id] && (
-                            <div className="mt-2 text-xs text-gray-600 flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <span className="font-medium">Selected:</span>{" "}
-                                <span className="truncate inline-block max-w-[180px] align-bottom">
-                                  {replaceFiles[doc.id]?.name}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2 flex-shrink-0">
-                                <button
-                                  onClick={() => handleUpdateDocument(doc.id)}
-                                  disabled={loadingUploadDoc === doc.id}
-                                  className="flex items-center space-x-1 px-3 py-1.5 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50"
-                                  title="Update selected file"
-                                >
-                                  {loadingUploadDoc === doc.id ? (
-                                    <>
-                                      <Upload className="w-3 h-3 animate-spin" />
-                                      <span className="truncate max-w-[80px]">Updating...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Upload className="w-3 h-3" />
-                                      <span>Update</span>
-                                    </>
-                                  )}
-                                </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
-                                <button
-                                  onClick={() =>
-                                    setReplaceFiles((prev) => ({ ...prev, [doc.id]: null }))
-                                  }
-                                  className="ml-2 text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  ✖
-                                </button>
-                              </div>
-                            </div>
-
-                          )}
-                        </div>
-
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -830,7 +1104,7 @@ export default function GenerateDocuments() {
       )}
 
       {/* Progress Bar */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
+      {(!(userInfo?.role === "ROLE_ORG_REPRESENTATIVE" || userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE") && <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Overall Progress</span>
           <span className="text-sm text-gray-600" aria-live="polite">{completedDocs}/{totalDocs} · {progressPercent}%</span>
@@ -838,85 +1112,195 @@ export default function GenerateDocuments() {
         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
           <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-      </div>
+      </div>)}
 
-      {/* Vertical Stepper Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Stepper */}
-        <aside className="lg:col-span-4">
-          <nav aria-label="Document steps" className="space-y-2">
-            {documentSteps.map((step) => {
-              const status = getStepStatus(step);
-              const totalRequired = step.documents.length;
-              const uploadedCount = step.documents.reduce((count, doc) => {
-                const isUploaded = uploadedDocuments[doc.name] && uploadedDocuments[doc.name].length > 0;
-                return count + (isUploaded ? 1 : 0);
-              }, 0);
-              const base = 'w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500';
-              const variant =
-                status === 'completed'
-                  ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                  : status === 'in_progress'
-                    ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                    : 'bg-white border-gray-200 hover:bg-gray-50';
-              return (
-                <div key={step.id} className="space-y-2">
-                  <button
-                    type="button"
-                    className={`${base} ${variant}`}
-                    onClick={() => { 
-                      setCurrentStep(step.id); 
-                      toggleStepExpansion(step.id);
-                    }}
-                    onKeyDown={(e) => { 
-                      if (e.key === 'Enter' || e.key === ' ') { 
-                        e.preventDefault(); 
-                        setCurrentStep(step.id); 
-                        toggleStepExpansion(step.id);
-                      } 
-                    }}
-                    aria-current={currentStep === step.id ? 'step' : undefined}
-                    aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
-                    aria-expanded={expandedSteps.has(step.id)}
-                  >
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(step)}`}>
-                      {getStepIcon(step)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900">Step {step.id}: {step.title}</h3>
-                        {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />}
-                      </div>
-                      {uploadedCount === 0 && (
-                        <p className="text-xs text-gray-600">{totalRequired} document{totalRequired !== 1 ? 's' : ''} required</p>
-                      )}
-                      {uploadedCount > 0 && uploadedCount < totalRequired && (
-                        <p className="text-xs text-yellow-700">{uploadedCount} of {totalRequired} documents uploaded</p>
-                      )}
-                      {uploadedCount === totalRequired && (
-                        <p className="text-xs text-green-700">All documents uploaded</p>
-                      )}
-                    </div>
-                  </button>
-                  {/* Mobile: Show step content inline below button when expanded */}
-                  {expandedSteps.has(step.id) && (
-                    <div id={`step-content-mobile-${step.id}`} className="lg:hidden">
-                      {renderStepContent(step, `step-content-mobile-${step.id}`)}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </aside>
 
-        {/* Right: Active Step Content (Desktop only) */}
-        <section className="hidden lg:block lg:col-span-8">
-          {(() => {
-            const activeStep = documentSteps.find((s) => s.id === currentStep) || documentSteps[0];
-            return renderStepContent(activeStep);
-          })()}
-        </section>
+        {(() => {
+          const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+          const userRoleFromLocalStorage = userInfo?.role;
+
+          const isRepresentative =
+            userRoleFromLocalStorage === "ROLE_ORG_REPRESENTATIVE" ||
+            userRoleFromLocalStorage === "ROLE_AGENCY_REPRESENTATIVE";
+
+          // Filter visible steps
+          let visibleSteps = documentSteps;
+          if (isRepresentative) {
+            visibleSteps = documentSteps.filter(
+              (step) => step.title === "Identity & Financial Documents"
+            );
+          }
+
+          if (isRepresentative) {
+            // 👇 Directly show documents (hide sidebar)
+            const identityStep = visibleSteps[0];
+            return (
+              <section className="col-span-12">
+                {renderStepContent(identityStep)}
+              </section>
+            );
+          }
+
+          // 👇 Regular layout (sidebar + right section)
+          return (
+            <>
+              <aside className="lg:col-span-4">
+                <nav aria-label="Document steps" className="space-y-2">
+                  {visibleSteps.map((step) => {
+                    const status = getStepStatus(step);
+                    const totalRequired = step.documents.length;
+                    const uploadedCount = step.documents.reduce((count, doc) => {
+                      const isUploaded =
+                        uploadedDocuments[doc.name] &&
+                        uploadedDocuments[doc.name].length > 0;
+                      return count + (isUploaded ? 1 : 0);
+                    }, 0);
+
+                    const base =
+                      "w-full text-left p-4 border rounded-lg flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500";
+                    const variant =
+                      status === "completed"
+                        ? "bg-green-50 border-green-200 hover:bg-green-100"
+                        : status === "in_progress"
+                          ? "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+                          : "bg-white border-gray-200 hover:bg-gray-50";
+
+                    const isStepDisabled =
+                      (step.id >= 3 && !isConnectionOnboarded)
+                    {/* || */ }
+                    // (step.id > 4 && !hasSanctionLetter);         
+
+
+                    const disabledClasses = isStepDisabled ? "opacity-50 cursor-not-allowed" : "";
+
+                    return (
+                      <div key={step.id} className="space-y-2">
+                        <button
+                          type="button"
+                          className={`${base} ${variant} ${disabledClasses}`}
+                          onClick={() => {
+                            if (!isStepDisabled) {
+                              setCurrentStep(step.id);
+                              toggleStepExpansion(step.id);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              if (!isStepDisabled) {
+                                setCurrentStep(step.id);
+                                toggleStepExpansion(step.id);
+                              }
+                            }
+                          }}
+                          disabled={isStepDisabled}
+                          aria-current={currentStep === step.id ? "step" : undefined}
+                          aria-controls={`step-content-${step.id} step-content-mobile-${step.id}`}
+                          aria-expanded={expandedSteps.has(step.id)}
+                          title={
+                            isStepDisabled
+                              ? step.id > 4 && !hasSanctionLetter
+                                ? "Upload the Sanction Letter to access this step."
+                                : "This step is disabled. Connection must be onboarded to access steps 3 and above."
+                              : undefined
+                          }
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${getStepClasses(
+                              step
+                            )}`}
+                          >
+                            {getStepIcon(step)}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-semibold text-gray-900">
+                                Step {step.id}: {step.title}
+                              </h3>
+                              {status === "completed" && (
+                                <CheckCircle
+                                  className="w-4 h-4 text-green-600"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </div>
+
+                            {uploadedCount === 0 && (
+                              <p className="text-xs text-gray-600">
+                                {totalRequired} document
+                                {totalRequired !== 1 ? "s" : ""} required
+                              </p>
+                            )}
+                            {uploadedCount > 0 && uploadedCount < totalRequired && (
+                              <p className="text-xs text-yellow-700">
+                                {uploadedCount} of {totalRequired} documents uploaded
+                              </p>
+                            )}
+                            {uploadedCount === totalRequired && (
+                              <p className="text-xs text-green-700">
+                                All documents uploaded
+                              </p>
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Mobile: Show step content inline below button when expanded */}
+                        {expandedSteps.has(step.id) && (
+                          <div
+                            id={`step-content-mobile-${step.id}`}
+                            className="lg:hidden"
+                          >
+                            {renderStepContent(step, `step-content-mobile-${step.id}`)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </nav>
+              </aside>
+
+              {/* Right: Active Step Content (Desktop only) */}
+              <section className="hidden lg:block lg:col-span-8">
+                <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4
+                  max-h-[90vh] overflow-y-auto">
+                  {(() => {
+                    const activeStep =
+                      documentSteps.find((s) => s.id === currentStep) ||
+                      documentSteps[0];
+                    const isActiveStepDisabled = activeStep.id >= 3 && !isConnectionOnboarded;
+
+                    if (isActiveStepDisabled) {
+
+                      const fallbackStep = documentSteps.find((s) => s.id < 3) || documentSteps[0];
+                      return (
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+                          <div className="text-center py-8">
+                            <p className="text-gray-600 mb-4">
+                              This step is disabled. Connection must be onboarded to access steps 3 and above.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setCurrentStep(fallbackStep.id);
+                                toggleStepExpansion(fallbackStep.id);
+                              }}
+                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                            >
+                              Go to Step {fallbackStep.id}: {fallbackStep.title}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return renderStepContent(activeStep);
+                  })()}
+                </div>
+              </section>
+            </>
+          );
+        })()}
 
         <Dialog
           open={dialogOpen}

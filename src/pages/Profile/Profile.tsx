@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Shield, Building, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key } from 'lucide-react';
+import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
 import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto, deleteUserSignaturePhoto } from '../../services/documentManagerService';
 import { useUser } from '../../contexts/UserContext';
+import { fetchClaims } from '../../services/jwtService';
 import { croppedImg } from '../../utils/croppedImage';
 
 const Profile: React.FC = () => {
@@ -19,7 +20,7 @@ const Profile: React.FC = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
 
-  const { userClaims: user, loading } = useUser();
+  const { userClaims: user } = useUser();
 
   const [showCropModalForProfile, setShowCropModalForProfile] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -31,6 +32,8 @@ const Profile: React.FC = () => {
   const [removingPhoto, setRemovingPhoto] = useState(false);
 
   const navigate = useNavigate();
+  const [claims, setClaims] = useState<any>(null);
+  const [loadingClaims, setLoadingClaims] = useState(false);
 
 
   // Cropping states
@@ -60,6 +63,22 @@ const Profile: React.FC = () => {
       setHasUploadedPhoto(false);
     }
   };
+
+  useEffect(() => {
+    const loadClaims = async () => {
+      try {
+        setLoadingClaims(true);
+        const data = await fetchClaims();
+        setClaims(data);
+      } catch (err) {
+        console.error("Failed to load claims", err);
+      } finally {
+        setLoadingClaims(false);
+      }
+    };
+
+    loadClaims();
+  }, []);
 
 
   useEffect(() => {
@@ -176,8 +195,8 @@ const Profile: React.FC = () => {
     if (file) {
 
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file',{
-          autoClose:1000,
+        toast.error('Please select an image file', {
+          autoClose: 1000,
           hideProgressBar: true
         });
         return;
@@ -185,8 +204,8 @@ const Profile: React.FC = () => {
 
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB',{
-          autoClose:1000,
+        toast.error('File size should be less than 5MB', {
+          autoClose: 1000,
           hideProgressBar: true
         });
         return;
@@ -284,7 +303,7 @@ const Profile: React.FC = () => {
 
   const handleCropSave = async () => {
     if (!croppedAreaPixels || !previewUrl) {
-      toast.error('Please adjust the crop area first',{
+      toast.error('Please adjust the crop area first', {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -304,7 +323,7 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      toast.error('Failed to crop image',{
+      toast.error('Failed to crop image', {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -338,8 +357,8 @@ const Profile: React.FC = () => {
 
       await uploadUserSignature(file);
 
-      toast.success("Signature uploaded successfully",{
-        autoClose:1000,
+      toast.success("Signature uploaded successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -351,7 +370,7 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Upload failed:", err);
-      toast.error("Failed to upload signature",{
+      toast.error("Failed to upload signature", {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -372,8 +391,8 @@ const Profile: React.FC = () => {
 
       await editUserSignature(file);
 
-      toast.success("Signature updated successfully",{
-        autoClose:1000,
+      toast.success("Signature updated successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -385,8 +404,8 @@ const Profile: React.FC = () => {
       setPreviewUrl(null);
     } catch (err) {
       console.error("Edit failed:", err);
-      toast.error("Failed to update signature",{
-        autoClose:1000,
+      toast.error("Failed to update signature", {
+        autoClose: 1000,
         hideProgressBar: true
       });
     } finally {
@@ -403,8 +422,8 @@ const Profile: React.FC = () => {
       // Call API to delete signature
       await deleteUserSignaturePhoto();
 
-      toast.success("Signature removed successfully",{
-        autoClose:1000,
+      toast.success("Signature removed successfully", {
+        autoClose: 1000,
         hideProgressBar: true
       });
 
@@ -419,7 +438,7 @@ const Profile: React.FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error("Failed to remove signature:", err);
-      toast.error("Failed to remove signature",{
+      toast.error("Failed to remove signature", {
         autoClose: 1000,
         hideProgressBar: true
       });
@@ -435,7 +454,7 @@ const Profile: React.FC = () => {
 
 
 
-  if (loading) {
+  if (loadingClaims) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -446,32 +465,27 @@ const Profile: React.FC = () => {
     );
   }
 
+  // if (loadingClaims) {
+  //   return <p>Loading...</p>;
+  // }
+
+
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        {/* <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="text-gray-600">Manage your account information and signature</p>
-          </div>
-        </div> */}
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Personal Information Card */}
           <Card>
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between mb-4">
+            <CardBody className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+
                 {/* Left Section - Profile Info */}
-                <div className="flex items-center gap-4 group relative">
+                <div className="flex items-center gap-4 group relative justify-start text-left w-full">
+
+
                   {/* Profile Photo Section */}
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative">
+                  <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative flex-shrink-0">
                     {profilePhoto ? (
                       <img
                         src={profilePhoto}
@@ -481,7 +495,6 @@ const Profile: React.FC = () => {
                     ) : (
                       <User className="w-6 h-6 text-gray-600" />
                     )}
-
                     {/* Overlay for Edit / Upload */}
                     <div
                       className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
@@ -491,7 +504,6 @@ const Profile: React.FC = () => {
                           setZoom(1);
                           setRotation(0);
                           setCroppedAreaPixelsForProfile(null);
-
                           setPreviewUrlForProfile(profilePhoto);
                           setShowCropModalForProfile(true);
                         } else {
@@ -513,30 +525,70 @@ const Profile: React.FC = () => {
                   </div>
 
                   {/* User Info Section */}
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {user?.name_as_per_gov_id || "Not provided"}
+                  <div className="flex flex-col">
+                    {/* Full Name */}
+                    <p className="text-lg sm:text-xl font-semibold text-gray-900">
+                      {claims?.name_as_per_gov_id || "NA"}
                     </p>
+
+                    {/* Preferred Name */}
                     <p className="text-sm text-gray-700">
-                      {user?.preferred_name || "Not provided"}
+                      <span className="font-medium text-gray-500">Preferred Name:</span>{" "}
+                      <span className="text-gray-800">
+                        {claims?.preferred_name || "NA"}
+                      </span>
                     </p>
-                    <p className="text-sm text-gray-600">
-                      {user?.email_address || "Not provided"}
-                      {user?.email_address && user?.contact_number ? " | " : ""}
-                      {user?.contact_number || ""}
-                    </p>
+
+                    {/* Email & Mobile */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-1">
+                      <p className="text-sm text-gray-700 flex items-center gap-1">
+                        <span className="font-medium text-gray-500 shrink-0">Email:</span>
+
+                        <span
+                          className="text-gray-800 truncate max-w-[160px] sm:max-w-full"
+                          title={claims?.email_address || "NA"}
+                        >
+                          {claims?.email_address || "NA"}
+                        </span>
+                      </p>
+
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium text-gray-500">Mobile:</span>{" "}
+                        <span className="text-gray-800">
+                          {claims?.contact_number || "NA"}
+                        </span>
+                      </p>
+                    </div>
                   </div>
+
+
                 </div>
 
-                {/* Right Section - Change Password Button */}
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  leftIcon={<Key className="w-4 h-4" />}
-                  onClick={() => navigate("/password-reset")}
-                >
-                  Change Password
-                </Button>
+                {/* Action Buttons */}
+                <div className="flex flex-row gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Pencil className="w-4 h-4" />}
+                    className="w-full sm:w-auto whitespace-nowrap"
+                    onClick={() => navigate("/edit-user",{state:{userId:user?.id}})}
+                  >
+                    Edit Details
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Key className="w-4 h-4" />}
+                    className="w-full sm:w-auto whitespace-nowrap"
+                    onClick={() => navigate("/password-reset")}
+                  >
+                    Change Password
+                  </Button>
+                </div>
+
+
+
               </div>
 
               {/* Crop Modal (same as your code) */}
@@ -682,12 +734,11 @@ const Profile: React.FC = () => {
             </CardBody>
           </Card>
 
-          <Card>
-            <CardBody className="p-6">
+          {/* <Card>
+            <CardBody className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                {/* Global Role (if any) */}
                 {user?.global_roles?.includes('ROLE_SUPER_ADMIN') && (
                   <div className="flex items-center gap-3">
                     <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -698,7 +749,6 @@ const Profile: React.FC = () => {
                   </div>
                 )}
 
-                {/* All Organization Roles with Names */}
                 {user?.org_roles &&
                   Object.entries(user.org_roles).map(([orgId, org]) => (
                     <div key={orgId} className="flex flex-col gap-1">
@@ -718,13 +768,13 @@ const Profile: React.FC = () => {
 
               </div>
             </CardBody>
-          </Card>
+          </Card> */}
 
 
 
           {/* Digital Signature Card */}
           <Card>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Digital Signature</h3>
 
               {signatureUrl ? (

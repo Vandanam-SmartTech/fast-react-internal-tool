@@ -55,6 +55,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         if (!matchingOrg) {
 
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
           return;
@@ -73,6 +74,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
             orgId,
             orgName: orgData.org_name,
             role: currentRole,
+            deptCode: orgData.dept_code ?? null,
           })
         );
 
@@ -109,8 +111,15 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         case 'ROLE_CUSTOMER':
           setRedirectPath('/manage-customers');
           break;
+        case 'ROLE_GRAMSEVAK':
+          setRedirectPath('/grampanchayat-dashboard');
+          break;
+        case 'ROLE_BDO':
+          setRedirectPath('/bdo-dashboard');
+          break;
         default:
           localStorage.removeItem('jwtToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
           setRedirectPath('/login');
       }

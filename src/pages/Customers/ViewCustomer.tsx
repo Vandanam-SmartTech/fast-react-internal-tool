@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames } from "../../services/customerRequisitionService";
+import { getCustomerById, fetchConsumerNumber, getInstallationByConnectionId, fetchInstallationSpaceTypesNames, getCustomerConnectionInstallationById } from "../../services/customerRequisitionService";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid"
 import { Eye, User, Phone, Mail, X, ArrowLeft } from 'lucide-react';
 import { getUserById } from "../../services/jwtService";
@@ -13,13 +13,14 @@ export const ViewCustomer = () => {
   const [connections, setConnections] = useState<any[]>([]);
   const navigate = useNavigate();
   const customerId = location.state?.customerId;
-  const [activeTab, setActiveTab] = useState("Customer Details");
+  const [activeTab,] = useState("Customer Details");
   const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any[]>>({});
   const [spaceTypes, setSpaceTypes] = useState<{ id: number; nameEnglish: string }[]>([]);
 
   const [showUserModal, setShowUserModal] = useState(false);
 
   const [referredByUser, setReferredByUser] = useState<any | null>(null);
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 
   const tabs = [
@@ -52,6 +53,12 @@ export const ViewCustomer = () => {
 
     fetchAllInstallations();
   }, [connections]);
+
+  const getSpaceTypeName = (typeId: number) => {
+    const type = spaceTypes.find(t => t.id === typeId);
+    return type ? type.nameEnglish : "Unknown";
+  };
+
 
   useEffect(() => {
     const loadSpaceTypes = async () => {
@@ -102,35 +109,71 @@ export const ViewCustomer = () => {
     fetchConnections();
   }, [customerId]);
 
+  // useEffect(() => {
+  //   const fetchAllData = async () => {
+  //     if (!customerId) return;
+
+  //     try {
+  //       const data = await getCustomerConnectionInstallationById(Number(customerId));
+
+  //       if (!data) return;
+
+  //       setCustomer(data);
+
+  //       if (data.referredByUserId) {
+  //         const userResponse = await getUserById(data.referredByUserId);
+  //         setReferredByUser(userResponse?.data || null);
+  //       }
+
+  //       setConnections(data.connections || []);
+
+  //       const installationMap: Record<string, any[]> = {};
+
+  //       data.connections?.forEach((conn: any) => {
+  //         installationMap[conn.connectionId] = conn.installationSpaces || [];
+  //       });
+
+  //       setInstallationsByConsumer(installationMap);
+
+  //     } catch (error) {
+  //       console.error("Error loading customer + connections + installations", error);
+  //     }
+  //   };
+
+  //   fetchAllData();
+  // }, [customerId]);
 
 
+  if (!customer)
+    return (
+      <div className="flex items-start justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
 
-  if (!customer) return <p>Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center gap-2">
-            {/* Back Arrow */}
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-full hover:bg-gray-200 transition"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </button>
 
-            <h1 className="text-2xl font-bold text-gray-700">View Customer Details</h1>
-          </div>
+        <div className="flex items-center gap-2">
+          {/* Back Arrow */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
 
+          <h1 className="text-xl font-bold text-gray-700">View Customer Details</h1>
         </div>
 
 
-        <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
-          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
 
+        <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
             {/* Connector Line: between the first and last icon only */}
             <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
@@ -176,47 +219,62 @@ export const ViewCustomer = () => {
           </div>
         </div>
 
-
-
-
         {/* Customer Card */}
-        <div className="px-2 mt-4">
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-full max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <UserCircleIcon className="w-4 h-4 text-green-600" />
+        <div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full max-w-4xl mx-auto">
+            <div className="mb-1">
+              <div className="flex items-start sm:items-center">
+                {/* Customer Details */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                    <UserCircleIcon className="w-4 h-4 text-green-600" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-800 whitespace-nowrap">
+                    Customer Details
+                  </h3>
                 </div>
-                <h3 className="text-base font-semibold text-gray-800">Customer Details</h3>
-              </div>
 
-              <div
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-900 cursor-pointer transition-colors"
-                onClick={() => setShowUserModal(true)}
-              >
-                <User className="w-4 h-4" />
-                <span className="font-medium">Referrer: {referredByUser?.nameAsPerGovId || 'User'}</span>
+                {/* Ref User */}
+                <div
+                  className="
+        ml-auto
+        text-sm text-blue-600 hover:text-blue-900
+        cursor-pointer transition-colors
+        text-right
+        max-w-[55%]
+      "
+                  onClick={() => setShowUserModal(true)}
+                >
+                  <span className="font-medium">
+                    Ref:&nbsp;
+                    <span className="sm:whitespace-nowrap break-words">
+                      {referredByUser?.nameAsPerGovId || "Not Available"}
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="border-b border-gray-200 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-gray-800">
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Name as per Gov ID</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.govIdName || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
-                <p className="mt-1 text-base text-gray-800">+91 {customer.mobileNumber || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.preferredName || "....."}</p>
-              </div>
-              <div className="break-words">
-                <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
-                <p className="mt-1 text-base text-gray-800">{customer.emailAddress || "....."}</p>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 ">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 text-gray-800">
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Gov ID Name</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.govIdName || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
+                  <p className="mt-1 text-sm text-gray-800">+91 {customer.mobileNumber || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Preferred Name</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.preferredName || "....."}</p>
+                </div>
+                <div className="break-words">
+                  <h3 className="text-sm font-medium text-gray-500">Email Address</h3>
+                  <p className="mt-1 text-sm text-gray-800">{customer.emailAddress || "....."}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -271,42 +329,38 @@ export const ViewCustomer = () => {
 
 
 
-          <div className="flex gap-3 justify-start mt-6 max-w-4xl mx-auto">
+          <div className="flex flex-row flex-wrap gap-2 justify-start mt-4 max-w-4xl mx-auto">
             <button
               onClick={() =>
                 navigate(`/edit-customer`, {
-                  state: {
-                    customerId,
-                  },
+                  state: { customerId },
                 })
               }
-              className="py-2 px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition"
+              className="py-2 px-4 sm:px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition text-sm sm:text-sm md:text-base"
             >
               Edit Customer
             </button>
 
-            {connections.length === 0 && (
+            {connections.length === 0 && !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && (
               <button
                 onClick={() =>
                   navigate(`/connection-form`, {
-                    state: {
-                      customerId,
-                      govIdName: customer.govIdName,
-                    },
+                    state: { customerId, govIdName: customer.govIdName },
                   })
                 }
-                className="py-2 px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition"
+                className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
               >
                 Add New Connection
               </button>
             )}
           </div>
+
+
         </div>
 
 
-
         {connections.length > 0 && (
-          <div className="mt-6 px-2">
+          <div className="mt-4">
             <div className="max-w-4xl mx-auto space-y-6">
 
               <div className="space-y-6">
@@ -324,7 +378,7 @@ export const ViewCustomer = () => {
                       </div>
 
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -359,86 +413,123 @@ export const ViewCustomer = () => {
                     </summary>
 
 
-                    <div className="px-5 pb-5 space-y-6 text-sm text-gray-700">
-                      <div className="border-b border-gray-200 mb-2" />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
+                    <div className="px-5 pb-5 space-y-4 text-sm text-gray-700">
+                      <div className="border-b border-gray-200" />
 
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Active Grid Connection</h3>
-                          <p className="mt-1 text-base text-gray-800">Yes</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Consumer Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.consumerId || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Billed To</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.billedTo || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Monthly Avg Consumption Units</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.avgMonthlyConsumption || "....."}</p>
-                        </div>
-
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Connection Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.connectionTypeName || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Phase Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.phaseTypeName || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">DISCOM ID</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.discomId || "....."}</p>
-                        </div>
-
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">GST Number</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.gstIn || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Address Type</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.addressTypeName || "....."}</p>
-                        </div>
-
-
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                          <p className="mt-1 text-base text-gray-800">
-                            {connection.addressLine1}, {connection.villageName}, {connection.talukaName}, {connection.districtName}
-                          </p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Postal Code</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.pinCode || "....."}</p>
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Latitude , Longitude</h3>
-                          <p className="mt-1 text-base text-gray-800">{connection.latitude || "--"}, {connection.longitude || "--"}</p>
-                        </div>
-
-                        {connection.isNameCorrectionRequired && (
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Correction Required</h3>
-                            <p className="mt-1 text-base text-gray-800">{connection.correctionTypeName || "....."}</p>
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                            <UserCircleIcon className="w-4 h-4 text-green-600" />
                           </div>
-                        )}
+                          <h4 className="text-base font-medium text-gray-900">Connection Information</h4>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Consumer #</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.consumerId || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Avg Units/Month</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.avgMonthlyConsumption || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Connection Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.connectionTypeName || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Phase Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.phaseTypeName || "NA"}</p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">DISCOM ID</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.discomId || "NA"}</p>
+                          </div>
+                        </div>
                       </div>
 
+                      {/* Business Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+                            <Cog6ToothIcon className="w-4 h-4 text-orange-600" />
+                          </div>
+                          <h4 className="text-base font-medium text-gray-900">Business Information</h4>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Billed To</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.billedTo || "NA"}</p>
+                          </div>
+
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">GST Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gstIn || "NA"}</p>
+                          </div>
+
+                          {(connection.isGharkulCustomer && <div>
+                            <h5 className="text-sm font-medium text-gray-500">Gharkul Number</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.gharkulNumber || "NA"}</p>
+                          </div>)}
+                        </div>
+                      </div>
+
+                      {/* Address Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <HomeModernIcon className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <h4 className="text-base font-medium text-gray-900">Address Information</h4>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {/* Address - full width on mobile */}
+                          <div className="col-span-2 md:col-span-1">
+                            <h5 className="text-sm font-medium text-gray-500">Address</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.addressLine1}, {connection.villageName}, {connection.talukaName},{" "}
+                              {connection.districtName}, {connection.pinCode}
+                            </p>
+                          </div>
+
+                          {/* Address Type */}
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.addressTypeName || "NA"}
+                            </p>
+                          </div>
+
+                          {/* Latitude, Longitude */}
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Lat, Long</h5>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {connection.latitude || "NA"}, {connection.longitude || "NA"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Name Correction */}
+                      {connection.isNameCorrectionRequired && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-base font-medium text-gray-900">Name Correction Required</h4>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-500">Correction Name</h5>
+                            <p className="text-sm text-gray-800 mt-1">{connection.correctionTypeName || "NA"}</p>
+                          </div>
+                        </div>
+                      )}
+
+
                       {/* View/Edit Buttons */}
-                      <div className="w-full grid grid-cols-2 gap-4 md:flex md:justify-start md:gap-4">
+                      <div className="w-full grid grid-cols-2 gap-2 md:flex md:justify-start md:gap-4">
                         <button
                           onClick={() =>
                             navigate(`/edit-connection`, {
@@ -449,7 +540,14 @@ export const ViewCustomer = () => {
                               },
                             })
                           }
-                          className="w-full md:w-auto py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 flex items-center justify-center"
+                          className="
+      w-full md:w-auto 
+      py-1.5 px-3.5 sm:py-2 sm:px-5 
+      bg-blue-600 text-white font-semibold 
+      rounded-md hover:bg-blue-700 
+      flex items-center justify-center
+      text-sm 
+    "
                         >
                           Edit Connection
                         </button>
@@ -464,27 +562,41 @@ export const ViewCustomer = () => {
                               },
                             })
                           }
-                          className="w-full md:w-auto py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 flex items-center justify-center"
+                          className="
+      w-full md:w-auto 
+      py-1.5 px-3.5 sm:py-2 sm:px-
+      bg-green-600 text-white font-semibold 
+      rounded-md hover:bg-green-700 
+      flex items-center justify-center
+      text-sm 
+    "
                         >
-                          Get System Specs
+                          Get Sys Specs
                         </button>
                       </div>
+
 
 
 
                       {/* Nested Installations */}
                       {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
                         <details key={installation.id} className="group/installation bg-white rounded-md px-4 py-2 border border-gray-200 mb-4">
-                          <summary className="flex justify-between items-center cursor-pointer text-sm font-semibold text-gray-800 group mt-2 mb-2">
-
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
-                                <HomeModernIcon className="w-4 h-4 text-yellow-600" />
+                          <summary className="flex items-center justify-between cursor-pointer mt-2 mb-2 group">
+                            {/* Left section */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <HomeModernIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600" />
                               </div>
-                              <span className="text-base font-semibold">Installation {idx + 1} - On {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."} ({installation.installationSpaceTitle})</span>
+                              <span className="text-sm sm:text-base font-semibold leading-snug">
+                                Installation {idx + 1} - On{" "}
+                                {getSpaceTypeName(installation.installationSpaceTypeId)}
+                              </span>
                             </div>
+
+
+                            {/* Chevron */}
                             <svg
-                              className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open/installation:rotate-180"
+                              className="w-4 h-4 text-gray-500 transform transition-transform duration-300 group-open/installation:rotate-180 flex-shrink-0"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -496,79 +608,83 @@ export const ViewCustomer = () => {
 
                           {/* Full Installation Info Block */}
                           <div className="mt-4">
-                            <div className="border-b border-gray-200 mb-2 mt-2" />
-                            <div className="p-4 w-full">
+                            <div className="border-b border-gray-200 mb-4 mt-2" />
+                            <div className="w-full">
+                              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20 mb-6">
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                      Installation Space Type
+                                    </h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {getSpaceTypeName(installation.installationSpaceTypeId) || "NA"}
+                                    </p>
+                                  </div>
 
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Installation Space Type</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {spaceTypes.find(type => type.id === installation.installationSpaceTypeId)?.nameEnglish || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.installationSpaceTitle || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">East-West-Length (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.availableEastWestLengthFt || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">South-North-Length (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.availableSouthNorthLengthFt || "....."}
-                                  </p>
-                                </div>
-                              </div>
 
-                              {/* Row 2 */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 md:gap-x-20">
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.structureInverterDistanceFt || "....."}
-                                  </p>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Installation Space Title</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.installationSpaceTitle || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">East-West-Length (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.availableEastWestLengthFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">South-North-Length (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.availableSouthNorthLengthFt || "NA"}
+                                    </p>
+                                  </div>
+
+
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Structure To Inverter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.structureInverterDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.inverterMeterDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.inverterEarthDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.arresterEarthDistanceFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Height of Structure (Ft)</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.minimumElevationFt || "NA"}
+                                    </p>
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
+                                    <p className="mt-1 text-sm text-gray-800 break-words whitespace-normal">
+                                      {installation.descriptionOfInstallation || "NA"}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Inverter to GenMeter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterMeterDistanceFt || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Earthing Pit to Inverter Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.inverterEarthDistanceFt || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Lightning Arrester to Ground Distance (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.arresterEarthDistanceFt || "....."}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Height of Structure (Feet)</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.minimumElevationFt || "....."}
-                                  </p>
-                                </div>
-                                <div className="md:col-span-2">
-                                  <h3 className="text-sm font-medium text-gray-500">Description about Installation</h3>
-                                  <p className="mt-1 text-base text-gray-800 break-words whitespace-normal">
-                                    {installation.descriptionOfInstallation || "....."}
-                                  </p>
-                                </div>
+
                               </div>
 
                               {/* Optional Edit Button */}
-                              <div className="flex mt-6">
+                              <div className="flex mt-4">
                                 <button
                                   onClick={() =>
                                     navigate(`/edit-installation`, {
@@ -608,7 +724,7 @@ export const ViewCustomer = () => {
               </div>
 
               {/* Add New Connection button below the collapsibles */}
-              <div className="flex justify-start mt-6">
+              { !(userInfo?.role =="ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <div className="flex justify-start mt-6">
                 <button
                   onClick={() =>
                     navigate(`/connection-form`, {
@@ -618,15 +734,14 @@ export const ViewCustomer = () => {
                       },
                     })
                   }
-                  className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className="py-2 px-4 sm:px-5 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 transition text-sm sm:text-sm md:text-base"
                 >
                   Add New Connection
                 </button>
-              </div>
+              </div>}
             </div>
           </div>
         )}
-
 
       </div>
     </div>

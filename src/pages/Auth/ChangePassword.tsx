@@ -54,6 +54,7 @@ const Verification: React.FC = () => {
       await verifyAndChangePassword(email, newPassword);
       setSuccess('Password changed successfully!');
       localStorage.removeItem("jwtToken");
+      localStorage.removeItem("refreshToken");
 
       setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
@@ -113,7 +114,7 @@ const Verification: React.FC = () => {
               onClick={() => setShowNewPassword(!showNewPassword)}
               className="absolute top-9 right-3 text-gray-500"
             >
-              {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+              {showNewPassword ? <FaEye /> : <FaEyeSlash />}
             </button>
           </div>
 
@@ -135,7 +136,7 @@ const Verification: React.FC = () => {
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute top-9 right-3 text-gray-500"
             >
-              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              {showConfirmPassword ? <FaEye /> : <FaEyeSlash />}
             </button>
           </div>
 

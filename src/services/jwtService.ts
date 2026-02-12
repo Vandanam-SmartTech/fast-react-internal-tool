@@ -26,20 +26,36 @@ export const login = async (credentials: { identifier: string; password: string;
   return response.data;
 };
 
-export const setAuthToken = (token: string) => {
+export const setAuthToken = (jwt: string, refreshToken: string) => {
   const jwtAPI = getJwtAPI();
-  if (token) {
-    localStorage.setItem('jwtToken', token);
-    jwtAPI.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  if (jwt) {
+    localStorage.setItem('jwtToken', jwt);
+    localStorage.setItem('refreshToken',refreshToken);
+    jwtAPI.defaults.headers.common['Authorization'] = `Bearer ${jwt}`;
   } else {
     localStorage.removeItem('jwtToken');
+    localStorage.removeItem('refreshToken');
     delete jwtAPI.defaults.headers.common['Authorization'];
   }
 };
 
-
-
 export const getAuthToken = () => localStorage.getItem('jwtToken');
+
+export const refreshToken = async () => {
+  const jwtAPI = getJwtAPI();
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    throw new Error("No refresh token found");
+  }
+
+  const response = await jwtAPI.post("/auth/refresh-token", {
+    refreshToken,
+  });
+
+  return response.data; // { accessToken, refreshToken: null }
+};
+
 
 
 export const fetchClaims = async () => {
@@ -336,23 +352,10 @@ export const fetchRepresentativesPaginated = async (page = 0, role?: string) => 
   }
 };
 
-
-
-// export const updateUser = async (userId: number, data: any) => {
-//   const jwtAPI = getJwtAPI();
-//   try {
-//     const response = await jwtAPI.put(`/api/users/${userId}`, data);
-//     return response;
-//   } catch (error) {
-//     console.error("Update failed", error);
-//     return { message: "Update error" };
-//   }
-// };
-
-export const fetchDistricts = async (): Promise<District[]> => {
+export const fetchDistricts = async () => {
   const jwtAPI = getJwtAPI();
   try {
-    const response = await jwtAPI.get('/api/district/27');
+    const response = await jwtAPI.get('/api/district/1');
     return response.data;
   } catch (error: any) {
     console.error('Error fetching districts:', error);
@@ -362,7 +365,7 @@ export const fetchDistricts = async (): Promise<District[]> => {
   }
 };
 
-export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
+export const fetchTalukas = async (districtCode: number) => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/taluka/${districtCode}`);
@@ -375,7 +378,7 @@ export const fetchTalukas = async (districtCode: number): Promise<Taluka[]> => {
   }
 };
 
-export const fetchVillages = async (talukaCode: number): Promise<Village[]> => {
+export const fetchVillages = async (talukaCode: number) => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/village/${talukaCode}`);

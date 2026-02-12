@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  postMaterialData, getMaterialsByConnectionId, updateMaterialData,
   saveInverter, saveInstallationDetails, saveModule, fetchInverter, fetchInstallation, fetchModule, updateModule, updateInstallationDetails, updateInverter
 } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
-import { fetchSystemRelatedDetails } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
 
@@ -40,6 +38,7 @@ export default function MaterialForm() {
     reInstalledCapacityGround: "",
     reInstalledCapacityTotal: "",
     serials: [] as { serialNumber: string }[],
+    yearOfManufacturing: "",
   });
 
 
@@ -48,10 +47,9 @@ export default function MaterialForm() {
   const connectionId = location.state?.connectionId;
   //const [connectionId, setConnectionId] = useState<number | null>(null);
   const [messageBoxOpen, setMessageBoxOpen] = useState(false);
-  const [messageBoxContent, setMessageBoxContent] = useState("");
-  const [messageBoxSeverity, setMessageBoxSeverity] = useState<"success" | "error">("success");
+  const [messageBoxContent, ] = useState("");
+  const [messageBoxSeverity, ] = useState<"success" | "error">("success");
   const consumer = location.state?.consumer as Consumer;
-  const [existingMaterialData, setExistingMaterialData] = useState<any | null>(null);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -95,7 +93,7 @@ export default function MaterialForm() {
         // Auto-update total whenever rooftop or ground changes
         if (name !== "reInstalledCapacityTotal") {
           const total = rooftop + ground;
-          updated.reInstalledCapacityTotal = total.toFixed(2); 
+          updated.reInstalledCapacityTotal = total.toFixed(2);
         }
 
         return updated;
@@ -114,39 +112,8 @@ export default function MaterialForm() {
     setFormData((prev) => ({ ...prev, serials: updatedSerials }));
   };
 
+  // const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-  // useEffect(() => {
-  //   const fetchMaterialData = async () => {
-  //     if (!connectionId) return;
-
-  //     const materials = await getMaterialsByConnectionId(connectionId);
-  //     if (materials.length > 0) {
-  //       setFormData({ ...materials[0] });
-  //       setExistingMaterialData(materials[0]);
-  //     } else {
-  //       // Fallback to fetch system details
-  //       try {
-  //         const systemDetails = await fetchSystemRelatedDetails(connectionId);
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           systemKw: systemDetails.customerSelectedKW || "",
-  //           makeOfModule: systemDetails.customerSelectedBrand || "",
-  //           inverterCapacity: systemDetails.inverterCapacity || "",
-  //           inverterMake: systemDetails.inverterBrand || "",
-  //           noOfModules: systemDetails.panelCount || "",
-  //           reInstalledCapacityTotal: systemDetails.customerSelectedKW || "",
-  //         }));
-  //       } catch (error) {
-  //         console.error("Error fetching system details:", error);
-  //       }
-  //     }
-  //   };
-
-  //   fetchMaterialData();
-  // }, [connectionId]);
 
   useEffect(() => {
     const loadSavedData = async () => {
@@ -170,7 +137,7 @@ export default function MaterialForm() {
           rating: inverter?.rating || "IP65",
           chargeControllerType: inverter?.chargeControllerType || "MPPT",
           inverterCapacity: inverter?.inverterCapacity?.toString() || "",
-
+          yearOfManufacturing: inverter?.yearOfManufacturing || "",
           earthingRod: installation?.earthingRod?.toString() || "",
           dateOfInstallation: installation?.dateOfInstallation || "",
           capacityType: installation?.capacityType || "Rooftop",
@@ -259,6 +226,7 @@ export default function MaterialForm() {
         rating: formData.rating,
         chargeControllerType: formData.chargeControllerType,
         inverterCapacity: parseFloat(formData.inverterCapacity),
+        yearOfManufacturing: formData.yearOfManufacturing,
       };
 
       const installationData = {
@@ -445,6 +413,17 @@ export default function MaterialForm() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Year of Manufacturing</label>
+                  <input
+                    type="text"
+                    name="yearOfManufacturing"
+                    value={formData.yearOfManufacturing}
+                    onChange={handleChange}
+                    placeholder="e.g. 2023"
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />
+                </div>
 
               </div>
             </div>
@@ -605,6 +584,19 @@ export default function MaterialForm() {
                     onChange={handleChange}
                     className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
+
+                  {/*<input
+                    type="date"
+                    name="dateOfInstallation"
+                    value={
+                      formData.dateOfInstallation
+                        ? formData.dateOfInstallation.split("/").reverse().join("-")
+                        : ""
+                    }
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  />*/}
+
                 </div>
 
                 <div>

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypes, fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById } from '../../services/customerRequisitionService';
 import {
-  generateQuotationPDF, previewQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
-  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getPriceDetails, getSecondaryId
+  generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
+  fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
+  fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId, getSavedSystemSpecPackages
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -12,78 +13,119 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from
 import { toast } from "react-toastify";
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, CurrencyRupeeIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useUser } from "../../contexts/UserContext";
-import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById } from "../../services/documentManagerService";
-import { Download as DownloadIcon } from "lucide-react";
+import { fetchUploadedDocumentByDocumentTypeAndDocumentNumber, downloadDocumentById, deleteDocumentById } from "../../services/documentManagerService";
+import { Download as DownloadIcon, CheckCircle, PencilIcon, LockIcon, X, RefreshCw } from "lucide-react";
+import "react-datepicker/dist/react-datepicker.css";
 
+interface Inverter {
+  inverterBrandName: string;
+  inverterCapacity: number;
+  inverterCount: number;
+  gridTypeName: string;
+}
+
+export interface BatterySpec {
+  id: number;
+  batteryCapacity?: number;
+  voltage?: number;
+  modelNumber?: string;
+  productWarranty?: number;
+}
+
+
+
+interface SystemSpec {
+  id: number;
+  connectionId: number;
+  isRunningCopy: boolean;
+
+  panelBrandShortName?: string;
+  panelRatedWattageW?: number;
+  systemCapacityKw?: number;
+
+  systemCost?: number;
+  fabricationCost?: number;
+
+  batteryBrandName?: string;
+  batteryCapacityKw?: number;
+
+  inverters?: Inverter[];
+
+  createdAt: string;
+}
 
 export const SystemSpecifications = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [showCostDetails, setShowCostDetails] = useState(false);
-  const [isSpecsSaved, setIsSpecsSaved] = useState(false);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [, setIsSpecsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [Kw, setKw] = useState("");
-  const [inverterKw, setInverterKw] = useState("");
-  const [dcrNonDcrType, setDcrNonDcrType] = useState("");
-  const [inversionType, setInversionType] = useState("");
-  const [inverterBrand, setInverterBrand] = useState("");
-  const [panelBrand, setPanelBrand] = useState("");
-  const [phaseType, setPhaseType] = useState("");
-  const [connectionType, setConnectionType] = useState("");
-  const [panelWattages, setPanelWattages] = useState([]);
-  const [inverterWattages, setInverterWattages] = useState([]);
-  const [isCustomSpecs, setIsCustomSpecs] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]);
+
+  const [, setIsCustomSpecs] = useState(false);
   const [govIdName, setGovIdName] = useState("");
+  const [connectionType, setConnectionType] = useState("");
   const [orgId, setOrgId] = useState<number | null>(null);
   const [agencyId, setAgencyId] = useState<number | null>(null);
-  const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState("");
-  const [dialogMessage, setDialogMessage] = useState("");
-  const [dialogAction, setDialogAction] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+
+  const [dialogType, setDialogType] = useState<
+    "success" | "error" | "confirm" | ""
+  >("");
+
+  const [dialogMessage, setDialogMessage] = useState<string>("");
+
+  const [dialogAction, setDialogAction] = useState<
+    (() => Promise<void> | void) | null
+  >(null);
+
+  const [quotationFileMeta, setQuotationFileMeta] = useState<{
+    systemCapacityKw?: number;
+    panelBrandName?: string;
+  }>({});
+
   const [showModal, setShowModal] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
   const [isSpaceListOpen, setIsSpaceListOpen] = useState(false);
-  const [inverterBrands, setInverterBrands] = useState<string[]>([]);
-  const [panelBrands, setPanelBrands] = useState<any[]>([]);
-  const [connectionDetails, setConnectionDetails] = useState<any>(null);
+  const [, setConnectionDetails] = useState<any>(null);
 
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
+  const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
   const [avgMonthlyConsumption, setAvgMonthlyConsumption] = useState<number | null>(null);
 
   const [materialOriginId, setMaterialOriginId] = useState<number | null>(null);
   const [origins, setOrigins] = useState<any[]>([]);
 
-  const [gridTypeId, setGridTypeId] = useState(1);
+  const [gridTypeId, setGridTypeId] = useState<number | null>(null);
   const [grids, setGrids] = useState<any[]>([]);
 
-  const [inverterBrandId, setInverterBrandId] = useState<number | null>(null);
+  const [inverterBrandId,] = useState<number | null>(null);
   const [inverters, setInverters] = useState<any[]>([]);
 
-  const [inverterSpecId, setInverterSpecId] = useState<number | null>(null);
-  const [inverterCapacities, setInverterCapacities] = useState<any[]>([]);
 
-  const [panelBrandId, setPanelBrandId] = useState<number | null>(null);
+  const [, setInverterCapacities] = useState<any[]>([]);
+
+  const [quotationNumber, setQuotationNumber] = useState("");
+
+
   const [panels, setPanels] = useState<any[]>([]);
 
-  const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
-  const [panelCapacities, setPanelCapacities] = useState([]);
+  const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
+  const [panelCapacities, setPanelCapacities] = useState<number[]>([]);
 
-  const [systemCapacityKw, setSystemCapacityKw] = useState<number | null>(null);
+  const [, setSystemCapacityKw] = useState<number | null>(null);
 
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
 
-  const [batterySpecId, setBatterySpecId] = useState<number | null>(null);
-  const [batteryCapacities, setBatteryCapacities] = useState([]);
+  const [pipes, setPipes] = useState<any[]>([]);
 
-  const [savedSpecs, setSavedSpecs] = useState([]);
-  const [selectedSpecId, setSelectedSpecId] = useState(null);
-  const [selectedSystemSpecsInverterId, setSelectedSystemSpecsInverterId] = useState(null);
+  const [, setOrgBatterySpecId] = useState<number | null>(null);
+  const [batteryCapacities, setBatteryCapacities] = useState<BatterySpec[]>([]);
+
+  const [savedSpecs, setSavedSpecs] = useState<SystemSpec[]>([]);
+
+  const [selectedSpecId, setSelectedSpecId] = useState<number | null>(null);
 
   const [isPrefilling, setIsPrefilling] = useState(false);
 
@@ -98,11 +140,23 @@ export const SystemSpecifications = () => {
 
   const [inverterCapacitiesMap, setInverterCapacitiesMap] = useState<Record<number, any[]>>({});
 
-  const [systemSpecificationId, setSystemSpecificationId] = useState(null);
+  const [, setSystemSpecificationId] = useState(null);
   const [secondaryId, setSecondaryId] = useState(null);
 
   const [documentsMap, setDocumentsMap] = useState<{ [key: number]: any }>({});
   const [loadingDocs, setLoadingDocs] = useState<{ [key: number]: boolean }>({});
+
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+
+  const [showDatePickModal, setShowDatePickModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
+
+  const [stdSpecPackages, setStdSpecPackages] = useState<any[]>([]);
+
+  const [isLoadingStdSpecs, setIsLoadingStdSpecs] = useState(false);
+
 
 
   const tabs = [
@@ -116,7 +170,9 @@ export const SystemSpecifications = () => {
   const [installationTypeMap, setInstallationTypeMap] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingFabrication, setIsEditingFabrication] = useState(false);
-
+  const [finalQuotationId, setFinalQuotationId] = useState<number | null>(null);
+  const [secondaryIdMap, setSecondaryIdMap] = useState<Record<number, number>>({});
+  const [isLoadingSavedSpecs, setIsLoadingSavedSpecs] = useState(false);
 
   const [formData, setFormData] = useState({
     systemCost: 0,
@@ -127,57 +183,33 @@ export const SystemSpecifications = () => {
     hasWaterSprinkler: false,
     hasHeavydutyRamp: false,
     hasHeavydutyStairs: false,
-    //inverterBrandId: null,
-    materialOriginId: null,
-    gridTypeId: 1,
-    //inverterSpecId: null,
-    //inverterCount: 1,
-    panelBrandId: null,
-    panelSpecId: null,
-    batteryBrandId: null,
-    batterySpecId: null,
-    systemCapacityKw: null,
-    inverters: [
-      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
-    ],
-  });
-
-  const defaultFormData = {
-    systemCost: 0,
-    fabricationCost: 0,
-    totalCost: 0,
-    installationSpaceType: "",
-    installationStructureType: "Static",
-    hasWaterSprinkler: false,
-    hasHeavydutyRamp: false,
-    hasHeavydutyStairs: false,
-    //inverterBrandId: null,
     materialOriginId: null,
     gridTypeId: null,
-    //inverterSpecId: null,
-    //inverterCount: 1,
     panelBrandId: null,
-    panelSpecId: null,
+    orgPanelSpecId: null,
     batteryBrandId: null,
-    batterySpecId: null,
+    orgBatterySpecId: null,
     systemCapacityKw: null,
     inverters: [
-      { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
+      { inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 },
     ],
-  };
-
-
+    pipes: [
+      { orgPipeSpecId: null, pipeCount: 1 },
+    ],
+  });
 
   const connectionId = location.state?.connectionId;
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
 
-  const formatIndianNumber = (value) => {
+
+  const formatIndianNumber = (value: number): string => {
     if (!value) return "";
     return new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 0,
     }).format(value);
   };
+
 
 
 
@@ -258,13 +290,17 @@ export const SystemSpecifications = () => {
         const data = await getConnectionByConnectionId(Number(connectionId));
         setConnectionDetails(data);
 
-        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null) {
+        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null && data?.connectionTypeName && data?.isGharkulCustomer) {
           setPhaseTypeId(data.phaseTypeId);
           setAvgMonthlyConsumption(data.avgMonthlyConsumption);
+          setConnectionType(data.connectionTypeName);
+          setIsGharkulCustomer(!!data?.isGharkulCustomer);
           console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
         } else {
           setPhaseTypeId(null);
           setAvgMonthlyConsumption(null);
+          setConnectionType("");
+          setIsGharkulCustomer(false);
         }
       } catch (error) {
         console.error("Failed to fetch connection details", error);
@@ -274,25 +310,48 @@ export const SystemSpecifications = () => {
     fetchConnection();
   }, [connectionId]);
 
+  useEffect(() => {
+    const fetchSystemSpecPackages = async () => {
+      if (isGharkulCustomer === null) return;
+
+      setIsLoadingStdSpecs(true);
+
+      try {
+        const packages = await getSavedSystemSpecPackages(isGharkulCustomer);
+        console.log("Fetched system spec packages:", packages);
+        setStdSpecPackages(packages);
+      } catch (error) {
+        console.error("Failed to fetch system spec packages", error);
+      } finally {
+        setIsLoadingStdSpecs(false);
+      }
+    };
+
+    fetchSystemSpecPackages();
+  }, [isGharkulCustomer]);
+
+
 
 
   const fetchSavedSpecs = async () => {
+    setIsLoadingSavedSpecs(true);
+
     try {
+
+      hasFetchedRef.current = false;
+
       const data = await getSavedSystemSpecs(connectionId);
       setSavedSpecs(data || []);
 
-      // 🔍 Find the first locked spec (isRunningCopy = false)
       const lockedSpec = (data || []).find(spec => spec.isRunningCopy === false);
 
       if (lockedSpec) {
         console.log("Locked spec found:", lockedSpec);
         setSystemSpecificationId(lockedSpec.id);
 
-        // 🔄 Fetch secondaryId for that locked spec
         try {
           const secondaryData = await getSecondaryId(lockedSpec.id);
 
-          // handle both array or object responses
           const secondaryIdValue = Array.isArray(secondaryData)
             ? secondaryData[0]?.id
             : secondaryData?.id;
@@ -311,6 +370,9 @@ export const SystemSpecifications = () => {
       }
     } catch (err) {
       console.error("Error fetching saved specs", err);
+    } finally {
+
+      setIsLoadingSavedSpecs(false);
     }
   };
 
@@ -340,227 +402,194 @@ export const SystemSpecifications = () => {
     fetchGrids();
   }, []);
 
-  // useEffect(() => {
-  //   const loadInverterBrands = async () => {
-
-  //       setInverters([]);
-  //       setInverterBrandId(null);
-  //       setInverterCapacities([]);
-  //       setInverterSpecId(null);
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         inverterBrandId: null,
-  //         inverterSpecId: null
-  //       }));
-
-
-  //     if (phaseTypeId !== null && gridTypeId !== null) {
-  //       try {
-  //         const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-  //         setInverters([...data]);
-  //       } catch (error) {
-  //         console.error("Failed to fetch inverter brands:", error);
-  //         setInverters([]);
-  //       } finally {
-  //         setIsPrefilling(false);
-  //       }
-  //     }
-  //   };
-
-  //   loadInverterBrands();
-  // }, [phaseTypeId, gridTypeId]);
 
   useEffect(() => {
     const loadInverterBrands = async () => {
 
       setInverters([]);
       setInverterCapacities([]);
-      setFormData((prev) => {
 
-        const updatedInverters = (prev.inverters || []).map((inv) => ({
-          ...inv,
-          inverterBrandId: null,
-          inverterSpecId: null,
-        }));
-        return {
+      if (!isPrefilling) {
+        setFormData((prev) => ({
           ...prev,
-          inverterBrandId: null,
-          inverterSpecId: null,
-          inverters: updatedInverters,
-        };
-      });
+          inverters: (prev.inverters || []).map(inv => ({
+            ...inv,
+            inverterBrandId: null,
+            orgInverterSpecId: null,
+          })),
+        }));
 
-
-      setInverterCapacitiesMap({});
-
-      if (phaseTypeId !== null && gridTypeId !== null) {
-        try {
-          const data = await fetchInverterBrands(phaseTypeId, gridTypeId);
-          setInverters(Array.isArray(data) ? data : []);
-        } catch (error) {
-          console.error("Failed to fetch inverter brands:", error);
-          setInverters([]);
-        } finally {
-          setIsPrefilling(false);
-        }
+        setInverterCapacitiesMap({});
       }
+
+      if (phaseTypeId && gridTypeId && orgId) {
+        const data = await fetchInverterBrands(phaseTypeId, gridTypeId, orgId);
+        setInverters(Array.isArray(data) ? data : []);
+      }
+
+      setIsPrefilling(false);
     };
 
     loadInverterBrands();
-  }, [phaseTypeId, gridTypeId]);
+  }, [phaseTypeId, gridTypeId, orgId]);
+
+
 
 
   useEffect(() => {
-    const loadInverterBrandCapacities = async () => {
+    if (isPrefilling) return;
+    if (!inverterBrandId) return;
 
+    const loadInverterBrandCapacities = async () => {
       setInverterCapacities([]);
 
-      setInverterSpecId(null);
-      setFormData((prev) => ({
-        ...prev,
-        inverterSpecId: null
-      }));
-
-
-      if (inverterBrandId !== null && gridTypeId !== null) {
-        try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId);
-          setInverterCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch inverter brand capacities:", error);
-          setInverterCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
+      try {
+        const data = await fetchInverterBrandCapacities(
+          inverterBrandId,
+          Number(orgId),
+          Number(phaseTypeId),
+          Number(gridTypeId)
+        );
+        setInverterCapacities(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch inverter brand capacities:", error);
+        setInverterCapacities([]);
       }
     };
 
     loadInverterBrandCapacities();
-  }, [inverterBrandId, gridTypeId]);
-
-
-useEffect(() => {
-  const loadPanelBrands = async () => {
-    if (!materialOriginId) return;
-
-    setPanels([]);
-    setPanelSpecId(null);
-    setPanelCapacities([]);
-    setSystemCapacityKw(null);
-    setFormData((prev) => ({
-      ...prev,
-      panelSpecId: null,
-      systemCapacityKw: null,
-    }));
-
-    try {
-      const data = await fetchPanelBrands(Number(materialOriginId));
-      setPanels([...data]);
-    } catch (error) {
-      console.error("Failed to fetch panel brands:", error);
-      setPanels([]);
-    }
-  };
-
-  loadPanelBrands();
-}, [materialOriginId]);
-
-
-
+  }, [inverterBrandId, gridTypeId, orgId, phaseTypeId]);
 
 
   useEffect(() => {
-  const loadPanelBrandCapacities = async () => {
-    if (
-      phaseTypeId === null ||
-      panelSpecId === null ||
-      avgMonthlyConsumption === null ||
-      materialOriginId === null
-    ) {
-      return;
-    }
+    const loadPanelBrands = async () => {
+      if (!materialOriginId || !orgId) return;
 
-    if (!formData.systemCapacityKw) {
+      // reset dependent state
+      setPanels([]);
+      setOrgPanelSpecId(null);
       setPanelCapacities([]);
       setSystemCapacityKw(null);
       setFormData((prev) => ({
         ...prev,
+        orgPanelSpecId: null,
         systemCapacityKw: null,
       }));
-    }
 
-    try {
-      const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
-      setPanelCapacities([...data]);
-    } catch (error) {
-      console.error("Failed to fetch panel brand capacities:", error);
-      setPanelCapacities([]);
-    }
-  };
+      try {
+        const data = await fetchPanelSpecsByOrg(
+          Number(materialOriginId),
+          Number(orgId)
+        );
+        setPanels(data);
+      } catch (error) {
+        console.error("Failed to fetch panel brands:", error);
+        setPanels([]);
+      }
+    };
 
-  loadPanelBrandCapacities();
-}, [phaseTypeId, panelSpecId, materialOriginId]);
+    loadPanelBrands();
+  }, [materialOriginId, orgId]);   // ✅ include orgId
+
+
+  useEffect(() => {
+    const loadPanelBrandCapacities = async () => {
+      if (
+        phaseTypeId === null ||
+        orgPanelSpecId === null ||
+        avgMonthlyConsumption === null ||
+        materialOriginId === null
+      ) {
+        return;
+      }
+
+      if (!formData.systemCapacityKw) {
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          systemCapacityKw: null,
+        }));
+      }
+
+      try {
+        const data = await fetchPanelBrandCapacities(phaseTypeId, orgPanelSpecId);
+        setPanelCapacities([...data]);
+      } catch (error) {
+        console.error("Failed to fetch panel brand capacities:", error);
+        setPanelCapacities([]);
+      }
+    };
+
+    loadPanelBrandCapacities();
+  }, [phaseTypeId, orgPanelSpecId, materialOriginId]);
 
 
 
 
   useEffect(() => {
     const loadBatteryBrands = async () => {
+      if (!orgId) return;
+
       if (formData.gridTypeId === 2 || formData.gridTypeId === 3) {
-        const data = await fetchBatteryBrands();
+        const data = await fetchBatteryBrands(Number(orgId));
         if (data) setBatteryBrands(data);
       } else {
-
+        // reset battery-related state
         setBatteryBrands([]);
         setBatteryBrandId(null);
-        setBatterySpecId(null);
+        setOrgBatterySpecId(null);
         setBatteryCapacities([]);
         setFormData((prev) => ({
           ...prev,
           batteryBrandId: null,
-          batterySpecId: null,
+          orgBatterySpecId: null,
         }));
       }
     };
 
     loadBatteryBrands();
-  }, [formData.gridTypeId]);
+  }, [formData.gridTypeId, orgId]);   // ✅ add orgId
+
 
   useEffect(() => {
+    // reset dependent state
     setBatteryCapacities([]);
-    setBatterySpecId(null);
+    setOrgBatterySpecId(null);
     setFormData((prev) => ({
       ...prev,
-      batterySpecId: null
+      orgBatterySpecId: null,
     }));
-    if (batteryBrandId !== null) {
+
+    if (batteryBrandId !== null && orgId) {
       const loadBatteryCapacities = async () => {
         try {
-          const data = await fetchBatteryBrandCapacities(batteryBrandId);
-          setBatteryCapacities([...data]);
+          const data = await fetchBatteryBrandCapacities(
+            Number(batteryBrandId),
+            Number(orgId)
+          );
+          setBatteryCapacities(data);
         } catch (error) {
           console.error("Failed to fetch battery brand capacities:", error);
           setBatteryCapacities([]);
-        } finally {
-          setIsPrefilling(false);
         }
       };
 
       loadBatteryCapacities();
     }
-  }, [batteryBrandId, gridTypeId]);
+  }, [batteryBrandId, gridTypeId, orgId]);   // ✅ add orgId
 
 
-  // useEffect(() => {
-  //   if (phaseTypeId !== null && !materialOriginId) {
-  //     const newMaterialOriginId = phaseTypeId === 1 ? 1 : 2;
-  //     setMaterialOriginId(newMaterialOriginId);
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       materialOriginId: newMaterialOriginId,
-  //     }));
-  //   }
-  // }, [phaseTypeId, materialOriginId]);
+  useEffect(() => {
+    const loadPipeSpecs = async () => {
+      const data = await fetchPipeSpecification(Number(orgId));
+      setPipes(data);
+    };
+
+    if (orgId) {
+      loadPipeSpecs();
+    }
+  }, [orgId]);
 
 
 
@@ -574,12 +603,12 @@ useEffect(() => {
 
     // If brand changed, reset spec and fetch capacities for that row
     if (field === "inverterBrandId") {
-      updatedInverters[index].inverterSpecId = null;
+      updatedInverters[index].orgInverterSpecId = null;
 
       if (value !== null) {
         try {
           // capacities for the particular brand (and implicitly for current gridTypeId)
-          const capacities = await fetchInverterBrandCapacities(value, gridTypeId);
+          const capacities = await fetchInverterBrandCapacities(value, Number(orgId), Number(phaseTypeId), Number(gridTypeId));
           setInverterCapacitiesMap((prev) => ({
             ...prev,
             [index]: Array.isArray(capacities) ? capacities : [],
@@ -596,102 +625,138 @@ useEffect(() => {
 
     // If gridTypeId changes elsewhere, the effect above will already have reset per-row fields.
     setFormData((prev) => ({ ...prev, inverters: updatedInverters }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
 
 
 
   const addNewInverter = () => {
-    setFormData({
-      ...formData,
-      inverters: [
-        ...formData.inverters,
-        { inverterBrandId: null, inverterSpecId: null, inverterCount: 1 },
-      ],
-    });
+    const newInverter = {
+      inverterBrandId: null,
+      orgInverterSpecId: null,
+      inverterCount: 1,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      inverters: [...(prev.inverters || []), newInverter],
+    }));
+
+    // also maintain a matching entry in inverterCapacitiesMap
+    setInverterCapacitiesMap((prev) => ({
+      ...prev,
+      [formData.inverters?.length || 0]: [], // initialize empty for new row
+    }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
+
 
   const removeInverter = (index) => {
-    const updated = formData.inverters.filter((_, i) => i !== index);
-    setFormData({ ...formData, inverters: updated });
+    setFormData((prev) => {
+      const updated = (prev.inverters || []).filter((_, i) => i !== index);
+      return { ...prev, inverters: updated };
+    });
+
+    setInverterCapacitiesMap((prev) => {
+      const updatedMap = { ...prev };
+      delete updatedMap[index];
+      // Re-index remaining capacities so that map stays in sync with inverters
+      const reIndexed = Object.keys(updatedMap).reduce((acc, key) => {
+        const newIndex = key > index ? key - 1 : key;
+        acc[newIndex] = updatedMap[key];
+        return acc;
+      }, {});
+      return reIndexed;
+    });
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
+  };
+
+  const handlePipeChange = (index: number, field: string, value: any) => {
+    const updatedPipes = [...(formData.pipes || [])];
+    // Ensure the row exists
+    if (!updatedPipes[index]) updatedPipes[index] = { orgPipeSpecId: null, pipeCount: 1 };
+
+    (updatedPipes[index] as any)[field] = value;
+
+    setFormData((prev) => ({ ...prev, pipes: updatedPipes }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
+  };
+
+  const addNewPipe = () => {
+    const newPipe = {
+      orgPipeSpecId: null,
+      pipeCount: 1,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      pipes: [...(prev.pipes || []), newPipe],
+    }));
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
+  };
+
+  const removePipe = (index: number) => {
+    setFormData((prev) => {
+      const updated = (prev.pipes || []).filter((_, i) => i !== index);
+      return { ...prev, pipes: updated };
+    });
+
+    if (priceAlreadySetFromCustomerData) {
+      setFetchTrigger((prev) => prev + 1);
+    }
   };
 
 
-
-
-  // const handleSaveSpecs = async () => {
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     const systemResponse = await saveSystemSpecs({
-  //       ...formData,
-  //       connectionId,
-  //       specSourceId: 2,
-  //       panelSpecsId: formData.panelSpecId,
-  //       batterySpecsId: formData.batterySpecId,
-  //       orgId,
-  //       agencyId
-
-  //     });
-
-  //     console.log("System specs saved:", systemResponse);
-
-  //     const systemSpecsId = systemResponse.id;
-
-
-  //     const inverterResponse = await saveInverterSpecs({
-  //       systemSpecsId,
-  //       inverterSpecId,
-  //       inverterCount: 1,
-  //     });
-
-  //     console.log("Inverter specs saved:", inverterResponse);
-
-  //     await fetchSavedSpecs();
-
-  //     toast.success("System Specification details saved successfully!", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving specs:", error);
-  //     toast.error("Failed to save system specs or inverter specs.", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
 
   const handleSaveSpecs = async () => {
     try {
+      // ---------------------- VALIDATION ------------------------------
 
+      // Inverter validation
       if (
         !formData.inverters ||
         formData.inverters.length === 0 ||
         formData.inverters.some(
-          (inv) => !inv.inverterBrandId || !inv.inverterSpecId
+          (inv) => !inv.inverterBrandId || !inv.orgInverterSpecId
         )
       ) {
         toast.error(
-          "Please select at least one Inverter Brand and Specification for all inverters before saving.",
+          "Please select at least one Inverter Brand and Specification for all inverters.",
           { autoClose: 1500, hideProgressBar: true }
         );
         return;
       }
+
+      // ---------------------- SAVE SYSTEM SPECS ------------------------------
 
       setIsSubmitting(true);
 
       const systemResponse = await saveSystemSpecs({
         ...formData,
         installationSpaceType:
-          formData.installationSpaceType?.trim() === "" ? null : formData.installationSpaceType,
-        batteryCount: formData.batterySpecId ? 1 : null,
+          formData.installationSpaceType?.trim() === ""
+            ? null
+            : formData.installationSpaceType,
+        batteryCount: formData.orgBatterySpecId ? 1 : null,
         connectionId,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        orgId,
-        agencyId,
+        orgPanelSpecId: formData.orgPanelSpecId,
+        orgBatterySpecId: formData.orgBatterySpecId,
+        orgId: agencyId ?? orgId,
         isRunningCopy: true,
       });
 
@@ -699,28 +764,47 @@ useEffect(() => {
 
       const systemSpecsId = systemResponse.id;
 
+      // ---------------------- SAVE INVERTERS ------------------------------
+
       const inverterList = formData.inverters.map((inv) => ({
         systemSpecsId,
-        inverterSpecId: inv.inverterSpecId,
+        orgInverterSpecId: inv.orgInverterSpecId,
         inverterCount: inv.inverterCount || 1,
       }));
 
       console.log("Inverter list to save:", inverterList);
 
-      const inverterResponse = await saveInverterSpecs(inverterList);
+      await saveInverterSpecs(inverterList);
 
-      console.log("Inverter specs saved:", inverterResponse);
+      // ---------------------- SAVE PIPE SPECS ------------------------------
 
+      // Save pipes if they exist, regardless of Heavy Duty Ramp checkbox
+      if (formData.pipes && formData.pipes.length > 0 && formData.pipes.some((p) => p.orgPipeSpecId)) {
+        const pipeList = formData.pipes
+          .filter((pipe) => pipe.orgPipeSpecId) // Only save pipes with valid spec IDs
+          .map((pipe) => ({
+            systemSpecsId,
+            orgPipeSpecId: pipe.orgPipeSpecId,
+            pipeCount: pipe.pipeCount || 1,
+          }));
+
+        console.log("Pipe list to save:", pipeList);
+
+        await savePipeSpecs(pipeList);
+      }
+
+      // ---------------------- REFRESH & SUCCESS ------------------------------
 
       await fetchSavedSpecs();
 
-      toast.success("System Specification details saved successfully!", {
+      toast.success("System Specification saved successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
+
     } catch (error) {
       console.error("Error saving specs:", error);
-      toast.error("Failed to save system specs or inverter specs.", {
+      toast.error("Failed to save system specs.", {
         autoClose: 1000,
         hideProgressBar: true,
       });
@@ -731,67 +815,6 @@ useEffect(() => {
 
 
 
-  // const handleUpdateSpecs = async () => {
-  //   try {
-  //     if (!selectedSpecId || !selectedSystemSpecsInverterId) {
-  //       console.error("No system specification selected for update!");
-  //       toast.error("Please select a system specification to update.", {
-  //         autoClose: 1000,
-  //         hideProgressBar: true,
-  //       });
-  //       return;
-  //     }
-
-  //     if (!formData.inverterBrandId || !formData.inverterSpecId) {
-  //       toast.error("Please select both Inverter Brand and Inverter Specification before updating.", {
-  //         autoClose: 1500,
-  //         hideProgressBar: true,
-  //       });
-  //       return; 
-  //     }
-
-  //     setIsSubmitting(true);
-
-  //     const systemResponse = await updateSystemSpecs(selectedSpecId, {
-  //       ...formData,
-  //       connectionId,
-  //       specSourceId: 2,
-  //       panelSpecsId: formData.panelSpecId,
-  //       batterySpecsId: formData.batterySpecId,
-  //       orgId,
-  //       agencyId
-  //     });
-
-  //     console.log("System specs updated:", systemResponse);
-
-  //     const inverterResponse = await updateInverterSpecs(selectedSystemSpecsInverterId, {
-  //       systemSpecsId: selectedSpecId,
-  //       inverterSpecId: formData.inverterSpecId,
-  //       inverterCount: 1,
-  //     });
-
-  //     console.log("Inverter specs updated:", inverterResponse);
-
-  //     await fetchSavedSpecs();
-
-  //     toast.success("System Specification details updated successfully!", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error updating specs:", error);
-  //     toast.error("Failed to update system specs or inverter specs.", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-
-
-
   const handleSaveButtonClick = () => {
     setDialogType("confirm");
     setDialogMessage("Do you want to save system specification details?");
@@ -799,38 +822,57 @@ useEffect(() => {
     setDialogOpen(true);
   };
 
-  const handleUpdateButtonClick = () => {
-    setDialogType("confirm");
-    setDialogMessage("Do you want to update system specification details?");
-    setDialogAction(() => handleUpdateSpecs);
-    setDialogOpen(true);
-  };
-
 
   const handleSelectSpec = async (spec) => {
     setIsPrefilling(true);
     setSelectedSpecId(spec.id);
-    console.log("selectedSpecId:", selectedSpecId);
 
-    // Extract inverters safely
+    setQuotationFileMeta({
+      systemCapacityKw: spec.systemCapacityKw,
+      panelBrandName: spec.panelBrandShortName,
+    });
+
+    // STEP 1: Extract common fields FIRST
+    const initialGridTypeId =
+      spec.inverters?.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId;
+
+    const initialMaterialOriginId = spec.materialOriginId;
+
+
+
+    // Set them immediately
+    setGridTypeId(initialGridTypeId);
+    setMaterialOriginId(initialMaterialOriginId);
+
+    setBatteryBrandId(spec.batteryBrandId || null);
+    setOrgBatterySpecId(spec.orgBatterySpecId || null);
+
+    // STEP 2: Build inverter list
     const inverterList = (spec.inverters || []).map((inv) => ({
       inverterBrandId: inv.inverterBrandId,
       inverterBrandName: inv.inverterBrandName,
-      inverterSpecId: inv.inverterSpecId,
+      orgInverterSpecId: inv.orgInverterSpecId,
       inverterCount: inv.inverterCount || 1,
       inverterCapacity: inv.inverterCapacity,
-      inverterWarrantyMonths: inv.inverterWarrantyMonths,
+      productWarranty: inv.productWarranty,
       almmModelNumber: inv.almmModelNumber,
       gridTypeId: inv.gridTypeId,
     }));
 
-    // Prefill capacities for each inverter row
+    // STEP 3: Fetch capacities for each inverter
     const capacitiesMap = {};
     for (let i = 0; i < inverterList.length; i++) {
       const inv = inverterList[i];
+
       if (inv.inverterBrandId) {
         try {
-          const capacities = await fetchInverterBrandCapacities(inv.inverterBrandId);
+          const capacities = await fetchInverterBrandCapacities(
+            inv.inverterBrandId,
+            Number(orgId),
+            Number(phaseTypeId),
+            Number(initialGridTypeId) // ✅ FIX
+          );
+
           capacitiesMap[i] = capacities;
         } catch (error) {
           capacitiesMap[i] = [];
@@ -842,6 +884,13 @@ useEffect(() => {
 
     setInverterCapacitiesMap(capacitiesMap);
 
+    // STEP 4: Build pipe list if available
+    const pipeList = (spec.pipes || []).map((pipe) => ({
+      orgPipeSpecId: pipe.orgPipeSpecId,
+      pipeCount: pipe.pipeCount || 1,
+    }));
+
+    // STEP 5: Then set all form data
     setFormData((prev) => ({
       ...prev,
       installationSpaceType: spec.installationSpaceType,
@@ -852,29 +901,23 @@ useEffect(() => {
       hasWaterSprinkler: spec.hasWaterSprinkler,
       hasHeavydutyRamp: spec.hasHeavydutyRamp,
       hasHeavydutyStairs: spec.hasHeavydutyStairs,
-      panelSpecId: spec.panelSpecsId,
-      materialOriginId: spec.materialOriginId,
-      gridTypeId: spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId,
+      orgPanelSpecId: spec.orgPanelSpecId,
+      materialOriginId: initialMaterialOriginId, // safe
+      gridTypeId: initialGridTypeId,            // safe
       batteryBrandId: spec.batteryBrandId,
-      batterySpecId: spec.batterySpecsId,
+      orgBatterySpecId: spec.orgBatterySpecId,
       systemCapacityKw: spec.systemCapacityKw,
       inverters: inverterList,
+      pipes: pipeList.length > 0 ? pipeList : [{ orgPipeSpecId: null, pipeCount: 1 }],
     }));
 
-    // Update dependent dropdown states if needed
-    setMaterialOriginId(spec.materialOriginId);
-    setGridTypeId(spec.inverters.length > 0 ? spec.inverters[0].gridTypeId : spec.gridTypeId);
-    setPanelSpecId(spec.panelSpecsId);
-    setBatteryBrandId(spec.batteryBrandId);
-    setBatterySpecId(spec.batterySpecsId);
-
-    console.log("Selected spec:", spec);
-    console.log("Loaded inverters:", inverterList);
-    console.log("Prefilled capacities map:", capacitiesMap);
+    setOrgPanelSpecId(spec.orgPanelSpecId);
 
     setPriceAlreadySetFromCustomerData(true);
-  };
 
+    setTimeout(() => setIsPrefilling(false), 0);
+
+  };
 
 
 
@@ -888,23 +931,29 @@ useEffect(() => {
   useEffect(() => {
     if (savedSpecs.length === 0) {
       setIsFormOpen(true);
-    } else if (savedSpecs.length === 1) {
+      return;
+    }
+
+    if (savedSpecs.length === 1) {
       handleSelectSpec(savedSpecs[0]);
       setSelectedSpecId(savedSpecs[0].id);
       setIsFormOpen(true);
+      return;
+    }
+
+    const firstEditable = savedSpecs.find(
+      (spec) => spec.isRunningCopy
+    );
+
+    if (firstEditable) {
+      handleSelectSpec(firstEditable);
+      setSelectedSpecId(firstEditable.id);
+      setIsFormOpen(true);
     } else {
-
-      const firstEditable = savedSpecs.find(spec => spec.isRunningCopy);
-      if (firstEditable) {
-        handleSelectSpec(firstEditable);
-        setSelectedSpecId(firstEditable.id);
-        setIsFormOpen(true);
-      } else {
-
-        setIsFormOpen(false);
-      }
+      setIsFormOpen(false);
     }
   }, [savedSpecs]);
+
 
 
 
@@ -918,6 +967,9 @@ useEffect(() => {
       [name]: newValue,
     };
 
+    // Pipe details are now independent of Heavy Duty Ramp checkbox
+    // No special handling needed when hasHeavydutyRamp changes
+
     updatedFormData.totalCost =
       (Number(updatedFormData.systemCost) || 0) +
       (Number(updatedFormData.fabricationCost) || 0);
@@ -925,211 +977,235 @@ useEffect(() => {
     setFormData(updatedFormData);
     setIsCustomSpecs(true);
     setIsSpecsSaved(false);
-    
+
     if (priceAlreadySetFromCustomerData) {
-    setPriceAlreadySetFromCustomerData(false);
-  }
+      setPriceAlreadySetFromCustomerData(false);
+    }
   };
 
 
-  // useEffect(() => {
-  //   const fetchPriceDetails = async () => {
-  //     if (formData.systemCapacityKw && formData.panelSpecId) {
-  //       try {
-  //         const response = await getPriceDetails({
-  //           panelSpecsId: formData.panelSpecId ?? "",
-  //           systemCapacityKw: formData.systemCapacityKw ?? "",
-  //           inverterSpecsId: formData.inverterSpecId ?? "",
-  //           batterySpecsId: formData.batterySpecId ?? "",
-  //           inverterCount: 1,
-  //           batteryCount: 1,
-  //         });
+  const priceInputsKey = JSON.stringify({
+    systemCapacityKw: formData.systemCapacityKw,
+    orgPanelSpecId: formData.orgPanelSpecId,
+    orgBatterySpecId: formData.orgBatterySpecId,
+    inverters: formData.inverters,
+    pipes: formData.pipes,
+  });
 
-  //         if (response) {
-  //           setFormData((prev: any) => ({
-  //             ...prev,
-  //             systemCost: response.systemCost || 0,
-  //             fabricationCost: response.fabricationCost || 0,
-  //             totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
-  //           }));
-  //         }
-  //       } catch (err) {
-  //         console.error("Failed to fetch price details", err);
-  //       }
-  //     } else {
-  //       setFormData((prev: any) => ({
-  //         ...prev,
-  //         systemCost: 0,
-  //         fabricationCost: 0,
-  //         totalCost: 0,
-  //       }));
-  //     }
-  //   };
 
-  //   fetchPriceDetails();
-  // }, [formData.systemCapacityKw, formData.panelSpecId, formData.batterySpecId]);
+  useEffect(() => {
+    const fetchPriceDetails = async () => {
+      if (priceAlreadySetFromCustomerData && fetchTrigger === 0) return;
 
-useEffect(() => {
-  const fetchPriceDetails = async () => {
-    // 🚫 Skip fetching if we’re showing saved (customer) prices
-    if (priceAlreadySetFromCustomerData) return;
+      const hasValidSystem = !!formData.systemCapacityKw || !!formData.orgPanelSpecId;
+      const hasValidBattery = !!formData.orgBatterySpecId;
+      const validInverters = (formData.inverters || []).filter(
+        (inv) => inv.orgInverterSpecId && inv.inverterCount > 0
+      );
+      const validPipes = (formData.pipes || []).filter(
+        (pipe) => pipe.orgPipeSpecId && pipe.pipeCount > 0
+      );
 
-    // ✅ Check if there’s valid input to fetch price
-    const hasValidSystem =
-      !!formData.systemCapacityKw || !!formData.panelSpecId;
-    const hasValidBattery = !!formData.batterySpecId;
-    const validInverters = (formData.inverters || []).filter(
-      (inv) => inv.inverterSpecId && inv.inverterCount > 0
-    );
-
-    const hasValidInverters = validInverters.length > 0;
-
-    if (!hasValidSystem && !hasValidBattery && !hasValidInverters) {
-      setFormData((prev) => ({
-        ...prev,
-        systemCost: 0,
-        fabricationCost: 0,
-        totalCost: 0,
-      }));
-      return;
-    }
-
-    try {
-      const payload = {
-        systemCapacityKw: formData.systemCapacityKw || 0,
-        panelSpecsId: formData.panelSpecId,
-        batterySpecsId: formData.batterySpecId,
-        batteryCount: hasValidBattery ? 1 : 0,
-        inverters: validInverters.map((inv) => ({
-          inverterSpecsId: inv.inverterSpecId,
-          inverterCount: inv.inverterCount,
-        })),
-      };
-
-      console.log("Sending payload to getPriceDetails:", payload);
-
-      const response = await getPriceDetails(payload);
-
-      if (response) {
+      if (!hasValidSystem && !hasValidBattery && validInverters.length === 0 && validPipes.length === 0) {
         setFormData((prev) => ({
           ...prev,
-          systemCost: response.systemCost || 0,
-          fabricationCost: response.fabricationCost || 0,
-          totalCost:
-            (response.systemCost || 0) + (response.fabricationCost || 0),
+          systemCost: 0,
+          fabricationCost: 0,
+          totalCost: 0,
         }));
+        return;
       }
-    } catch (err) {
-      console.error("Failed to fetch price details", err);
-    }
-  };
 
-  fetchPriceDetails();
-}, [
-  formData.systemCapacityKw,
-  formData.panelSpecId,
-  formData.inverters,
-  formData.batterySpecId,
-  priceAlreadySetFromCustomerData, // include this dependency
-]);
+      try {
+        const response = await getPriceDetails({
+          systemCapacityKw: formData.systemCapacityKw,
+          orgPanelSpecId: formData.orgPanelSpecId,
+          orgBatterySpecId: formData.orgBatterySpecId,
+          batteryCount: hasValidBattery ? 1 : 0,
+          inverters: validInverters.map((inv) => ({
+            orgInverterSpecId: inv.orgInverterSpecId,
+            inverterCount: inv.inverterCount,
+          })),
+          pipes: validPipes.map((pipe) => ({
+            orgPipeSpecId: pipe.orgPipeSpecId,
+            pipeCount: pipe.pipeCount
+          }))
+        });
 
+        console.log("Fetched price details:", response);
 
+        if (response) {
+          setFormData((prev) => ({
+            ...prev,
+            systemCost: response.systemCost || 0,
+            fabricationCost: response.fabricationCost || 0,
+            totalCost: (response.systemCost || 0) + (response.fabricationCost || 0),
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch price details", err);
+      }
+    };
 
+    fetchPriceDetails();
+  }, [priceInputsKey, fetchTrigger]);
 
-
-  const handleGenerateQuotation = async () => {
-    if (!selectedSpecId) {
-      console.error("Spec ID is missing");
-      return;
-    }
+  const handleGenerateQuotation = async (date: Date,
+    quotationNumber?: string) => {
+    if (!selectedSpecId || !date) return;
 
     setIsLoading(true);
-
     try {
-      console.log("Fetching Quotation PDF for Spec ID:", selectedSpecId);
+      const normalizedQuotationNumber =
+        quotationNumber && quotationNumber.trim() !== ""
+          ? quotationNumber.trim()
+          : null;
 
-      const pdfBlob = await generateQuotationPDF(selectedSpecId);
-      console.log('PDF Blob size:', pdfBlob.size);
+      const pdfBlob = await generateQuotationPDF(selectedSpecId, date, normalizedQuotationNumber as string);
+
+      const safe = (val?: string | number) =>
+        String(val || "")
+          .trim()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9._-]/g, ""); // ✅ allow dot
+
+
+      const fileName = [
+        safe(govIdName),
+        safe(quotationFileMeta.systemCapacityKw
+          ? `${quotationFileMeta.systemCapacityKw}kW`
+          : ""),
+        safe(connectionType),          // ✅ FROM STATE
+        safe(quotationFileMeta.panelBrandName),
+        "Quotation",
+      ]
+        .filter(Boolean)
+        .join("_") + ".pdf";
 
 
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = pdfUrl;
-      link.download = `quotation_${govIdName}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(pdfUrl);
 
-      console.log("Quotation PDF downloaded successfully");
       await fetchSavedSpecs();
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth", // or "instant"
+      });
 
     } catch (error) {
       console.error("Error generating quotation PDF:", error);
     } finally {
       setIsLoading(false);
+      setSelectedDate(null);
     }
+  };
+
+  const handleDeleteSpec = (specId: number, documentId?: number) => {
+    setDialogType("confirm");
+    setDialogMessage("Are you sure you want to delete this specification?");
+    setDialogAction(() => () => confirmDeleteSpec(specId, documentId));
+    setDialogOpen(true);
   };
 
 
 
-  const handlePreview = async () => {
-    setIsPreviewLoading(true);
+  const confirmDeleteSpec = async (specId: number, documentId?: number) => {
     try {
-      if (!selectedSpecId) {
-        console.error("System Specs ID is missing");
-        return;
+      await deleteSpecAPI(specId);
+
+      if (documentId) {
+        await deleteDocumentById(documentId);
       }
 
-      console.log("Fetching PDF for System Specs ID:", selectedSpecId);
+      await fetchSavedSpecs();
 
-      const pdfBlob = await previewQuotationPDF(selectedSpecId);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+      toast.success("Specification deleted successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
 
-      window.open(pdfUrl, "_blank");
+      setDialogOpen(false);
+
+
+
     } catch (err) {
-      console.error("Failed to preview the quotation:", err);
-    } finally {
-      setIsPreviewLoading(false);
+      toast.error("Failed to delete specification!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+
+      setDialogOpen(false);
     }
   };
 
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    if (savedSpecs.length === 0) return;
+
+    hasFetchedRef.current = true;
+
     const fetchLockedSpecsDocs = async () => {
-      const lockedSpecs = savedSpecs.filter((spec) => !spec.isRunningCopy);
-      if (lockedSpecs.length === 0) return;
+      const lockedSpecs = savedSpecs.filter(
+        (spec) => !spec.isRunningCopy
+      );
 
       for (const spec of lockedSpecs) {
         try {
-          setLoadingDocs((prev) => ({ ...prev, [spec.id]: true }));
+          setLoadingDocs((prev) => ({
+            ...prev,
+            [spec.id]: true,
+          }));
 
-          // Step 1: Get secondaryId using systemSpecificationId
           const secondaryResponse = await getSecondaryId(spec.id);
-          const secondaryId = secondaryResponse?.id || secondaryResponse?.[0]?.id;
+          const secondaryId =
+            secondaryResponse?.id ?? secondaryResponse?.[0]?.id;
+
           if (!secondaryId) continue;
 
-          // Step 2: Fetch document by documentType & documentNumber
-          const documentResponse = await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
-            spec.connectionId,
-            "Unsigned Quotation",
-            secondaryId
-          );
+          setSecondaryIdMap((prev) => ({
+            ...prev,
+            [spec.id]: secondaryId,
+          }));
+
+          const documentResponse =
+            await fetchUploadedDocumentByDocumentTypeAndDocumentNumber(
+              spec.connectionId,
+              "Unsigned Quotation",
+              secondaryId
+            );
 
           if (Array.isArray(documentResponse) && documentResponse.length > 0) {
-            setDocumentsMap((prev) => ({ ...prev, [spec.id]: documentResponse[0] }));
+            setDocumentsMap((prev) => ({
+              ...prev,
+              [spec.id]: documentResponse[0],
+            }));
           }
         } catch (err) {
-          console.error(`Error fetching document for specId ${spec.id}:`, err);
+          console.error(`Error fetching document for specId ${spec.id}`, err);
         } finally {
-          setLoadingDocs((prev) => ({ ...prev, [spec.id]: false }));
+          setLoadingDocs((prev) => ({
+            ...prev,
+            [spec.id]: false,
+          }));
         }
       }
     };
 
-    if (savedSpecs?.length > 0) fetchLockedSpecsDocs();
+    fetchLockedSpecsDocs();
   }, [savedSpecs]);
 
-  // ✅ Download handler
+
+
+
   const handleDownload = async (id: number, fileName: string) => {
     try {
       const blob = await downloadDocumentById(id);
@@ -1146,1033 +1222,1480 @@ useEffect(() => {
     }
   };
 
+  const handleView = async (id: number) => {
+    try {
+      const blob = await downloadDocumentById(id);
+      const url = window.URL.createObjectURL(blob);
+
+      // Open in new tab for preview
+      window.open(url, "_blank");
+
+      // Cleanup later (not immediately, otherwise tab may fail)
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10000);
+    } catch (error) {
+      console.error("Preview failed:", error);
+      toast.error("Failed to preview file", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form Submitted:", formData);
   };
 
-  return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1 pr-4 pl-6 pb-4 sm:pb-6">
+  const handleMarkFinal = async (
+    e: React.MouseEvent,
+    secondaryId: number
+  ) => {
+    e.stopPropagation();
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() =>
-            navigate(-1)
+    if (!connectionId) {
+      console.error("connectionId missing");
+      return;
+    }
+
+    try {
+      const payload = {
+        connectionId: connectionId,
+        quotationId: secondaryId,
+      };
+
+      await markQuotationFinal(payload);
+      await loadFinalQuotation();
+
+      toast.success("Quotation marked as final", {
+        autoClose: 1000,
+        hideProgressBar: true
+      });
+    } catch (error) {
+      console.error("Failed to mark final quotation", error);
+      toast.error("Failed to mark quotation as final");
+    }
+  };
+
+  const loadFinalQuotation = async () => {
+    try {
+      const response = await fetchFinalQuotationByConnectionId(connectionId);
+      setFinalQuotationId(response?.quotationId ?? null);
+    } catch (err) {
+      console.error("Error fetching final quotation", err);
+    }
+  };
+
+  useEffect(() => {
+    if (connectionId) {
+      loadFinalQuotation();
+    }
+  }, [connectionId]);
+
+
+
+  const SpecCard = ({ spec }) => {
+
+    const isEditable = spec.isRunningCopy;
+    const document = documentsMap[spec.id];
+    const isLoadingDoc = loadingDocs[spec.id];
+    const secondaryIdForSpec = secondaryIdMap[spec.id];
+    const isFinalQuotation =
+      secondaryIdForSpec === finalQuotationId;
+    const canMarkFinal =
+      userInfo?.role === "ROLE_ORG_ADMIN" || userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+      userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN");
+
+
+    return (
+      <div
+        onClick={() => {
+          handleSelectSpec(spec);
+          setActiveLoadedSpecId(spec.id);
+
+          if (spec.isRunningCopy) {
+            setSelectedSpecId(spec.id);
           }
-          className="p-2 rounded-full hover:bg-gray-200 transition"
-        >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
-        </button>
 
+          setIsFormOpen(true);
+        }}
+        className={`relative cursor-pointer border rounded-lg p-3 shadow transition
+        ${isEditable
+            ? "bg-gradient-to-br from-green-50 to-white border-green-400 hover:shadow-lg"
+            : "bg-gray-100 border-gray-300 opacity-90 hover:shadow-md"}
+        ${activeLoadedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
+      `}
+      >
 
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-700 ml-2 md:ml-0">
-          {/* {isCustomSpecs ? "Customized System Specifications" : "Recommended System Specifications"} */}
-          System Specification Details
-        </h2>
-      </div>
-
-
-      <div className="w-full max-w-4xl mx-auto mb-6 mt-4 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
-        <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-
-
-          <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
-
-          <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
-            {tabs.map((tab, index) => {
-              const isActive = activeTab === tab;
-
-              const Icon =
-                tab === "Customer Details"
-                  ? UserCircleIcon
-                  : tab === "Connection Details"
-                    ? BoltIcon
-                    : tab === "Installation Details"
-                      ? HomeModernIcon
-                      : Cog6ToothIcon;
-
-              const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details" || tab === "Installation Details";
-
-
-              return (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    if (tab === "Customer Details") {
-                      navigate(`/view-customer`, {
-                        state: {
-                          customerId,
-                        },
-                      });
-                    } else if (tab === "Connection Details") {
-                      navigate(`/view-connection`, {
-                        state: { consumerId, customerId, connectionId },
-                      });
-                    }
-                  }}
-                  className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
-                >
-                  <div
-                    className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
-                      ? "bg-blue-500 text-white border border-transparent"
-                      : "bg-white border border-gray-300 text-gray-500"}
-                      }`}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <span
-                    className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
-                      }`}
-                  >
-                    {tab}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-
-      {isFetchingRecommendations && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
-          <div className="flex flex-col items-center space-y-4">
-            <svg
-              className="animate-spin h-10 w-10 text-blue-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              ></path>
-            </svg>
-            <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
-          </div>
-        </div>
-      )}
-
-
-
-
-
-      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-          {/* Left side: Icon + Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-              <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
-          </div>
-
-          {/* {savedSpecs.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedSpecId(null);
-                setFormData(defaultFormData);
-                setMaterialOriginId(null);
-                setGridTypeId(null);
-                setPanelSpecId(null);
-                setInverterSpecId(null);
-                setBatteryBrandId(null);
-                setBatterySpecId(null);
-                setInverterBrandId(null);
-                setSystemCapacityKw(null);
-
-                setIsFormOpen(true);
-              }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <PlusIcon className="w-4 h-4 text-white" />
-              Add Another System Specs
-            </button>
-
-          )} */}
-
-
-        </div>
-
-        <div className="border-b border-gray-200 mb-4" />
-
-        {savedSpecs.length > 0 && (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    {savedSpecs.map((spec) => {
-      const isEditable = spec.isRunningCopy;
-      const document = documentsMap[spec.id];
-      const isLoadingDoc = loadingDocs[spec.id];
-
-      return (
-        <div
-          key={spec.id}
-          onClick={() => {
-            if (!isEditable) return;
-            handleSelectSpec(spec);
-            setIsFormOpen(true);
-          }}
-          className={`cursor-pointer border rounded-lg p-4 shadow hover:shadow-md transition 
-            ${
-              isEditable
-                ? "bg-green-50 border-green-400 hover:shadow-lg"
-                : "bg-gray-100 border-gray-300 opacity-80 cursor-not-allowed"
-            }
-            ${selectedSpecId === spec.id ? "ring-2 ring-blue-400" : ""}
-          `}
-        >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-gray-800">
-              {spec.panelBrandShortName} ({spec.panelRatedWattageW} W) – {spec.systemCapacityKw} kW
-            </h3>
-
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                isEditable ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
-              }`}
-            >
-              {isEditable ? "Editable" : "Locked"}
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-0.5">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex-1 truncate pr-2">
+            {spec.panelBrandShortName}
+            <span className="text-sm font-medium text-gray-600">
+              {" "}({spec.panelRatedWattageW}W)
             </span>
-          </div>
+            <span className="text-gray-700"> - {spec.systemCapacityKw} kW</span>
+          </h3>
 
-          {/* ✅ Handle list of inverters */}
-          {spec.inverters && spec.inverters.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <span
+              className={`p-1.5 rounded-full flex items-center justify-center ${isEditable ? "bg-green-300" : "bg-gray-300"
+                }`}
+            >
+              {isEditable ? (
+                <PencilIcon className="w-4 h-4 text-green-700" />
+              ) : (
+                <LockIcon className="w-4 h-4 text-gray-500" />
+              )}
+            </span>
+
+            {!isEditable &&
+              (userInfo?.role === "ROLE_ORG_ADMIN" ||
+                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteSpec(spec.id, document?.id);
+                  }}
+                  className="p-1 rounded-full text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors"
+                  aria-label="Delete"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+
+          </div>
+        </div>
+
+        <div className="space-y-0.5">
+          {spec.inverters?.length > 0 ? (
             spec.inverters.map((inv, index) => (
-              <p key={index} className="text-sm font-medium text-gray-700 mb-1">
-                Inverter {index + 1}: {inv.inverterBrandName} – {inv.inverterCapacity} kW × {inv.inverterCount}
+              <p key={index} className="text-sm text-gray-700">
+                ⚡ Inverter {index + 1}:{" "}
+                <span className="font-medium">
+                  {inv.inverterBrandName}
+                </span>{" "}
+                - {inv.inverterCapacity} kW × {inv.inverterCount}
               </p>
             ))
           ) : (
-            <p className="text-sm font-medium text-gray-500 mb-1">No inverter details</p>
+            <p className="text-sm text-gray-500 italic">
+              No inverter details
+            </p>
           )}
 
-          <div className="flex justify-between text-sm text-gray-600 mt-2">
-            <span>System Cost: ₹{spec.systemCost.toLocaleString("en-IN")}</span>
-            <span>Fabrication Cost: ₹{spec.fabricationCost?.toLocaleString("en-IN") || 0}</span>
-          </div>
+          {spec.inverters?.some(inv => inv.gridTypeName === "Hybrid") && (
+            <p className="text-sm text-gray-700">
+              🔋 Battery:{" "}
+              <span className="font-medium">
+                {spec.batteryBrandName}
+              </span>{" "}
+              - {spec.batteryCapacityKw} kW
+            </p>
+          )}
+        </div>
 
-          {/* 📄 Show document for locked specs */}
-          {!isEditable && (
-            <div className="mt-4 bg-white border rounded-md p-2 shadow-sm">
-              {isLoadingDoc ? (
-                <p className="text-sm text-gray-500">Loading document...</p>
-              ) : document ? (
-                <div className="flex justify-between items-center">
-                  <div className="max-w-[70%]">
-                    <p
-                      className="text-sm font-medium text-gray-700 truncate"
-                      title={document.fileName}
-                    >
-                      {document.fileName}
-                    </p>
-                    <p className="text-xs text-gray-500">Generated by: {document.uploadedBy}</p>
-                  </div>
+        <div className="mt-0.5">
+          <span className="text-sm font-semibold text-blue-800">
+            Total Cost: ₹{((spec.systemCost || 0) + (spec.fabricationCost || 0)).toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        {!isEditable && (
+          <div className="mt-2 bg-white border rounded-md p-2 shadow-sm">
+            {isLoadingDoc ? (
+              <p className="text-sm text-gray-500">Loading document...</p>
+            ) : document ? (
+              <div className="flex justify-between items-center">
+                <div className="max-w-[70%]">
+                  <p
+                    className="text-sm font-medium truncate text-blue-600 hover:text-blue-800 underline underline-offset-2 cursor-pointer"
+                    title="Click to preview"
+                    onClick={(e) => {
+                      e.stopPropagation(); // 🔥 prevent card click
+                      handleView(document.id);
+                    }}
+                  >
+                    {document.fileName}
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    Generated by: {document.uploadedBy}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => {
+                      if (canMarkFinal && !isFinalQuotation && secondaryIdForSpec) {
+                        handleMarkFinal(e, secondaryIdForSpec);
+                      }
+                    }}
+                    disabled={isFinalQuotation}
+                    className="p-2"
+                    title={
+                      isFinalQuotation
+                        ? "Quotation marked as final"
+                        : "Mark this quotation as final"
+                    }
+                  >
+                    <CheckCircle
+                      className={`w-5 h-5 ${isFinalQuotation ? "text-green-500" : "text-red-400"
+                        }`}
+                    />
+                  </button>
+
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDownload(document.id, document.fileName);
                     }}
-                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full transition"
-                    title="Download Document"
+                    className="p-2 text-blue-600"
                   >
                     <DownloadIcon className="w-5 h-5" />
                   </button>
                 </div>
-              ) : (
-                <p className="text-sm text-gray-500 italic">No document found</p>
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 italic">No document found</p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const StdSpecCard = ({ pkg }: { pkg: any }) => {
+    const stdSpec = pkg.systemSpecs;
+
+    if (!stdSpec) return null;
+
+    return (
+      <div
+        onClick={() => {
+          handleSelectSpec(stdSpec);   // pass systemSpecs
+          setIsFormOpen(true);
+        }}
+        className="relative cursor-pointer border rounded-lg p-3 shadow transition
+      bg-gradient-to-br from-yellow-50 to-white border-yellow-400 hover:shadow-lg"
+      >
+        {/* PACKAGE TITLE */}
+        <div className="mb-1">
+          <h2 className="text-sm font-semibold text-blue-700">
+            {pkg.title}
+          </h2>
+          <p className="text-xs text-gray-500 truncate">
+            {pkg.description}
+          </p>
         </div>
-      );
-    })}
-  </div>
-)}
 
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-1">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex-1 truncate pr-2">
+            {stdSpec.panelBrandShortName}
+            <span className="text-sm font-medium text-gray-600">
+              {" "}({stdSpec.panelRatedWattageW}W)
+            </span>
+            <span className="text-gray-700">
+              {" "} - {stdSpec.systemCapacityKw} kW
+            </span>
+          </h3>
+        </div>
 
+        <div className="space-y-1">
+          {stdSpec.inverters?.length > 0 ? (
+            stdSpec.inverters.map((inv: any, index: number) => (
+              <p key={index} className="text-sm text-gray-700">
+                ⚡ Inverter {index + 1}:{" "}
+                <span className="font-medium">{inv.inverterBrandName}</span>
+                {" "} - {inv.inverterCapacity} kW × {inv.inverterCount}
+              </p>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              No inverter details
+            </p>
+          )}
 
-        {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <div className="md:col-span-1">
-
-            <label className="block text-sm font-medium text-gray-700">Installation Space</label>
-
-            <div className="mt-1 relative">
-              <button
-                type="button"
-                onClick={() => setIsSpaceListOpen(!isSpaceListOpen)}
-                className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
-              >
-                <span className="flex items-center gap-2">
-
-                  <span>
-                    {formData.installationSpaceType
-                      ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
-                      : "Installations Not Available"}
-                  </span>
+          {/* Battery only if Hybrid inverter exists */}
+          {stdSpec.inverters?.some(
+            (inv: any) => inv.gridTypeName === "Hybrid"
+          ) && stdSpec.batteryBrandName && (
+              <p className="text-sm text-gray-700">
+                🔋 Battery:{" "}
+                <span className="font-medium">
+                  {stdSpec.batteryBrandName}
                 </span>
-                <svg className={`w-4 h-4 text-gray-500 transition-transform ${isSpaceListOpen ? "rotate-180" : "rotate-0"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+                {" "} - {stdSpec.batteryCapacityKw} kW
+              </p>
+            )}
+        </div>
 
-              {isSpaceListOpen && (
-                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-auto">
-                  {availableSpaceTypes.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500">Installations Not Available</div>
-                  ) : (
-                    availableSpaceTypes.map((space) => (
-                      <div key={space.id} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
-                        <button
-                          type="button"
-                          className="text-left flex-1 flex items-center gap-2 text-sm text-gray-800"
-                          onClick={() => {
-                            setFormData((prev) => ({ ...prev, installationSpaceType: space.installationSpaceType }));
-                            setSelectedSpace(space);
-                            setIsSpaceListOpen(false);
-                          }}
-                        >
+        {/* COST */}
+        <div className="mt-2">
+          <span className="text-sm font-semibold text-blue-800">
+            Total Cost: ₹
+            {(
+              (stdSpec.systemCost || 0) +
+              (stdSpec.fabricationCost || 0)
+            ).toLocaleString("en-IN")}
+          </span>
+        </div>
 
-                          <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="ml-3 px-2 py-1 text-xs rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700"
-                          onClick={() => { setSelectedSpace(space); setShowModal(true); }}
-                        >
-                          View
-                        </button>
+        {/* VALIDITY */}
+        {/* <div className="mt-1 text-xs text-gray-500">
+          Valid: {pkg.validFrom} → {pkg.validThrough}
+        </div> */}
+      </div>
+    );
+  };
+
+
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-4">
+      {/* <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 ${isGharkulCustomer ? "max-w-7xl" : "max-w-4xl"
+          }`}
+      > */}
+      <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl`}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            onClick={() =>
+              navigate(-1)
+            }
+            className="p-2 rounded-full hover:bg-gray-200 transition"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
+          <h1 className="text-xl font-bold text-gray-700">
+            System Configurations
+          </h1>
+        </div>
+        {/* 
+        <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+          <div className="relative flex justify-center min-w-[500px] md:min-w-0">
+
+
+            <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
+
+            <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab;
+
+                const Icon =
+                  tab === "Customer Details"
+                    ? UserCircleIcon
+                    : tab === "Connection Details"
+                      ? BoltIcon
+                      : tab === "Installation Details"
+                        ? HomeModernIcon
+                        : Cog6ToothIcon;
+
+                const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details" || tab === "Installation Details";
+
+
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      if (tab === "Customer Details") {
+                        navigate(`/view-customer`, {
+                          state: {
+                            customerId,
+                          },
+                        });
+                      } else if (tab === "Connection Details") {
+                        navigate(`/view-connection`, {
+                          state: { consumerId, customerId, connectionId },
+                        });
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1 min-w-[80px] md:min-w-0 z-10"
+                  >
+                    <div
+                      className={`rounded-full p-2 transition-all duration-300 ${shouldHighlightIcon
+                        ? "bg-blue-500 text-white border border-transparent"
+                        : "bg-white border border-gray-300 text-gray-500"}
+                      }`}
+                    >
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-semibold mt-1 ${isActive ? "text-gray-700" : "text-gray-700"
+                        }`}
+                    >
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div> */}
+
+        {isLoadingSavedSpecs && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
+            <div className="flex flex-col items-center space-y-4">
+              <svg
+                className="animate-spin h-10 w-10 text-blue-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                ></path>
+              </svg>
+              <span className="text-gray-700 text-lg font-medium">Fetching System Specification Details...</span>
+            </div>
+          </div>
+        )}
+
+        {/* <div
+          className={`flex flex-col lg:flex-row gap-5 ${isGharkulCustomer ? "lg:items-start" : "lg:justify-center"
+            }`}
+        > */}
+        <div
+          className={`flex flex-col lg:flex-row gap-5lg:justify-center`}
+        >
+          
+          {/* {isGharkulCustomer && (
+            <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                Standard Packages
+              </h2>
+
+              <div className="relative">
+
+                {!isLoadingStdSpecs && stdSpecPackages.length > 1 && (
+                  <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white pointer-events-none lg:hidden" />
+                )}
+
+                <div
+                  className="
+          flex gap-3
+          overflow-x-auto pb-2
+          snap-x snap-mandatory
+          lg:flex-col lg:overflow-visible
+        "
+                >
+                  {isLoadingStdSpecs ? (
+                    <div className="flex justify-center items-center py-6 gap-2 min-w-full">
+                      <RefreshCw className="w-6 h-6 animate-spin text-gray-600" />
+                      Loading...
+                    </div>
+                  ) : stdSpecPackages.length > 0 ? (
+                    stdSpecPackages.map((pkg) => (
+                      <div
+                        key={pkg.id}
+                        className="min-w-[90%] sm:min-w-[80%] lg:min-w-0 snap-start"
+                      >
+                        <StdSpecCard pkg={pkg} />
                       </div>
                     ))
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">
+                      No standard packages available
+                    </p>
                   )}
+
                 </div>
-              )}
+              </div>
+            </div>
+          )} */}
+
+
+
+          {/* <div
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 ${isGharkulCustomer ? "lg:w-3/4" : ""
+              }`}
+          > */}
+
+                    <div
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
+          >
+
+
+
+
+            {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                <Cog6ToothIcon className="w-4 h-4 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">System Specifications</h3>
             </div>
 
-            {showModal && selectedSpace && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
-                  <div className="absolute top-4 right-4 flex items-center space-x-4">
-                    {/* Edit Button */}
-                    <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-full shadow-sm transition-all"
-                      onClick={() =>
-                        navigate("/edit-installation", { state: { installationId: selectedSpace.id, connectionId: connectionId, consumerId: consumerId, customerId: customerId } })
-                      }
-                    >
-                      Edit
-                    </button>
-
-
-                    {/* Close Button */}
-                    <button
-                      className="text-gray-500 hover:text-gray-700 text-lg"
-                      onClick={() => setShowModal(false)}
-                    >
-                      ✖
-                    </button>
-                  </div>
-
-                  <h2 className="text-lg font-semibold mb-4">
-                    Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
-                  </h2>
-
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-
-                    {(() => {
-                      const ew = selectedSpace.availableEastWestLengthFt;
-                      const sn = selectedSpace.availableSouthNorthLengthFt;
-
-                      let shapeClass = "w-16 h-16";
-                      if (ew > sn * 1.3) shapeClass = "w-24 h-16";
-                      else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
-
-                      return (
-                        <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
-
-
-                          <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
-                            <span className="mr-1">N</span>
-                            <span className="text-base">↑</span>
-                          </div>
-
-                          <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
-                            <span className="mb-[2px]">E</span>
-                            <span className="text-base">→</span>
-                          </div>
-
-                          <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
-                            <span className="text-[10px] text-gray-800 font-semibold">
-                              {ew * sn} ft²
-                            </span>
-                          </div>
-
-
-                          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
-                            <span className="mr-1">←</span>
-                            <span>{ew} Ft</span>
-                            <span className="ml-1">→</span>
-                          </div>
-
-                          <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
-                            <span>↑</span>
-                            <span>{sn} Ft</span>
-                            <span>↓</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-
-                    <div className="text-s text-gray-600 space-y-2">
-                      <div><strong>Structure to Inverter Distance:</strong> {selectedSpace.structureInverterDistanceFt || "..."} ft</div>
-                      <div><strong>Inverter to GenMeter Distance:</strong> {selectedSpace.inverterMeterDistanceFt || "..."} ft</div>
-                      <div><strong>Earthing Pit to Inverter Distance:</strong> {selectedSpace.inverterEarthDistanceFt || "..."} ft</div>
-                      <div><strong>Lightning Arrester to Ground Distance:</strong> {selectedSpace.arresterEarthDistanceFt || "..."} ft</div>
-                      <div><strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
-                      <div><strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/installation-form", {
-                  state: { connectionId, customerId, consumerId },
-                })
-              }
-              className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-            >
-              <PlusIcon className="w-4 h-4" />
-              <span>Add New Installation</span>
-            </button>
-
           </div>
 
+          <div className="border-b border-gray-200 mb-4" /> */}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Grid Type
-            </label>
+            {savedSpecs.length > 0 && (() => {
 
-            {/* <select
-              id="gridTypeId"
-              name="gridTypeId"
-              value={formData.gridTypeId ?? ""}
-              onChange={(e) => {
-                const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                setGridTypeId(selectedId);
-                handleChange({
-                  target: { name: "gridTypeId", value: selectedId },
-                } as any);
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Grid Type</option>
-              {grids.map((grid) => (
-                <option key={grid.id} value={grid.id}>
-                  {grid.gridType}
-                </option>
-              ))}
-            </select> */}
+              const editableSpecs = savedSpecs.filter(s => s.isRunningCopy);
 
-            <ReusableDropdown
-              name="gridTypeId"
-              value={formData.gridTypeId ?? ""}
-              onChange={(val) => {
-                const selectedId = val === "" ? null : Number(val);
-                setGridTypeId(selectedId);
-                handleChange({
-                  target: { name: "gridTypeId", value: selectedId },
-                } as any);
-              }}
-              options={grids.map((grid) => ({
-                value: grid.id,
-                label: grid.gridType,
-              }))}
-              placeholder="Select Grid Type"
-              className="mt-1"
-            />
-          </div>
+              const lockedSpecs = [...savedSpecs]
+                .filter(s => !s.isRunningCopy)
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                );
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Material Origin Type
-            </label>
+              return (
+                <>
+                  {/* ================= MOBILE VIEW ================= */}
+                  <div className="block md:hidden space-y-4 mb-4">
 
-            {/* <select
-              id="materialOriginId"
-              name="materialOriginId"
-              value={formData.materialOriginId ?? ""}
-              onChange={(e) => {
-                const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                setMaterialOriginId(selectedId);
-                handleChange({
-                  target: { name: "materialOriginId", value: selectedId },
-                } as any);
-              }}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Material Origin Type</option>
-              {origins.map((origin) => (
-                <option key={origin.id} value={origin.id}>
-                  {origin.originCode}
-                </option>
-              ))}
-            </select> */}
-
-            <ReusableDropdown
-              name="materialOriginId"
-              value={formData.materialOriginId ?? ""}
-              onChange={(val) => {
-                const selectedId = val === "" ? null : Number(val);
-                setMaterialOriginId(selectedId);
-                handleChange({
-                  target: { name: "materialOriginId", value: selectedId },
-                } as any);
-              }}
-              options={origins.map((origin) => ({
-                value: origin.id,
-                label: origin.originCode,
-              }))}
-              placeholder="Select Material Origin Type"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
-            {/* <select
-              id="panelSpecId"
-              name="panelSpecId"
-              value={formData.panelSpecId ?? ""}
-              onChange={(e) => {
-                const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                setPanelSpecId(selectedId);
-                handleChange({
-                  target: { name: "panelSpecId", value: selectedId },
-                } as any);
-              }}
-              disabled={!materialOriginId}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-              required
-            >
-              <option value="">Select PV System Brand</option>
-              {panels.map((panel) => (
-                <option key={panel.panelSpecId} value={panel.panelSpecId}>
-                  {panel.brandShortname} - ({panel.ratedWattageW} W) - ({panel.modelNumber})
-                </option>
-              ))}
-            </select> */}
-            <ReusableDropdown
-              name="panelSpecId"
-              value={formData.panelSpecId ?? ""}
-              onChange={(val) => {
-                const selectedId = val === "" ? null : Number(val);
-                setPanelSpecId(selectedId);
-                handleChange({
-                  target: { name: "panelSpecId", value: selectedId },
-                } as any);
-              }}
-              options={panels.map((panel) => ({
-                value: panel.panelSpecId,
-                label: `${panel.brandShortname} - (${panel.ratedWattageW} W) - (${panel.modelNumber})`,
-              }))}
-              placeholder="Select PV System Brand"
-              className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
-            />
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
-            {/* <select
-              id="systemCapacityKw"
-              name="systemCapacityKw"
-              value={formData.systemCapacityKw ?? ""}
-              onChange={(e) => {
-                const selectedValue = e.target.value === "" ? null : Number(e.target.value);
-                setSystemCapacityKw(selectedValue);
-                handleChange({
-                  target: { name: "systemCapacityKw", value: selectedValue },
-                } as any);
-              }}
-              //onChange={(e) => handleChange(e)}
-              disabled={!materialOriginId || !panelSpecId}
-              className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-              required
-            >
-              <option value="">Select PV System Capacity</option>
-              {panelCapacities.map((panelCapacity) => (
-                <option key={panelCapacity} value={panelCapacity}>
-                  {panelCapacity}
-                </option>
-              ))}
-            </select> */}
-            <ReusableDropdown
-              name="systemCapacityKw"
-              value={formData.systemCapacityKw ?? ""}
-              onChange={(val) => {
-                const selectedValue = val === "" ? null : Number(val);
-                setSystemCapacityKw(selectedValue);
-                handleChange({
-                  target: { name: "systemCapacityKw", value: selectedValue },
-                } as any);
-              }}
-              options={panelCapacities.map((panelCapacity) => ({
-                value: panelCapacity,
-                label: `${panelCapacity} kW`,
-              }))}
-              placeholder="Select PV System Capacity"
-              className={`mt-1 ${!materialOriginId || !panelSpecId ? "opacity-60 pointer-events-none" : ""}`}
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-base font-semibold text-gray-800">Inverter Details</h3>
-                <button
-                  type="button"
-                  onClick={addNewInverter}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition"
-                >
-                  + Add Another Inverter
-                </button>
-              </div>
-
-              {formData.inverters.map((inv, index) => (
-                <div
-                  key={index}
-                  className="md:col-span-2 grid grid-cols-12 gap-4 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
-                >
-                  {formData.inverters.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeInverter(index)}
-                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                    >
-                      ✕
-                    </button>
-                  )}
-
-                  {/* Inverter Brand */}
-                  <div className="col-span-12 md:col-span-5">
-                    <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
-                    <ReusableDropdown
-                      name="inverterBrandId"
-                      value={inv.inverterBrandId ?? ""}
-                      onChange={(val) =>
-                        handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
-                      }
-                      options={inverters.map((inv) => ({
-                        value: inv.id,
-                        label: inv.inverterBrandName,
-                      }))}
-                      placeholder="Select Inverter Brand"
-                    />
-                  </div>
-
-                  {/* Inverter Spec */}
-                  <div className="col-span-12 md:col-span-5">
-                    <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
-                    <ReusableDropdown
-                      name="inverterSpecId"
-                      value={inv.inverterSpecId ?? ""}
-                      onChange={(val) =>
-                        handleInverterChange(index, "inverterSpecId", val === "" ? null : Number(val))
-                      }
-                      options={(inverterCapacitiesMap[index] || []).map((spec) => ({
-                        value: spec.id,
-                        label: `${spec.inverterCapacity} kW - (${spec.productWarrantyMonths} months) - (${spec.almmModelNumber})`,
-                      }))}
-                      disabled={!inv.inverterBrandId || !formData.systemCapacityKw}
-                      placeholder="Select Inverter Spec"
-                    />
-
-                  </div>
-
-                  {/* Inverter Count */}
-                  <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
-                    <label className="block text-sm font-medium text-gray-700">Count</label>
-                    <div className="flex items-center border rounded-md shadow-sm bg-white">
-                      <button
-                        type="button"
-                        disabled={(inv.inverterCount ?? 1) <= 1}
-                        onClick={() =>
-                          handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
-                        }
-                        className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
-                          ? "text-gray-300 bg-gray-100 cursor-not-allowed"
-                          : "text-gray-600 hover:text-white hover:bg-red-500"
-                          }`}
-                      >
-                        −
-                      </button>
-
-                      <input
-                        type="text"
-                        name="inverterCount"
-                        inputMode="numeric"
-                        value={inv.inverterCount ?? 1}
-                        onChange={(e) => {
-                          const value = Math.max(Number(e.target.value) || 1, 1);
-                          handleInverterChange(index, "inverterCount", value);
-                        }}
-                        className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    {/* Editable Spec - Full Width */}
+                    {editableSpecs.map((spec) => (
+                      <SpecCard
+                        key={spec.id}
+                        spec={spec}
                       />
+                    ))}
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
-                        }
-                        className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
-                      >
-                        +
-                      </button>
-                    </div>
+                    {/* Locked Specs */}
+                    {lockedSpecs.length > 0 && (
+                      <div className="mt-3"> {/* ⬅ ensures it starts BELOW editable cards */}
+
+                        <div className="flex gap-3 overflow-x-auto pb-2 px-1 snap-x snap-mandatory">
+                          {lockedSpecs.map((spec) => (
+                            <div
+                              key={spec.id}
+                              className="
+              min-w-[95%]
+              sm:min-w-[85%]
+              snap-start
+            "
+                            >
+                              <SpecCard spec={spec} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                   </div>
-                </div>
-              ))}
-            </div>
-
-          </div>
 
 
-          {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Battery Brand
-                </label>
-                {/* <select
-                  id="batteryBrandId"
-                  name="batteryBrandId"
-                  value={formData.batteryBrandId ?? ""}
-                  onChange={(e) => {
-                    const selectedId = Number(e.target.value);
-                    setBatteryBrandId(selectedId);
-                    handleChange({
-                      target: { name: "batteryBrandId", value: selectedId },
-                    });
-                  }}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">Select Battery Brand</option>
-                  {batteryBrands.map((batteryBrand) => (
-                    <option key={batteryBrand.id} value={batteryBrand.id}>
-                      {batteryBrand.brandName}
-                    </option>
-                  ))}
-                </select> */}
-                <ReusableDropdown
-                  name="batteryBrandId"
-                  value={formData.batteryBrandId ?? ""}
-                  onChange={(val) => {
-                    const selectedId = val === "" ? null : Number(val);
-                    setBatteryBrandId(selectedId);
-                    handleChange({
-                      target: { name: "batteryBrandId", value: selectedId },
-                    });
-                  }}
-                  options={batteryBrands.map((batteryBrand) => ({
-                    value: batteryBrand.id,
-                    label: batteryBrand.brandName,
-                  }))}
-                  placeholder="Select Battery Brand"
-                  className="mt-1"
-                />
-
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
-                {/* <select
-                  id="batterySpecId"
-                  name="batterySpecId"
-                  value={formData.batterySpecId ?? ""}
-                  onChange={(e) => {
-                    const selectedId = e.target.value === "" ? null : Number(e.target.value);
-                    setBatterySpecId(selectedId);
-                    handleChange({
-                      target: { name: "batterySpecId", value: selectedId },
-                    } as any);
-                  }}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select Battery Capacity</option>
-                  {batteryCapacities.map((batteryCapacity) => (
-                    <option key={batteryCapacity.id} value={batteryCapacity.id}>
-                      {batteryCapacity.batteryCapacity} kW - {batteryCapacity.voltage} V - {batteryCapacity.modelNumber} ({batteryCapacity.warrantyMonths} months)
-                    </option>
-                  ))}
-                </select> */}
-                <ReusableDropdown
-                  name="batterySpecId"
-                  value={formData.batterySpecId ?? ""}
-                  onChange={(val) => {
-                    const selectedId = val === "" ? null : Number(val);
-                    setBatterySpecId(selectedId);
-                    handleChange({
-                      target: { name: "batterySpecId", value: selectedId },
-                    });
-                  }}
-                  options={batteryCapacities.map((batteryCapacity) => ({
-                    value: batteryCapacity.id,
-                    label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
-                  }))}
-                  placeholder="Select Battery Capacity"
-                  className="mt-1"
-                />
-
-              </div>
-            </>
-          )}
+                  {/* ================= DESKTOP VIEW ================= */}
+                  <div className="hidden md:grid grid-cols-2 gap-2 mb-4">
+                    {[...editableSpecs, ...lockedSpecs].map((spec) => (
+                      <SpecCard
+                        key={spec.id}
+                        spec={spec}
+                      />
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
 
 
 
-          <div className="col-span-full space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  name="hasWaterSprinkler"
-                  checked={formData.hasWaterSprinkler || false}
-                  onChange={handleChange}
-                  className="h-5 w-5 text-blue-600"
-                />
-                <span className="text-base text-gray-800">Water Sprinkler System</span>
-              </label>
 
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  name="hasHeavydutyRamp"
-                  checked={formData.hasHeavydutyRamp || false}
-                  onChange={handleChange}
-                  className="h-5 w-5 text-blue-600"
-                />
-                <span className="text-base text-gray-800">Heavy Duty Ramp</span>
-              </label>
+            {isFormOpen && (<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  name="hasHeavydutyStairs"
-                  checked={formData.hasHeavydutyStairs || false}
-                  onChange={handleChange}
-                  className="h-5 w-5 text-blue-600"
-                />
-                <span className="text-base text-gray-800">Heavy Duty Stairs</span>
-              </label>
-            </div>
-          </div>
+              <div className="md:col-span-1">
 
+                <label className="block text-sm font-medium text-gray-700">Installation Space</label>
 
-          <div className="col-span-full space-y-6 mt-6">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
-              </div>
-
-              {/* Horizontal line */}
-              <div className="mt-2 border-b border-gray-200"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Solar System Cost (₹)
-                </label>
-                <input
-                  type="text"
-                  name="systemCost"
-                  value={
-                    isEditing
-                      ? formData.systemCost // raw while typing
-                      : formatIndianNumber(formData.systemCost) // formatted otherwise
-                  }
-                  onFocus={() => setIsEditing(true)}
-                  onBlur={() => setIsEditing(false)}
-                  onChange={(e) => {
-                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                    setFormData({
-                      ...formData,
-                      systemCost: rawValue,
-                    });
-                  }}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Fabrication Cost (₹)
-                </label>
-                <input
-                  type="text"
-                  name="fabricationCost"
-                  value={
-                    isEditingFabrication
-                      ? formData.fabricationCost // raw while editing
-                      : formatIndianNumber(formData.fabricationCost) // formatted on blur
-                  }
-                  onFocus={() => setIsEditingFabrication(true)}
-                  onBlur={() => setIsEditingFabrication(false)}
-                  onChange={(e) => {
-                    const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
-                    setFormData({
-                      ...formData,
-                      fabricationCost: rawValue,
-                    });
-                  }}
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Total Cost (₹)
-                </label>
-                <input
-                  type="text"
-                  name="totalCost"
-                  value={formatIndianNumber(formData.totalCost)}
-                  readOnly
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-
-            <div className="flex flex-wrap gap-4 justify-center">
-              <button
-                type="button"
-                onClick={handleSaveButtonClick}
-                disabled={isSubmitting}
-                className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
-    ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"} 
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-              >
-                {isSubmitting ? "Saving..." : "Save System Specs"}
-              </button>
-
-
-
-              {/* {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (<button
-                  type="button"
-                  onClick={handlePreview}
-                  disabled={!selectedSpecId || isPreviewLoading}
-                  className="hidden md:block w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPreviewLoading ? "Previewing..." : "Preview Quotation"}
-                </button>)} */}
-
-              {(userInfo?.role === "ROLE_ORG_ADMIN" ||
-                userInfo?.role === "ROLE_AGENCY_ADMIN" ||
-                userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+                <div className="mt-1 relative">
                   <button
                     type="button"
-                    onClick={handleGenerateQuotation}
-                    disabled={!selectedSpecId || isLoading}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setIsSpaceListOpen(!isSpaceListOpen)}
+                    className="w-full p-2 border rounded-md shadow-sm text-left flex items-center justify-between focus:border-blue-500 focus:ring-blue-500"
                   >
-                    {isLoading ? "Generating..." : "Generate & Save Quotation"}
+                    <span className="flex items-center gap-2">
+
+                      <span>
+                        {formData.installationSpaceType
+                          ? `On ${formData.installationSpaceType}${selectedSpace?.installationSpaceTitle ? ` (${selectedSpace.installationSpaceTitle})` : ""}`
+                          : "Installations Not Available"}
+                      </span>
+                    </span>
+                    <svg className={`w-4 h-4 text-gray-500 transition-transform ${isSpaceListOpen ? "rotate-180" : "rotate-0"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
+
+                  {isSpaceListOpen && (
+                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-auto">
+                      {availableSpaceTypes.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-gray-500">Installations Not Available</div>
+                      ) : (
+                        availableSpaceTypes.map((space) => (
+                          <div key={space.id} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
+                            <button
+                              type="button"
+                              className="text-left flex-1 flex items-center gap-2 text-sm text-gray-800"
+                              onClick={() => {
+                                setFormData((prev) => ({ ...prev, installationSpaceType: space.installationSpaceType }));
+                                setSelectedSpace(space);
+                                setIsSpaceListOpen(false);
+                              }}
+                            >
+
+                              <span>On {space.installationSpaceType} ({space.installationSpaceTitle})</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="ml-3 px-2 py-1 text-xs rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700"
+                              onClick={() => { setSelectedSpace(space); setShowModal(true); }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {showModal && selectedSpace && (
+                  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full relative overflow-y-auto max-h-[70vh]">
+                      <div className="absolute top-4 right-4 flex items-center space-x-4">
+                        {/* Edit Button */}
+                        <button
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1 rounded-full shadow-sm transition-all"
+                          onClick={() =>
+                            navigate("/edit-installation", { state: { installationId: selectedSpace.id, connectionId: connectionId, consumerId: consumerId, customerId: customerId } })
+                          }
+                        >
+                          Edit
+                        </button>
+
+
+                        {/* Close Button */}
+                        <button
+                          className="text-gray-500 hover:text-gray-700 text-lg"
+                          onClick={() => setShowModal(false)}
+                        >
+                          ✖
+                        </button>
+                      </div>
+
+                      <h2 className="text-lg font-semibold mb-4">
+                        Installation on {selectedSpace.installationSpaceType} ({selectedSpace.installationSpaceTitle})
+                      </h2>
+
+                      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+
+                        {(() => {
+                          const ew = selectedSpace.availableEastWestLengthFt;
+                          const sn = selectedSpace.availableSouthNorthLengthFt;
+
+                          let shapeClass = "w-16 h-16";
+                          if (ew > sn * 1.3) shapeClass = "w-24 h-16";
+                          else if (sn > ew * 1.3) shapeClass = "w-16 h-24";
+
+                          return (
+                            <div className="relative w-40 h-36 border border-dashed border-gray-300 flex items-center justify-center">
+
+
+                              <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[11px] text-gray-700 font-bold flex items-center leading-none">
+                                <span className="mr-1">N</span>
+                                <span className="text-base">↑</span>
+                              </div>
+
+                              <div className="absolute top-1/2 right-1 transform -translate-y-1/2 text-[11px] text-gray-700 font-bold flex flex-col items-center leading-none">
+                                <span className="mb-[2px]">E</span>
+                                <span className="text-base">→</span>
+                              </div>
+
+                              <div className={`relative border-2 border-black bg-white ${shapeClass} flex items-center justify-center`}>
+                                <span className="text-[10px] text-gray-800 font-semibold">
+                                  {ew * sn} ft²
+                                </span>
+                              </div>
+
+
+                              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] text-blue-600 font-semibold flex items-center">
+                                <span className="mr-1">←</span>
+                                <span>{ew} Ft</span>
+                                <span className="ml-1">→</span>
+                              </div>
+
+                              <div className="absolute top-1/2 left-1 transform -translate-y-1/2 text-[10px] text-green-600 font-semibold flex flex-col items-center space-y-1">
+                                <span>↑</span>
+                                <span>{sn} Ft</span>
+                                <span>↓</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+
+                        <div className="text-s text-gray-600 space-y-2">
+                          <div><strong>Structure to Inverter Distance:</strong> {selectedSpace.structureInverterDistanceFt || "..."} ft</div>
+                          <div><strong>Inverter to GenMeter Distance:</strong> {selectedSpace.inverterMeterDistanceFt || "..."} ft</div>
+                          <div><strong>Earthing Pit to Inverter Distance:</strong> {selectedSpace.inverterEarthDistanceFt || "..."} ft</div>
+                          <div><strong>Lightning Arrester to Ground Distance:</strong> {selectedSpace.arresterEarthDistanceFt || "..."} ft</div>
+                          <div><strong>height of Structure:</strong> {selectedSpace.minimumElevationFt || "..."} ft</div>
+                          <div><strong>Description:</strong> {selectedSpace.descriptionOfInstallation || "....."}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-            </div>
-          </div>
+              </div>
+              <div className="md:col-span-1 flex items-center justify-left md:mt-0 md:pt-6">
 
-        </form>)}
-
-        <Dialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle id="alert-dialog-title">
-            {dialogType === "success" && "Success"}
-            {dialogType === "error" && "Error"}
-            {dialogType === "confirm" && "Confirm"}
-          </DialogTitle>
-
-          <DialogContent dividers>
-            <Alert
-              severity={
-                dialogType === "success"
-                  ? "success"
-                  : dialogType === "error"
-                    ? "error"
-                    : "info"
-              }
-            >
-              {dialogMessage}
-            </Alert>
-          </DialogContent>
-
-          <DialogActions>
-            {dialogType === "confirm" ? (
-              <>
-                <Button
-                  onClick={() => setDialogOpen(false)}
-                // color="error"
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/installation-form", {
+                      state: { connectionId, customerId, consumerId },
+                    })
+                  }
+                  className="py-1 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  No
-                </Button>
-                <Button
-                  onClick={() => {
-                    setDialogOpen(false);
-                    if (dialogAction) dialogAction();
+                  <PlusIcon className="w-4 h-4" />
+                  <span>Add New Installation</span>
+                </button>
+
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Grid Type
+                </label>
+                <ReusableDropdown
+                  name="gridTypeId"
+                  value={formData.gridTypeId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setGridTypeId(selectedId);
+                    handleChange({
+                      target: { name: "gridTypeId", value: selectedId },
+                    } as any);
                   }}
-                  autoFocus
+                  options={grids.map((grid) => ({
+                    value: grid.id,
+                    label: grid.gridType,
+                  }))}
+                  placeholder="Select Grid Type"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Material Origin Type
+                </label>
+                <ReusableDropdown
+                  name="materialOriginId"
+                  value={formData.materialOriginId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setMaterialOriginId(selectedId);
+                    handleChange({
+                      target: { name: "materialOriginId", value: selectedId },
+                    } as any);
+                  }}
+                  options={origins.map((origin) => ({
+                    value: origin.id,
+                    label: origin.originCode,
+                  }))}
+                  placeholder="Select Material Origin Type"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PV Panel Specification</label>
+                <ReusableDropdown
+                  name="orgPanelSpecId"
+                  value={formData.orgPanelSpecId ?? ""}
+                  onChange={(val) => {
+                    const selectedId = val === "" ? null : Number(val);
+                    setOrgPanelSpecId(selectedId);
+                    handleChange({
+                      target: { name: "orgPanelSpecId", value: selectedId },
+                    } as any);
+                  }}
+
+                  options={panels.map((panel) => {
+                    const parts = [
+                      panel.panelBrandName || null,
+                      panel.panelTypeName || null,
+                      panel.ratedWattageW ? `(${panel.ratedWattageW} W)` : null,
+                      panel.modelNumber ? `(${panel.modelNumber})` : null
+                    ];
+
+                    const label = parts.filter(Boolean).join(" - ");
+
+                    return {
+                      value: panel.id,
+                      label,
+                    };
+                  })}
+
+                  placeholder="Select PV System Brand"
+                  className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
+                />
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PV System Capacity (kW)</label>
+                <ReusableDropdown
+                  name="systemCapacityKw"
+                  value={formData.systemCapacityKw ?? ""}
+                  onChange={(val) => {
+                    const selectedValue = val === "" ? null : Number(val);
+                    setSystemCapacityKw(selectedValue);
+                    handleChange({
+                      target: { name: "systemCapacityKw", value: selectedValue },
+                    } as any);
+                  }}
+                  options={panelCapacities.map((panelCapacity) => ({
+                    value: panelCapacity,
+                    label: `${panelCapacity} kW`,
+                  }))}
+                  placeholder="Select PV System Capacity"
+                  className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+                />
+              </div>
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="md:col-span-2">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-nowrap">
+                    <h3 className="text-base font-semibold text-gray-800 whitespace-nowrap">
+                      Inverter Details
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={addNewInverter}
+                      disabled={
+                        formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false
+                      }
+                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap
+      ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
+                          ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                    >
+                      + Add More Inverter
+                    </button>
+                  </div>
+
+
+                  {formData.inverters.map((inv, index) => (
+                    <div
+                      key={index}
+                      className="md:col-span-2 grid grid-cols-12 gap-4 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                    >
+                      {formData.inverters.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeInverter(index)}
+                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      {/* Inverter Brand */}
+                      <div className="col-span-12 md:col-span-5">
+                        <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+                        <ReusableDropdown
+                          name="inverterBrandId"
+                          value={inv.inverterBrandId ?? ""}
+                          onChange={(val) =>
+                            handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
+                          }
+                          options={inverters.map((inv) => ({
+                            value: inv.inverterBrandId,
+                            label: inv.inverterBrandName,
+                          }))}
+                          placeholder="Select Inverter Brand"
+                        />
+                      </div>
+
+                      {/* Inverter Spec */}
+                      <div className="col-span-12 md:col-span-5">
+                        <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
+                        <ReusableDropdown
+                          name="orgInverterSpecId"
+                          value={inv.orgInverterSpecId ?? ""}
+                          onChange={(val) =>
+                            handleInverterChange(index, "orgInverterSpecId", val === "" ? null : Number(val))
+                          }
+
+                          options={(inverterCapacitiesMap[index] || []).map((spec) => {
+                            const parts = [
+                              spec.inverterCapacity ? `${spec.inverterCapacity} kW` : null,
+                              spec.productWarranty ? `(${spec.productWarranty} )` : null,
+                              spec.almmModelNumber ? `(${spec.almmModelNumber})` : null
+                            ];
+
+                            const label = parts.filter(Boolean).join(" - ");
+
+                            return {
+                              value: spec.id,
+                              label,
+                            };
+                          })}
+                          disabled={!inv.inverterBrandId}
+                          placeholder="Select Inverter Spec"
+                        />
+                      </div>
+
+                      {/* Inverter Count */}
+                      <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
+                        <label className="block text-sm font-medium text-gray-700">Count</label>
+                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                          <button
+                            type="button"
+                            disabled={(inv.inverterCount ?? 1) <= 1}
+                            onClick={() =>
+                              handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
+                            }
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
+                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                              : "text-gray-600 hover:text-white hover:bg-red-500"
+                              }`}
+                          >
+                            −
+                          </button>
+
+                          <input
+                            type="text"
+                            name="inverterCount"
+                            inputMode="numeric"
+                            value={inv.inverterCount ?? 1}
+                            onChange={(e) => {
+                              const value = Math.max(Number(e.target.value) || 1, 1);
+                              handleInverterChange(index, "inverterCount", value);
+                            }}
+                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
+                            }
+                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+
+              {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Battery Brand
+                    </label>
+                    <ReusableDropdown
+                      name="batteryBrandId"
+                      value={formData.batteryBrandId ?? ""}
+                      onChange={(val) => {
+                        const selectedId = val === "" ? null : Number(val);
+                        setBatteryBrandId(selectedId);
+                        handleChange({
+                          target: { name: "batteryBrandId", value: selectedId },
+                        });
+                      }}
+                      options={batteryBrands.map((batteryBrand) => ({
+                        value: batteryBrand.brandId,
+                        label: batteryBrand.brandName,
+                      }))}
+                      placeholder="Select Battery Brand"
+                      className="mt-1"
+                    />
+
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
+                    <ReusableDropdown
+                      name="orgBatterySpecId"
+                      value={formData.orgBatterySpecId ?? ""}
+                      onChange={(val) => {
+                        const selectedId = val === "" ? null : Number(val);
+                        setOrgBatterySpecId(selectedId);
+                        handleChange({
+                          target: { name: "orgBatterySpecId", value: selectedId },
+                        });
+                      }}
+                      // options={batteryCapacities.map((batteryCapacity) => ({
+                      //   value: batteryCapacity.id,
+                      //   label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
+                      // }))}
+                      options={batteryCapacities.map((b) => {
+                        const parts = [
+                          b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
+                          b.voltage ? `${b.voltage} V` : null,
+                          b.modelNumber || null,
+                          b.productWarranty ? `(${b.productWarranty} )` : null
+                        ];
+
+                        // Filter out null/empty values and join with " - "
+                        const label = parts.filter(Boolean).join(" - ");
+
+                        return {
+                          value: b.id,
+                          label,
+                        };
+                      })}
+
+                      placeholder="Select Battery Capacity"
+                      className="mt-1"
+                    />
+
+                  </div>
+                </>
+              )}
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="md:col-span-2">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-semibold text-gray-800">Pipe Details</h3>
+                    <button
+                      type="button"
+                      onClick={addNewPipe}
+                      disabled={
+                        formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false
+                      }
+                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
+                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                    >
+                      + Add More Pipe
+                    </button>
+                  </div>
+
+                  {formData.pipes.map((pipe, index) => (
+                    <div
+                      key={index}
+                      className="md:col-span-2 grid grid-cols-12 items-center gap-6 p-4 border border-gray-200 rounded-xl shadow-sm bg-gray-50 relative"
+                    >
+                      {formData.pipes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePipe(index)}
+                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+
+
+                      {/* LEFT EMPTY SPACE (2 columns) */}
+                      <div className="hidden md:block md:col-span-2"></div>
+
+                      {/* Pipe Specification - 5 columns */}
+                      <div className="col-span-12 md:col-span-6">
+                        <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
+                        <ReusableDropdown
+                          name="orgPipeSpecId"
+                          value={pipe.orgPipeSpecId ?? ""}
+                          onChange={(val) =>
+                            handlePipeChange(index, "orgPipeSpecId", val === "" ? null : Number(val))
+                          }
+                          options={pipes.map((p) => ({
+                            value: p.id,
+                            label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
+                          }))}
+
+                          placeholder="Select Pipe Specification"
+                        />
+                      </div>
+
+                      {/* Pipe Count - 3 columns */}
+                      <div className="col-span-12 md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700">Count</label>
+                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                          <button
+                            type="button"
+                            disabled={(pipe.pipeCount ?? 1) <= 1}
+                            onClick={() =>
+                              handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
+                            }
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
+                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                              : "text-gray-600 hover:text-white hover:bg-red-500"
+                              }`}
+                          >
+                            −
+                          </button>
+
+                          <input
+                            type="text"
+                            name="pipeCount"
+                            inputMode="numeric"
+                            value={pipe.pipeCount ?? 1}
+                            onChange={(e) => {
+                              const value = Math.max(Number(e.target.value) || 1, 1);
+                              handlePipeChange(index, "pipeCount", value);
+                            }}
+                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
+                            }
+                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* RIGHT EMPTY SPACE (2 columns) */}
+                      <div className="hidden md:block md:col-span-2"></div>
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+
+              <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
+
+              <div className="col-span-full space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-4">
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasWaterSprinkler"
+                      checked={formData.hasWaterSprinkler || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Water Sprinkler System</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasHeavydutyRamp"
+                      checked={formData.hasHeavydutyRamp || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Heavy Duty Ramp</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="hasHeavydutyStairs"
+                      checked={formData.hasHeavydutyStairs || false}
+                      onChange={handleChange}
+                      className="h-5 w-5 text-blue-600"
+                    />
+                    <span className="text-base text-gray-800">Heavy Duty Stairs</span>
+                  </label>
+                </div>
+              </div>
+
+
+              <div className="col-span-full space-y-4 mt-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                      <CurrencyRupeeIcon className="w-4 h-4 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
+                  </div>
+
+                  {/* Horizontal line */}
+                  <div className="mt-2 border-b border-gray-200"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Solar System Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      name="systemCost"
+                      value={
+                        isEditing
+                          ? (formData.systemCost === 0 ? "" : String(formData.systemCost))
+                          : formatIndianNumber(formData.systemCost)
+                      }
+
+                      onFocus={() => setIsEditing(true)}
+                      onBlur={() => setIsEditing(false)}
+                      onChange={(e) => {
+                        const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                        setFormData({
+                          ...formData,
+                          systemCost: rawValue,
+                        });
+                      }}
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Solar System Cost"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Fabrication Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      name="fabricationCost"
+                      value={
+                        isEditingFabrication
+                          ? (formData.fabricationCost === 0 ? "" : String(formData.fabricationCost))
+                          : formatIndianNumber(formData.fabricationCost)
+                      }
+
+                      onFocus={() => setIsEditingFabrication(true)}
+                      onBlur={() => setIsEditingFabrication(false)}
+                      onChange={(e) => {
+                        const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
+                        setFormData({
+                          ...formData,
+                          fabricationCost: rawValue,
+                        });
+                      }}
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Fabrication Cost"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Total Cost (₹)
+                    </label>
+                    <input
+                      type="text"
+                      name="totalCost"
+                      value={formatIndianNumber(formData.totalCost)}
+                      readOnly
+                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Total Cost"
+                    />
+                  </div>
+                </div>
+
+
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <button
+                    type="button"
+                    onClick={handleSaveButtonClick}
+                    disabled={isSubmitting}
+                    className={`w-full sm:w-auto px-5 py-2.5 text-white font-medium rounded-lg 
+    bg-blue-600 hover:bg-blue-700
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+    disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {isSubmitting ? "Saving..." : "Save System Specs"}
+                  </button>
+
+
+
+                  {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                    userInfo?.role === "ROLE_AGENCY_ADMIN" ||
+                    userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Check if maximum limit of 5 quotations is reached
+                            if (savedSpecs.length >= 6) {
+                              setDialogType("error");
+                              setDialogMessage("You have reached the maximum limit of 5 quotations. Please delete an existing quotation to create a new one.");
+                              setDialogAction(null);
+                              setDialogOpen(true);
+                              return;
+                            }
+                            setSelectedDate(new Date());
+                            setShowDatePickModal(true);
+
+                          }}
+                          disabled={!selectedSpecId || isLoading}
+                          className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? "Generating..." : "Generate & Save Quotation"}
+                        </button>
+
+                        {/* Modal */}
+                        {showDatePickModal && (
+                          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+                            <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+                              <h2 className="text-lg font-semibold mb-4 text-gray-800">
+                                Quotation Details
+                              </h2>
+
+                              {/* Native HTML Date Picker */}
+                              {/* Quotation Number */}
+                              <input
+                                type="text"
+                                placeholder="Enter Quotation Number"
+                                value={quotationNumber}
+                                onChange={(e) => setQuotationNumber(e.target.value)}
+                                className="border px-3 py-2 rounded w-full mb-4"
+                              />
+
+
+                              <input
+                                type="date"
+                                value={
+                                  selectedDate
+                                    ? selectedDate.toISOString().split("T")[0]
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  const picked = e.target.value ? new Date(e.target.value) : null;
+                                  setSelectedDate(picked);
+                                }}
+                                className="border px-3 py-2 rounded w-full"
+                              />
+
+                              <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                  onClick={() => setShowDatePickModal(false)}
+                                  className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+                                >
+                                  Cancel
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    if (selectedDate) {
+                                      setShowDatePickModal(false); // close modal first
+                                      // slight delay to ensure modal close before API call
+                                      setTimeout(() => {
+                                        handleGenerateQuotation(selectedDate, quotationNumber);
+                                      }, 300);
+                                    }
+                                  }}
+                                  disabled={!selectedDate || isLoading}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {isLoading ? "Generating..." : "Confirm & Generate"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+
+                </div>
+              </div>
+
+            </form>)}
+
+            <Dialog
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+              maxWidth="xs"
+              fullWidth
+            >
+              <DialogTitle id="alert-dialog-title">
+                {dialogType === "success" && "Success"}
+                {dialogType === "error" && "Error"}
+                {dialogType === "confirm" && "Confirm"}
+              </DialogTitle>
+
+              <DialogContent dividers>
+                <Alert
+                  severity={
+                    dialogType === "success"
+                      ? "success"
+                      : dialogType === "error"
+                        ? "error"
+                        : "info"
+                  }
                 >
-                  Yes
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => {
-                  setDialogOpen(false);
-                  if (dialogAction) dialogAction();
-                }}
-                autoFocus
-              >
-                OK
-              </Button>
-            )}
-          </DialogActions>
-        </Dialog>
+                  {dialogMessage}
+                </Alert>
+              </DialogContent>
 
+              <DialogActions>
+                {dialogType === "confirm" ? (
+                  <>
+                    <Button
+                      onClick={() => setDialogOpen(false)}
+                    // color="error"
+                    >
+                      No
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setDialogOpen(false);
+                        if (dialogAction) {
+                          await dialogAction();
+                        }
+                      }}
+                      autoFocus
+                    >
+                      Yes
+                    </Button>
+
+                  </>
+                ) : (
+                  <Button
+                    onClick={async () => {
+                      setDialogOpen(false);
+                      if (dialogAction) {
+                        await dialogAction();
+                      }
+                    }}
+                    autoFocus
+                  >
+                    OK
+                  </Button>
+
+                )}
+              </DialogActions>
+            </Dialog>
+
+          </div>
+        </div>
       </div>
-
 
     </div>
   );

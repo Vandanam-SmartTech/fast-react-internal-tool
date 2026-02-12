@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
-import { Users, UserCheck, Calendar, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { UserCheck, Users, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
 import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
 
-const StaffDashboard: React.FC = () => {
+const GramPanchayatDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
+  const navigate = useNavigate();
   const [onboardedCount, setOnboardedCount] = useState<number | null>(null);
-  const [count, setCount] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-
   const [, setData] = useState([]);
-  const [, setStatsLoading] = useState(true);
-  const navigate = useNavigate();
   const { userClaims } = useUser();
+  const [, setStatsLoading] = useState(true);
+
+
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -54,7 +55,12 @@ const StaffDashboard: React.FC = () => {
     ) {
       params.orgId = selectedOrg.orgId;
       params.userRole = selectedOrg.role;
-    } else if (
+    } else if(
+      selectedOrg.role === "ROLE_GRAMSEVAK"
+    ){
+      params.userRole = selectedOrg.role;
+      params.villageCode = selectedOrg.deptCode;
+    }else if (
       selectedOrg.role === "ROLE_AGENCY_STAFF" ||
       selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
     ) {
@@ -159,7 +165,6 @@ const StaffDashboard: React.FC = () => {
     }, 20);
   };
 
-
   const handleActivate = (path: string) => navigate(path);
 
   const handleKeyActivate: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
@@ -171,15 +176,13 @@ const StaffDashboard: React.FC = () => {
   };
 
   const dashboardItems = [
-
-    {
-      title: 'Manage Customers',
-      description: 'List, View, Add, Update customers',
-      icon: <Users className="h-8 w-8 text-primary-600" />,
-      path: '/manage-customers',
-      color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
-    },
-
+     {
+          title: 'Manage Customers',
+          description: 'List, View, Add, Update customers',
+          icon: <Users className="h-8 w-8 text-primary-600" />,
+          path: '/manage-customers',
+          color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
+        },
   ];
 
   return (
@@ -218,12 +221,12 @@ const StaffDashboard: React.FC = () => {
       </div>
       </div>
 
-
       <div className="space-y-3">
         {/* <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
           Management Tools
-        </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        </h2> */}
+
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {dashboardItems.map((item, index) => (
             <Card
               key={index}
@@ -245,6 +248,7 @@ const StaffDashboard: React.FC = () => {
                      leading-tight mb-0.5">
                       {item.title}
                     </h3>
+
                     <p className="text-secondary-700 dark:text-secondary-300
                     text-xs sm:text-sm
                     leading-snug line-clamp-2 mb-1">
@@ -252,7 +256,7 @@ const StaffDashboard: React.FC = () => {
                     </p>
                   </div>
                 </div>
-             </CardBody>
+              </CardBody>
             </Card>
         ))}
       </div> */}
@@ -327,7 +331,6 @@ const StaffDashboard: React.FC = () => {
         </Card>
       </div>
 
-
       </div>
 
     </div>
@@ -335,4 +338,4 @@ const StaffDashboard: React.FC = () => {
 
 };
 
-export default StaffDashboard;
+export default GramPanchayatDashboard;

@@ -6,7 +6,6 @@ import Button from './ui/Button';
 import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
-import { Loader2 } from 'lucide-react';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
 
 const Header: React.FC = () => {
@@ -21,7 +20,7 @@ const Header: React.FC = () => {
   const orgDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
-  const { userClaims, selectedOrg, setSelectedOrg, clearUserClaims } = useUser();
+  const { userClaims, setSelectedOrg, clearUserClaims } = useUser();
 
 
   const [showCropModal, setShowCropModal] = useState(false);
@@ -117,6 +116,10 @@ const Header: React.FC = () => {
       navigate('/staff-dashboard');
     } else if (role === 'ROLE_SUPER_ADMIN') {
       navigate('/super-admin-dashboard');
+    } else if (role === 'ROLE_BDO') {
+      navigate ('/bdo-dashboard');
+    } else if (role === 'ROLE_GRAMSEVAK'){
+      navigate('/grampanchayat-dashboard');
     }
 
     window.location.reload();
@@ -127,6 +130,7 @@ const Header: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("selectedOrg");
     clearUserClaims();
     navigate("/login");
@@ -294,8 +298,12 @@ const Header: React.FC = () => {
                 <div className="flex flex-col ml-[40px] md:ml-[0px] lg:ml-[0px]">
                   <span className="font-semibold text-sm">{selectedOrgName}</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">
-                    {selectedRole.replace('ROLE_', '').replace('_', ' ')}
+                    {{
+                      ROLE_BDO: "Panchayat Samiti Adhikari",
+                      ROLE_GRAMSEVAK: "Gram Adhikari",
+                    }[selectedRole] || selectedRole.replace("ROLE_", "").replace("_", " ")}
                   </span>
+
                 </div>
               </div>
             )}
@@ -332,50 +340,78 @@ const Header: React.FC = () => {
               >
                 <span className="hidden sm:inline">Switch Org</span>
               </Button>
-
               {showOrgDropdown && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-secondary-800 rounded-xl shadow-large border border-secondary-200 dark:border-secondary-700 z-50 animate-slide-down">
+                <div
+                  className="
+      fixed sm:absolute
+      inset-x-3 sm:inset-x-auto
+      top-16 sm:top-full
+      sm:right-0
+      mt-2
+      w-auto sm:w-72
+      max-h-[80vh]
+      bg-white dark:bg-secondary-800
+      rounded-xl
+      shadow-large
+      border border-secondary-200 dark:border-secondary-700
+      z-50
+      animate-slide-down
+      overflow-hidden
+    "
+                >
                   <div className="py-2">
+                    {/* Header */}
                     <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
-                      <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">Select Organization</h3>
-                      <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">Choose your organization and role</p>
+                      <h3 className="text-sm font-semibold text-secondary-900 dark:text-secondary-100">
+                        Select Organization
+                      </h3>
+                      <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
+                        Choose your organization and role
+                      </p>
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
+
+                    {/* List */}
+                    <div className="max-h-[60vh] overflow-y-auto">
                       {Object.entries(userClaims.org_roles).map(([orgId, orgData]) =>
                         orgData.roles.map(role => {
-                          const isSelected = orgData.org_name === selectedOrgName && role === selectedRole;
+                          const isSelected =
+                            orgData.org_name === selectedOrgName &&
+                            role === selectedRole;
 
                           return (
                             <button
                               key={`${orgId}-${role}`}
-                              onClick={() => handleOrgChange(orgId, orgData.org_name, role)}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-3 ${isSelected
+                              onClick={() =>
+                                handleOrgChange(orgId, orgData.org_name, role)
+                              }
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${isSelected
                                 ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
                                 : "text-secondary-700 dark:text-secondary-300 border-l-transparent"
                                 }`}
                             >
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1">
-                                  <div className="font-medium">{orgData.org_name}</div>
+                                  <div className="font-medium">
+                                    {orgData.org_name}
+                                  </div>
                                   <div className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
                                     {role.replace("ROLE_", "").replace("_", " ")}
                                   </div>
                                 </div>
+
                                 {isSelected && (
-                                  <div className="flex items-center">
-                                    <Check className="h-4 w-4 text-primary-600" />
-                                  </div>
+                                  <Check className="h-4 w-4 text-primary-600 flex-shrink-0" />
                                 )}
                               </div>
                             </button>
                           );
                         })
                       )}
-
                     </div>
                   </div>
                 </div>
               )}
+
             </div>
           )}
 
@@ -413,7 +449,8 @@ const Header: React.FC = () => {
                   {/* Header */}
                   <div className="px-3 sm:px-4 py-3 border-b border-secondary-100 dark:border-secondary-700 flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="relative group w-10 h-10 sm:w-12 sm:h-12">
+                    <div className="relative group w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+
                       {/* Avatar */}
                       <div className="w-full h-full bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
                         {profilePhoto ? (
@@ -426,18 +463,6 @@ const Header: React.FC = () => {
                           <User className="h-5 w-5 text-white" />
                         )}
                       </div>
-
-                      {/*<label
-                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                      >
-                        <Camera className="w-5 h-5 text-white" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-                      </label>*/}
 
                       <div
                         className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
@@ -614,14 +639,20 @@ const Header: React.FC = () => {
 
 
                     {/* User Info */}
-                    <div>
-                      <div className="font-medium text-secondary-900 dark:text-secondary-100 text-sm">
-                        {userClaims?.name_as_per_gov_id}
+                    {/* User Info */}
+                    <div className="min-w-0">
+                      <div
+                        className="font-medium text-secondary-900 dark:text-secondary-100 text-sm truncate"
+                        title={userClaims?.name_as_per_gov_id}
+                      >
+                        {userClaims?.name_as_per_gov_id || "NA"}
                       </div>
-                      <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300">
-                        {isSuperAdmin ? 'Super Admin' : selectedOrgName}
+
+                      <div className="text-xs sm:text-sm text-secondary-600 dark:text-secondary-300 truncate">
+                        {isSuperAdmin ? "Super Admin" : selectedOrgName}
                       </div>
                     </div>
+
                   </div>
 
                   {/* Actions */}

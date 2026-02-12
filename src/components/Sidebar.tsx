@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Logo } from "./ui";
-import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight, Package } from "lucide-react";
+import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight, Package, Layers } from "lucide-react";
 import Button from "./ui/Button";
 import { fetchClaims } from "../services/jwtService";
 import { useUser } from "../contexts/UserContext";
@@ -54,94 +54,137 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     };
   }, [isOpen, onToggle]);
 
-  const goToListOfConsumers = () => navigate("/list-of-consumers");
-  const goToOnboardedConsumers = () => navigate("/onboarded-consumers");
-  const goToCustomerForm = () => navigate("/customer-form");
-  const goToOrganizations = () => navigate("/organizations");
-  const goToAdminManagement = () => navigate("/admin-management");
-  const goToUserManagement = () => navigate("/user-management");
-  const goToPackageManagement = () => navigate("package-management");
-
-
-const handleHomeClick = async () => {
-  try {
-    if (!userClaims) {
-      navigate("/login");
-      return;
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth < 768) {
+      onToggle(); // sidebar close
     }
+  };
 
-    // Super Admin shortcut
-    if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-      navigate("/super-admin-dashboard");
-      return;
-    }
+  const navigateWithSidebarClose = (path: string) => {
+    navigate(path);
+    closeSidebarOnMobile();
+  };
 
-    const selectedOrgStr = localStorage.getItem("selectedOrg");
-    if (!selectedOrgStr) {
-      navigate("/login");
-      return;
-    }
+  const goToListOfConsumers = () =>
+    navigateWithSidebarClose("/list-of-consumers");
 
-    let selectedOrg;
+  const goToOnboardedConsumers = () =>
+    navigateWithSidebarClose("/onboarded-consumers");
+
+  const goToCustomerForm = () =>
+    navigateWithSidebarClose("/customer-form");
+
+  const goToOrganizations = () =>
+    navigateWithSidebarClose("/organizations");
+
+  const goToAdminManagement = () =>
+    navigateWithSidebarClose("/admin-management");
+
+  const goToUserManagement = () =>
+    navigateWithSidebarClose("/user-management");
+
+  const goToProductManagement = () =>
+    navigateWithSidebarClose("/product-management");
+
+    const goToPackageManagement = () =>
+    navigateWithSidebarClose("/package-management");
+
+
+
+  const handleHomeClick = async () => {
     try {
-      selectedOrg = JSON.parse(selectedOrgStr);
-    } catch {
-      console.error("Invalid selectedOrg format in localStorage");
-      localStorage.removeItem("selectedOrg");
-      navigate("/login");
+      if (!userClaims) {
+        navigate("/login");
+        closeSidebarOnMobile();
       return;
-    }
 
-    const orgData = userClaims.org_roles?.[selectedOrg.orgId];
-    if (!orgData) {
-      alert("Invalid organization selection.");
-      localStorage.removeItem("selectedOrg");
-      navigate("/login");
-      return;
-    }
+      }
 
-    // Validate role
-    let role = selectedOrg.role;
-    if (!role || !orgData.roles.includes(role)) {
-      // If multiple roles, pick the first or show selection
-      role = orgData.roles[0];
-      localStorage.setItem(
-        "selectedOrg",
-        JSON.stringify({ orgId: selectedOrg.orgId, orgName: orgData.org_name, role })
-      );
-    }
+      // Super Admin shortcut
+      if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        navigate("/super-admin-dashboard");
+        closeSidebarOnMobile();
+        return;
+      }
 
-    // Navigate based on role
-    switch (role) {
-      case "ROLE_ORG_ADMIN":
-        navigate("/org-admin-dashboard");
-        break;
-      case "ROLE_AGENCY_ADMIN":
-        navigate("/agency-admin-dashboard");
-        break;
-      case "ROLE_ORG_STAFF":
-      case "ROLE_AGENCY_STAFF":
-        navigate("/staff-dashboard");
-        break;
-      case "ROLE_ORG_REPRESENTATIVE":
-      case "ROLE_AGENCY_REPRESENTATIVE":
-        navigate("/representative-dashboard");
-        break;
-      default:
-        alert("Unauthorized role.");
+      const selectedOrgStr = localStorage.getItem("selectedOrg");
+      if (!selectedOrgStr) {
+        navigate("/login");
+        closeSidebarOnMobile();
+        return;
+      }
+
+      let selectedOrg;
+      try {
+        selectedOrg = JSON.parse(selectedOrgStr);
+      } catch {
+        console.error("Invalid selectedOrg format in localStorage");
         localStorage.removeItem("selectedOrg");
         navigate("/login");
+        closeSidebarOnMobile();
+        return;
+      }
+
+      const orgData = userClaims.org_roles?.[selectedOrg.orgId];
+      if (!orgData) {
+        alert("Invalid organization selection.");
+        localStorage.removeItem("selectedOrg");
+        navigate("/login");
+        closeSidebarOnMobile();
+        return;
+      }
+
+      // Validate role
+      let role = selectedOrg.role;
+      if (!role || !orgData.roles.includes(role)) {
+        // If multiple roles, pick the first or show selection
+        role = orgData.roles[0];
+        localStorage.setItem(
+          "selectedOrg",
+          JSON.stringify({ orgId: selectedOrg.orgId, orgName: orgData.org_name, role })
+        );
+      }
+
+      // Navigate based on role
+      switch (role) {
+        case "ROLE_ORG_ADMIN":
+          navigate("/org-admin-dashboard");
+          break;
+        case "ROLE_GRAMSEVAK":
+          navigate("/grampanchayat-dashboard");
+          break;
+        case "ROLE_BDO":
+          navigate("/bdo-dashboard");
+          break;
+        case "ROLE_AGENCY_ADMIN":
+          navigate("/agency-admin-dashboard");
+          break;
+        case "ROLE_ORG_STAFF":
+        case "ROLE_AGENCY_STAFF":
+          navigate("/staff-dashboard");
+          break;
+        case "ROLE_ORG_REPRESENTATIVE":
+        case "ROLE_AGENCY_REPRESENTATIVE":
+          navigate("/representative-dashboard");
+          break;
+        default:
+          alert("Unauthorized role.");
+          localStorage.removeItem("selectedOrg");
+          navigate("/login");
+      }
+      closeSidebarOnMobile();
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      alert("Error determining user role.");
+      navigate("/login");
+      closeSidebarOnMobile();
     }
-  } catch (error) {
-    console.error("Error fetching claims:", error);
-    alert("Error determining user role.");
-    navigate("/login");
-  }
-};
+  };
 
 
 
   useEffect(() => {
+
     const fetchRole = async (checkPageAccess = false) => {
       try {
         const claims = await fetchClaims();
@@ -173,7 +216,7 @@ const handleHomeClick = async () => {
           const restrictedPages = [
             "/admin-management",
             "/user-management",
-            "/package-management"
+            "/product-management"
           ];
           const dashboardPages = [
             "/org-admin-dashboard",
@@ -181,6 +224,8 @@ const handleHomeClick = async () => {
             "/representative-dashboard",
             "/agency-admin-dashboard",
             "/staff-dashboard",
+            "/grampanchayat-dashboard",
+            "/bdo-dashboard",
           ];
 
           if (restrictedPages.includes(currentPath)) {
@@ -222,6 +267,10 @@ const handleHomeClick = async () => {
         navigate("/staff-dashboard");
       } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
         navigate("/staff-dashboard");
+      }else if (allRoles.includes("ROLE_GRAMSEVAK")) {
+        navigate("/grampanchayat-dashboard");
+      }else if (allRoles.includes("ROLE_BDO")) {
+        navigate("/bdo-dashboard");
       } else {
         navigate("/login");
       }
@@ -298,7 +347,9 @@ const handleHomeClick = async () => {
                   "/representative-dashboard",
                   "/super-admin-dashboard",
                   "/agency-admin-dashboard",
-                  "/staff-dashboard"
+                  "/staff-dashboard",
+                  "/grampanchayat-dashboard",
+                  "/bdo-dashboard"
                 ])
                   ? "nav-link-active"
                   : "nav-link-inactive"
@@ -333,7 +384,7 @@ const handleHomeClick = async () => {
                 {customersExpanded && (
                   <div className="ml-6 space-y-1 mt-2">
 
-                    <button
+                    {!(roles.includes("ROLE_BDO") || roles.includes("ROLE_GRAMSEVAK")) && (<button
                       onClick={goToCustomerForm}
                       className={`nav-link w-full justify-start ${location.pathname === "/customer-form"
                         ? "nav-link-active"
@@ -342,7 +393,7 @@ const handleHomeClick = async () => {
                     >
                       <UserPlus size={18} />
                       <span>Add Customer</span>
-                    </button>
+                    </button>)}
 
 
                     <button
@@ -407,13 +458,24 @@ const handleHomeClick = async () => {
                 </button>
               )}
 
-              {/* {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
                 <button
-                  onClick={goToPackageManagement}
-                  className={`nav-link w-full justify-start ${isActive("/package-management") ? "nav-link-active" : "nav-link-inactive"
+                  onClick={goToProductManagement}
+                  className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
                     }`}
                 >
                   <Package size={20} />
+                  <span>Product Management</span>
+                </button>
+              )}
+
+               {/* {(roles.includes("ROLE_ORG_ADMIN")) && (
+                <button
+                  onClick={goToPackageManagement}
+                  className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
+                >
+                  <Layers size={20} />
                   <span>Package Management</span>
                 </button>
               )} */}

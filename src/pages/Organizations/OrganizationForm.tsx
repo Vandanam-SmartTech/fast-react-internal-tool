@@ -11,6 +11,7 @@ import { ZoomIn, ZoomOut, RotateCcw, Crop } from "lucide-react";
 import { croppedImgForLogo } from '../../utils/croppedImageForLogo';
 import { Button } from '../../components/ui';
 import ReusableDropdown from '../../components/ReusableDropdown';
+import { removeBackground } from "@imgly/background-removal";
 
 interface District {
   code: number;
@@ -27,6 +28,49 @@ interface Village {
   nameEnglish: string;
   pinCode: string;
 }
+
+const validationRules = {
+  gstNumber: {
+    pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    message: "GSTIN must be in format: 22AAAAA0000A1Z6"
+  },
+
+  addressLine: {
+    pattern: /^[A-Za-z0-9\s,.\/#-]{5,100}$/,
+    message: "Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+  },
+  pinCode: {
+    pattern: /^[0-9]{6}$/,
+    message: "Pincode must be exactly 6 digits (0-9)"
+  }
+};
+
+const validateField = (fieldName: string, value: string | number): { isValid: boolean; message: string } => {
+  const rule = validationRules[fieldName as keyof typeof validationRules];
+  if (!rule) return { isValid: true, message: "" };
+
+  if (fieldName === 'gstNumber') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString().toUpperCase());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'addressLine1' || fieldName === 'addressLine2') {
+    if (!value) return { isValid: true, message: "" }; // Optional field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+
+  if (fieldName === 'pinCode') {
+    if (!value) return { isValid: false, message: "pinCode is required" }; // Required field
+    const isValid = 'pattern' in rule && rule.pattern.test(value.toString());
+    return { isValid, message: isValid ? "" : rule.message };
+  }
+
+  return { isValid: true, message: "" };
+};
 
 const OrganizationForm: React.FC = () => {
   const navigate = useNavigate();
@@ -74,6 +118,8 @@ const OrganizationForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const { userClaims } = useUser();
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
 
   useEffect(() => {
@@ -182,6 +228,54 @@ const OrganizationForm: React.FC = () => {
     console.log("Current state PINcode:", value);
   };
 
+  const validateForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+
+    if (!formData.addressLine1) {
+      errors.push("Address Line 1 is required");
+    } else {
+      const addressValidation = validateField('addressLine1', formData.addressLine1);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+    if (formData.addressLine2) {
+      const addressValidation = validateField('addressLine2', formData.addressLine2);
+      if (!addressValidation.isValid) {
+        errors.push(addressValidation.message);
+      }
+    }
+
+
+    if (formData.gstNumber) {
+      const gstNumberValidation = validateField('gstNumber', formData.gstNumber);
+      if (!gstNumberValidation.isValid) {
+        errors.push(gstNumberValidation.message);
+      }
+    }
+
+    if (!formData.pinCode) {
+      errors.push("PIN Code is required");
+    } else {
+      const pinCodeValidation = validateField('pinCode', formData.pinCode);
+      if (!pinCodeValidation.isValid) {
+        errors.push(pinCodeValidation.message);
+      }
+    }
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  const validateFieldOnChange = (fieldName: string, value: string | number) => {
+    const validation = validateField(fieldName, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: validation.message
+    }));
+  };
+
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -266,19 +360,19 @@ const OrganizationForm: React.FC = () => {
   };
 
   const handleChooseAnotherImage = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageSrc(reader.result);
-      setCroppedAreaPixels(null);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setRotation(0);
-    };
-    reader.readAsDataURL(file);
-  }
-};
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result);
+        setCroppedAreaPixels(null);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
 
@@ -330,42 +424,53 @@ const OrganizationForm: React.FC = () => {
     const { name, value } = e.target;
 
     if (name === 'legalName') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         legalName: value,
         displayName: isDisplayNameManuallyEdited ? prev.displayName : value,
       }));
-    } else if (name === 'displayName') {
+    }
+    else if (name === 'displayName') {
       setIsDisplayNameManuallyEdited(true);
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         displayName: value,
       }));
-    } else {
-      setFormData((prev) => ({
+    }
+    else {
+      // update form data first
+      setFormData(prev => ({
         ...prev,
-        [name]: value,
+        [name]: value
       }));
+
+      // validate on change
+      validateFieldOnChange(name, value);
     }
   };
 
 
+
   return (
-    <div className="max-w-4xl mx-auto pt-1 sm:pt-1">
-      <div className="flex items-center mb-6">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+            <div className="flex items-center gap-2">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-gray-200 transition"
         >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+         <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-700">
+        <h1 className="text-xl font-bold text-gray-700">
           Add New Organization
         </h1>
       </div>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -443,7 +548,7 @@ const OrganizationForm: React.FC = () => {
                 <p className="text-red-600 text-sm mt-1">
                   Enter a valid 10-digit mobile number starting with 6-9
                 </p>
-              )}          
+              )}
           </div>
 
           <div>
@@ -514,20 +619,30 @@ const OrganizationForm: React.FC = () => {
             <input
               type="text"
               name="gstNumber"
-              value={formData.gstNumber || ''}
-              onChange={handleChange}
-              pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
-              title="GSTIN must be in format: 22AAAAA0000A1Z6"
-              placeholder="e.g. 22AAAAA0000A1Z6"
+              value={formData.gstNumber}
+              onChange={(e) =>
+                handleChange({
+                  target: {
+                    name: "gstNumber",
+                    value: e.target.value.toUpperCase()
+                  }
+                } as React.ChangeEvent<HTMLInputElement>)
+              }
               maxLength={15}
-              required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              placeholder="e.g. 22AAAAA0000A1Z6"
+              className={`w-full px-3 py-2.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+                }`}
             />
+
+            {fieldErrors.gstNumber && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.gstNumber}</p>
+            )}
+
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Government Registration Number
+              Government Registration Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -544,55 +659,55 @@ const OrganizationForm: React.FC = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
             <ReusableDropdown
-                  name="district"
-                  value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
-                  options={[
-                    { value: 0, label: districtName || "Select District" },
-                    ...districts.map((district) => ({
-                      value: district.code,
-                      label: district.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={districtName || "Select District"}
-                  className="w-full"
-                />
+              name="district"
+              value={districtCode}
+              onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+              options={[
+                { value: 0, label: districtName || "Select District" },
+                ...districts.map((district) => ({
+                  value: district.code,
+                  label: district.nameEnglish,
+                })),
+              ]}
+              placeholder={districtName || "Select District"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
             <ReusableDropdown
-                  name="talukaCode"
-                  value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
-                  options={[
-                    { value: 0, label: talukaName || "Select Taluka" },
-                    ...talukas.map((taluka) => ({
-                      value: taluka.code,
-                      label: taluka.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={talukaName || "Select Taluka"}
-                  className="w-full"
-                />
+              name="talukaCode"
+              value={talukaCode}
+              onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+              options={[
+                { value: 0, label: talukaName || "Select Taluka" },
+                ...talukas.map((taluka) => ({
+                  value: taluka.code,
+                  label: taluka.nameEnglish,
+                })),
+              ]}
+              placeholder={talukaName || "Select Taluka"}
+              className="w-full"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
             <ReusableDropdown
-                  name="villageCode"
-                  value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
-                  options={[
-                    { value: 0, label: villageName || "Select Village" },
-                    ...villages.map((village) => ({
-                      value: village.code,
-                      label: village.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={villageName || "Select Village"}
-                  className="w-full"
-                />
+              name="villageCode"
+              value={villageCode}
+              onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+              options={[
+                { value: 0, label: villageName || "Select Village" },
+                ...villages.map((village) => ({
+                  value: village.code,
+                  label: village.nameEnglish,
+                })),
+              ]}
+              placeholder={villageName || "Select Village"}
+              className="w-full"
+            />
           </div>
 
           <div>
@@ -639,26 +754,33 @@ const OrganizationForm: React.FC = () => {
             />
           </div>
 
-
+        </div>
         </div>
 
-        <div className="col-span-2 flex justify-center gap-6 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+            className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
+            className="
+      w-full sm:w-auto inline-flex items-center justify-center gap-2
+      px-3 py-2.5 sm:px-5 sm:py-2.5
+      bg-blue-600 text-white font-semibold
+      text-sm sm:text-base
+      rounded-md hover:bg-blue-700
+      transition-colors shadow-sm hover:shadow-md
+      disabled:opacity-50">
             <Save className="h-4 w-4" />
             {loading ? 'Saving...' : 'Save Organization'}
           </button>
         </div>
+
 
 
       </form>
@@ -687,86 +809,88 @@ const OrganizationForm: React.FC = () => {
       )}
 
       {/* --- Crop Modal --- */}
-{showCropModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-    <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
-      <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <h3 className="text-base font-semibold text-gray-900">Crop Logo</h3>
-      </div>
+      {showCropModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900">Crop Logo</h3>
+            </div>
 
-      <div className="p-4 flex flex-col gap-4">
-        <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">
-            Adjust the crop area. Final output will be <b>768×325px</b>.
-          </p>
+            <div className="p-4 flex flex-col gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-1">
+                  Adjust the crop area. Final output will be <b>768×325px</b>.
+                </p>
+              </div>
+
+              <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  rotation={rotation}
+                  aspect={768 / 325}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onRotationChange={setRotation}
+                  onCropComplete={handleCropComplete}
+                  objectFit="contain"
+                  showGrid={true}
+                  cropSize={{ width: 300, height: 127 }}
+                />
+              </div>
+
+              {/* ✅ Choose another image option */}
+              <div className="flex justify-center">
+                <label className="cursor-pointer text-blue-600 text-sm font-medium hover:underline">
+                  Choose Another Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleChooseAnotherImage}
+                  />
+                </label>
+              </div>
+
+              <div className="flex justify-center gap-3">
+                <button onClick={() => setZoom(Math.max(0.5, zoom - 0.05))}>
+                  <ZoomOut className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(Math.min(3, zoom + 0.05))}>
+                  <ZoomIn className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
+              <Button
+                onClick={handleCropReset}
+                variant="outline"
+                size="sm"
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+              >
+                Reset
+              </Button>
+
+              <Button
+                onClick={handleCropAndUpload}
+                size="sm"
+                leftIcon={!loading && <Crop className="w-4 h-4" />}
+                loading={isProcessing}
+                disabled={!croppedAreaPixels}
+              >
+                {isProcessing ? "Uploading..." : "Save & Upload"}
+              </Button>
+            </div>
+          </div>
         </div>
+      )}
 
-        <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={768 / 325}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onRotationChange={setRotation}
-            onCropComplete={handleCropComplete}
-            objectFit="contain"
-            showGrid={true}
-            cropSize={{ width: 300, height: 127 }}
-          />
-        </div>
-
-        {/* ✅ Choose another image option */}
-        <div className="flex justify-center">
-          <label className="cursor-pointer text-blue-600 text-sm font-medium hover:underline">
-            Choose Another Image
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleChooseAnotherImage}
-            />
-          </label>
-        </div>
-
-        <div className="flex justify-center gap-3">
-          <button onClick={() => setZoom(Math.max(0.5, zoom - 0.1))}>
-            <ZoomOut className="w-4 h-4 text-gray-600" />
-          </button>
-          <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom(Math.min(3, zoom + 0.1))}>
-            <ZoomIn className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
-      </div>
-
-      <div className="p-3 border-t border-gray-200 flex gap-3 justify-center">
-        <Button
-          onClick={handleCropReset}
-          variant="outline"
-          size="sm"
-          leftIcon={<RotateCcw className="w-4 h-4" />}
-        >
-          Reset
-        </Button>
-
-        <Button
-          onClick={handleCropAndUpload}
-          size="sm"
-          leftIcon={!loading && <Crop className="w-4 h-4" />}
-          loading={isProcessing}
-          disabled={!croppedAreaPixels}
-        >
-          {isProcessing ? "Uploading..." : "Save & Upload"}
-        </Button>
-      </div>
     </div>
-  </div>
-)}
-
     </div>
+    
   );
 };
 

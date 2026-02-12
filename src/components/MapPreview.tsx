@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L, { LeafletMouseEvent } from 'leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import pinPoint from '../assets/google-map-icon-png-13.jpg';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
@@ -32,36 +32,36 @@ const MapPreview = ({ latitude, longitude, onLocationChange }: Props) => {
     setPosition([latitude, longitude]);
   }, [latitude, longitude]);
 
-const handleDragEnd = () => {
-  const marker = markerRef.current;
-  if (marker) {
-    const { lat, lng } = marker.getLatLng();
-    setPendingLatLng([lat, lng]);
-    setDialogOpen(true);
-  }
-};
+  const handleDragEnd = () => {
+    const marker = markerRef.current;
+    if (marker) {
+      const { lat, lng } = marker.getLatLng();
+      setPendingLatLng([lat, lng]);
+      setDialogOpen(true);
+    }
+  };
 
-const handleConfirmLocationChange = () => {
-  if (pendingLatLng) {
-    const [lat, lng] = pendingLatLng;
-    setPosition([lat, lng]);
-    onLocationChange(lat, lng);
-    toast.success("Location updated successfully!", {
+  const handleConfirmLocationChange = () => {
+    if (pendingLatLng) {
+      const [lat, lng] = pendingLatLng;
+      setPosition([lat, lng]);
+      onLocationChange(lat, lng);
+      toast.success("Location updated successfully!", {
         autoClose: 1000,
         hideProgressBar: true,
       });
-  }
-  setDialogOpen(false);
-};
+    }
+    setDialogOpen(false);
+  };
 
-const handleCancelLocationChange = () => {
-  // Revert marker to original position
-  if (markerRef.current && pendingLatLng) {
-    markerRef.current.setLatLng(position);
-  }
-  setDialogOpen(false);
-  setPendingLatLng(null);
-};
+  const handleCancelLocationChange = () => {
+    // Revert marker to original position
+    if (markerRef.current && pendingLatLng) {
+      markerRef.current.setLatLng(position);
+    }
+    setDialogOpen(false);
+    setPendingLatLng(null);
+  };
 
 
 
@@ -72,13 +72,13 @@ const handleCancelLocationChange = () => {
       zoom={15}
       scrollWheelZoom={true}
       style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
-      // whenCreated={(map) => {
-      //   map.flyTo(position, 18, { duration: 1.5 });
-      // }}
+    // whenCreated={(map) => {
+    //   map.flyTo(position, 18, { duration: 1.5 });
+    // }}
     >
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        //attribution='&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+      //attribution='&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
       />
 
       <Marker
@@ -95,29 +95,29 @@ const handleCancelLocationChange = () => {
       </Marker>
 
       <Dialog
-  open={dialogOpen}
-  onClose={handleCancelLocationChange}
-  aria-labelledby="alert-dialog-title"
-  aria-describedby="alert-dialog-description"
-  maxWidth="xs"
-  fullWidth
->
-  <DialogTitle id="alert-dialog-title">Confirm</DialogTitle>
-  <DialogContent dividers>
-    <Alert severity="info">Do you want to change the location?</Alert>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={handleCancelLocationChange}>No</Button>
-    <Button onClick={handleConfirmLocationChange} autoFocus>
-      Yes
-    </Button>
-  </DialogActions>
-</Dialog>
+        open={dialogOpen}
+        onClose={handleCancelLocationChange}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle id="alert-dialog-title">Confirm</DialogTitle>
+        <DialogContent dividers>
+          <Alert severity="info">Do you want to change the location?</Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelLocationChange}>No</Button>
+          <Button onClick={handleConfirmLocationChange} autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
 
 
     </MapContainer>
 
-    
+
   );
 };
 

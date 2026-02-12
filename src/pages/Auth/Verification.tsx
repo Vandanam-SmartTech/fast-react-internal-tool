@@ -119,9 +119,9 @@ const Verification: React.FC = () => {
     } catch (err) {
 
     } finally {
-      const now = Date.now();
-      const newExpiry = now + 3 * 60 * 1000;
-      const newResend = now + 60 * 1000;
+      // const now = Date.now();
+      // const newExpiry = now + 3 * 60 * 1000;
+      // const newResend = now + 60 * 1000;
 
       setCountdown(180);
       setResendCountdown(60);
@@ -158,14 +158,14 @@ const Verification: React.FC = () => {
         </div> */}
 
         <div className="flex justify-center mb-4">
-                <div className="relative">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
-                  <Logo
-                    size="xl"
-                    className="relative drop-shadow-lg"
-                  />
-                </div>
-              </div>
+          <div className="relative">
+            <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
+            <Logo
+              size="xl"
+              className="relative drop-shadow-lg"
+            />
+          </div>
+        </div>
 
         {message && (
           <div className="bg-green-100 text-green-700 border border-green-200 rounded-lg p-2 mb-4 text-center">
@@ -189,12 +189,11 @@ const Verification: React.FC = () => {
                 value={otp}
                 onChange={setOtp}
                 numInputs={6}
-                isInputNum
+                inputType="password"  // <-- use this instead of isInputNum
                 shouldAutoFocus
                 renderInput={(props) => (
                   <input
                     {...props}
-                    type="password"
                     disabled={isLocked}
                     className="mx-1 w-10 h-10 text-center text-xl border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ aspectRatio: '1 / 1' }}
@@ -202,6 +201,7 @@ const Verification: React.FC = () => {
                 )}
               />
             </div>
+
           </div>
 
           <button

@@ -31,3 +31,5 @@ export const getConfig = (): AppConfig => {
   }
   return config;
 };
+
+

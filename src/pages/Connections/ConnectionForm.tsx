@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
+import { saveConnection, getDistrictNameByCode, checkConsumerNumberExists, fetchDistricts, fetchTalukas, fetchVillages, 
+  fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType, fetchConsumerData } from '../../services/customerRequisitionService';
 import { ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import MapPreview from '../../components/MapPreview';
 import ReusableDropdown from "../../components/ReusableDropdown";
-
-import {
-  UserCircleIcon,
-  BoltIcon,
-  HomeModernIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/solid";
+import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon, } from "@heroicons/react/24/solid";
 
 interface District {
   code: number;
@@ -147,7 +142,7 @@ export const ConnectionForm = () => {
 
   const [districtCode, setDistrictCode] = useState<number>(0);
   const [talukaCode, setTalukaCode] = useState<number>(0);
-  const [pinCode, setPinCode] = useState<string>("");
+  const [, setPinCode] = useState<string>("");
   const [villageCode, setVillageCode] = useState<number>(0);
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
@@ -163,11 +158,9 @@ export const ConnectionForm = () => {
   const [confirmConsumerNumber, setConfirmConsumerNumber] = useState("");
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
 
-  const [showConsumerNumber, setShowConsumerNumber] = useState(false);
-  const handleToggleConsumerNumber = () => setShowConsumerNumber(!showConsumerNumber);
 
-  const [navigateAfterClose, setNavigateAfterClose] = useState(false);
-  const [createdConnectionId, setCreatedConnectionId] = useState<number | null>(null);
+  const [, setNavigateAfterClose] = useState(false);
+  const [, setCreatedConnectionId] = useState<number | null>(null);
 
   const [showMapPreview, setShowMapPreview] = useState(false);
 
@@ -193,15 +186,21 @@ export const ConnectionForm = () => {
     addressLine1: "",
     addressLine2: "",
     villageCode: 0,
+    districtCode: 0,
+    talukaCode: 0,
     pinCode: "",
     isNameCorrection: "No",
-    correctionTypeId: null,
+    correctionTypeId: null as number | null,
     avgMonthlyConsumption: "",
     discomId: "",
     isActive: true,
     isOnboardedCustomers: false,
+    correctionType: "",
+    isGharkulCustomer: "No",
+    gharkulNumber: "",
   });
 
+  const numberFields = ["connectionTypeId", "addressTypeId", "villageCode", "phaseTypeId", "discomId"];
 
   const validateForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -228,6 +227,10 @@ export const ConnectionForm = () => {
 
     if (formData.isNameCorrection === "Yes" && !formData.correctionTypeId) {
       errors.push("Please select a correction type.");
+    }
+
+    if (formData.isGharkulCustomer === "Yes" && !formData.gharkulNumber) {
+      errors.push("Please provide gharkul number.");
     }
 
     if (!formData.billedTo) {
@@ -314,26 +317,8 @@ export const ConnectionForm = () => {
     }));
   };
 
-  ///////////////////////////////////////////////////////////
-  // useEffect(() => {
-  //   const savedForm = localStorage.getItem('connectionFormData');
-  //   const savedConfirmConsumerNumber = localStorage.getItem("confirmConsumerNumber");
-  //   if (savedForm) {
-  //     setFormData(JSON.parse(savedForm));
-  //   }
-
-  //   if (savedConfirmConsumerNumber) {
-  //     setConfirmConsumerNumber(savedConfirmConsumerNumber);
-  //   }
-  // }, []);
-  ///////////////////////////////////////////////////////////
 
 
-  useEffect(() => {
-    if (govIdName) {
-      setFormData((prev) => ({ ...prev, billedTo: govIdName }));
-    }
-  }, [govIdName]);
 
   useEffect(() => {
     const checkConsumerIdExists = async () => {
@@ -346,6 +331,18 @@ export const ConnectionForm = () => {
     };
     checkConsumerIdExists();
   }, [formData.consumerId]);
+
+  const handleGharkulChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      isGharkulCustomer: value,
+      gharkulNumber: value === "Yes" ? prev.gharkulNumber : "",
+    }));
+  };
+
+
 
 
   useEffect(() => {
@@ -452,105 +449,198 @@ export const ConnectionForm = () => {
     loadCorrectionTypes();
   }, []);
 
-
-
-
-
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-  const { name, value } = e.target;
-
-  if (name === "isDiscomConsumer" && value === "No") {
-    setConfirmConsumerNumber("");
-  }
-
-  if (name === 'consumerId' && value === '') {
-    setConfirmConsumerNumber('');
-  }
-
-  if (name === 'consumerId') {
-    if (value !== confirmConsumerNumber) {
-      setConfirmConsumerNumber('');
+    useEffect(() => {
+    if (govIdName) {
+      setFormData((prev) => ({ ...prev, billedTo: govIdName }));
     }
+  }, [govIdName]);
 
-    checkConsumerNumberExists(value).then((exists) => {
-      setConsumerNumberExists(exists);
-      if (exists) {
-        setConfirmConsumerNumber('');
-      }
-    });
-  }
-
-  // Real-time validation
-  if (name === 'consumerId') {
-    if (value === '') {
-      setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
-    } else {
-      validateFieldOnChange('consumerNumber', value);
-    }
-  } else if (name === 'gstIn') {
-    validateFieldOnChange('gstIn', value);
-  } else if (name === 'billedTo') {
-    validateFieldOnChange('billedTo', value);
-  } else if (name === 'addressLine1') {
-    validateFieldOnChange('addressLine1', value);
-  } else if (name === 'addressLine2') {
-    validateFieldOnChange('addressLine2', value);
-  } else if (name === 'avgMonthlyConsumption') {
-    validateFieldOnChange('avgMonthlyConsumption', value);
-  } else if (name === 'latitude') {
-    validateFieldOnChange('latitude', value);
-  } else if (name === 'longitude') {
-    validateFieldOnChange('longitude', value);
-  } else if (name === 'discomId') {
-    validateFieldOnChange('discomId', value);
-  } else if (name === 'pinCode') {
-    validateFieldOnChange('pinCode', value);
-  }
-
-  if (name === "connectionTypeId") {
-    const selectedType = connectionTypes.find(type => type.id === Number(value));
-    const isHT = selectedType?.nameEn?.toLowerCase().includes("ht");
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      phaseTypeId: isHT ? 2 : 1, 
-      ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-    }));
-
-    // Save to localStorage
-    // setTimeout(() => {
-    //   localStorage.setItem("connectionFormData", JSON.stringify({
-    //     ...formData,
-    //     [name]: value,
-    //     phaseTypeId: isHT ? 2 : 1,
-    //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-    //   }));
-    // }, 0);
-
-    return; 
-  }
-
-
+  const resetConsumerAutoFill = () => {
   setFormData((prev) => ({
     ...prev,
-    [name]: value,
-    ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+    latitude: "",
+    longitude: "",
+    districtCode: 0,
+    talukaCode: 0,
+    villageCode: 0,
+    addressLine1: "",
+    avgMonthlyConsumption: "",
+    discomId: "",
+    billedTo: govIdName || "",
   }));
-
-
-  // setTimeout(() => {
-  //   localStorage.setItem("connectionFormData", JSON.stringify({
-  //     ...formData,
-  //     [name]: value,
-  //     ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
-  //   }));
-  // }, 0);
+  setDistrictCode(0);
+  setTalukaCode(0);
+  setVillageCode(0);
+  setPinCode("");
 };
 
 
-  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  useEffect(() => {
+  const isValidConsumerNumber = /^[0-9]{12}$/.test(formData.consumerId);
+  const isConfirmed =
+    confirmConsumerNumber === formData.consumerId &&
+    confirmConsumerNumber !== "";
+
+  const shouldFetch =
+    formData.isDiscomConsumer === "Yes" &&
+    isValidConsumerNumber &&
+    isConfirmed &&
+    !consumerNumberExists;
+
+  if (!shouldFetch) {
+    resetConsumerAutoFill();
+    return;
+  }
+
+  // 🟢 FETCH when conditions are correct
+  const fetchData = async () => {
+    try {
+      const data = await fetchConsumerData(Number(confirmConsumerNumber));
+
+      if (!data || Object.keys(data).length === 0) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        latitude: data.latitude?.toString() || "",
+        longitude: data.longitude?.toString() || "",
+        districtCode: data.districtCode || 0,
+        talukaCode: data.talukaCode || 0,
+        villageCode: data.villageCode || 0,
+        addressLine1: data.address || "",
+        avgMonthlyConsumption: data.avgConsumption?.toString() || "",
+        discomId: data.bu?.toString() || "",
+        billedTo: data.consumerName ?? govIdName ?? ""
+
+      }));
+    } catch (err) {
+      console.error("Failed to fetch consumer data", err);
+    }
+  };
+
+  fetchData();
+}, [
+  confirmConsumerNumber,
+  formData.consumerId,
+  formData.isDiscomConsumer,
+  consumerNumberExists,
+]);
+
+useEffect(() => {
+  if (formData.districtCode) {
+    setDistrictCode(formData.districtCode);
+  }
+
+  if (formData.talukaCode) {
+    setTalukaCode(formData.talukaCode);
+  }
+
+  if (formData.villageCode) {
+    setVillageCode(formData.villageCode);
+  }
+
+}, [
+  formData.districtCode,
+  formData.talukaCode,
+  formData.villageCode,
+
+]);
+
+useEffect(() => {
+  if (!villageCode || villages.length === 0) return;
+
+  const selectedVillage = villages.find(
+    (v) => v.code === villageCode
+  );
+
+  if (!selectedVillage) return;
+
+  const pin = String(selectedVillage.pinCode || "");
+
+  setPinCode(pin);
+  setFormData((prev) => ({
+    ...prev,
+    pinCode: pin,
+  }));
+}, [villageCode, villages]);
+
+
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    if (name === "isDiscomConsumer" && value === "No") {
+      setConfirmConsumerNumber("");
+    }
+
+    if (name === 'consumerId' && value === '') {
+      setConfirmConsumerNumber('');
+    }
+
+    if (name === 'consumerId') {
+      if (value !== confirmConsumerNumber) {
+        setConfirmConsumerNumber('');
+      }
+
+      checkConsumerNumberExists(value).then((exists) => {
+        setConsumerNumberExists(exists);
+        if (exists) {
+          setConfirmConsumerNumber('');
+        }
+      });
+    }
+
+    // Real-time validation
+    if (name === 'consumerId') {
+      if (value === '') {
+        setFieldErrors((prev) => ({ ...prev, consumerNumber: '' }));
+      } else {
+        validateFieldOnChange('consumerNumber', value);
+      }
+    } else if (name === 'gstIn') {
+      validateFieldOnChange('gstIn', value);
+    } else if (name === 'billedTo') {
+      validateFieldOnChange('billedTo', value);
+    } else if (name === 'addressLine1') {
+      validateFieldOnChange('addressLine1', value);
+    } else if (name === 'addressLine2') {
+      validateFieldOnChange('addressLine2', value);
+    } else if (name === 'avgMonthlyConsumption') {
+      validateFieldOnChange('avgMonthlyConsumption', value);
+    } else if (name === 'latitude') {
+      validateFieldOnChange('latitude', value);
+    } else if (name === 'longitude') {
+      validateFieldOnChange('longitude', value);
+    } else if (name === 'discomId') {
+      validateFieldOnChange('discomId', value);
+    } else if (name === 'pinCode') {
+      validateFieldOnChange('pinCode', value);
+    }
+
+    if (name === "connectionTypeId") {
+      const selectedType = connectionTypes.find(type => type.id === Number(value));
+      const isHT = selectedType?.nameEn?.toLowerCase().includes("ht");
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Number(value),   // FIX HERE
+        phaseTypeId: isHT ? 2 : 1,
+      }));
+
+      return;
+    }
+
+    // Generic state update (supports string + number)
+    setFormData((prev) => ({
+      ...prev,
+      [name]: numberFields.includes(name) ? Number(value) : value,
+      ...(name === "isDiscomConsumer" && value === "No" ? { consumerId: "" } : {}),
+    }));
+
+  };
+
+
+  const handleDistrictChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setDistrictCode(value);
     setTalukaCode(0);
     setVillageCode(0);
@@ -566,8 +656,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     }));
   };
 
-  const handleTalukaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleTalukaChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     setTalukaCode(value);
 
     setVillageCode(0);
@@ -581,8 +671,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
+  const handleVillageChange = (value: number) => {
+    //const value = parseInt(e.target.value, 10);
     const selectedVillage = villages.find((village) => village.code === value);
 
     if (selectedVillage) {
@@ -591,7 +681,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
       setFormData((prev) => ({
         ...prev,
         villageCode: value,
-        pinCode: selectedVillage.pinCode,
+        pinCode: String(selectedVillage.pinCode || ""),
       }));
     }
   };
@@ -604,7 +694,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   };
 
 
-  const handleNameCorrection = (e) => {
+  const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -639,8 +729,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
       return;
     }
 
-
-
     const isDiscomConsumer = formData.isDiscomConsumer === "Yes";
 
     const connectionData = {
@@ -649,6 +737,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
       isDiscomConsumer,
       isNameCorrectionRequired: formData.isNameCorrection === "Yes",
       correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
+      isGharkulCustomer: formData.isGharkulCustomer === "Yes",
+      gharkulNumber: formData.isGharkulCustomer ==="Yes" ? formData.gharkulNumber : null,
       phaseTypeId: formData.phaseTypeId,
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
@@ -658,10 +748,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
       gstIn: formData.gstIn.trim() === "" ? null : formData.gstIn.trim(),
       latitude: formData.latitude,
       longitude: formData.longitude,
-
       billedTo: formData.billedTo,
       addressLine1: formData.addressLine1,
-      addressLine2: formData.addressLine2,
+      addressLine2: formData.addressLine2 || null,
       discomId: formData.discomId,
       isActive: formData.isActive,
       isOnboardedCustomers: formData.isOnboardedCustomers,
@@ -718,24 +807,23 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   return (
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
-              {/* Back Arrow */}
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="p-2 rounded-full hover:bg-gray-200 transition"
-              >
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
 
-              <h1 className="text-2xl font-bold text-gray-700">Add New Connection</h1>
-            </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Back Arrow */}
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
+            <h1 className="text-xl font-bold text-gray-700">Add New Connection</h1>
           </div>
+
         </div>
+
 
         {/* Progress Steps */}
         <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
@@ -801,15 +889,17 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
           {/* Connection Status Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
               <BoltIcon className="w-5 h-5 text-blue-500" />
               Connection Status
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Does the customer currently have an active grid connection?
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="sm:hidden">Is active grid connection?</span> {/* Mobile */}
+                  <span className="hidden sm:inline">Does the customer currently have an active grid connection?</span> {/* Desktop */}
                 </label>
+
                 <div className="flex items-center space-x-6">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -840,9 +930,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
           {/* Consumer Information Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
               <UserCircleIcon className="w-5 h-5 text-green-500" />
-              Consumer Information
+              Connection Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -948,6 +1038,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     value: type.id,
                     label: type.nameEn,
                   }))}
+                  required={formData.isDiscomConsumer === "Yes"}    // <-- add this
+                  disabled={formData.isDiscomConsumer === "No"}
                 />
               </div>
 
@@ -1042,7 +1134,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
           {/* Business Information Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
               <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
@@ -1074,7 +1166,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Billed To <span className="text-red-500">*</span>
+                  Name on Electricity Bill <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1097,7 +1189,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
           {/* Address Information Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1">
               <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1121,33 +1213,19 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   District <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="district"
-                  value={districtCode}
-                  onChange={handleDistrictChange}
-                  required
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{districtName || "Select District"}</option>
-                  {districts.map((district) => (
-                    <option key={district.nameEnglish} value={district.code}>
-                      {district.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
-
                 <ReusableDropdown
-                  name="district"
+                  name="districtCode"
                   value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  onChange={(val) => handleDistrictChange(Number(val))}
                   options={[
-                    { value: 0, label: districtName || "Select District" },
+                    { value: 0, label: "Select District" },
                     ...districts.map((district) => ({
                       value: district.code,
                       label: district.nameEnglish,
                     })),
                   ]}
                   placeholder={districtName || "Select District"}
+                  required
                   className="w-full"
                 />
 
@@ -1157,32 +1235,19 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Taluka <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="talukaCode"
-                  value={talukaCode}
-                  onChange={handleTalukaChange}
-                  required
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{talukaName || "Select Taluka"}</option>
-                  {talukas.map((taluka) => (
-                    <option key={taluka.nameEnglish} value={taluka.code}>
-                      {taluka.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  onChange={(val) => handleTalukaChange(Number(val))}
                   options={[
-                    { value: 0, label: talukaName || "Select Taluka" },
+                    { value: 0, label: "Select Taluka" },
                     ...talukas.map((taluka) => ({
                       value: taluka.code,
                       label: taluka.nameEnglish,
                     })),
                   ]}
                   placeholder={talukaName || "Select Taluka"}
+                  required
                   className="w-full"
                 />
 
@@ -1190,32 +1255,20 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Village
+                  Village <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="villageCode"
-                  value={villageCode}
-                  onChange={handleVillageChange}
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value={0}>{villageName || "Select Village"}</option>
-                  {villages.map((village) => (
-                    <option key={village.code} value={village.code}>
-                      {village.nameEnglish}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  onChange={(val) => handleVillageChange(Number(val))}
                   options={[
-                    { value: 0, label: villageName || "Select Village" },
+                    { value: 0, label: "Select Village" },
                     ...villages.map((village) => ({
                       value: village.code,
                       label: village.nameEnglish,
                     })),
                   ]}
+                  required
                   placeholder={villageName || "Select Village"}
                   className="w-full"
                 />
@@ -1270,6 +1323,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     value: type.id,
                     label: type.nameEn,
                   }))}
+                  required
                 />
 
               </div>
@@ -1393,74 +1447,118 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
           {/* Name Correction Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Name Correction
-            </h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* LEFT SIDE – Gharkul Connection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h5v-6h4v6h5a1 1 0 001-1V10"
+                    />
+                  </svg>
+                  Gharkul Connection
+                </h3>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Is Gharkul Connection?
+                </label>
+
+                <div className="flex items-center space-x-5 mb-3">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isGharkulCustomer"
+                      value="Yes"
+                      onChange={handleGharkulChange}
+                      checked={formData.isGharkulCustomer === "Yes"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Yes</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="isGharkulCustomer"
+                      value="No"
+                      onChange={handleGharkulChange}
+                      checked={formData.isGharkulCustomer === "No"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+
+                {formData.isGharkulCustomer === "Yes" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Gharkul Number
+                    </label>
+                    <input
+                      type="text"
+                      name="gharkulNumber"
+                      value={formData.gharkulNumber || ""}
+                      onChange={handleChange}
+                      placeholder="Enter Gharkul Number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT SIDE – Name Correction */}
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Name Correction
+                </h3>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Does the connection require a name correction?
                 </label>
-                <div className="flex items-center space-x-5">
+
+                <div className="flex items-center space-x-5 mb-3">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
                       name="nameCorrection"
                       value="Yes"
                       onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       checked={formData.isNameCorrection === "Yes"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">Yes</span>
                   </label>
+
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="radio"
                       name="nameCorrection"
                       value="No"
                       onChange={handleNameCorrection}
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       checked={formData.isNameCorrection === "No"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">No</span>
                   </label>
                 </div>
-              </div>
 
-              {formData.isNameCorrection === "Yes" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Correction Type
-                  </label>
-                  {/* <select
-                    name="correctionTypeId"
-                    value={formData.correctionTypeId || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, correctionTypeId: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  >
-                    <option value="" disabled>Select an option</option>
-                    {correctionTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.nameEn}
-                      </option>
-                    ))}
-                  </select> */}
-
+                {formData.isNameCorrection === "Yes" && (
                   <ReusableDropdown
                     name="correctionTypeId"
                     value={formData.correctionTypeId || ""}
                     onChange={(val) =>
-                      setFormData((prev) => ({
+                      setFormData(prev => ({
                         ...prev,
-                        correctionTypeId: val ? Number(val) : "",
+                        correctionTypeId: val ? Number(val) : null,
                       }))
                     }
                     options={[
                       { value: "", label: "Select an option" },
-                      ...correctionTypes.map((type) => ({
+                      ...correctionTypes.map(type => ({
                         value: type.id,
                         label: type.nameEn,
                       })),
@@ -1468,12 +1566,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
                     placeholder="Select an option"
                     className="w-full"
                   />
-
-                </div>
-              )}
+                )}
+              </div>
 
             </div>
           </div>
+
 
           {/* Submit Button */}
           <div className="flex justify-center sm:justify-center space-x-3 pt-1">
@@ -1481,7 +1579,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="py-2 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+              className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
             >
               Cancel
             </button>
@@ -1489,7 +1587,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex justify-center px-3 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
+              className="w-full sm:w-auto inline-flex justify-center px-3 py-2.5 sm:px-5 sm:py-2.5 bg-blue-600 text-white font-semibold text-sm sm:text-base rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md truncate"
             >
               Save Connection
             </button>

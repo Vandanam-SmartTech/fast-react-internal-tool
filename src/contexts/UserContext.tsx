@@ -6,11 +6,13 @@ interface SelectedOrg {
   orgId?: string;
   orgName: string;
   role: string;
+  deptCode: number | null;
 }
 
 interface OrgRole {
   roles: string[];
   org_name: string;
+  dept_code: number | null;
 }
 
 interface UserClaims {
@@ -30,7 +32,7 @@ interface UserClaims {
 interface UserContextType {
   userClaims: UserClaims | null;
   loading: boolean;
-  refreshUserClaims: () => Promise<void>;
+  refreshUserClaims: () => Promise<UserClaims | null>;
   clearUserClaims: () => void;
   selectedOrg: SelectedOrg | null;
   setSelectedOrg: (org: SelectedOrg | null) => void;
