@@ -547,7 +547,7 @@ const OnboardedConsumers: React.FC = () => {
   );
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-2">
+    <div className="p-4 max-w-7xl mx-auto py-2">
 
       <div className="mb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -782,7 +782,7 @@ const OnboardedConsumers: React.FC = () => {
       </div>
 
 
-      <div className="mb-6 space-y-4">
+      <div className="space-y-4">
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
@@ -865,7 +865,7 @@ const OnboardedConsumers: React.FC = () => {
 
           {/* Pagination */}
           {renderPagination() && (
-            <div className="flex justify-center items-center mt-8 gap-2">
+            <div className="flex justify-center items-center mt-2 gap-2">
               {renderPagination()}
             </div>
           )}

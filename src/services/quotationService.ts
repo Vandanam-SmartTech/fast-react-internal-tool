@@ -296,7 +296,7 @@ export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
   const quotationAPI = getQuotationAPI();
 
   try {
-    const response = await quotationAPI.post(`/api/system-spec-package`, requestData);
+    const response = await quotationAPI.post(`/api/system-packages`, requestData);
     return response.data;
   } catch (error) {
     console.error("Error saving system specs:", error);

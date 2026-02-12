@@ -113,7 +113,7 @@ export const SystemSpecifications = () => {
   const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
   const [panelCapacities, setPanelCapacities] = useState<number[]>([]);
 
-  const [, setSystemCapacityKw] = useState<number | null>(null);
+  const [systemCapacityKw, setSystemCapacityKw] = useState<number | null>(null);
 
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
@@ -202,6 +202,11 @@ export const SystemSpecifications = () => {
   const consumerId = location.state?.consumerId;
   const customerId = location.state?.customerId;
 
+  const isGharkulUser =
+    userInfo?.role === "ROLE_BDO" ||
+    userInfo?.role === "ROLE_GRAMSEVAK";
+
+
 
   const formatIndianNumber = (value: number): string => {
     if (!value) return "";
@@ -209,7 +214,6 @@ export const SystemSpecifications = () => {
       maximumFractionDigits: 0,
     }).format(value);
   };
-
 
 
 
@@ -290,7 +294,12 @@ export const SystemSpecifications = () => {
         const data = await getConnectionByConnectionId(Number(connectionId));
         setConnectionDetails(data);
 
-        if (data?.phaseTypeId !== undefined && data?.phaseTypeId !== null && data?.avgMonthlyConsumption !== null && data?.connectionTypeName && data?.isGharkulCustomer) {
+        if (
+          data?.phaseTypeId != null &&
+          data?.avgMonthlyConsumption != null &&
+          data?.connectionTypeName != null &&
+          data?.isGharkulCustomer != null
+        ) {
           setPhaseTypeId(data.phaseTypeId);
           setAvgMonthlyConsumption(data.avgMonthlyConsumption);
           setConnectionType(data.connectionTypeName);
@@ -494,16 +503,18 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     const loadPanelBrandCapacities = async () => {
+
       if (
         phaseTypeId === null ||
         orgPanelSpecId === null ||
-        avgMonthlyConsumption === null ||
         materialOriginId === null
       ) {
+      
         return;
       }
 
       if (!formData.systemCapacityKw) {
+        
         setPanelCapacities([]);
         setSystemCapacityKw(null);
         setFormData((prev) => ({
@@ -513,16 +524,22 @@ export const SystemSpecifications = () => {
       }
 
       try {
-        const data = await fetchPanelBrandCapacities(phaseTypeId, orgPanelSpecId);
+      
+        const data = await fetchPanelBrandCapacities(
+          phaseTypeId,
+          orgPanelSpecId
+        );
+
         setPanelCapacities([...data]);
       } catch (error) {
-        console.error("Failed to fetch panel brand capacities:", error);
+        console.error("❌ Failed to fetch panel brand capacities:", error);
         setPanelCapacities([]);
       }
     };
 
     loadPanelBrandCapacities();
   }, [phaseTypeId, orgPanelSpecId, materialOriginId]);
+
 
 
 
@@ -1556,14 +1573,14 @@ export const SystemSpecifications = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      {/* <div
+    <div className="min-h-screen bg-gray-50 py-2">
+      <div
         className={`mx-auto px-4 sm:px-6 lg:px-8 ${isGharkulCustomer ? "max-w-7xl" : "max-w-4xl"
           }`}
-      > */}
-      <div
-        className={`mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl`}
       >
+        {/* <div
+        className={`mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl`}
+      > */}
         <div className="flex items-center gap-2 mb-2">
           <button
             onClick={() =>
@@ -1669,15 +1686,15 @@ export const SystemSpecifications = () => {
           </div>
         )}
 
-        {/* <div
+        <div
           className={`flex flex-col lg:flex-row gap-5 ${isGharkulCustomer ? "lg:items-start" : "lg:justify-center"
             }`}
-        > */}
-        <div
-          className={`flex flex-col lg:flex-row gap-5lg:justify-center`}
         >
-          
-          {/* {isGharkulCustomer && (
+          {/* <div
+          className={`flex flex-col lg:flex-row gap-5lg:justify-center`}
+        > */}
+
+          {isGharkulCustomer && (
             <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
               <h2 className="text-lg font-semibold text-gray-800 mb-2">
                 Standard Packages
@@ -1720,18 +1737,18 @@ export const SystemSpecifications = () => {
                 </div>
               </div>
             </div>
-          )} */}
+          )}
 
 
 
-          {/* <div
+          <div
             className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 ${isGharkulCustomer ? "lg:w-3/4" : ""
               }`}
-          > */}
-
-                    <div
-            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
           >
+
+            {/* <div
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
+          > */}
 
 
 
@@ -1998,6 +2015,7 @@ export const SystemSpecifications = () => {
                   }))}
                   placeholder="Select Grid Type"
                   className="mt-1"
+                  disabled={isGharkulUser}
                 />
               </div>
 
@@ -2021,6 +2039,7 @@ export const SystemSpecifications = () => {
                   }))}
                   placeholder="Select Material Origin Type"
                   className="mt-1"
+                  disabled={isGharkulUser}
                 />
               </div>
 
@@ -2052,9 +2071,9 @@ export const SystemSpecifications = () => {
                       label,
                     };
                   })}
-
+                  disabled={isGharkulUser || !materialOriginId}
                   placeholder="Select PV System Brand"
-                  className={`mt-1 ${!materialOriginId ? "opacity-60 pointer-events-none" : ""}`}
+
                 />
               </div>
 
@@ -2076,7 +2095,8 @@ export const SystemSpecifications = () => {
                     label: `${panelCapacity} kW`,
                   }))}
                   placeholder="Select PV System Capacity"
-                  className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+                  disabled={!materialOriginId || !orgPanelSpecId || isGharkulUser}
+
                 />
               </div>
 
@@ -2093,11 +2113,12 @@ export const SystemSpecifications = () => {
                       type="button"
                       onClick={addNewInverter}
                       disabled={
-                        formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false
+                        isGharkulUser || (formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false)
                       }
-                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap
-      ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
-                          ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap border rounded-md shadow-sm
+      ${isGharkulUser ||
+                          formData.inverters?.some((inv) => !inv.orgInverterSpecId)
+                          ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
                           : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                     >
@@ -2115,10 +2136,16 @@ export const SystemSpecifications = () => {
                         <button
                           type="button"
                           onClick={() => removeInverter(index)}
-                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                          disabled={isGharkulUser}
+                          className={`absolute top-2 right-2 transition
+    ${isGharkulUser
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-red-600 hover:text-red-800"
+                            }`}
                         >
                           ✕
                         </button>
+
                       )}
 
                       {/* Inverter Brand */}
@@ -2135,6 +2162,7 @@ export const SystemSpecifications = () => {
                             label: inv.inverterBrandName,
                           }))}
                           placeholder="Select Inverter Brand"
+                          disabled={isGharkulUser}
                         />
                       </div>
 
@@ -2162,7 +2190,7 @@ export const SystemSpecifications = () => {
                               label,
                             };
                           })}
-                          disabled={!inv.inverterBrandId}
+                          disabled={!inv.inverterBrandId || isGharkulUser}
                           placeholder="Select Inverter Spec"
                         />
                       </div>
@@ -2173,13 +2201,14 @@ export const SystemSpecifications = () => {
                         <div className="flex items-center border rounded-md shadow-sm bg-white">
                           <button
                             type="button"
-                            disabled={(inv.inverterCount ?? 1) <= 1}
+                            disabled={isGharkulUser || ((inv.inverterCount ?? 1) <= 1)}
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(inv.inverterCount ?? 1) <= 1
-                              ? "text-gray-300 bg-gray-100 cursor-not-allowed"
-                              : "text-gray-600 hover:text-white hover:bg-red-500"
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md  border-gray-300 transition
+    ${isGharkulUser || (inv.inverterCount ?? 1) <= 1
+                                ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                                : "text-gray-600 hover:text-white hover:bg-red-500"
                               }`}
                           >
                             −
@@ -2194,15 +2223,20 @@ export const SystemSpecifications = () => {
                               const value = Math.max(Number(e.target.value) || 1, 1);
                               handleInverterChange(index, "inverterCount", value);
                             }}
-                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full text-center border-x p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
 
                           <button
                             type="button"
+                            disabled={isGharkulUser}
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
                             }
-                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                            className={`px-3 py-2 text-lg font-bold rounded-r-md transition border-gray-300
+    ${isGharkulUser
+                                ? "text-gray-300 bg-gray-100 cursor-not-allowed "
+                                : "text-gray-600 hover:text-white hover:bg-green-500"
+                              }`}
                           >
                             +
                           </button>
@@ -2237,6 +2271,7 @@ export const SystemSpecifications = () => {
                       }))}
                       placeholder="Select Battery Brand"
                       className="mt-1"
+                      disabled={isGharkulUser}
                     />
 
                   </div>
@@ -2273,7 +2308,7 @@ export const SystemSpecifications = () => {
                           label,
                         };
                       })}
-
+                      disabled={isGharkulUser}
                       placeholder="Select Battery Capacity"
                       className="mt-1"
                     />
@@ -2292,10 +2327,10 @@ export const SystemSpecifications = () => {
                       type="button"
                       onClick={addNewPipe}
                       disabled={
-                        formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false
+                        isGharkulUser || (formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false)
                       }
-                      className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
-                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      className={`px-4 py-2 text-sm font-medium border rounded-md shadow-sm transition ${isGharkulUser || formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
+                        ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
                         : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                     >
@@ -2312,7 +2347,12 @@ export const SystemSpecifications = () => {
                         <button
                           type="button"
                           onClick={() => removePipe(index)}
-                          className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                          disabled={isGharkulUser}
+                          className={`absolute top-2 right-2 transition
+    ${isGharkulUser
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-red-600 hover:text-red-800"
+                            }`}
                         >
                           ✕
                         </button>
@@ -2336,7 +2376,7 @@ export const SystemSpecifications = () => {
                             value: p.id,
                             label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
                           }))}
-
+                          disabled={isGharkulUser}
                           placeholder="Select Pipe Specification"
                         />
                       </div>
@@ -2347,11 +2387,11 @@ export const SystemSpecifications = () => {
                         <div className="flex items-center border rounded-md shadow-sm bg-white">
                           <button
                             type="button"
-                            disabled={(pipe.pipeCount ?? 1) <= 1}
+                            disabled={isGharkulUser || (pipe.pipeCount ?? 1) <= 1}
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition ${(pipe.pipeCount ?? 1) <= 1
+                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition border-gray-300 ${(pipe.pipeCount ?? 1) <= 1
                               ? "text-gray-300 bg-gray-100 cursor-not-allowed"
                               : "text-gray-600 hover:text-white hover:bg-red-500"
                               }`}
@@ -2373,10 +2413,15 @@ export const SystemSpecifications = () => {
 
                           <button
                             type="button"
+                            disabled={isGharkulUser}
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
                             }
-                            className="px-3 py-2 text-lg font-bold text-gray-600 hover:text-white hover:bg-green-500 rounded-r-md transition"
+                            className={`px-3 py-2 text-lg font-bold rounded-r-md transition border-gray-300
+    ${isGharkulUser
+                                ? "text-gray-300 bg-gray-100 cursor-not-allowed "
+                                : "text-gray-600 hover:text-white hover:bg-green-500"
+                              }`}
                           >
                             +
                           </button>
@@ -2401,7 +2446,8 @@ export const SystemSpecifications = () => {
                       name="hasWaterSprinkler"
                       checked={formData.hasWaterSprinkler || false}
                       onChange={handleChange}
-                      className="h-5 w-5 text-blue-600"
+                      disabled={isGharkulUser}
+                      className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="text-base text-gray-800">Water Sprinkler System</span>
                   </label>
@@ -2412,7 +2458,8 @@ export const SystemSpecifications = () => {
                       name="hasHeavydutyRamp"
                       checked={formData.hasHeavydutyRamp || false}
                       onChange={handleChange}
-                      className="h-5 w-5 text-blue-600"
+                      disabled={isGharkulUser}
+                      className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="text-base text-gray-800">Heavy Duty Ramp</span>
                   </label>
@@ -2423,7 +2470,9 @@ export const SystemSpecifications = () => {
                       name="hasHeavydutyStairs"
                       checked={formData.hasHeavydutyStairs || false}
                       onChange={handleChange}
-                      className="h-5 w-5 text-blue-600"
+                      disabled={isGharkulUser}
+                      className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+
                     />
                     <span className="text-base text-gray-800">Heavy Duty Stairs</span>
                   </label>
@@ -2468,7 +2517,13 @@ export const SystemSpecifications = () => {
                           systemCost: rawValue,
                         });
                       }}
-                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      disabled={isGharkulUser}   // ✅ disable condition
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
+      ${isGharkulUser
+                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
+                          : "focus:border-blue-500 focus:ring-blue-500"
+                        }
+    `}
                       placeholder="Solar System Cost"
                     />
                   </div>
@@ -2496,7 +2551,13 @@ export const SystemSpecifications = () => {
                           fabricationCost: rawValue,
                         });
                       }}
-                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      disabled={isGharkulUser}   // ✅ disable condition
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
+      ${isGharkulUser
+                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
+                          : "focus:border-blue-500 focus:ring-blue-500"
+                        }
+    `}
                       placeholder="Fabrication Cost"
                     />
                   </div>
@@ -2510,7 +2571,13 @@ export const SystemSpecifications = () => {
                       name="totalCost"
                       value={formatIndianNumber(formData.totalCost)}
                       readOnly
-                      className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      disabled={isGharkulUser}   // ✅ disable condition
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
+      ${isGharkulUser
+                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
+                          : "focus:border-blue-500 focus:ring-blue-500"
+                        }
+    `}
                       placeholder="Total Cost"
                     />
                   </div>
