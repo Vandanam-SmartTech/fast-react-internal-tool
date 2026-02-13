@@ -5,7 +5,7 @@
   "VITE_QUOTATION_API": "https://dev.vandanam.co.in/quotation",
   "VITE_DOCGENERATOR_API": "https://dev.vandanam.co.in/document-generator",
   "VITE_DOCMANAGER_API": "https://dev.vandanam.co.in/document-manager",
-  "BASE_PATH": "/solarprov2/",
+  "BASE_PATH": "/solarpro/",
   "VITE_MODE": "development",
   "VITE_ENV_LABEL": "Development"
 }

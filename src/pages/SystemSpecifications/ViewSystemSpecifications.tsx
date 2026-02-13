@@ -7,10 +7,10 @@ import {
     HomeModernIcon,
     Cog6ToothIcon,
 } from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, generateQuotationPDF } from "../../services/quotationService";
+import { getSavedSystemSpecs, generateQuotationPDF, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
 import { uploadDocuments } from "../../services/documentManagerService";
 import { toast } from "react-toastify";
-import { getConnectionByConnectionId } from "../../services/customerRequisitionService";
+import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
@@ -43,6 +43,10 @@ interface SystemSpec {
 
     batteryBrandName?: string;
     batteryCapacityKw?: number;
+    batteryCount?: number; // Added
+
+    title?: string; // Added
+    panelCount?: number; // Added
 
     inverters?: Inverter[];
     pipes?: Pipe[];
@@ -55,6 +59,8 @@ interface SystemSpec {
     hasHeavydutyRamp?: boolean;
     hasHeavydutyStairs?: boolean;
 }
+
+
 
 export const ViewSystemSpecifications = () => {
     const location = useLocation();
@@ -74,6 +80,11 @@ export const ViewSystemSpecifications = () => {
     const [orgId, setOrgId] = useState<number | null>(null);
     const [agencyId, setAgencyId] = useState<number | null>(null);
     const [govIdName, setGovIdName] = useState("");
+
+    // New State for System Packages
+    const [panelSpecs, setPanelSpecs] = useState<any[]>([]);
+    const [selectedPanelSpecId, setSelectedPanelSpecId] = useState<number | null>(null);
+    const [stdSpecPackages, setStdSpecPackages] = useState<any[]>([]);
 
     const tabs = [
         "Customer Details",
@@ -147,7 +158,94 @@ export const ViewSystemSpecifications = () => {
         };
 
         fetchConnection();
+        fetchConnection();
     }, [connectionId]);
+
+    // Fetch Panel Specs when Org ID is available
+    useEffect(() => {
+        const loadPanelSpecs = async () => {
+            if (orgId) {
+                try {
+                    const specs = await fetchSelectedPanelSpecs(orgId);
+                    setPanelSpecs(specs || []);
+                } catch (error) {
+                    console.error("Failed to fetch panel specs", error);
+                }
+            }
+        };
+        loadPanelSpecs();
+    }, [orgId]);
+
+    // Fetch System Packages when a panel is selected
+    useEffect(() => {
+        const fetchPackages = async () => {
+            if (orgId && selectedPanelSpecId) {
+                try {
+                    setLoading(true);
+                    // Assuming isGharkulCustomer is boolean, default to false if null
+                    const isGharkul = !!isGharkulCustomer;
+
+                    // Note: ensure phaseTypeId is passed if needed, otherwise ignore or pass 0/null
+                    const packages = await getSystemPackagesWithSpecs(isGharkul, orgId, selectedPanelSpecId);
+                    console.log("Params: ", isGharkulCustomer, orgId, selectedPanelSpecId);
+                    // Map API response to SystemSpec interface
+                    const mappedSpecs: SystemSpec[] = packages.map((pkg: any) => {
+                        const specs = pkg.systemSpecs || {};
+                        return {
+                            id: pkg.id || specs.id || Math.random(), // Use package ID primarily
+                            connectionId: Number(connectionId),
+                            isRunningCopy: false, // These are templates
+
+                            title: pkg.title,
+                            panelBrandShortName: specs.panelBrandShortName,
+                            panelRatedWattageW: specs.panelRatedWattageW || specs.panelRatedWattage,
+                            systemCapacityKw: specs.systemCapacityKw,
+                            panelCount: specs.panelCount,
+
+                            systemCost: specs.systemCost,
+                            fabricationCost: specs.fabricationCost,
+                            totalCost: (specs.systemCost || 0) + (specs.fabricationCost || 0),
+
+                            batteryBrandName: specs.batteryBrandName,
+                            batteryCount: specs.batteryCount,
+                            batteryCapacityKw: specs.batteryCapacityKw,
+
+                            inverters: specs.inverters?.map((inv: any) => ({
+                                inverterBrandName: inv.inverterBrandName,
+                                inverterCount: inv.inverterCount,
+                                inverterCapacity: inv.inverterCapacity || 0,
+                                gridTypeName: inv.gridTypeName || ""
+                            })) || [],
+
+                            pipes: specs.pipes?.map((p: any) => ({
+                                pipeBrandName: p.pipeBrandName,
+                                pipeCount: p.pipeCount
+                            })) || [],
+
+                            installationStructureType: specs.installationStructureType,
+                            createdAt: specs.createdAt || new Date().toISOString(),
+                        };
+                    });
+
+                    setAllSpecs(mappedSpecs);
+                    if (mappedSpecs.length > 0) {
+                        setSelectedSpec(mappedSpecs[0]);
+                    } else {
+                        setSelectedSpec(null);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch system packages", error);
+                    toast.error("Failed to load system packages.");
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        if (selectedPanelSpecId) {
+            fetchPackages();
+        }
+    }, [selectedPanelSpecId, orgId, isGharkulCustomer, phaseTypeId, connectionId]);
 
     const formatIndianNumber = (value?: number) => {
         if (value === undefined || value === null) return "N/A";
@@ -230,7 +328,6 @@ export const ViewSystemSpecifications = () => {
 
     if (loading) return <div className="p-8 text-center">Loading...</div>;
 
-    if (allSpecs.length === 0) return <div className="p-8 text-center">No system specifications found.</div>;
 
     return (
         <div className="min-h-screen bg-gray-50 py-4 pb-20">
@@ -320,53 +417,87 @@ export const ViewSystemSpecifications = () => {
 
                     {/* Left Column: Package List */}
                     <div className="w-full lg:w-2/3 space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Available Packages</h3>
-                        {allSpecs.map((spec) => (
-                            <div
-                                key={spec.id}
-                                onClick={() => setSelectedSpec(spec)}
-                                className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all ${selectedSpec?.id === spec.id
-                                    ? "border-blue-500 ring-2 ring-blue-100"
-                                    : "border-gray-200 hover:border-blue-300"
-                                    }`}
+
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Available List of Panels</label>
+                            <select
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={selectedPanelSpecId || ""}
+                                onChange={(e) => setSelectedPanelSpecId(Number(e.target.value))}
                             >
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedSpec?.id === spec.id ? "border-blue-600" : "border-gray-400"
-                                            }`}>
-                                            {selectedSpec?.id === spec.id && <div className="w-3 h-3 bg-blue-600 rounded-full" />}
+                                <option value="" disabled>Select a Panel</option>
+                                {panelSpecs.map((spec: any) => (
+                                    <option key={spec.id || spec.id} value={spec.id || spec.id}>
+                                        {spec.panelBrandName} - {spec.ratedWattageW}W - {spec.modelNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Available Packages</h3>
+                        {allSpecs.length === 0 ? (
+                            <div className="bg-white p-8 text-center text-gray-500 rounded-lg border border-dashed border-gray-300">
+                                Select a panel to see matching system packages.
+                            </div>
+                        ) : (
+                            allSpecs.map((spec) => (
+                                <div
+                                    key={spec.id}
+                                    onClick={() => setSelectedSpec(spec)}
+                                    className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all ${selectedSpec?.id === spec.id
+                                        ? "border-blue-500 ring-2 ring-blue-100"
+                                        : "border-gray-200 hover:border-blue-300"
+                                        }`}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedSpec?.id === spec.id ? "border-blue-600" : "border-gray-400"
+                                                }`}>
+                                                {selectedSpec?.id === spec.id && <div className="w-3 h-3 bg-blue-600 rounded-full" />}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-md font-bold text-gray-800">{spec.title || `${spec.systemCapacityKw} kW System`}</h4>
+                                                <p className="text-sm text-gray-500">{spec.panelBrandShortName} • {spec.installationStructureType || "Static"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-bold text-blue-600">₹ {formatIndianNumber((spec.systemCost || 0) + (spec.fabricationCost || 0))}</p>
+                                            <p className="text-xs text-gray-500">System Capacity: {spec.systemCapacityKw} kW</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Mini Details */}
+                                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs text-gray-600">
+                                        <div>
+                                            <span className="block text-gray-400">Panel Details</span>
+                                            {spec.panelBrandShortName} ({spec.panelCount || 0} x {spec.panelRatedWattageW}W)
                                         </div>
                                         <div>
-                                            <h4 className="text-md font-bold text-gray-800">{spec.systemCapacityKw} kW System</h4>
-                                            <p className="text-sm text-gray-500">{spec.panelBrandShortName} • {spec.installationStructureType || "Static"}</p>
+                                            <span className="block text-gray-400">Inverter Details</span>
+                                            {spec.inverters && spec.inverters.length > 0
+                                                ? `${spec.inverters[0].inverterBrandName} (${spec.inverters[0].inverterCount})`
+                                                : "None"}
+                                        </div>
+                                        <div>
+                                            <span className="block text-gray-400">Battery Details</span>
+                                            {spec.batteryBrandName
+                                                ? `${spec.batteryBrandName} (${spec.batteryCount || 0})`
+                                                : "None"}
+                                        </div>
+                                        <div>
+                                            <span className="block text-gray-400">Pipe Details</span>
+                                            {spec.pipes && spec.pipes.length > 0
+                                                ? `${spec.pipes[0].pipeBrandName} (${spec.pipes[0].pipeCount})`
+                                                : "None"}
+                                        </div>
+                                        <div>
+                                            <span className="block text-gray-400">Costs</span>
+                                            System: ₹{formatIndianNumber(spec.systemCost)} | Fab: ₹{formatIndianNumber(spec.fabricationCost)}
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-lg font-bold text-blue-600">₹ {formatIndianNumber((spec.systemCost || 0) + (spec.fabricationCost || 0))}</p>
-                                    </div>
                                 </div>
-
-                                {/* Mini Details */}
-                                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-gray-600">
-                                    <div>
-                                        <span className="block text-gray-400">Panel Wattage</span>
-                                        {spec.panelRatedWattageW} W
-                                    </div>
-                                    <div>
-                                        <span className="block text-gray-400">Inverters</span>
-                                        {spec.inverters?.length || 0} Units
-                                    </div>
-                                    <div>
-                                        <span className="block text-gray-400">Battery</span>
-                                        {spec.batteryBrandName || "None"}
-                                    </div>
-                                    <div>
-                                        <span className="block text-gray-400">Created</span>
-                                        {new Date(spec.createdAt).toLocaleDateString()}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     {/* Right Column: Checkout / Details */}
