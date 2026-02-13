@@ -10,6 +10,7 @@ import {
 import { getSavedSystemSpecs, generateQuotationPDF } from "../../services/quotationService";
 import { uploadDocuments } from "../../services/documentManagerService";
 import { toast } from "react-toastify";
+const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
 interface Inverter {
     inverterBrandName: string;
@@ -189,30 +190,28 @@ export const ViewSystemSpecifications = () => {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() =>
-                                navigate(`/system-specifications`, {
-                                    state: { consumerId, customerId, connectionId },
-                                })
+                                navigate(-1)
                             }
                             className="p-2 rounded-full hover:bg-gray-200 transition"
                         >
                             <ArrowLeft className="w-6 h-6 text-gray-700" />
                         </button>
-                        <h1 className="text-xl font-bold text-gray-700">Select System Package</h1>
+                        <h1 className="text-xl font-bold text-gray-700">System Configurations</h1>
                     </div>
 
-                    <button
+                    { userInfo?.role === "ROLE_ORG_ADMIN" && <button
                         onClick={handleAddPackage}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                         <Plus className="w-4 h-4" />
-                        Add New Solar Product
-                    </button>
+                        Customize Details
+                    </button> }
                 </div>
 
                 {/* Progress Steps */}
-                <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
+                {/*<div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
                     <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-                        {/* Connector Line */}
+                   
                         <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
                         <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
@@ -264,7 +263,7 @@ export const ViewSystemSpecifications = () => {
                             })}
                         </div>
                     </div>
-                </div>
+                </div>*/}
 
                 <div className="flex flex-col lg:flex-row gap-6">
 

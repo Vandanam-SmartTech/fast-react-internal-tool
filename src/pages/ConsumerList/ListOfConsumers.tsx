@@ -703,7 +703,7 @@ export const ListOfConsumers = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate(`/system-specifications`, {
+                      navigate(`/view-system-specifications`, {
                         state: {
                           connectionId: connection.id,
                           consumerId: connection.consumerId,

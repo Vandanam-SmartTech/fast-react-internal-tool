@@ -796,7 +796,7 @@ export const SystemSpecifications = () => {
       // ---------------------- REFRESH & SUCCESS ------------------------------
 
       // Navigate immediately to Preview System Specification
-      navigate("/preview-system-specification", {
+      navigate("/view-system-specifications", {
         state: {
           consumerId,
           connectionId,

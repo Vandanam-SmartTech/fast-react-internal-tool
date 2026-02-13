@@ -554,7 +554,7 @@ export const ViewCustomer = () => {
 
                         <button
                           onClick={() =>
-                            navigate(`/system-specifications`, {
+                            navigate(`/view-system-specifications`, {
                               state: {
                                 connectionId: connection.id,
                                 consumerId: connection.consumerId,

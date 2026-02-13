@@ -185,7 +185,7 @@ export const ViewConnection = () => {
 
 
   const handleSaveSpecs = () => {
-    navigate(`/system-specifications`, {
+    navigate(`/view-system-specifications`, {
       state: {
         connectionId: connectionId,
         consumerId: consumerId,
@@ -631,7 +631,7 @@ export const ViewConnection = () => {
             {/* Get Recommendation Button */}
             <button
               onClick={() =>
-                navigate(`/system-specifications`, {
+                navigate(`/view-system-specifications`, {
                   state: {
                     connectionId: connectionId,
                     consumerId: consumerId,
