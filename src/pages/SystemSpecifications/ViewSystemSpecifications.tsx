@@ -10,7 +10,10 @@ import {
 import { getSavedSystemSpecs, generateQuotationPDF } from "../../services/quotationService";
 import { uploadDocuments } from "../../services/documentManagerService";
 import { toast } from "react-toastify";
+import { getConnectionByConnectionId } from "../../services/customerRequisitionService";
+
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
+
 
 interface Inverter {
     inverterBrandName: string;
@@ -64,6 +67,13 @@ export const ViewSystemSpecifications = () => {
     const [requestingQuote, setRequestingQuote] = useState(false);
     const [uploadingQuote, setUploadingQuote] = useState(false);
     const [activeTab, setActiveTab] = useState("System Specifications");
+    const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
+    const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
+    const [, setConnectionDetails] = useState<any>(null);
+    const [connectionType, setConnectionType] = useState("");
+    const [orgId, setOrgId] = useState<number | null>(null);
+    const [agencyId, setAgencyId] = useState<number | null>(null);
+    const [govIdName, setGovIdName] = useState("");
 
     const tabs = [
         "Customer Details",
@@ -96,6 +106,47 @@ export const ViewSystemSpecifications = () => {
         };
 
         fetchSpecs();
+    }, [connectionId]);
+
+    useEffect(() => {
+        const fetchCustomer = async () => {
+            if (customerId) {
+                const data = await getCustomerById(Number(customerId));
+                setGovIdName(data?.govIdName || "");
+                setOrgId(data?.organizationId || null);
+                setAgencyId(data?.agencyId || null);
+            }
+        };
+        fetchCustomer();
+    }, [customerId]);
+
+    useEffect(() => {
+        const fetchConnection = async () => {
+            if (!connectionId) {
+                console.error("Connection ID not found!");
+                return;
+            }
+
+            try {
+                const data = await getConnectionByConnectionId(Number(connectionId));
+                setConnectionDetails(data);
+
+                if (data?.phaseTypeId !== null && data?.phaseTypeId !== null && data?.connectionTypeName && data?.isGharkulCustomer !== null) {
+                    setPhaseTypeId(data.phaseTypeId);
+                    setConnectionType(data.connectionTypeName);
+                    setIsGharkulCustomer(!!data?.isGharkulCustomer);
+                    console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
+                } else {
+                    setPhaseTypeId(null);
+                    setConnectionType("");
+                    setIsGharkulCustomer(false);
+                }
+            } catch (error) {
+                console.error("Failed to fetch connection details", error);
+            }
+        };
+
+        fetchConnection();
     }, [connectionId]);
 
     const formatIndianNumber = (value?: number) => {
@@ -199,13 +250,13 @@ export const ViewSystemSpecifications = () => {
                         <h1 className="text-xl font-bold text-gray-700">System Configurations</h1>
                     </div>
 
-                    { userInfo?.role === "ROLE_ORG_ADMIN" && <button
+                    {userInfo?.role === "ROLE_ORG_ADMIN" && <button
                         onClick={handleAddPackage}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                         <Plus className="w-4 h-4" />
                         Customize Details
-                    </button> }
+                    </button>}
                 </div>
 
                 {/* Progress Steps */}
