@@ -38,12 +38,6 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
-  useEffect(() => {
-    if (userInfo.orgId) {
-      loadOrganization(parseInt(userInfo.orgId));
-    }
-  }, [userInfo.orgId, loadOrganization]);
-
   const loadOrganization = useCallback(async (orgId: number) => {
     try {
       const org = await getOrganizationById(orgId);
@@ -56,6 +50,12 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (userInfo.orgId) {
+      loadOrganization(parseInt(userInfo.orgId));
+    }
+  }, [userInfo.orgId, loadOrganization]);
 
 
   const dashboardItems = useMemo(() => [
