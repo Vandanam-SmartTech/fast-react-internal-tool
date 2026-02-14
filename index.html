@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="preload" href="/Vandanam_Logo.png" as="image">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <title>Vandanam SmartTech</title>
     <style>
-      *{box-sizing:border-box;margin:0;padding:0}#root{min-height:100vh;display:flex;flex-direction:column}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.loading{display:flex;justify-content:center;align-items:center;height:100vh}
+      *{box-sizing:border-box;margin:0;padding:0}#root{min-height:100vh;display:flex;flex-direction:column}body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background:#f9fafb}.loading{display:flex;justify-content:center;align-items:center;height:100vh;background:#f9fafb}.spinner{width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="loading"><div class="spinner"></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

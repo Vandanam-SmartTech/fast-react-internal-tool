@@ -12,7 +12,6 @@ import PageNotFound from './pages/PageNotFound';
 import EnvBanner from './components/EnvBanner';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import 'leaflet/dist/leaflet.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ListOfConsumers = lazy(() => import('./pages/ConsumerList/ListOfConsumers').then(m => ({ default: m.ListOfConsumers })));
@@ -68,9 +67,11 @@ const AppContent: React.FC = () => {
   const showSidebar = !authPages.includes(location.pathname);
 
   const toggleSidebar = () => {
-    const newState = !sidebarOpen;
-    setSidebarOpen(newState);
-    localStorage.setItem('sidebarOpen', newState.toString());
+    setSidebarOpen(prev => {
+      const newState = !prev;
+      localStorage.setItem('sidebarOpen', newState.toString());
+      return newState;
+    });
   };
 
   useEffect(() => {
@@ -120,7 +121,7 @@ const AppContent: React.FC = () => {
         showSidebar && sidebarOpen ? 'md:ml-64' : ''
       }`}>
         <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-10 h-10 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div></div>}>
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />

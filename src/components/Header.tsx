@@ -7,6 +7,7 @@ import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
+import { loadCropperCSS } from '../utils/cssLoader';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -195,6 +196,7 @@ const Header: React.FC = () => {
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    loadCropperCSS();
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -428,6 +430,8 @@ const Header: React.FC = () => {
                       src={profilePhoto}
                       alt="User"
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
@@ -458,33 +462,36 @@ const Header: React.FC = () => {
                             src={profilePhoto}
                             alt="User"
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <User className="h-5 w-5 text-white" />
                         )}
                       </div>
 
-                      <div
-                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                        onClick={() => {
-                          if (profilePhoto) {
+                        <div
+                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                          onClick={() => {
+                            loadCropperCSS();
+                            if (profilePhoto) {
 
-                            setCrop({ x: 0, y: 0 });
-                            setZoom(1);
-                            setRotation(0);
-                            setCroppedAreaPixels(null);
+                              setCrop({ x: 0, y: 0 });
+                              setZoom(1);
+                              setRotation(0);
+                              setCroppedAreaPixels(null);
 
 
-                            setPreviewUrl(profilePhoto);
-                            setShowCropModal(true);
-                          } else {
+                              setPreviewUrl(profilePhoto);
+                              setShowCropModal(true);
+                            } else {
 
-                            document.getElementById("profile-file-input")?.click();
-                          }
-                        }}
-                      >
-                        <Camera className="w-5 h-5 text-white" />
-                      </div>
+                              document.getElementById("profile-file-input")?.click();
+                            }
+                          }}
+                        >
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
 
                       <input
                         id="profile-file-input"
