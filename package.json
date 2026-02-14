@@ -58,5 +58,8 @@
     "vite": "^6.3.5",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-imagemin": "^0.1.0"
+  },
+  "resolutions": {
+    "react": "18.3.1"
   }
 }

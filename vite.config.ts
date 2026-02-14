@@ -13,12 +13,12 @@ export default defineConfig({
     viteCompression({ algorithm: 'brotliCompress', threshold: 512, deleteOriginFile: false })
   ],
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'axios', 'react-leaflet', 'leaflet'],
-    exclude: [],
+    include: ['react', 'react-dom', 'react-router-dom', 'axios'],
+    exclude: ['react-leaflet', 'leaflet'],
     esbuildOptions: { target: 'es2020' }
   },
   resolve: {
-    dedupe: ['react', 'react-dom']
+    dedupe: ['react', 'react-dom', 'react-router-dom']
   },
   build: {
     modulePreload: { polyfill: false },
@@ -51,7 +51,7 @@ export default defineConfig({
         }
       },
       treeshake: {
-        moduleSideEffects: 'no-external',
+        moduleSideEffects: true,
         propertyReadSideEffects: false
       }
     },
