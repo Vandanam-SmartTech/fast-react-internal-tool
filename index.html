@@ -2,25 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/Vandanam_Logo.png" />
+    <link rel="icon" type="image/png" href="./Vandanam_Logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SolarPro - Solar Energy Management Platform" />
     <meta name="theme-color" content="#2563eb" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="modulepreload" href="/src/main.tsx" />
-    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin />
     <title>Vandanam SmartTech</title>
-    <style>*{box-sizing:border-box;margin:0;padding:0}#root{min-height:100vh;display:flex;flex-direction:column}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background:#f0f4f8}.loading{display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f4f8}.spinner{width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
-    <script>
-      window.__assetsPath=function(f){return'/'+f};
-      const i=new FontFace('Inter','url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2)',{weight:'400 700',display:'swap'});i.load().then(f=>document.fonts.add(f));
-    </script>
+    <style>*{box-sizing:border-box;margin:0;padding:0}#root{min-height:100vh}body{margin:0;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;background:#f0f4f8}.loading{display:flex;justify-content:center;align-items:center;height:100vh}.spinner{width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
+    <script>const i=new FontFace('Inter','url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2)',{weight:'400 700',display:'swap'});i.load().then(f=>document.fonts.add(f));</script>
   </head>
   <body>
     <div id="root"><div class="loading"><div class="spinner"></div></div></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
