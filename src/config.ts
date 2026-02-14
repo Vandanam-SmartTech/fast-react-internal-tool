@@ -14,11 +14,29 @@ let config: AppConfig | null = null;
 
 export const loadConfig = async (): Promise<void> => {
   try {
-    const response = await fetch(`${import.meta.env.BASE_URL}config.json`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    // Try multiple paths to find config.json
+    const paths = [
+      `${import.meta.env.BASE_URL}config.json`,
+      '/solarpro/config.json',
+      '/config.json'
+    ];
+    
+    let lastError: Error | null = null;
+    
+    for (const path of paths) {
+      try {
+        const response = await fetch(path);
+        if (response.ok) {
+          config = await response.json();
+          console.log('Config loaded from:', path);
+          return;
+        }
+      } catch (err) {
+        lastError = err as Error;
+      }
     }
-    config = await response.json();
+    
+    throw lastError || new Error('Failed to load config.json from any path');
   } catch (error) {
     console.error('Error loading config.json:', error);
     throw error;
