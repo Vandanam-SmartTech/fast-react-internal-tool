@@ -89,10 +89,5 @@ export default defineConfig({
     minifySyntax: true,
     minifyWhitespace: true,
     drop: ['console', 'debugger']
-  },
-  experimental: {
-    renderBuiltUrl(filename) {
-      return { runtime: `window.__assetsPath(${JSON.stringify(filename)})` };
-    }
   }
 });
