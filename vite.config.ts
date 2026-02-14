@@ -38,7 +38,7 @@ export default defineConfig({
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('react-toastify')) return 'vendor-toast';
             if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
-            if (id.includes('leaflet')) return 'vendor-maps';
+            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-maps';
             if (id.includes('axios')) return 'vendor-http';
             return 'vendor-misc';
           }
