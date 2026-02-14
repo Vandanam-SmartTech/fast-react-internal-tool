@@ -86,7 +86,7 @@ export const isTokenExpired = (token: string): boolean => {
   return Date.now() / 1000 >= claims.exp;
 };
 
-export const fetchClaims = () => {
+export const fetchClaims = async () => {
   const token = getAuthToken();
   if (!token || isTokenExpired(token)) {
     setAuthToken('', '');

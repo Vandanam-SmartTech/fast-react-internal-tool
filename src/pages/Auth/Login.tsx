@@ -47,8 +47,9 @@ const Login = () => {
     if (!token) return;
 
     window.dispatchEvent(new Event('userUpdated'));
-    const claims = fetchClaims();
-    if (claims) handleRoleRouting(claims);
+    fetchClaims().then(claims => {
+      if (claims) handleRoleRouting(claims);
+    });
   }, []);
 
 
@@ -65,7 +66,7 @@ const Login = () => {
 
       window.dispatchEvent(new Event('userUpdated'));
 
-      const claims = fetchClaims();
+      const claims = await fetchClaims();
 
       if (!claims.has_password_changed) {
         navigate('/password-reset');

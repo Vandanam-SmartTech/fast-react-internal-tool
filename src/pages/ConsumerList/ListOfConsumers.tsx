@@ -107,14 +107,6 @@ export const ListOfConsumers = memo(() => {
     navigate(path, { state });
   }, [navigate]);
 
-  const resetAndLoad = useCallback(async () => {
-    setAllConsumers([]);
-    setCurrentPage(0);
-    setBackendPage(0);
-    setHasMoreBackend(true);
-    await loadConsumers(0);
-  }, []);
-
   const loadConsumers = useCallback(async (pageNumber: number) => {
     if (!isInitialized) return;
     try {
@@ -179,15 +171,26 @@ export const ListOfConsumers = memo(() => {
     }
   }, [isInitialized, selectedOrgId, selectedAgencyId, selectedUserId, userRole, userInfo, selectedVillage, BATCH_SIZE]);
 
+  const resetAndLoad = useCallback(async () => {
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
+    await loadConsumers(0);
+  }, [loadConsumers]);
+
   useEffect(() => {
     fetchClaims().then(claims => {
-      if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      if (claims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
         setUserRole("ROLE_SUPER_ADMIN");
         fetchOrganizations().then(orgs => setOrganizations(orgs.map(o => ({ id: o.id as number, name: o.name }))));
       } else {
-        setUserRole(claims.role || "");
+        setUserRole(claims?.role || "");
       }
       setIsInitialized(true);
+    }).catch(() => {
+      setIsInitialized(true);
+      setLoading(false);
     });
   }, []);
 
@@ -217,7 +220,7 @@ export const ListOfConsumers = memo(() => {
   useEffect(() => {
     if (!isInitialized) return;
     resetAndLoad();
-  }, [selectedVillage, selectedOrgId, selectedAgencyId, selectedUserId, isInitialized]);
+  }, [selectedVillage, selectedOrgId, selectedAgencyId, selectedUserId, isInitialized, resetAndLoad]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
