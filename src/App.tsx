@@ -1,56 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { UserProvider } from './contexts/UserContext';
 import ScrollToTop from './components/ScrollToTop';
-
 import Login from './pages/Auth/Login';
 import PrivateRoute from './routes/PrivateRoute';
 import RoleProtectedRoute from './routes/RoleProtectedRoute';
 import HomeRedirect from './pages/HomeRedirect';
 import Sidebar from './components/Sidebar';
-import { ListOfConsumers } from './pages/ConsumerList/ListOfConsumers';
-import GenerateDocuments from './pages/Documents/GenerateDocuments';
-import { CustomerForm } from './pages/Customers/CustomerForm';
-import { ViewCustomer } from './pages/Customers/ViewCustomer';
-import ManageCustomers from './pages/Customers/ManageCustomers';
-import { ConnectionForm } from './pages/Connections/ConnectionForm';
-import { ViewConnection } from './pages/Connections/ViewConnection';
-import { InstallationForm } from './pages/Installations/InstallationForm';
-import { ViewInstallation } from './pages/Installations/ViewInstallation';
-import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifications';
-import  OnboardedConsumers  from './pages/ConsumerList/OnboardedConsumers';
-import  PasswordReset  from './pages/Auth/PasswordReset'; 
-import ChangePassword from './pages/Auth/ChangePassword';
-import  Verification  from './pages/Auth/Verification';
-import  RepresentativeDashboard  from './pages/Dashboard/RepresentativeDashboard';
-import AdminDashboard from './pages/Dashboard/AdminDashboard';
-import SuperAdminDashboard from './pages/Dashboard/SuperAdminDashboard';
-import BDODashboard from './pages/Dashboard/BDODashboard';
-import GramPanchayatDashboard from './pages/Dashboard/GramPanchayatDashboard';
-import AgencyAdminDashboard from './pages/Dashboard/AgencyAdminDashboard';
-import StaffDashboard from './pages/Dashboard/StaffDashboard';
-import { EditCustomer } from './pages/Customers/EditCustomer';
-import { EditConnection } from './pages/Connections/EditConnection';
-import { EditInstallation } from './pages/Installations/EditInstallation';
-import MaterialDetails from './pages/Materials/MaterialDetails';
-import OrganizationList from './pages/Organizations/OrganizationList';
-import OrganizationForm from './pages/Organizations/OrganizationForm';
-import AdminManagement from './pages/Organizations/AdminManagement';
-import AgencyList from './pages/Agencies/AgencyList';
-import AgencyForm from './pages/Agencies/AgencyForm';
-import AgencyView from './pages/Agencies/AgencyView';
-import EditAgency from './pages/Agencies/EditAgency';
-import OrganizationView from './pages/Organizations/OrganizationView';
-import EditOrganization from './pages/Organizations/EditOrganization';
-import UserManagement from './pages/Organizations/UserManagement';
-import UserFormManagement from './pages/Organizations/UserFormManagement';
-import PackageManagement from './pages/Organizations/PackageManagement';
-import ProductManagement from './pages/Organizations/ProductManagement';
-import EditUser from './pages/Organizations/EditUser';
-import UserView from './pages/Organizations/UserView';
-import RoleManagement from './pages/Organizations/RoleManagement';
-import UserOrgRoles from './pages/Organizations/UserOrgRoles';
-import Profile from './pages/Profile/Profile';
 import { ToastContainer } from 'react-toastify';
 import PageNotFound from './pages/PageNotFound';
 import EnvBanner from './components/EnvBanner';
@@ -58,6 +14,50 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import 'leaflet/dist/leaflet.css';
 import 'react-toastify/dist/ReactToastify.css';
+
+const ListOfConsumers = lazy(() => import('./pages/ConsumerList/ListOfConsumers').then(m => ({ default: m.ListOfConsumers })));
+const GenerateDocuments = lazy(() => import('./pages/Documents/GenerateDocuments'));
+const CustomerForm = lazy(() => import('./pages/Customers/CustomerForm').then(m => ({ default: m.CustomerForm })));
+const ViewCustomer = lazy(() => import('./pages/Customers/ViewCustomer').then(m => ({ default: m.ViewCustomer })));
+const ManageCustomers = lazy(() => import('./pages/Customers/ManageCustomers'));
+const ConnectionForm = lazy(() => import('./pages/Connections/ConnectionForm').then(m => ({ default: m.ConnectionForm })));
+const ViewConnection = lazy(() => import('./pages/Connections/ViewConnection').then(m => ({ default: m.ViewConnection })));
+const InstallationForm = lazy(() => import('./pages/Installations/InstallationForm').then(m => ({ default: m.InstallationForm })));
+const ViewInstallation = lazy(() => import('./pages/Installations/ViewInstallation').then(m => ({ default: m.ViewInstallation })));
+const SystemSpecifications = lazy(() => import('./pages/SystemSpecifications/SystemSpecifications').then(m => ({ default: m.SystemSpecifications })));
+const OnboardedConsumers = lazy(() => import('./pages/ConsumerList/OnboardedConsumers'));
+const PasswordReset = lazy(() => import('./pages/Auth/PasswordReset'));
+const ChangePassword = lazy(() => import('./pages/Auth/ChangePassword'));
+const Verification = lazy(() => import('./pages/Auth/Verification'));
+const RepresentativeDashboard = lazy(() => import('./pages/Dashboard/RepresentativeDashboard'));
+const AdminDashboard = lazy(() => import('./pages/Dashboard/AdminDashboard'));
+const SuperAdminDashboard = lazy(() => import('./pages/Dashboard/SuperAdminDashboard'));
+const BDODashboard = lazy(() => import('./pages/Dashboard/BDODashboard'));
+const GramPanchayatDashboard = lazy(() => import('./pages/Dashboard/GramPanchayatDashboard'));
+const AgencyAdminDashboard = lazy(() => import('./pages/Dashboard/AgencyAdminDashboard'));
+const StaffDashboard = lazy(() => import('./pages/Dashboard/StaffDashboard'));
+const EditCustomer = lazy(() => import('./pages/Customers/EditCustomer').then(m => ({ default: m.EditCustomer })));
+const EditConnection = lazy(() => import('./pages/Connections/EditConnection').then(m => ({ default: m.EditConnection })));
+const EditInstallation = lazy(() => import('./pages/Installations/EditInstallation').then(m => ({ default: m.EditInstallation })));
+const MaterialDetails = lazy(() => import('./pages/Materials/MaterialDetails'));
+const OrganizationList = lazy(() => import('./pages/Organizations/OrganizationList'));
+const OrganizationForm = lazy(() => import('./pages/Organizations/OrganizationForm'));
+const AdminManagement = lazy(() => import('./pages/Organizations/AdminManagement'));
+const AgencyList = lazy(() => import('./pages/Agencies/AgencyList'));
+const AgencyForm = lazy(() => import('./pages/Agencies/AgencyForm'));
+const AgencyView = lazy(() => import('./pages/Agencies/AgencyView'));
+const EditAgency = lazy(() => import('./pages/Agencies/EditAgency'));
+const OrganizationView = lazy(() => import('./pages/Organizations/OrganizationView'));
+const EditOrganization = lazy(() => import('./pages/Organizations/EditOrganization'));
+const UserManagement = lazy(() => import('./pages/Organizations/UserManagement'));
+const UserFormManagement = lazy(() => import('./pages/Organizations/UserFormManagement'));
+const PackageManagement = lazy(() => import('./pages/Organizations/PackageManagement'));
+const ProductManagement = lazy(() => import('./pages/Organizations/ProductManagement'));
+const EditUser = lazy(() => import('./pages/Organizations/EditUser'));
+const UserView = lazy(() => import('./pages/Organizations/UserView'));
+const RoleManagement = lazy(() => import('./pages/Organizations/RoleManagement'));
+const UserOrgRoles = lazy(() => import('./pages/Organizations/UserOrgRoles'));
+const Profile = lazy(() => import('./pages/Profile/Profile'));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -120,6 +120,7 @@ const AppContent: React.FC = () => {
         showSidebar && sidebarOpen ? 'md:ml-64' : ''
       }`}>
         <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>}>
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
@@ -522,6 +523,7 @@ const AppContent: React.FC = () => {
               }
             />
           </Routes>
+          </Suspense>
         </div>
       </main>
       

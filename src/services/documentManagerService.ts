@@ -154,7 +154,6 @@ export const getUserSignature = async (): Promise<string | null> => {
     
     return URL.createObjectURL(res.data);
   } catch (error: any) {
-    console.error("Failed to fetch signature:", error);
     return null;
   }
 };
@@ -234,7 +233,6 @@ export const getUserProfilePhoto = async (): Promise<string | null> => {
     
     return URL.createObjectURL(res.data);
   } catch (error: any) {
-    console.error("Failed to fetch signature:", error);
     return null;
   }
 };
