@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchInstallationSpaceTypesNames, getConnectionByConnectionId, getCustomerById, getInstallationByConnectionId, updateConsumerConnectionDetails } from "../../services/customerRequisitionService";
 import { useLocation } from "react-router-dom";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { checkFinalQuotationExists } from "../../services/quotationService";
 import { toast } from "react-toastify";
@@ -131,7 +131,7 @@ export const ViewConnection = () => {
     if (!connection?.id) return;
 
     try {
-      const exists = await checkFinalQuotationExists(connection.id);
+      await checkFinalQuotationExists(connection.id);
 
       setDialogType("confirm");
       setDialogMessage("Do you want to onboard the consumer?");
@@ -144,18 +144,6 @@ export const ViewConnection = () => {
       setMessageBoxSeverity("error");
       setMessageBoxOpen(true);
     }
-  };
-
-
-
-  const handleSaveSpecs = () => {
-    navigate(`/system-specifications`, {
-      state: {
-        connectionId: connectionId,
-        consumerId: consumerId,
-        customerId,
-      },
-    });
   };
 
   const handleYes = async () => {

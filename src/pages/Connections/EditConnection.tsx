@@ -510,21 +510,6 @@ export const EditConnection = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
-    const selectedVillage = villages.find((village) => village.code === value);
-
-    if (selectedVillage) {
-      setVillageCode(value);
-      setPinCode(selectedVillage.pinCode || "");
-      setFormData((prev: any) => ({
-        ...prev,
-        villageCode: value,
-        pinCode: selectedVillage.pinCode,
-      }));
-    }
-  };
-
   const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPinCode(value);

@@ -261,7 +261,9 @@ export const ListOfConsumers = memo(() => {
       ) : (
         <>
           <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {finalDisplayData.map((c: Consumer) => <ConsumerCard key={c.id} consumer={c} userRole={userInfo?.role} onView={handleViewConsumer} onNavigate={handleNavigate} />)}
+            {finalDisplayData.map((c: Consumer) => (
+              <ConsumerCard key={`consumer-${c.id}`} consumer={c} userRole={userInfo?.role} onView={handleViewConsumer} onNavigate={handleNavigate} />
+            ))}
           </div>
           <div className="flex justify-center gap-3 mt-4">
             <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
