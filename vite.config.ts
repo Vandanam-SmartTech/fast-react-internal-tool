@@ -52,7 +52,7 @@ export default defineConfig({
         }
       },
       treeshake: {
-        moduleSideEffects: false,
+        moduleSideEffects: 'no-external',
         propertyReadSideEffects: false
       }
     },
@@ -61,34 +61,11 @@ export default defineConfig({
       compress: { 
         drop_console: false, 
         drop_debugger: true,
-        passes: 2,
+        passes: 1,
         pure_funcs: ['console.debug'],
-        unsafe_arrows: false,
-        unsafe_methods: false,
-        unsafe_proto: false,
-        unsafe_comps: false,
-        unsafe_Function: false,
-        unsafe_math: false,
-        unsafe_symbols: false,
-        unsafe_undefined: false,
-        booleans_as_integers: false,
-        collapse_vars: true,
-        comparisons: true,
-        computed_props: true,
-        conditionals: true,
-        dead_code: true,
-        evaluate: true,
-        if_return: true,
-        inline: 2,
-        join_vars: true,
-        keep_fargs: true,
-        loops: true,
-        properties: true,
-        reduce_vars: true,
-        sequences: true,
-        side_effects: true,
-        switches: true,
-        unused: true
+        collapse_vars: false,
+        reduce_vars: false,
+        inline: false
       },
       format: { 
         comments: false
