@@ -58,15 +58,45 @@ export const refreshToken = async () => {
 
 
 
-export const fetchClaims = async () => {
-  const jwtAPI = getJwtAPI();
+import { jwtDecode } from 'jwt-decode';
+
+interface JwtClaims {
+  sub: string;
+  userId?: number;
+  username?: string;
+  roles?: string[];
+  organizationId?: number;
+  agencyId?: number;
+  exp?: number;
+  iat?: number;
+  [key: string]: any;
+}
+
+export const parseJwtClaims = (token: string): JwtClaims | null => {
   try {
-    const response = await jwtAPI.get('/jwt/claims');
-    return response.data.claims;
+    return jwtDecode<JwtClaims>(token);
   } catch (error) {
-    console.error('Error fetching claims:', error);
+    console.error('Failed to parse JWT:', error);
     return null;
   }
+};
+
+export const isTokenExpired = (token: string): boolean => {
+  const claims = parseJwtClaims(token);
+  if (!claims?.exp) return true;
+  return Date.now() / 1000 >= claims.exp;
+};
+
+export const fetchClaims = async () => {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) return null;
+  
+  if (isTokenExpired(token)) {
+    localStorage.removeItem('jwtToken');
+    return null;
+  }
+  
+  return parseJwtClaims(token);
 };
 
 
@@ -170,15 +200,17 @@ export const verifyAndChangePassword = async (
 };
 
 export const validateJwtToken = async (): Promise<string[] | null> => {
-  const jwtAPI = getJwtAPI();
-  try {
-    const response = await jwtAPI.get('/jwt/validate');
-    return response.data.roles;
-  } catch (error) {
-    console.error('JWT validation failed:', error);
+  const token = localStorage.getItem('jwtToken');
+  if (!token) return null;
+  
+  if (isTokenExpired(token)) {
     localStorage.removeItem('jwtToken');
+    localStorage.removeItem('refreshToken');
     return null;
   }
+  
+  const claims = parseJwtClaims(token);
+  return claims?.roles || null;
 };
 
 export const checkMobileNumberExists = async (

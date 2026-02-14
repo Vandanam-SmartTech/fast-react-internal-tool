@@ -6,7 +6,6 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
-import bgImage from '../../assets/Solar_Image.jpg';
 import ReusableDropdown from '../../components/ReusableDropdown';
 
 interface OrgRoleData {
@@ -175,10 +174,8 @@ const Login = () => {
       className="min-h-screen relative flex justify-center overflow-hidden items-start pt-24 md:items-center md:pt-0"
 
       style={{
-        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%), url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#f0f4f8',
+        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%)`
       }}
     >
       <div className="absolute inset-0 overflow-hidden">
