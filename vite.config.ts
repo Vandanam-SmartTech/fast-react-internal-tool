@@ -32,14 +32,13 @@ export default defineConfig({
         entryFileNames: 'assets/js/[name]-[hash].js',
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react-dom')) return 'vendor-react';
-            if (id.includes('react/') || id.includes('scheduler')) return 'vendor-react';
+            if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler')) return 'vendor-react';
             if (id.includes('react-router')) return 'vendor-router';
+            if (id.includes('axios')) return 'vendor-http';
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('react-toastify')) return 'vendor-toast';
             if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
             if (id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-maps';
-            if (id.includes('axios')) return 'vendor-http';
             return 'vendor-misc';
           }
           if (id.includes('src/pages/')) {

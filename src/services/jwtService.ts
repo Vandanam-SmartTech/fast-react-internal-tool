@@ -88,11 +88,19 @@ export const isTokenExpired = (token: string): boolean => {
 
 export const fetchClaims = async () => {
   const token = getAuthToken();
-  if (!token || isTokenExpired(token)) {
+  if (!token) {
     setAuthToken('', '');
     return null;
   }
-  return parseJwtClaims(token);
+  
+  if (isTokenExpired(token)) {
+    setAuthToken('', '');
+    return null;
+  }
+  
+  const claims = parseJwtClaims(token);
+  console.log('JWT Claims:', claims);
+  return claims;
 };
 
 // Cached fetch with TTL

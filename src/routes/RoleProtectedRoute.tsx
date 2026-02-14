@@ -13,14 +13,18 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
 
   useEffect(() => {
     const checkAccess = async () => {
+      console.log('RoleProtectedRoute: Checking access for roles:', allowedRoles);
       const token = localStorage.getItem('jwtToken');
       if (!token) {
+        console.log('RoleProtectedRoute: No token found');
         setRedirectPath('/login');
         return;
       }
 
       const claims = await fetchClaims();
+      console.log('RoleProtectedRoute: Claims received:', claims);
       if (!claims) {
+        console.log('RoleProtectedRoute: No claims found');
         setRedirectPath('/login');
         return;
       }
@@ -28,21 +32,27 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
 
       if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         if (allowedRoles.includes('ROLE_SUPER_ADMIN')) {
+          console.log('RoleProtectedRoute: Super admin authorized');
           setAuthorized(true);
         } else {
+          console.log('RoleProtectedRoute: Super admin redirecting to dashboard');
           setRedirectPath('/super-admin-dashboard');
         }
         return;
       }
 
       const orgRoles = claims.org_roles ? Object.entries(claims.org_roles) : [];
+      console.log('RoleProtectedRoute: Org roles:', orgRoles);
       if (orgRoles.length === 0) {
+        console.log('RoleProtectedRoute: No org roles found');
         setRedirectPath('/login');
         return;
       }
 
       const selectedOrgRaw = localStorage.getItem('selectedOrg');
+      console.log('RoleProtectedRoute: Selected org:', selectedOrgRaw);
       if (!selectedOrgRaw) {
+        console.log('RoleProtectedRoute: No selected org');
         setRedirectPath('/login');
         return;
       }
@@ -52,11 +62,13 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
 
 
         const matchingOrg = orgRoles.find(([orgId]) => orgId === selectedOrg.orgId);
+        console.log('RoleProtectedRoute: Matching org:', matchingOrg);
         if (!matchingOrg) {
 
           localStorage.removeItem('jwtToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('selectedOrg');
+          console.log('RoleProtectedRoute: No matching org, logging out');
           setRedirectPath('/login');
           return;
         }
@@ -67,6 +79,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
             ? selectedOrg.role
             : orgData.roles[0];
 
+        console.log('RoleProtectedRoute: Current role:', currentRole);
         
         localStorage.setItem(
           'selectedOrg',
@@ -80,9 +93,10 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
 
 
         if (allowedRoles.includes(currentRole)) {
+          console.log('RoleProtectedRoute: User authorized with role:', currentRole);
           setAuthorized(true);
         } else {
-          
+          console.log('RoleProtectedRoute: User not authorized, redirecting');
           redirectToDashboard(currentRole);
         }
       } catch (err) {
