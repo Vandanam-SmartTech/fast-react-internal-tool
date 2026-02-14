@@ -21,17 +21,6 @@ interface RoleOption {
   deptCode: number | null;
 }
 
-interface UserClaims {
-  id: number;
-  name_as_per_gov_id?: string;
-  preferred_name?: string;
-  email_address?: string;
-  global_roles?: string[];
-  org_roles?: Record<string, OrgRoleData>;
-  has_password_changed?: boolean;
-  [key: string]: any;
-}
-
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +57,12 @@ const Login = () => {
 
       const claims = await fetchClaims();
 
+      if (!claims) {
+        setError('Failed to fetch user claims.');
+        setLoading(false);
+        return;
+      }
+
       if (!claims.has_password_changed) {
         navigate('/password-reset');
         return;
@@ -85,7 +80,7 @@ const Login = () => {
 
 
 
-  const handleRoleRouting = (claims: UserClaims) => {
+  const handleRoleRouting = (claims: any) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       navigate('/super-admin-dashboard');
       return;
@@ -99,14 +94,15 @@ const Login = () => {
       return;
     }
 
-    const options: RoleOption[] = orgEntries.flatMap(([orgId, orgData]) =>
-      orgData.roles.map((role: string) => ({
+    const options: RoleOption[] = orgEntries.flatMap(([orgId, orgData]) => {
+      const data = orgData as OrgRoleData;
+      return data.roles.map((role: string) => ({
         orgId,
-        orgName: orgData.org_name,
+        orgName: data.org_name,
         role,
-        deptCode: orgData.dept_code ?? null,
-      }))
-    );
+        deptCode: data.dept_code ?? null,
+      }));
+    });
 
     if (options.length === 1) {
       const { role, orgId, orgName, deptCode } = options[0];

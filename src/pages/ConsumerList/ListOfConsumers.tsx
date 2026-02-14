@@ -8,7 +8,6 @@ import { obfuscatePhoneNumber } from "../../utils/phoneUtils";
 import { Eye, Mail, Phone, Lightbulb, Search, Users, RefreshCw, Zap, FileText, Plus } from "lucide-react";
 import { Button } from "../../components/ui";
 import Card, { CardBody } from "../../components/ui/Card";
-import ReusableDropdown from "../../components/ReusableDropdown";
 
 interface Consumer {
   id: number;
@@ -72,21 +71,20 @@ const ConsumerCard = memo(({ consumer, userRole, onView, onNavigate }: any) => (
 
 export const ListOfConsumers = memo(() => {
   const navigate = useNavigate();
-  const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [villages, setVillages] = useState<any[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState("");
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
+  const [, setVillages] = useState<any[]>([]);
+  const [selectedVillage] = useState("");
+  const [, setOrganizations] = useState<{ id: number; name: string }[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
-  const [agencies, setAgencies] = useState<Organization[]>([]);
-  const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
+  const [, setAgencies] = useState<Organization[]>([]);
+  const [selectedAgencyId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [, setUsers] = useState<any[]>([]);
+  const [selectedUserId] = useState<number | null>(null);
   const [allConsumers, setAllConsumers] = useState<any[]>([]);
   const [backendPage, setBackendPage] = useState(0);
   const [hasMoreBackend, setHasMoreBackend] = useState(true);
@@ -240,7 +238,7 @@ export const ListOfConsumers = memo(() => {
     }, 300);
   }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole, userInfo, selectedVillage]);
 
-  const villageOptions = useMemo(() => [{ value: "", label: "All Villages" }, ...villages.map(v => ({ value: v.code, label: v.nameEnglish }))], [villages]);
+
   const displayDataForCustomers = useMemo(() => allConsumers.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE), [allConsumers, currentPage]);
   const totalPagesLoaded = useMemo(() => Math.ceil(allConsumers.length / ITEMS_PER_PAGE), [allConsumers.length]);
   const displaySearchData = useMemo(() => searchResults.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE), [searchResults, currentPage]);
