@@ -5,9 +5,11 @@ import { getConfig } from '../config';
 // Singleton instance
 let jwtAPIInstance: AxiosInstance | null = null;
 
-// Memory cache
+// Memory cache with TTL
 let tokenCache: string | null = null;
 let claimsCache: any | null = null;
+let claimsCacheTimestamp: number = 0;
+const CLAIMS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const dataCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -88,30 +90,31 @@ export const isTokenExpired = (token: string): boolean => {
   return Date.now() / 1000 >= claims.exp;
 };
 
-export const fetchClaims = async () => {
+export const fetchClaims = async (forceRefresh = false) => {
   const token = getAuthToken();
   if (!token) {
     setAuthToken('', '');
     return null;
   }
   
-  if (claimsCache) {
+  // Return cached claims if valid
+  if (!forceRefresh && claimsCache && Date.now() - claimsCacheTimestamp < CLAIMS_CACHE_TTL) {
     return claimsCache;
   }
   
   try {
     const response = await getJwtAPI().get('/jwt/claims');
     claimsCache = response.data.claims || response.data;
+    claimsCacheTimestamp = Date.now();
     return claimsCache;
   } catch (error: any) {
-    console.warn('Backend /jwt/claims failed, using client-side decode:', error.message);
-    
     if (isTokenExpired(token)) {
       setAuthToken('', '');
       return null;
     }
     
     claimsCache = parseJwtClaims(token);
+    claimsCacheTimestamp = Date.now();
     return claimsCache;
   }
 };
@@ -354,4 +357,5 @@ export const clearCache = () => {
   dataCache.clear();
   tokenCache = null;
   claimsCache = null;
+  claimsCacheTimestamp = 0;
 };

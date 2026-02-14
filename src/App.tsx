@@ -12,7 +12,6 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Define auth pages where sidebar/header should not show
   const authPages = ['/login', '/password-reset', '/verification', '/change-password', '/page-not-found'];
   const showSidebar = !authPages.includes(location.pathname);
 
@@ -29,9 +28,7 @@ const AppContent: React.FC = () => {
     setSidebarOpen(storedState === 'true');
 
     const userRole = localStorage.getItem('userRole');
-    if (userRole) {
-      preloadDashboard(userRole);
-    }
+    if (userRole) preloadDashboard(userRole);
     preloadCommonRoutes();
 
     const handleStorageChange = () => {

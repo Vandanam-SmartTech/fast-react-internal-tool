@@ -57,63 +57,49 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [selectedOrg, setSelectedOrg] = useState<SelectedOrg | null>(null);
 
-const refreshUserClaims = async (): Promise<UserClaims | null> => {
-  try {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
+  const refreshUserClaims = async (): Promise<UserClaims | null> => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        setUserClaims(null);
+        setLoading(false);
+        return null;
+      }
+
+      const claims = await fetchClaims(false); // Use cache
+      setUserClaims(claims);
+      return claims; 
+    } catch {
       setUserClaims(null);
-      setLoading(false);
       return null;
+    } finally {
+      setLoading(false);
     }
-
-    const claims = await fetchClaims();
-    setUserClaims(claims);
-    return claims; 
-  } catch (error) {
-    console.error('Failed to fetch user claims:', error);
-    setUserClaims(null);
-    return null;
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   const clearUserClaims = () => {
     setUserClaims(null);
-    setSelectedOrg(null); 
-
+    setSelectedOrg(null);
   };
 
   useEffect(() => {
     refreshUserClaims();
-  }, []);
 
-  
-  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'jwtToken') {
-        if (e.newValue) {
-          refreshUserClaims();
-        } else {
-          clearUserClaims();
-        }
+        e.newValue ? refreshUserClaims() : clearUserClaims();
       }
     };
 
+    const handleUserUpdate = () => refreshUserClaims();
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-
-  useEffect(() => {
-    const handleUserUpdate = () => {
-      refreshUserClaims();
-    };
-
     window.addEventListener('userUpdated', handleUserUpdate);
-    return () => window.removeEventListener('userUpdated', handleUserUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
   }, []);
 
 

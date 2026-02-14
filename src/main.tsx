@@ -6,28 +6,19 @@ import { loadConfig, getConfig } from './config';
 import { logPerformance } from './utils/performance';
 import { registerSW } from './utils/serviceWorker';
 
-console.log('[SolarPro] Starting application...');
-
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  console.error('[SolarPro] Root element not found!');
-  throw new Error('Root element not found');
-}
+if (!rootElement) throw new Error('Root element not found');
 
 const root = createRoot(rootElement);
 
 loadConfig()
   .then(() => {
-    console.log('[SolarPro] Config loaded successfully');
     const { BASE_PATH } = getConfig();
-    console.log('[SolarPro] Base path:', BASE_PATH);
     root.render(<App basePath={BASE_PATH} />);
-    console.log('[SolarPro] App rendered');
     logPerformance();
     registerSW();
   })
   .catch((err) => {
-    console.error('[SolarPro] Failed to load config:', err);
     root.render(
       <div style={{ 
         fontFamily: 'sans-serif', 
@@ -72,11 +63,3 @@ loadConfig()
       </div>
     );
   });
-
-window.addEventListener('error', (event) => {
-  console.error('[SolarPro] Global error:', event.error);
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('[SolarPro] Unhandled rejection:', event.reason);
-});

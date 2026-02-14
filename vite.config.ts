@@ -51,13 +51,24 @@ export default defineConfig({
         }
       },
       treeshake: {
-        moduleSideEffects: true,
-        propertyReadSideEffects: false
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        unknownGlobalSideEffects: false
       }
     },
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+        passes: 2
+      },
+      mangle: { safari10: true },
+      format: { comments: false }
+    },
     chunkSizeWarningLimit: 250,
-    sourcemap: true,
+    sourcemap: false,
     target: 'es2020',
     reportCompressedSize: false,
     assetsInlineLimit: 4096
@@ -76,6 +87,9 @@ export default defineConfig({
   esbuild: {
     legalComments: 'none',
     treeShaking: true,
-    drop: ['debugger']
+    drop: ['console', 'debugger'],
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true
   }
 });
