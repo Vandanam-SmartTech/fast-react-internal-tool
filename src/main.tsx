@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { loadConfig, getConfig } from './config';
+import { logPerformance } from './utils/performance';
+import { registerSW } from './utils/serviceWorker';
 
 const rootElement = document.getElementById('root')!;
 const root = createRoot(rootElement);
@@ -10,7 +12,9 @@ const root = createRoot(rootElement);
 loadConfig()
   .then(() => {
     const { BASE_PATH } = getConfig();
-    root.render(<StrictMode><App basePath={BASE_PATH} /></StrictMode>);
+    root.render(<App basePath={BASE_PATH} />);
+    logPerformance();
+    registerSW();
   })
   .catch((err) => {
     console.error('Failed to load config.json:', err);

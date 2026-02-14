@@ -43,21 +43,12 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAlreadyLoggedIn = async () => {
-      const token = localStorage.getItem('jwtToken');
-      if (!token) return;
+    const token = localStorage.getItem('jwtToken');
+    if (!token) return;
 
-
-      window.dispatchEvent(new Event('userUpdated'));
-
-      const claims = await fetchClaims();
-      if (!claims) return;
-
-
-      handleRoleRouting(claims);
-    };
-
-    checkAlreadyLoggedIn();
+    window.dispatchEvent(new Event('userUpdated'));
+    const claims = fetchClaims();
+    if (claims) handleRoleRouting(claims);
   }, []);
 
 
@@ -74,7 +65,7 @@ const Login = () => {
 
       window.dispatchEvent(new Event('userUpdated'));
 
-      const claims = await fetchClaims();
+      const claims = fetchClaims();
 
       if (!claims.has_password_changed) {
         navigate('/password-reset');
@@ -179,25 +170,8 @@ const Login = () => {
       }}
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-solar-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-secondary-400/10 to-primary-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
-      </div>
-
-
-      <div className="absolute inset-0">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-white/30 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-solar-400/20 to-transparent rounded-full blur-3xl"></div>
       </div>
 
      <div

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Building2, UserCog, Calendar, Clock } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
@@ -30,8 +30,12 @@ const AgencyAdminDashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 60000);
 
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  useEffect(() => {
     const fetchParentOrg = async () => {
       if (userInfo?.orgId) {
         try {
@@ -44,14 +48,12 @@ const AgencyAdminDashboard: React.FC = () => {
     };
 
     fetchParentOrg();
-
-    return () => clearInterval(timeInterval);
   }, [userInfo?.orgId]);
 
 
 
 
-  const dashboardItems = [
+  const dashboardItems = useMemo(() => [
 
     {
       title: 'Manage Customers',
@@ -76,7 +78,7 @@ const AgencyAdminDashboard: React.FC = () => {
       color: 'bg-gradient-to-r from-error-50 to-error-100 dark:from-error-900/20 dark:to-error-800/20 border-error-200 dark:border-error-700'
     },
 
-  ];
+  ], [userInfo?.orgId, parentOrgId]);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">

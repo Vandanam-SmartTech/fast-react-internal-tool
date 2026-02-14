@@ -9,88 +9,90 @@ export default defineConfig({
   base: config.BASE_PATH || '/',
   plugins: [
     react(),
-    viteCompression({ algorithm: 'gzip' }),
-    viteCompression({ algorithm: 'brotliCompress' })
+    viteCompression({ algorithm: 'gzip', threshold: 512, deleteOriginFile: false }),
+    viteCompression({ algorithm: 'brotliCompress', threshold: 512, deleteOriginFile: false })
   ],
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom', 'axios'],
+    exclude: [],
+    esbuildOptions: { target: 'es2020' }
   },
   build: {
-    modulePreload: {
-      polyfill: false
-    },
+    modulePreload: { polyfill: false },
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
-          const ext = info[info.length - 1];
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(ext)) {
-            return `assets/images/[name]-[hash][extname]`;
-          } else if (/woff|woff2|eot|ttf|otf/i.test(ext)) {
-            return `assets/fonts/[name]-[hash][extname]`;
-          }
+          const ext = assetInfo.name.split('.').pop();
+          if (/png|jpe?g|svg|gif|webp/i.test(ext)) return `assets/img/[name]-[hash][extname]`;
+          if (/woff2?|eot|ttf|otf/i.test(ext)) return `assets/fonts/[name]-[hash][extname]`;
           return `assets/[name]-[hash][extname]`;
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            if (id.includes('lucide') || id.includes('@heroicons') || id.includes('react-icons')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('recharts')) return 'chart-vendor';
-            if (id.includes('leaflet')) return 'map-vendor';
-            if (id.includes('pdf')) return 'pdf-vendor';
-            if (id.includes('@mui')) return 'mui-vendor';
-            return 'vendor';
+            if (id.includes('react-dom')) return 'react';
+            if (id.includes('react/') || id.includes('scheduler')) return 'react';
+            if (id.includes('react-router')) return 'router';
+            if (id.includes('react-icons') || id.includes('lucide-react')) return 'icons';
+            if (id.includes('react-toastify')) return 'toast';
+            if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
+            if (id.includes('recharts') || id.includes('d3-') || id.includes('victory')) return 'charts';
+            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'maps';
+            if (id.includes('react-easy-crop') || id.includes('cropperjs')) return 'crop';
+            if (id.includes('axios')) return 'http';
+            if (id.includes('sockjs') || id.includes('stomp')) return 'ws';
           }
         }
+      },
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false
       }
     },
     minify: 'terser',
     terserOptions: {
-      compress: {
-        drop_console: true,
+      compress: { 
+        drop_console: true, 
         drop_debugger: true,
+        passes: 3,
         pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        passes: 2,
-        unsafe: true,
-        unsafe_comps: true,
-        unsafe_math: true,
-        unsafe_proto: true,
-        dead_code: true,
-        collapse_vars: true,
-        reduce_vars: true,
-        booleans: true,
-        loops: true,
-        unused: true,
-        hoist_funs: true,
-        hoist_vars: true,
-        if_return: true,
-        join_vars: true,
-        side_effects: true
+        unsafe_arrows: true,
+        unsafe_methods: true,
+        unsafe_proto: true
       },
-      mangle: {
-        toplevel: true,
-        safari10: true
-      },
-      format: {
-        comments: false
-      }
+      format: { comments: false },
+      mangle: { safari10: true }
     },
-    chunkSizeWarningLimit: 1000,
-    cssCodeSplit: true,
-    sourcemap: false
+    chunkSizeWarningLimit: 250,
+    sourcemap: false,
+    target: 'es2020',
+    reportCompressedSize: false,
+    assetsInlineLimit: 4096
   },
   define: {
-    global: 'window',
-    __DEFINES__: {},
+    global: 'globalThis'
   },
-  server: {
-    host: '0.0.0.0',
+  server: { 
+    host: '0.0.0.0', 
     port: 8080,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost'
+    }
   },
+  esbuild: {
+    legalComments: 'none',
+    treeShaking: true,
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true,
+    drop: ['console', 'debugger']
+  },
+  experimental: {
+    renderBuiltUrl(filename) {
+      return { runtime: `window.__assetsPath(${JSON.stringify(filename)})` };
+    }
+  }
 });

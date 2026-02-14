@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Building, Building2, UserCog, Calendar, Clock, Shield } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
@@ -33,7 +33,7 @@ const AdminDashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(timeInterval);
   }, []);
@@ -42,9 +42,9 @@ const AdminDashboard: React.FC = () => {
     if (userInfo.orgId) {
       loadOrganization(parseInt(userInfo.orgId));
     }
-  }, [userInfo.orgId]);
+  }, [userInfo.orgId, loadOrganization]);
 
-  const loadOrganization = async (orgId: number) => {
+  const loadOrganization = useCallback(async (orgId: number) => {
     try {
       const org = await getOrganizationById(orgId);
       setOrganization(org);
@@ -55,10 +55,10 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
 
-  const dashboardItems = [
+  const dashboardItems = useMemo(() => [
 
     {
       title: 'Manage Customers',
@@ -102,7 +102,7 @@ const AdminDashboard: React.FC = () => {
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
     }
-  ];
+  ], [userInfo?.orgId, gstNumber]);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">

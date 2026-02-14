@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { Users, UserCheck, Calendar, Clock } from 'lucide-react';
@@ -35,12 +35,12 @@ const StaffDashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(timeInterval);
   }, []);
 
-  const buildCustomerParams = () => {
+  const buildCustomerParams = useCallback(() => {
     const selectedOrgStr = localStorage.getItem("selectedOrg");
     if (!selectedOrgStr) return null;
 
@@ -63,10 +63,10 @@ const StaffDashboard: React.FC = () => {
     }
 
     return params;
-  };
+  }, []);
 
 
-  const refreshCustomerCount = async (animate = true) => {
+  const refreshCustomerCount = useCallback(async (animate = true) => {
     try {
       const params = buildCustomerParams();
       if (!params) return;
@@ -87,7 +87,7 @@ const StaffDashboard: React.FC = () => {
     } catch (err) {
       console.error("Failed to refresh customer count", err);
     }
-  };
+  }, [buildCustomerParams]);
 
 
 
@@ -101,36 +101,27 @@ const StaffDashboard: React.FC = () => {
     return () => {
       disconnectCustomerSocket();
     };
-  }, []);
+  }, [refreshCustomerCount]);
 
   useEffect(() => {
-    refreshCustomerCount(false);
-
     const params = buildCustomerParams();
     if (!params) return;
 
-    getOnboardedCustomerCount(params)
-      .then((actualCount) => {
-        setOnboardedCount(actualCount);
-        setAnimatedOnboardedCount(actualCount);
-      })
-      .catch(console.error);
+    refreshCustomerCount(false);
 
-    getCustomerStats(params)
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    Promise.all([
+      getOnboardedCustomerCount(params),
+      getCustomerStats(params)
+    ]).then(([actualCount, rawData]) => {
+      setOnboardedCount(actualCount);
+      setAnimatedOnboardedCount(actualCount);
 
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
-
-        setData(filtered);
-      })
-      .catch(console.error)
-      .finally(() => setStatsLoading(false));
-  }, []);
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const filtered = rawData.filter((entry: any) => new Date(entry.date) >= oneYearAgo);
+      setData(filtered);
+    }).catch(console.error).finally(() => setStatsLoading(false));
+  }, [buildCustomerParams, refreshCustomerCount]);
 
 
   const animateCountUp = (
@@ -170,7 +161,7 @@ const StaffDashboard: React.FC = () => {
     }
   };
 
-  const dashboardItems = [
+  const dashboardItems = useMemo(() => [
 
     {
       title: 'Manage Customers',
@@ -180,7 +171,7 @@ const StaffDashboard: React.FC = () => {
       color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
     },
 
-  ];
+  ], []);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">
