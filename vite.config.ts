@@ -39,7 +39,8 @@ export default defineConfig({
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('react-toastify')) return 'vendor-toast';
             if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
-            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-maps';
+            if (id.includes('leaflet')) return 'vendor-maps';
+            if (id.includes('react-leaflet')) return 'vendor-react';
             return 'vendor-misc';
           }
           if (id.includes('src/pages/')) {
@@ -56,62 +57,43 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: { 
-        drop_console: true, 
+        drop_console: false, 
         drop_debugger: true,
-        passes: 5,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        unsafe_arrows: true,
-        unsafe_methods: true,
-        unsafe_proto: true,
-        unsafe_comps: true,
-        unsafe_Function: true,
-        unsafe_math: true,
-        unsafe_symbols: true,
-        unsafe_undefined: true,
-        booleans_as_integers: true,
+        passes: 2,
+        pure_funcs: ['console.debug'],
+        unsafe_arrows: false,
+        unsafe_methods: false,
+        unsafe_proto: false,
+        unsafe_comps: false,
+        unsafe_Function: false,
+        unsafe_math: false,
+        unsafe_symbols: false,
+        unsafe_undefined: false,
+        booleans_as_integers: false,
         collapse_vars: true,
         comparisons: true,
         computed_props: true,
         conditionals: true,
         dead_code: true,
-        directives: true,
         evaluate: true,
-        hoist_funs: true,
-        hoist_props: true,
-        hoist_vars: true,
         if_return: true,
-        inline: 3,
+        inline: 2,
         join_vars: true,
-        keep_fargs: false,
+        keep_fargs: true,
         loops: true,
-        negate_iife: true,
         properties: true,
-        reduce_funcs: true,
         reduce_vars: true,
         sequences: true,
         side_effects: true,
         switches: true,
-        toplevel: true,
-        typeofs: true,
         unused: true
       },
       format: { 
-        comments: false,
-        ascii_only: true,
-        beautify: false,
-        braces: false,
-        ecma: 2020
+        comments: false
       },
       mangle: { 
-        safari10: true,
-        toplevel: true,
-        eval: true,
-        properties: {
-          regex: /^_/
-        }
-      },
-      module: true,
-      toplevel: true
+        safari10: true
+      }
     },
     chunkSizeWarningLimit: 250,
     sourcemap: false,
@@ -133,9 +115,6 @@ export default defineConfig({
   esbuild: {
     legalComments: 'none',
     treeShaking: true,
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
-    drop: ['console', 'debugger']
+    drop: ['debugger']
   }
 });

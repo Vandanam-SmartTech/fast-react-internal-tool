@@ -6,18 +6,28 @@ import { loadConfig, getConfig } from './config';
 import { logPerformance } from './utils/performance';
 import { registerSW } from './utils/serviceWorker';
 
-const rootElement = document.getElementById('root')!;
+console.log('[SolarPro] Starting application...');
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('[SolarPro] Root element not found!');
+  throw new Error('Root element not found');
+}
+
 const root = createRoot(rootElement);
 
 loadConfig()
   .then(() => {
+    console.log('[SolarPro] Config loaded successfully');
     const { BASE_PATH } = getConfig();
+    console.log('[SolarPro] Base path:', BASE_PATH);
     root.render(<App basePath={BASE_PATH} />);
+    console.log('[SolarPro] App rendered');
     logPerformance();
     registerSW();
   })
   .catch((err) => {
-    console.error('Failed to load config.json:', err);
+    console.error('[SolarPro] Failed to load config:', err);
     root.render(
       <div style={{ 
         fontFamily: 'sans-serif', 
@@ -33,6 +43,17 @@ loadConfig()
         <p style={{ color: '#6b7280', fontSize: '14px' }}>
           Please ensure config.json is accessible at /solarpro/config.json
         </p>
+        <pre style={{ 
+          background: '#f3f4f6', 
+          padding: '12px', 
+          borderRadius: '6px',
+          fontSize: '12px',
+          textAlign: 'left',
+          overflow: 'auto',
+          marginTop: '16px'
+        }}>
+          {err?.message || String(err)}
+        </pre>
         <button 
           onClick={() => window.location.reload()} 
           style={{
@@ -51,3 +72,11 @@ loadConfig()
       </div>
     );
   });
+
+window.addEventListener('error', (event) => {
+  console.error('[SolarPro] Global error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[SolarPro] Unhandled rejection:', event.reason);
+});
