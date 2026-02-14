@@ -7,8 +7,9 @@ let jwtAPIInstance: AxiosInstance | null = null;
 
 // Memory cache
 let tokenCache: string | null = null;
+let claimsCache: any | null = null;
 const dataCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 export const getJwtAPI = (): AxiosInstance => {
   if (jwtAPIInstance) return jwtAPIInstance;
@@ -37,6 +38,7 @@ export const login = async (credentials: { identifier: string; password: string 
 
 export const setAuthToken = (jwt: string, refreshToken: string) => {
   tokenCache = jwt || null;
+  claimsCache = null;
   if (jwt) {
     localStorage.setItem('jwtToken', jwt);
     localStorage.setItem('refreshToken', refreshToken);
@@ -93,14 +95,25 @@ export const fetchClaims = async () => {
     return null;
   }
   
-  if (isTokenExpired(token)) {
-    setAuthToken('', '');
-    return null;
+  if (claimsCache) {
+    return claimsCache;
   }
   
-  const claims = parseJwtClaims(token);
-  console.log('JWT Claims:', claims);
-  return claims;
+  try {
+    const response = await getJwtAPI().get('/jwt/claims');
+    claimsCache = response.data.claims || response.data;
+    return claimsCache;
+  } catch (error: any) {
+    console.warn('Backend /jwt/claims failed, using client-side decode:', error.message);
+    
+    if (isTokenExpired(token)) {
+      setAuthToken('', '');
+      return null;
+    }
+    
+    claimsCache = parseJwtClaims(token);
+    return claimsCache;
+  }
 };
 
 // Cached fetch with TTL
@@ -337,8 +350,8 @@ export const getAllRoles = async () => {
   });
 };
 
-// Clear cache on logout
 export const clearCache = () => {
   dataCache.clear();
   tokenCache = null;
+  claimsCache = null;
 };
