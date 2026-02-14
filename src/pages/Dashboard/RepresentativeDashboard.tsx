@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserCheck, Users, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
-import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
+import { safeConnectWebSocket } from '../../utils/websocketHelper';
 
 const RepresentativeDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -83,10 +83,10 @@ const RepresentativeDashboard: React.FC = () => {
   }, [buildCustomerParams]);
 
   useEffect(() => {
-    connectCustomerSocket((event) => {
+    const cleanup = safeConnectWebSocket((event) => {
       if (event === "CUSTOMER_ADDED") refreshCustomerCount(true);
     });
-    return () => disconnectCustomerSocket();
+    return cleanup;
   }, [refreshCustomerCount]);
 
   useEffect(() => {

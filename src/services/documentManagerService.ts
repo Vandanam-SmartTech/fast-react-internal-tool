@@ -151,9 +151,13 @@ export const getUserSignature = async (): Promise<string | null> => {
       { responseType: "blob" }
     );
 
-    
     return URL.createObjectURL(res.data);
   } catch (error: any) {
+    // Silently handle 404/500 errors - user may not have a signature
+    if (error.response?.status === 404 || error.response?.status === 500) {
+      return null;
+    }
+    console.error("Failed to fetch signature:", error);
     return null;
   }
 };
@@ -230,9 +234,13 @@ export const getUserProfilePhoto = async (): Promise<string | null> => {
       { responseType: "blob" }
     );
 
-    
     return URL.createObjectURL(res.data);
   } catch (error: any) {
+    // Silently handle 404/500 errors - user may not have a profile photo
+    if (error.response?.status === 404 || error.response?.status === 500) {
+      return null;
+    }
+    console.error("Failed to fetch profile photo:", error);
     return null;
   }
 };
@@ -301,7 +309,7 @@ export const uploadOrganizationImage = async (orgId: number, file: File): Promis
   }
 };
 
-export const fetchOrganizationImage = async (orgId: number): Promise<string> => {
+export const fetchOrganizationImage = async (orgId: number): Promise<string | null> => {
   try {
     const docManagerAPI = getDocManagerAPI();
 
@@ -313,13 +321,14 @@ export const fetchOrganizationImage = async (orgId: number): Promise<string> => 
     );
 
     const imageUrl = URL.createObjectURL(response.data);
-
-    console.log(`Logo fetched successfully for organization ${orgId}`);
-
     return imageUrl;
   } catch (error: any) {
+    // Silently handle 404/500 errors - organization may not have a logo
+    if (error.response?.status === 404 || error.response?.status === 500) {
+      return null;
+    }
     console.error("Failed to fetch logo:", error);
-    throw error;
+    return null;
   }
 };
 

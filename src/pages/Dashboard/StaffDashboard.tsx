@@ -4,7 +4,7 @@ import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '.
 import { Users, UserCheck, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
-import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
+import { safeConnectWebSocket } from '../../utils/websocketHelper';
 
 const StaffDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -92,15 +92,12 @@ const StaffDashboard: React.FC = () => {
 
 
   useEffect(() => {
-    connectCustomerSocket((event) => {
+    const cleanup = safeConnectWebSocket((event) => {
       if (event === "CUSTOMER_ADDED") {
         refreshCustomerCount(true);
       }
     });
-
-    return () => {
-      disconnectCustomerSocket();
-    };
+    return cleanup;
   }, [refreshCustomerCount]);
 
   useEffect(() => {
