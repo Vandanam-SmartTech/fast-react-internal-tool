@@ -57,7 +57,7 @@ export default defineConfig({
     },
     minify: 'esbuild',
     chunkSizeWarningLimit: 250,
-    sourcemap: false,
+    sourcemap: true,
     target: 'es2020',
     reportCompressedSize: false,
     assetsInlineLimit: 4096

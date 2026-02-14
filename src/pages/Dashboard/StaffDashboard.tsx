@@ -13,9 +13,6 @@ const StaffDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-
-  const [, setData] = useState([]);
-  const [, setStatsLoading] = useState(true);
   const navigate = useNavigate();
   const { userClaims } = useUser();
 
@@ -44,25 +41,28 @@ const StaffDashboard: React.FC = () => {
     const selectedOrgStr = localStorage.getItem("selectedOrg");
     if (!selectedOrgStr) return null;
 
-    const selectedOrg = JSON.parse(selectedOrgStr);
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+      const params: Record<string, any> = {};
 
-    const params: Record<string, any> = {};
+      if (
+        selectedOrg.role === "ROLE_ORG_STAFF" ||
+        selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
+      ) {
+        params.orgId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      } else if (
+        selectedOrg.role === "ROLE_AGENCY_STAFF" ||
+        selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
+      ) {
+        params.agencyId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      }
 
-    if (
-      selectedOrg.role === "ROLE_ORG_STAFF" ||
-      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
-    ) {
-      params.orgId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
-    } else if (
-      selectedOrg.role === "ROLE_AGENCY_STAFF" ||
-      selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
-    ) {
-      params.agencyId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
+      return params;
+    } catch {
+      return null;
     }
-
-    return params;
   }, []);
 
 
@@ -112,19 +112,14 @@ const StaffDashboard: React.FC = () => {
     Promise.all([
       getOnboardedCustomerCount(params),
       getCustomerStats(params)
-    ]).then(([actualCount, rawData]) => {
+    ]).then(([actualCount]) => {
       setOnboardedCount(actualCount);
       setAnimatedOnboardedCount(actualCount);
-
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      const filtered = rawData.filter((entry: any) => new Date(entry.date) >= oneYearAgo);
-      setData(filtered);
-    }).catch(console.error).finally(() => setStatsLoading(false));
+    }).catch(console.error);
   }, [buildCustomerParams, refreshCustomerCount]);
 
 
-  const animateCountUp = (
+  const animateCountUp = useCallback((
     from: number,
     to: number,
     setDisplay: (val: number) => void
@@ -138,8 +133,13 @@ const StaffDashboard: React.FC = () => {
     }
 
     const step = Math.max(Math.floor(diff / 30), 1);
+    let isCancelled = false;
 
     const interval = setInterval(() => {
+      if (isCancelled) {
+        clearInterval(interval);
+        return;
+      }
       current += step;
       if (current >= to) {
         setDisplay(to);
@@ -148,7 +148,12 @@ const StaffDashboard: React.FC = () => {
         setDisplay(current);
       }
     }, 20);
-  };
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
 
   const handleActivate = (path: string) => navigate(path);
@@ -162,7 +167,6 @@ const StaffDashboard: React.FC = () => {
   };
 
   const dashboardItems = useMemo(() => [
-
     {
       title: 'Manage Customers',
       description: 'List, View, Add, Update customers',
@@ -170,7 +174,6 @@ const StaffDashboard: React.FC = () => {
       path: '/manage-customers',
       color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
     },
-
   ], []);
 
   return (

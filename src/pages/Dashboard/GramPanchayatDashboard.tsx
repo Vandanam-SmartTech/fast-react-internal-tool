@@ -14,9 +14,7 @@ const GramPanchayatDashboard: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-  const [, setData] = useState([]);
   const { userClaims } = useUser();
-  const [, setStatsLoading] = useState(true);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -29,20 +27,25 @@ const GramPanchayatDashboard: React.FC = () => {
   const buildCustomerParams = useCallback(() => {
     const selectedOrgStr = localStorage.getItem("selectedOrg");
     if (!selectedOrgStr) return null;
-    const selectedOrg = JSON.parse(selectedOrgStr);
-    const params: Record<string, any> = {};
 
-    if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
-      params.orgId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
-    } else if (selectedOrg.role === "ROLE_GRAMSEVAK") {
-      params.userRole = selectedOrg.role;
-      params.villageCode = selectedOrg.deptCode;
-    } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
-      params.agencyId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+      const params: Record<string, any> = {};
+
+      if (selectedOrg.role === "ROLE_ORG_STAFF" || selectedOrg.role === "ROLE_ORG_REPRESENTATIVE") {
+        params.orgId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      } else if (selectedOrg.role === "ROLE_GRAMSEVAK") {
+        params.userRole = selectedOrg.role;
+        params.villageCode = selectedOrg.deptCode;
+      } else if (selectedOrg.role === "ROLE_AGENCY_STAFF" || selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE") {
+        params.agencyId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      }
+      return params;
+    } catch {
+      return null;
     }
-    return params;
   }, []);
 
   const animateCountUp = (from: number, to: number, setDisplay: (val: number) => void) => {
@@ -84,14 +87,10 @@ const GramPanchayatDashboard: React.FC = () => {
 
     refreshCustomerCount(false);
     Promise.all([getOnboardedCustomerCount(params), getCustomerStats(params)])
-      .then(([actualCount, rawData]) => {
+      .then(([actualCount]) => {
         setOnboardedCount(actualCount);
         setAnimatedOnboardedCount(actualCount);
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-        const filtered = rawData.filter((entry: any) => new Date(entry.date) >= oneYearAgo);
-        setData(filtered);
-      }).catch(console.error).finally(() => setStatsLoading(false));
+      }).catch(console.error);
   }, [buildCustomerParams, refreshCustomerCount]);
 
   const handleActivate = (path: string) => navigate(path);
