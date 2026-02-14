@@ -188,6 +188,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     const fetchRole = async (checkPageAccess = false) => {
       try {
         const claims = await fetchClaims();
+        if (!claims) {
+          console.warn('No claims available');
+          setRoles([]);
+          return;
+        }
+        
         const allRoles: string[] = [];
 
         if (Array.isArray(claims.global_roles)) {
