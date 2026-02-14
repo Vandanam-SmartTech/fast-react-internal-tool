@@ -38,7 +38,7 @@ export const ViewConnection = () => {
   const [dialogMessage, setDialogMessage] = useState("");
   const [dialogAction, setDialogAction] = useState<(() => void) | null>(null);
 
-  const [installationsByConsumer, setInstallationsByConsumer] = useState({});
+  const [installationsByConsumer, setInstallationsByConsumer] = useState<Record<string, any>>({});
 
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
@@ -127,47 +127,11 @@ export const ViewConnection = () => {
     return spaceTypes.find((type) => type.id === id)?.nameEnglish || "Unknown";
   };
 
-  // const handleOnboardClick = async () => {
-  //   if (!connection?.id) return;
-
-  //   try {
-  //     setDialogType("confirm");
-  //     setDialogMessage("Do you want to onboard the consumer?");
-  //     setDialogAction(() => handleYes);
-  //     setDialogOpen(true);
-  //   } catch (error) {
-  //     console.error("Error during onboarding:", error);
-  //     setMessageBoxContent("Failed to start onboarding process.");
-  //     setMessageBoxSeverity("error");
-  //     setMessageBoxOpen(true);
-  //   }
-  // };
-
   const handleOnboardClick = async () => {
     if (!connection?.id) return;
 
     try {
       const exists = await checkFinalQuotationExists(connection.id);
-
-      // if (!exists) {
-      //   setDialogType("confirm");
-      //   setDialogMessage(
-      //     "Final Quotation is not given to this consumer. Do you want to give final quotation?"
-      //   );
-
-      //   setDialogAction(() => () => {
-      //     navigate(`/system-specifications`, {
-      //       state: {
-      //         connectionId: connection.id,
-      //         consumerId: connection.consumerId,
-      //         customerId: connection.customerId,
-      //       },
-      //     });
-      //   });
-
-      //   setDialogOpen(true);
-      //   return;
-      // }
 
       setDialogType("confirm");
       setDialogMessage("Do you want to onboard the consumer?");
@@ -265,7 +229,6 @@ export const ViewConnection = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
 <div className="flex items-center gap-2">
-          {/* Back Arrow */}
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -280,7 +243,6 @@ export const ViewConnection = () => {
 
      <div className="w-full max-w-4xl mx-auto mb-4 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-            {/* Connector Line: between the first and last icon only */}
             <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
             <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
@@ -363,7 +325,6 @@ export const ViewConnection = () => {
 
           <div className="border-b border-gray-200 mb-4" />
 
-          {/* Consumer Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -395,7 +356,6 @@ export const ViewConnection = () => {
             </div>
           </div>
 
-          {/* Business Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
@@ -421,7 +381,6 @@ export const ViewConnection = () => {
             </div>
           </div>
 
-          {/* Address Information */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
@@ -430,7 +389,6 @@ export const ViewConnection = () => {
               <h4 className="text-base font-medium text-gray-900">Address Information</h4>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {/* Address - full width on mobile */}
               <div className="col-span-2 md:col-span-1">
                 <h5 className="text-sm font-medium text-gray-500">Address</h5>
                 <p className="text-sm text-gray-800 mt-1">
@@ -439,7 +397,6 @@ export const ViewConnection = () => {
                 </p>
               </div>
 
-              {/* Address Type */}
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Address Type</h5>
                 <p className="text-sm text-gray-800 mt-1">
@@ -447,7 +404,6 @@ export const ViewConnection = () => {
                 </p>
               </div>
 
-              {/* Latitude, Longitude */}
               <div>
                 <h5 className="text-sm font-medium text-gray-500">Lat, Long</h5>
                 <p className="text-sm text-gray-800 mt-1">
@@ -458,7 +414,6 @@ export const ViewConnection = () => {
           </div>
 
 
-          {/* Name Correction */}
           {connection.isNameCorrectionRequired && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
               <div className="flex items-center gap-2 mb-3">
@@ -502,7 +457,7 @@ export const ViewConnection = () => {
 
 
       <div className="col-span-1 md:col-span-2 flex flex-col items-center space-y-4 mt-4">
-        {(installationsByConsumer[connection.id] || []).map((installation, idx) => (
+        {(installationsByConsumer[connection.id] || []).map((installation: any, idx: number) => (
           <details
             key={installation.id}
             className="group w-full max-w-4xl rounded-xl border border-gray-200 bg-white shadow-lg"
@@ -524,7 +479,6 @@ export const ViewConnection = () => {
 
 
 
-            {/* Installation Info Block */}
             <div className="px-4 pb-6 text-sm text-gray-700">
               <div className="border-b border-gray-200 mb-4" />
 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
@@ -572,7 +526,6 @@ export const ViewConnection = () => {
               </div>
               </div>
 
-              {/* Edit Button */}
               <div className="flex justify-start mt-4">
                 <button
                   onClick={() =>
@@ -595,14 +548,11 @@ export const ViewConnection = () => {
         ))}
       </div>
 
-      {/* Action Buttons Section */}
       <div className="col-span-1 md:col-span-2 flex flex-col items-center space-y-4 py-4">
 
 
-        {/* Responsive Button Grid */}
         <div className="w-full max-w-4xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* Add New Installation Button */}
             <button
               onClick={() => {
                 console.log("Navigating with connectionId:", connectionId);
@@ -628,7 +578,6 @@ export const ViewConnection = () => {
 
 
 
-            {/* Get Recommendation Button */}
             <button
               onClick={() =>
                 navigate(`/system-specifications`, {

@@ -25,6 +25,32 @@ interface Village {
   pinCode: string;
 }
 
+interface FormData {
+  consumerId: string;
+  isDiscomConsumer: string;
+  phaseTypeId: number;
+  connectionTypeId: number;
+  addressTypeId: number;
+  latitude: string;
+  longitude: string;
+  gstIn: string;
+  billedTo: string;
+  addressLine1: string;
+  addressLine2: string;
+  villageCode: number;
+  pinCode: string;
+  isNameCorrection: string;
+  correctionTypeId: number | null;
+  avgMonthlyConsumption: string;
+  isOnboardedCustomers: boolean;
+  discomId: string;
+  isActive: boolean;
+  isGharkulCustomer: string;
+  gharkulNumber: string;
+  districtCode?: number;
+  talukaCode?: number;
+}
+
 const validationRules = {
   consumerNumber: {
     pattern: /^[0-9]{12}$/,
@@ -181,7 +207,7 @@ export const EditConnection = () => {
 
 
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<FormData>({
     consumerId: "",
     isDiscomConsumer: "Yes",
     phaseTypeId: 1,
@@ -391,10 +417,10 @@ export const EditConnection = () => {
       }
     }
 
-    if (!formData.avgMonthlyConsumption || isNaN(formData.avgMonthlyConsumption)) {
+    if (!formData.avgMonthlyConsumption || isNaN(Number(formData.avgMonthlyConsumption))) {
       errors.push("Monthly Average Consumption Units is required");
     } else {
-      const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.avgMonthlyConsumption);
+      const consumptionValidation = validateField('avgMonthlyConsumption', formData.avgMonthlyConsumption);
       if (!consumptionValidation.isValid) {
         errors.push(consumptionValidation.message);
       }
@@ -506,12 +532,12 @@ export const EditConnection = () => {
     console.log("Current state PINcode:", value);
   };
 
-  const handleNameCorrection = (e) => {
+  const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,
       isNameCorrection: value,
-      correctionType: value === "No" ? "" : prev.correctionType,
+      correctionTypeId: value === "No" ? null : prev.correctionTypeId,
     }));
   };
 
@@ -859,7 +885,7 @@ export const EditConnection = () => {
                   value={formData.consumerId}
                   onChange={handleChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.replace(/[^0-9]/g, "");
                   }}
                   maxLength={12}
                   pattern="^[0-9]{12}$"
@@ -897,7 +923,7 @@ export const EditConnection = () => {
                   value={confirmConsumerNumber}
                   onChange={handleConfirmConsumerNumberChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.replace(/[^0-9]/g, "");
                   }}
                   placeholder="Confirm consumer number"
                   maxLength={12}
@@ -930,7 +956,7 @@ export const EditConnection = () => {
                   name="connectionTypeId"
                   value={formData.connectionTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "connectionTypeId", value: val } })
+                    handleChange({ target: { name: "connectionTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={connectionTypes.map((type) => ({
                     value: type.id,
@@ -947,7 +973,7 @@ export const EditConnection = () => {
                   name="phaseTypeId"
                   value={formData.phaseTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "phaseTypeId", value: val } })
+                    handleChange({ target: { name: "phaseTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={phaseTypes.map((type) => ({
                     value: type.id,
@@ -1102,7 +1128,7 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="district"
                   value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)}
                   options={[
                     { value: 0, label: districtName || "Select District" },
                     ...districts.map((district) => ({
@@ -1122,7 +1148,7 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)}
                   options={[
                     { value: 0, label: talukaName || "Select Taluka" },
                     ...talukas.map((taluka) => ({
@@ -1142,7 +1168,19 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  onChange={(val) => {
+                    const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+                    const selectedVillage = villages.find((village) => village.code === numVal);
+                    if (selectedVillage) {
+                      setVillageCode(numVal);
+                      setPinCode(selectedVillage.pinCode || "");
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        villageCode: numVal,
+                        pinCode: selectedVillage.pinCode,
+                      }));
+                    }
+                  }}
                   options={[
                     { value: 0, label: villageName || "Select Village" },
                     ...villages.map((village) => ({
@@ -1185,7 +1223,7 @@ export const EditConnection = () => {
                   name="addressTypeId"
                   value={formData.addressTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "addressTypeId", value: val } })
+                    handleChange({ target: { name: "addressTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={addressTypes.map((type) => ({
                     value: type.id,
@@ -1515,6 +1553,7 @@ export const EditConnection = () => {
                         longitude: connection.longitude || "",
                         isOnboardedCustomers: connection.isOnboardedCustomers ?? false,
                         discomId: connection.discomId || "",
+                        isActive: connection.isActive ?? true,
                       });
 
                     }

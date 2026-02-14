@@ -707,7 +707,6 @@ useEffect(() => {
   const handleConfirmConsumerNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmConsumerNumber(value);
-    //localStorage.setItem('confirmConsumerNumber', value);
   };
 
 
@@ -795,10 +794,7 @@ useEffect(() => {
       });
     }
 
-    /////////////
     localStorage.removeItem('connectionFormData');
-    //localStorage.removeItem('confirmConsumerNumber');
-    ////////////
   };
 
 
@@ -810,7 +806,6 @@ useEffect(() => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2">
-            {/* Back Arrow */}
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -828,8 +823,6 @@ useEffect(() => {
         {/* Progress Steps */}
         <div className="w-full max-w-4xl mx-auto mb-6 mt-2 overflow-x-auto no-scrollbar bg-transparent border-none shadow-none">
           <div className="relative flex justify-center min-w-[500px] md:min-w-0">
-
-            {/* Connector Line: between the first and last icon only */}
             <div className="absolute top-5 left-[16%] right-[18%] h-0.5 bg-gray-300 z-0 md:left-[18%] md:right-[20%]" />
 
             <div className="flex justify-between w-full px-4 md:w-[80%] z-10 min-w-[500px]">
@@ -949,7 +942,8 @@ useEffect(() => {
                   value={formData.consumerId}
                   onChange={handleChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9]/g, "");
                   }}
                   maxLength={12}
                   pattern="^[0-9]{12}$"
@@ -985,7 +979,8 @@ useEffect(() => {
                   value={confirmConsumerNumber}
                   onChange={handleConfirmConsumerNumberChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^0-9]/g, "");
                   }}
                   placeholder="Confirm consumer number"
                   maxLength={12}
@@ -1014,31 +1009,17 @@ useEffect(() => {
                     <span className="text-red-500">*</span>
                   )}
                 </label>
-                {/* <select
-                  name="connectionTypeId"
-                  value={formData.connectionTypeId}
-                  onChange={handleChange}
-                  required={formData.isDiscomConsumer === "Yes"}
-                  disabled={formData.isDiscomConsumer === "No"}
-                  className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300 disabled:bg-gray-200 disabled:cursor-not-allowed"
-                >
-                  {connectionTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="connectionTypeId"
                   value={formData.connectionTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "connectionTypeId", value: val } })
+                    handleChange({ target: { name: "connectionTypeId", value: String(val) } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={connectionTypes.map((type) => ({
                     value: type.id,
                     label: type.nameEn,
                   }))}
-                  required={formData.isDiscomConsumer === "Yes"}    // <-- add this
+                  required={formData.isDiscomConsumer === "Yes"}
                   disabled={formData.isDiscomConsumer === "No"}
                 />
               </div>
@@ -1047,23 +1028,11 @@ useEffect(() => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phase Type <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="phaseTypeId"
-                  value={formData.phaseTypeId}
-                  onChange={handleChange}
-                  className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                >
-                  {phaseTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="phaseTypeId"
                   value={formData.phaseTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "phaseTypeId", value: val } })
+                    handleChange({ target: { name: "phaseTypeId", value: String(val) } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={phaseTypes.map((type) => ({
                     value: type.id,
@@ -1124,9 +1093,6 @@ useEffect(() => {
                   title="DISCOM ID must be a positive integer greater than 0"
                   className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
                 />
-                {/* {fieldErrors.discomId && (
-                    <p className="text-red-600 text-sm mt-1">{fieldErrors.discomId}</p>
-            )} */}
               </div>
 
             </div>
@@ -1301,23 +1267,11 @@ useEffect(() => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Address Type <span className="text-red-500">*</span>
                 </label>
-                {/* <select
-                  name="addressTypeId"
-                  value={formData.addressTypeId}
-                  onChange={handleChange}
-                  className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  {addressTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.nameEn}
-                    </option>
-                  ))}
-                </select> */}
                 <ReusableDropdown
                   name="addressTypeId"
                   value={formData.addressTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "addressTypeId", value: val } })
+                    handleChange({ target: { name: "addressTypeId", value: String(val) } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={addressTypes.map((type) => ({
                     value: type.id,

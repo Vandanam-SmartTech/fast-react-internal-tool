@@ -47,10 +47,10 @@ const ConsumerCard = memo(({ consumer, userRole, onView, onNavigate }: any) => (
               <Button variant="outline" size="sm" onClick={() => onNavigate('/connection-form', { customerId: consumer.customerId || consumer.id, govIdName: consumer.govIdName })} leftIcon={<Plus className="w-4 h-4" />}>Add Connection</Button>
             )}
           </div>
-          {consumer.connectionData.map((conn: any, i: number) => (
-            <div key={i} className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 rounded-lg border border-primary-100">
+          {consumer.connectionData.map((conn: any, idx: number) => (
+            <div key={conn.id} className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 rounded-lg border border-primary-100">
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-primary-700">Connection {i + 1}</div>
+                <div className="text-xs font-medium text-primary-700">Connection {idx + 1}</div>
                 <div className="text-[11px] text-secondary-700 font-mono">{conn.consumerId ?? conn.gharkulNumber}</div>
               </div>
               <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export const ListOfConsumers = memo(() => {
       }
 
       const data = await fetchConsumersWithConnectionsOptimized(pageNumber, BATCH_SIZE, {
-        orgId, agencyId, userRole: effectiveUserRole, userId, isGharkulCustomer: false, villageCode, talukaCode, limit: BATCH_SIZE
+        orgId, agencyId, userRole: effectiveUserRole, userId, isGharkulCustomer: false, villageCode, talukaCode
       });
       setAllConsumers(prev => [...prev, ...data.content]);
       if (data.content.length < BATCH_SIZE) setHasMoreBackend(false);
