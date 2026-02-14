@@ -36,14 +36,13 @@ export default defineConfig({
         entryFileNames: 'assets/js/[name]-[hash].js',
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler') || id.includes('react-leaflet')) return 'vendor-react';
+            if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler')) return 'vendor-react';
             if (id.includes('react-router')) return 'vendor-router';
             if (id.includes('axios')) return 'vendor-http';
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('react-toastify')) return 'vendor-toast';
             if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
-            if (id.includes('leaflet')) return 'vendor-maps';
-            return 'vendor-misc';
+            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-maps';
           }
           if (id.includes('src/pages/')) {
             const match = id.match(/src\/pages\/([^\/]+)/);
@@ -56,24 +55,7 @@ export default defineConfig({
         propertyReadSideEffects: false
       }
     },
-    minify: 'terser',
-    terserOptions: {
-      compress: { 
-        drop_console: false, 
-        drop_debugger: true,
-        passes: 1,
-        pure_funcs: ['console.debug'],
-        collapse_vars: false,
-        reduce_vars: false,
-        inline: false
-      },
-      format: { 
-        comments: false
-      },
-      mangle: { 
-        safari10: true
-      }
-    },
+    minify: 'esbuild',
     chunkSizeWarningLimit: 250,
     sourcemap: false,
     target: 'es2020',
