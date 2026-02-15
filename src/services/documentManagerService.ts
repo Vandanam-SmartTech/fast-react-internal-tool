@@ -341,5 +341,6 @@ export const fetchOrganizationImage = async (orgId: number): Promise<string | nu
     console.error("Failed to fetch logo:", error);
     return null;
   }
+  
 };
 
