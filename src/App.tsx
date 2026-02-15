@@ -28,9 +28,11 @@ const AppContent: React.FC = () => {
     setSidebarOpen(storedState === 'true');
 
     const userRole = localStorage.getItem('userRole');
-    if (userRole) preloadDashboard(userRole);
-    preloadCommonRoutes();
-
+    if (userRole) {
+      preloadDashboard(userRole);
+      preloadCommonRoutes();
+    }
+    
     const handleStorageChange = () => {
       const newState = localStorage.getItem('sidebarOpen');
       setSidebarOpen(newState === 'true');
