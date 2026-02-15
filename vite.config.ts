@@ -73,18 +73,10 @@ export default defineConfig({
   },
   server: { 
     host: '0.0.0.0', 
-    port: 8081,
+    port: 8080,
     hmr: {
       protocol: 'ws',
       host: 'localhost'
     }
   },
-  esbuild: {
-    legalComments: 'none',
-    treeShaking: true,
-    drop: ['console', 'debugger'],
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true
-  }
 });
