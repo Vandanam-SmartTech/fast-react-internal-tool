@@ -8,7 +8,27 @@
     <meta name="theme-color" content="#2563eb" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Preload -->
+    <link 
+      rel="preload"
+      as="image"
+      href="./src/assets/Vandanam_SmartTech_Logo_213_105.png"
+      fetchpriority="high"
+    />
+    <link 
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    >
+    <noscript>
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      >
+    </noscript>
+
     <title>Vandanam SmartTech</title>
   </head>
   <body>

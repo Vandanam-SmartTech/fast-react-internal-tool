@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import bgImage from '../../assets/Solar_Image.jpg';
+import bgImage from '../../assets/Solar_Image.webp';
 import { validateUser } from '../../services/jwtService';
 import { sendOtpToEmail } from '../../services/otpService';
 import 'react-toastify/dist/ReactToastify.css';

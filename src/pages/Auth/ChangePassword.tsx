@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import bgImage from '../../assets/Solar_Image.jpg';
+import bgImage from '../../assets/Solar_Image.webp';
 import { Logo } from '../../components/ui';
 import { verifyAndChangePassword } from '../../services/jwtService';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';

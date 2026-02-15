@@ -8,7 +8,7 @@ import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import ReusableDropdown from '../../components/ReusableDropdown';
 import { useUser } from '../../contexts/UserContext';
-import bgImage from '../../assets/Solar_Image.jpg';
+import bgImage from '../../assets/Solar_Image.webp';
 
 interface OrgRoleData {
   roles: string[];
