@@ -1,8 +1,10 @@
-const CACHE_NAME = 'solarpro-v1';
+const BASE_PATH = '/solarpro/';
+const CACHE_NAME = 'solarpro-v2';
+
 const urlsToCache = [
-  '/',
-  '/config.json',
-  '/Vandanam_Logo.png'
+  BASE_PATH,
+  BASE_PATH + 'config.json',
+  BASE_PATH + 'Vandanam_Logo.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -12,22 +14,34 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) return response;
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((networkResponse) => {
+        if (
+          !networkResponse ||
+          networkResponse.status !== 200 ||
+          networkResponse.type !== 'basic'
+        ) {
+          return networkResponse;
         }
-        const responseToCache = response.clone();
+
+        const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          cache.put(event.request, responseClone);
         });
-        return response;
+
+        return networkResponse;
       });
     })
   );
 });
+
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
