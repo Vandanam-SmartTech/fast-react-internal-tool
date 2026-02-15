@@ -4,7 +4,7 @@ const CACHE_NAME = 'solarpro-v2';
 const urlsToCache = [
   BASE_PATH,
   BASE_PATH + 'config.json',
-  BASE_PATH + 'Vandanam_Logo.png'
+  BASE_PATH + 'Vandanam_Logo_227_192.png'
 ];
 
 self.addEventListener('install', (event) => {
