@@ -1,17 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
-import viteCompression from 'vite-plugin-compression';
 
 const config = JSON.parse(fs.readFileSync('./public/config.json', 'utf-8'));
 
 export default defineConfig({
   base: config.BASE_PATH || '/',
-  plugins: [
-    react({ jsxRuntime: 'automatic' }),
-    viteCompression({ algorithm: 'gzip', threshold: 512, deleteOriginFile: false }),
-    viteCompression({ algorithm: 'brotliCompress', threshold: 512, deleteOriginFile: false })
-  ],
+  plugins: [react()],
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'axios'],
     exclude: ['react-leaflet', 'leaflet'],
