@@ -69,11 +69,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 250,
     sourcemap: false,
-<<<<<<< HEAD
     target: 'es2015',
-=======
-    target: 'es2017',
->>>>>>> 0d8d8aadf62c2e0d695ab799f56d31b9ac79cdf6
     reportCompressedSize: false,
     assetsInlineLimit: 4096
   },

@@ -27,7 +27,7 @@ const OnboardedConsumers: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [, setTotalCustomers] = useState(0);
 
   // refs to handle debounced searching and race conditions
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
