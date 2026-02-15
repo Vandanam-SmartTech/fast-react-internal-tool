@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Circle, FileText, Plus, Download, Upload, CreditCard } from "lucide-react";
+import { ArrowLeft, CheckCircle, Download, Upload, CreditCard, Info, Plus, X as CloseIcon } from "lucide-react";
 import {
-    UserCircleIcon,
     BoltIcon,
     HomeModernIcon,
-    Cog6ToothIcon,
+    CalendarDaysIcon,
+    ChatBubbleBottomCenterTextIcon,
+    WrenchIcon,
+    ArrowsPointingOutIcon
 } from "@heroicons/react/24/solid";
 import { getSavedSystemSpecs, generateQuotationPDF, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
 import { uploadDocuments } from "../../services/documentManagerService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
+import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
 
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
@@ -20,12 +23,17 @@ interface Inverter {
     inverterCapacity: number;
     inverterCount: number;
     gridTypeName: string;
+    productWarranty?: number;
 }
 
 interface Pipe {
     pipeBrandName?: string;
     pipeSize?: string;
     pipeCount?: number;
+    pipeWidth?: number;
+    pipeHeight?: number;
+    pipeThickness?: number;
+    pipeLength?: number;
 }
 
 interface SystemSpec {
@@ -47,6 +55,7 @@ interface SystemSpec {
 
     title?: string; // Added
     panelCount?: number; // Added
+    description?: string; // Added
 
     inverters?: Inverter[];
     pipes?: Pipe[];
@@ -58,6 +67,8 @@ interface SystemSpec {
     hasWaterSprinkler?: boolean;
     hasHeavydutyRamp?: boolean;
     hasHeavydutyStairs?: boolean;
+    validFrom?: string;
+    validThru?: string;
 }
 
 
@@ -72,26 +83,21 @@ export const ViewSystemSpecifications = () => {
     const [loading, setLoading] = useState(true);
     const [requestingQuote, setRequestingQuote] = useState(false);
     const [uploadingQuote, setUploadingQuote] = useState(false);
-    const [activeTab, setActiveTab] = useState("System Specifications");
     const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
     const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
     const [, setConnectionDetails] = useState<any>(null);
-    const [connectionType, setConnectionType] = useState("");
+    const [, setConnectionType] = useState("");
     const [orgId, setOrgId] = useState<number | null>(null);
-    const [agencyId, setAgencyId] = useState<number | null>(null);
-    const [govIdName, setGovIdName] = useState("");
+    const [, setAgencyId] = useState<number | null>(null);
+    const [, setGovIdName] = useState("");
 
     // New State for System Packages
     const [panelSpecs, setPanelSpecs] = useState<any[]>([]);
     const [selectedPanelSpecId, setSelectedPanelSpecId] = useState<number | null>(null);
-    const [stdSpecPackages, setStdSpecPackages] = useState<any[]>([]);
 
-    const tabs = [
-        "Customer Details",
-        "Connection Details",
-        "Installation Details",
-        "System Specifications",
-    ];
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [viewingSpec, setViewingSpec] = useState<SystemSpec | null>(null);
 
     useEffect(() => {
         const fetchSpecs = async () => {
@@ -214,15 +220,26 @@ export const ViewSystemSpecifications = () => {
                                 inverterBrandName: inv.inverterBrandName,
                                 inverterCount: inv.inverterCount,
                                 inverterCapacity: inv.inverterCapacity || 0,
-                                gridTypeName: inv.gridTypeName || ""
+                                gridTypeName: inv.gridTypeName || "",
+                                productWarranty: inv.productWarranty
                             })) || [],
 
                             pipes: specs.pipes?.map((p: any) => ({
                                 pipeBrandName: p.pipeBrandName,
-                                pipeCount: p.pipeCount
+                                pipeCount: p.pipeCount,
+                                pipeWidth: p.pipeWidth,
+                                pipeHeight: p.pipeHeight,
+                                pipeThickness: p.pipeThickness,
+                                pipeLength: p.pipeLength
                             })) || [],
 
                             installationStructureType: specs.installationStructureType,
+                            hasWaterSprinkler: specs.hasWaterSprinkler,
+                            hasHeavydutyRamp: specs.hasHeavydutyRamp,
+                            hasHeavydutyStairs: specs.hasHeavydutyStairs,
+                            validFrom: pkg.validFrom,
+                            validThru: pkg.validThru,
+                            description: pkg.description,
                             createdAt: specs.createdAt || new Date().toISOString(),
                         };
                     });
@@ -316,13 +333,20 @@ export const ViewSystemSpecifications = () => {
     };
 
     const handleAddPackage = () => {
-        // Navigate back to system specs to add a new one. 
-        // We might need to ensure the form clears or allows adding new. 
-        // SystemSpecifications.tsx handles "isRunningCopy" so it should create a new draft if we save again?
-        // Or we just navigate there.
         navigate(`/system-specifications`, {
             state: { consumerId, customerId, connectionId },
         });
+    };
+
+    const handleOpenModal = (spec: SystemSpec, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setViewingSpec(spec);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setViewingSpec(null);
     };
 
 
@@ -344,7 +368,7 @@ export const ViewSystemSpecifications = () => {
                         >
                             <ArrowLeft className="w-6 h-6 text-gray-700" />
                         </button>
-                        <h1 className="text-xl font-bold text-gray-700">System Configurations</h1>
+                        <h1 className="text-xl font-bold text-gray-700">Confirm & Pay</h1>
                     </div>
 
                     {userInfo?.role === "ROLE_ORG_ADMIN" && <button
@@ -419,7 +443,7 @@ export const ViewSystemSpecifications = () => {
                     <div className="w-full lg:w-2/3 space-y-4">
 
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Available List of Panels</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Choose Your Solar Panels</label>
                             <select
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 value={selectedPanelSpecId || ""}
@@ -434,69 +458,100 @@ export const ViewSystemSpecifications = () => {
                             </select>
                         </div>
 
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Available Packages</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 px-1">Our Solar Plans</h3>
                         {allSpecs.length === 0 ? (
-                            <div className="bg-white p-8 text-center text-gray-500 rounded-lg border border-dashed border-gray-300">
-                                Select a panel to see matching system packages.
+                            <div className="bg-white p-12 text-center text-gray-500 rounded-xl border-2 border-dashed border-gray-200 shadow-inner">
+                                <Info className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                                <p className="text-lg">Select a panel to see matching system packages.</p>
                             </div>
                         ) : (
-                            allSpecs.map((spec) => (
-                                <div
-                                    key={spec.id}
-                                    onClick={() => setSelectedSpec(spec)}
-                                    className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all ${selectedSpec?.id === spec.id
-                                        ? "border-blue-500 ring-2 ring-blue-100"
-                                        : "border-gray-200 hover:border-blue-300"
-                                        }`}
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedSpec?.id === spec.id ? "border-blue-600" : "border-gray-400"
-                                                }`}>
-                                                {selectedSpec?.id === spec.id && <div className="w-3 h-3 bg-blue-600 rounded-full" />}
-                                            </div>
-                                            <div>
-                                                <h4 className="text-md font-bold text-gray-800">{spec.title || `${spec.systemCapacityKw} kW System`}</h4>
-                                                <p className="text-sm text-gray-500">{spec.panelBrandShortName} • {spec.installationStructureType || "Static"}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-bold text-blue-600">₹ {formatIndianNumber((spec.systemCost || 0) + (spec.fabricationCost || 0))}</p>
-                                            <p className="text-xs text-gray-500">System Capacity: {spec.systemCapacityKw} kW</p>
-                                        </div>
-                                    </div>
+                            <div className="space-y-4">
+                                {allSpecs.map((spec) => (
+                                    <div
+                                        key={spec.id}
+                                        onClick={() => setSelectedSpec(spec)}
+                                        className={`bg-white rounded-xl shadow-sm border-2 p-4 cursor-pointer transition-all duration-200 group relative ${selectedSpec?.id === spec.id
+                                            ? "border-blue-500 ring-4 ring-blue-50 bg-blue-50/10"
+                                            : "border-gray-100 hover:border-blue-200 hover:shadow-md"
+                                            }`}
+                                    >
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex items-start gap-3 flex-1">
+                                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSpec?.id === spec.id ? "border-blue-600 bg-blue-600" : "border-gray-300 group-hover:border-blue-400"
+                                                    }`}>
+                                                    {selectedSpec?.id === spec.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h4 className="text-base font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                            {spec.title || `${spec.systemCapacityKw} kW System`}
+                                                        </h4>
+                                                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                                                            {spec.systemCapacityKw} kW
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs font-semibold text-gray-500 mb-1.5 capitalize">
+                                                        {spec.panelBrandShortName} Solar Panels
+                                                    </p>
 
-                                    {/* Mini Details */}
-                                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 text-xs text-gray-600">
-                                        <div>
-                                            <span className="block text-gray-400">Panel Details</span>
-                                            {spec.panelBrandShortName} ({spec.panelCount || 0} x {spec.panelRatedWattageW}W)
+                                                    {spec.description && (
+                                                        <p className="text-[11px] text-gray-500 line-clamp-1 mb-2 bg-gray-50/50 p-1 rounded italic">
+                                                            "{spec.description}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-2xl font-black text-blue-600 mb-0">
+                                                    ₹{formatIndianNumber((spec.systemCost || 0) + (spec.fabricationCost || 0))}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="block text-gray-400">Inverter Details</span>
-                                            {spec.inverters && spec.inverters.length > 0
-                                                ? `${spec.inverters[0].inverterBrandName} (${spec.inverters[0].inverterCount})`
-                                                : "None"}
-                                        </div>
-                                        <div>
-                                            <span className="block text-gray-400">Battery Details</span>
-                                            {spec.batteryBrandName
-                                                ? `${spec.batteryBrandName} (${spec.batteryCount || 0})`
-                                                : "None"}
-                                        </div>
-                                        <div>
-                                            <span className="block text-gray-400">Pipe Details</span>
-                                            {spec.pipes && spec.pipes.length > 0
-                                                ? `${spec.pipes[0].pipeBrandName} (${spec.pipes[0].pipeCount})`
-                                                : "None"}
-                                        </div>
-                                        <div>
-                                            <span className="block text-gray-400">Costs</span>
-                                            System: ₹{formatIndianNumber(spec.systemCost)} | Fab: ₹{formatIndianNumber(spec.fabricationCost)}
+
+                                        {/* Key Features Grid & Action */}
+                                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-end gap-4">
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 flex-1">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-0.5">Panels</span>
+                                                    <span className="text-xs font-bold text-gray-800">
+                                                        {spec.panelCount || 0} x {spec.panelRatedWattageW}W
+                                                    </span>
+                                                </div>
+                                                {spec.inverters && spec.inverters.length > 0 && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-0.5">Inverter</span>
+                                                        <span className="text-xs font-bold text-gray-800 truncate" title={spec.inverters[0].inverterBrandName}>
+                                                            {spec.inverters[0].inverterBrandName}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {spec.batteryBrandName && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-0.5">Battery</span>
+                                                        <span className="text-xs font-bold text-gray-800">
+                                                            {spec.batteryBrandName}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-0.5">Structure</span>
+                                                    <span className="text-xs font-bold text-gray-800 truncate" title={spec.pipes && spec.pipes.length > 0 ? spec.pipes[0].pipeBrandName : "Structure"}>
+                                                        {spec.pipes && spec.pipes.length > 0 ? spec.pipes[0].pipeBrandName : (spec.installationStructureType || "Static")}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={(e) => handleOpenModal(spec, e)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-[10px] font-black text-white rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95 whitespace-nowrap"
+                                            >
+                                                <Info className="w-3 h-3" />
+                                                VIEW ALL SPECS
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                ))}
+                            </div>
                         )}
                     </div>
 
@@ -504,7 +559,7 @@ export const ViewSystemSpecifications = () => {
                     <div className="w-full lg:w-1/3">
                         {selectedSpec ? (
                             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                                <h3 className="text-lg font-bold text-gray-800 mb-4">Package Summary</h3>
+                                <h3 className="text-lg font-bold text-gray-800 mb-4">Order Details</h3>
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex justify-between text-sm">
@@ -572,6 +627,197 @@ export const ViewSystemSpecifications = () => {
                 </div>
 
             </div>
+
+            {/* Package Details Modal */}
+            <Dialog
+                open={isModalOpen}
+                onClose={handleCloseModal}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    className: "rounded-2xl overflow-hidden shadow-2xl"
+                }}
+            >
+                {viewingSpec && (
+                    <>
+                        <DialogTitle className="bg-blue-600 text-white flex justify-between items-center p-6">
+                            <div className="flex items-center gap-3">
+                                <Info className="w-6 h-6" />
+                                <div>
+                                    <h2 className="text-xl font-black leading-tight">{viewingSpec.title || "Package Details"}</h2>
+                                    <p className="text-blue-100 text-[11px] font-bold uppercase tracking-widest mt-0.5">Technical Specifications & Warranty</p>
+                                </div>
+                            </div>
+                            <IconButton onClick={handleCloseModal} className="text-white hover:bg-blue-700 transition-colors">
+                                <CloseIcon className="w-6 h-6" />
+                            </IconButton>
+                        </DialogTitle>
+                        <DialogContent className="p-0 bg-gray-50">
+                            <div className="p-6 space-y-8">
+
+                                {/* Header Section: Overview & Validity */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="md:col-span-2 space-y-4">
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2 flex items-center gap-1.5">
+                                                <ChatBubbleBottomCenterTextIcon className="w-3.5 h-3.5" />
+                                                Description
+                                            </h3>
+                                            <p className="text-sm text-gray-700 leading-relaxed bg-white p-4 rounded-xl shadow-sm border border-gray-100 italic">
+                                                {viewingSpec.description || "No detailed description available for this package."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2 flex items-center gap-1.5">
+                                            <CalendarDaysIcon className="w-3.5 h-3.5" />
+                                            Offer Validity
+                                        </h3>
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+                                            <div className="pb-3 flex justify-between items-center">
+                                                <span className="text-[11px] font-bold text-gray-400">Valid From</span>
+                                                <span className="text-sm font-black text-gray-800">{viewingSpec.validFrom || "N/A"}</span>
+                                            </div>
+                                            <div className="pt-3 flex justify-between items-center">
+                                                <span className="text-[11px] font-bold text-gray-400">Valid Through</span>
+                                                <span className="text-sm font-black text-red-500">{viewingSpec.validThru || "N/A"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Technical Specs Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                                    {/* Column 1: Power & Inverter */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3 flex items-center gap-1.5">
+                                                <BoltIcon className="w-3.5 h-3.5" />
+                                                Inverter & Electricals
+                                            </h3>
+                                            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                                                {viewingSpec.inverters?.map((inv, idx) => (
+                                                    <div key={idx} className="space-y-3">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-bold text-gray-500">Brand & Count</span>
+                                                            <span className="text-sm font-extrabold text-gray-900">{inv.inverterBrandName} ({inv.inverterCount})</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-bold text-gray-500">Capacity</span>
+                                                            <span className="text-sm font-extrabold text-blue-600">{inv.inverterCapacity} kW</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-bold text-gray-500">Grid Type</span>
+                                                            <span className="text-sm font-extrabold text-gray-900">{inv.gridTypeName}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+                                                            <span className="text-xs font-black text-green-700 uppercase tracking-tighter">Product Warranty</span>
+                                                            <span className="text-sm font-black text-green-700">{inv.productWarranty || "Standard"} Years</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {(!viewingSpec.inverters || viewingSpec.inverters.length === 0) && (
+                                                    <p className="text-xs text-gray-400 italic">No inverter details found.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3 flex items-center gap-1.5">
+                                                <HomeModernIcon className="w-3.5 h-3.5" />
+                                                Installation Assets
+                                            </h3>
+                                            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+                                                <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center text-center">
+                                                    <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Sprinkler</span>
+                                                    {viewingSpec.hasWaterSprinkler ?
+                                                        <CheckCircle className="w-5 h-5 text-green-500" /> :
+                                                        <CloseIcon className="w-5 h-5 text-gray-300" />
+                                                    }
+                                                </div>
+                                                <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center text-center">
+                                                    <span className="text-[10px] uppercase font-black text-gray-400 mb-1">HD Ramp</span>
+                                                    {viewingSpec.hasHeavydutyRamp ?
+                                                        <CheckCircle className="w-5 h-5 text-green-500" /> :
+                                                        <CloseIcon className="w-5 h-5 text-gray-300" />
+                                                    }
+                                                </div>
+                                                <div className="p-3 bg-gray-50 rounded-xl flex flex-col items-center justify-center text-center col-span-2">
+                                                    <span className="text-[10px] uppercase font-black text-gray-400 mb-1">HD Stairs</span>
+                                                    {viewingSpec.hasHeavydutyStairs ?
+                                                        <CheckCircle className="w-5 h-5 text-green-500" /> :
+                                                        <CloseIcon className="w-5 h-5 text-gray-300" />
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 2: Structure & Meta */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3 flex items-center gap-1.5">
+                                                <WrenchIcon className="w-3.5 h-3.5" />
+                                                Structure (Pipe Specifications)
+                                            </h3>
+                                            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                                                {viewingSpec.pipes?.map((pipe, idx) => (
+                                                    <div key={idx} className="space-y-3">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-bold text-gray-500">Brand</span>
+                                                            <span className="text-sm font-extrabold text-gray-900">{pipe.pipeBrandName}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3 mt-4">
+                                                            <div className="bg-gray-50 p-3 rounded-xl">
+                                                                <span className="block text-[10px] font-black text-gray-400 uppercase mb-1">Width x Height</span>
+                                                                <span className="text-xs font-extrabold">{pipe.pipeWidth || 0} x {pipe.pipeHeight || 0} mm</span>
+                                                            </div>
+                                                            <div className="bg-gray-50 p-3 rounded-xl">
+                                                                <span className="block text-[10px] font-black text-gray-400 uppercase mb-1">Thickness</span>
+                                                                <span className="text-xs font-extrabold">{pipe.pipeThickness || 0} mm</span>
+                                                            </div>
+                                                            <div className="bg-blue-50 p-3 rounded-xl col-span-2 flex justify-between items-center">
+                                                                <span className="text-[10px] font-black text-blue-600 uppercase">Length per pipe</span>
+                                                                <span className="text-xs font-black text-blue-700">{pipe.pipeLength || 0} Meters</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {(!viewingSpec.pipes || viewingSpec.pipes.length === 0) && (
+                                                    <p className="text-xs text-gray-400 italic">No structure pipe details found.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3 flex items-center gap-1.5">
+                                                <ArrowsPointingOutIcon className="w-3.5 h-3.5" />
+                                                System Information
+                                            </h3>
+                                            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-bold text-gray-500">Total System Capacity</span>
+                                                    <span className="text-sm font-extrabold text-blue-600">{viewingSpec.systemCapacityKw} kW</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-bold text-gray-500">Panel Configuration</span>
+                                                    <span className="text-sm font-black text-gray-900">{viewingSpec.panelCount} x {viewingSpec.panelRatedWattageW}W</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs font-bold text-gray-500">Structure Type</span>
+                                                    <span className="text-sm font-black text-gray-900">{viewingSpec.installationStructureType || "Static Structure"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </>
+                )}
+            </Dialog>
         </div>
     );
 };
