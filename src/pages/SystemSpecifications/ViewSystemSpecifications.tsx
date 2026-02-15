@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Download, Upload, CreditCard, Info, Plus, X as CloseIcon } from "lucide-react";
+import { ArrowLeft, CheckCircle, CreditCard, Info, Plus, X as CloseIcon } from "lucide-react";
 import {
     BoltIcon,
     HomeModernIcon,
@@ -9,8 +9,7 @@ import {
     WrenchIcon,
     ArrowsPointingOutIcon
 } from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, generateQuotationPDF, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
-import { uploadDocuments } from "../../services/documentManagerService";
+import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
@@ -81,8 +80,6 @@ export const ViewSystemSpecifications = () => {
     const [allSpecs, setAllSpecs] = useState<SystemSpec[]>([]);
     const [selectedSpec, setSelectedSpec] = useState<SystemSpec | null>(null);
     const [loading, setLoading] = useState(true);
-    const [requestingQuote, setRequestingQuote] = useState(false);
-    const [uploadingQuote, setUploadingQuote] = useState(false);
     const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
     const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
     const [, setConnectionDetails] = useState<any>(null);
@@ -271,50 +268,7 @@ export const ViewSystemSpecifications = () => {
         }).format(value);
     };
 
-    const handleGenerateQuote = async () => {
-        if (!selectedSpec) return;
-        setRequestingQuote(true);
-        try {
-            const date = new Date();
-            const blob = await generateQuotationPDF(selectedSpec.id, date, "DRAFT-QUOTE");
 
-            // Create download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `Quotation_${selectedSpec.id}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            toast.success("Quotation generated successfully!");
-        } catch (error) {
-            console.error("Failed to generate quote", error);
-            toast.error("Failed to generate quotation.");
-        } finally {
-            setRequestingQuote(false);
-        }
-    };
-
-    const handleUploadQuote = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!selectedSpec || !event.target.files || event.target.files.length === 0) return;
-
-        setUploadingQuote(true);
-        const file = event.target.files[0];
-
-        try {
-            // Document Type: "Signed Quotation" (Using a generic name assumption)
-            await uploadDocuments(String(connectionId), "Signed Quotation", file);
-            toast.success("Signed quotation uploaded successfully!");
-        } catch (error) {
-            console.error("Failed to upload quote", error);
-            toast.error("Failed to upload signed quotation.");
-        } finally {
-            setUploadingQuote(false);
-            // Reset file input
-            event.target.value = '';
-        }
-    };
 
     const handleProceedToBuy = () => {
         if (!selectedSpec) return;
@@ -574,46 +528,14 @@ export const ViewSystemSpecifications = () => {
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="space-y-3">
-                                    {/* Generate Quote */}
-                                    <button
-                                        onClick={handleGenerateQuote}
-                                        disabled={requestingQuote}
-                                        className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                        {requestingQuote ? "Generating..." : "Generate Quotation"}
-                                    </button>
-
-                                    {/* Upload Quote */}
-                                    <div className="relative">
-                                        <input
-                                            type="file"
-                                            onChange={handleUploadQuote}
-                                            className="hidden"
-                                            id="upload-quote"
-                                            accept=".pdf,.jpg,.jpeg,.png"
-                                            disabled={uploadingQuote}
-                                        />
-                                        <label
-                                            htmlFor="upload-quote"
-                                            className={`w-full flex items-center justify-center gap-2 py-2 px-4 border border-dashed border-blue-300 rounded-md text-blue-600 hover:bg-blue-50 transition cursor-pointer ${uploadingQuote ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            <Upload className="w-4 h-4" />
-                                            {uploadingQuote ? "Uploading..." : "Upload Signed Quote"}
-                                        </label>
-                                    </div>
-
-                                    {/* Proceed to Buy */}
-                                    <button
-                                        onClick={handleProceedToBuy}
-                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4"
-                                    >
-                                        <CreditCard className="w-5 h-5" />
-                                        Proceed to Buy
-                                    </button>
-                                </div>
+                                {/* Proceed to Buy */}
+                                <button
+                                    onClick={handleProceedToBuy}
+                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4"
+                                >
+                                    <CreditCard className="w-5 h-5" />
+                                    Proceed to Buy
+                                </button>
                             </div>
                         ) : (
                             <div className="bg-gray-100 rounded-lg p-6 text-center text-gray-500">
@@ -622,7 +544,6 @@ export const ViewSystemSpecifications = () => {
                         )}
                     </div>
                 </div>
-
             </div>
 
             {/* Package Details Modal */}
