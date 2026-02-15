@@ -14,8 +14,10 @@ let config: AppConfig | null = null;
 
 export const loadConfig = async (): Promise<void> => {
   try {
-    const response = await fetch('/solarpro/config.json');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const response = await fetch(`${import.meta.env.BASE_URL}config.json`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
     config = await response.json();
   } catch (error) {
     console.error('Error loading config.json:', error);
