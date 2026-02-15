@@ -1,104 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { fetchClaims } from '../services/jwtService';
+import { useUser } from '../contexts/UserContext';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+
+  const {
+    userClaims,
+    loading,
+    setSelectedOrg,
+    clearUserClaims
+  } = useUser();
 
   useEffect(() => {
-    const verifyAccess = async () => {
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
-        setRedirectPath('/login');
+    
+    if (loading) return;
+
+    const token = localStorage.getItem('jwtToken');
+
+
+    if (!token) {
+      setRedirectPath('/login');
+      return;
+    }
+
+    if (!userClaims) {
+      setRedirectPath('/login');
+      return;
+    }
+
+    if (userClaims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
+      setAuthorized(true);
+      return;
+    }
+
+    const selectedOrgRaw = localStorage.getItem('selectedOrg');
+
+    if (!selectedOrgRaw) {
+      setRedirectPath('/login');
+      return;
+    }
+
+    try {
+      const parsedOrg = JSON.parse(selectedOrgRaw);
+      const orgData = userClaims.org_roles?.[parsedOrg.orgId];
+
+      if (!orgData) {
+        forceLogout();
         return;
       }
 
-      try {
-        const claims = await fetchClaims();
-        if (!claims) {
-          setRedirectPath('/login');
-          return;
-        }
-
-        // ✅ Global Super Admin → allow access to everything
-        if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
-          setAuthorized(true);
-          return;
-        }
-
-        // ✅ Extract orgRoles as entries so we have both orgId & role
-        const orgRoles = claims.org_roles ? Object.entries(claims.org_roles) : [];
-        if (orgRoles.length === 0) {
-          setRedirectPath('/login');
-          return;
-        }
-
-        // ✅ Validate selectedOrg
-        const selectedOrgRaw = localStorage.getItem('selectedOrg');
-        if (!selectedOrgRaw) {
-          setRedirectPath('/login');
-          return;
-        }
-
-        try {
-          const parsedOrg = JSON.parse(selectedOrgRaw);
-
-          // ✅ Cross-check orgId with claims
-          const matchingOrg = orgRoles.find(([orgId]) => orgId === parsedOrg.orgId);
-
-          if (!matchingOrg) {
-            console.warn('Selected org not in user claims. Forcing logout.');
-            localStorage.removeItem('selectedOrg');
-            localStorage.removeItem('jwtToken');
-            localStorage.removeItem('refreshToken');
-            setRedirectPath('/login');
-            return;
-          }
-
-          // ✅ Keep selectedOrg in sync with latest claim data
-          const [orgId, orgData] = matchingOrg;
-
-          const roleToUse =
-            parsedOrg.role && orgData.roles.includes(parsedOrg.role)
-              ? parsedOrg.role
-              : orgData.roles[0];
-
-          localStorage.setItem(
-            'selectedOrg',
-            JSON.stringify({
-              orgId,
-              orgName: orgData.org_name,
-              role: roleToUse,
-              deptCode: orgData.dept_code ?? null ,
-            })
-          );
-
-          setAuthorized(true);
-        } catch (e) {
-          console.error('Failed to parse selectedOrg:', e);
-          localStorage.removeItem('selectedOrg');
-          setRedirectPath('/login');
-        }
-      } catch (err) {
-        console.error('Error verifying access:', err);
-        setRedirectPath('/login');
+      if (!orgData.roles.includes(parsedOrg.role)) {
+        forceLogout();
+        return;
       }
-    };
 
-    verifyAccess();
-  }, []);
+      setSelectedOrg({
+        orgId: parsedOrg.orgId,
+        orgName: orgData.org_name,
+        role: parsedOrg.role,
+        deptCode: orgData.dept_code ?? null,
+      });
+
+      setAuthorized(true);
+    } catch {
+      forceLogout();
+    }
+
+  }, [userClaims, loading]);
+
+  const forceLogout = () => {
+    localStorage.removeItem('selectedOrg');
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('refreshToken');
+    clearUserClaims();
+    setRedirectPath('/login');
+  };
+
+  // if (loading || authorized === null) {
+  //   return <div>Loading...</div>;
+  // }
 
   if (redirectPath) {
     return <Navigate to={redirectPath} replace />;
-  }
-
-  if (authorized === null) {
-    return <div>Loading...</div>;
   }
 
   return <>{children}</>;

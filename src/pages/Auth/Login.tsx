@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
+import { login, setAuthToken } from '../../services/jwtService';
 import { User, Lock, Sun, Shield, Zap, Sparkles, ArrowLeft } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
 import ReusableDropdown from '../../components/ReusableDropdown';
+import { useUser } from '../../contexts/UserContext';
+import bgImage from '../../assets/Solar_Image.jpg';
 
 interface OrgRoleData {
   roles: string[];
@@ -21,6 +23,17 @@ interface RoleOption {
   deptCode: number | null;
 }
 
+interface UserClaims {
+  id: number;
+  name_as_per_gov_id?: string;
+  preferred_name?: string;
+  email_address?: string;
+  global_roles?: string[];
+  org_roles?: Record<string, OrgRoleData>;
+  has_password_changed?: boolean;
+  [key: string]: any;
+}
+
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -30,19 +43,26 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshUserClaims } = useUser();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) return;
+    const checkAlreadyLoggedIn = async () => {
+      const token = localStorage.getItem('jwtToken');
+      if (!token) return;
 
-    window.dispatchEvent(new Event('userUpdated'));
-    fetchClaims().then(claims => {
-      if (claims) handleRoleRouting(claims);
-    });
+
+      const claims = await refreshUserClaims(); // ✅ use context
+
+      if (claims) {
+        handleRoleRouting(claims);
+      }
+    };
+
+    checkAlreadyLoggedIn();
   }, []);
 
 
-  const handleLogin = async (e: React.FormEvent) => {
+const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -50,18 +70,16 @@ const Login = () => {
     try {
       const { jwt, refreshToken } = await login({ identifier, password });
       localStorage.setItem('jwtToken', jwt);
-      localStorage.setItem('refreshToken',refreshToken);
+      localStorage.setItem('refreshToken', refreshToken);
       setAuthToken(jwt, refreshToken);
 
-      window.dispatchEvent(new Event('userUpdated'));
-
-      const claims = await fetchClaims();
+      const claims = await refreshUserClaims();
 
       if (!claims) {
-        setError('Failed to fetch user claims.');
-        setLoading(false);
+        setError("Unable to load user details. Please try again.");
         return;
       }
+
 
       if (!claims.has_password_changed) {
         navigate('/password-reset');
@@ -80,7 +98,8 @@ const Login = () => {
 
 
 
-  const handleRoleRouting = (claims: any) => {
+
+  const handleRoleRouting = (claims: UserClaims) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       navigate('/super-admin-dashboard');
       return;
@@ -159,16 +178,35 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen relative flex justify-center overflow-hidden items-start pt-24 md:items-center md:pt-0"
+      className="min-h-screen relative flex items-center justify-center overflow-hidden"
 
       style={{
-        backgroundColor: '#f0f4f8',
-        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%)`
+        backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%), url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/20 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-solar-400/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-solar-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-secondary-400/10 to-primary-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
+      </div>
+
+
+      <div className="absolute inset-0">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-white/30 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
       </div>
 
      <div

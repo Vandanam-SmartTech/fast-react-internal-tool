@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { getConfig } from '../config';
-import { fetchClaims } from './jwtService';
 
 export const getDocManagerAPI = () => {
   const { VITE_DOCMANAGER_API } = getConfig();
@@ -21,13 +20,6 @@ export const getDocManagerAPI = () => {
   return docManagerAPI;
 };
 
-// Local types for helper endpoints
-type SessionName = string;
-interface UploadedFile {
-  fileId: string;
-  fileName: string;
-  filePath: string;
-}
 
 export const uploadDocuments = async (
   connectionId: string,
@@ -120,31 +112,37 @@ export const updateDocumentById = async (id:number, file: File): Promise<void> =
   }
 };
 
-export const uploadUserSignature = async (file: File): Promise<void> => {
+export const uploadUserSignature = async (
+  userId: number,
+  file: File
+): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await docManagerAPI.post(`/api/document-manager/user-media/${userId}/signature`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    await docManagerAPI.post(
+      `/api/document-manager/user-media/${userId}/signature`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Failed to upload signature:", error);
     throw error;
   }
 };
 
-export const getUserSignature = async (): Promise<string | null> => {
+
+export const getUserSignature = async (
+  userId: number
+): Promise<string | null> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const res = await docManagerAPI.get(
       `/api/document-manager/user-media/${userId}/signature`,
@@ -153,7 +151,7 @@ export const getUserSignature = async (): Promise<string | null> => {
 
     return URL.createObjectURL(res.data);
   } catch (error: any) {
-    // Silently handle 404/500 errors - user may not have a signature
+
     if (error.response?.status === 404 || error.response?.status === 500) {
       return null;
     }
@@ -162,11 +160,13 @@ export const getUserSignature = async (): Promise<string | null> => {
   }
 };
 
-export const editUserSignature = async (file: File): Promise<void> => {
+
+export const editUserSignature = async (
+  userId: number,
+  file: File
+): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
@@ -186,48 +186,59 @@ export const editUserSignature = async (file: File): Promise<void> => {
   }
 };
 
-export const deleteUserSignaturePhoto = async (): Promise<void> => {
+
+export const deleteUserSignaturePhoto = async (
+  userId: number
+): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
-    await docManagerAPI.delete(`/api/document-manager/user-media/${userId}`, {
-      params: { type: "SIGNATURE" },
-    });
+    await docManagerAPI.delete(
+      `/api/document-manager/user-media/${userId}`,
+      {
+        params: { type: "SIGNATURE" },
+      }
+    );
 
-    console.log("Profile photo deleted successfully");
+    console.log("Signature deleted successfully");
   } catch (error: any) {
-    console.error("Failed to delete profile photo:", error);
+    console.error("Failed to delete signature:", error);
     throw error;
   }
 };
 
-export const uploadUserProfilePhoto = async (file: File): Promise<void> => {
+
+export const uploadUserProfilePhoto = async (
+  userId: number,
+  file: File
+): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
 
-    await docManagerAPI.post(`/api/document-manager/user-media/${userId}/profile`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    await docManagerAPI.post(
+      `/api/document-manager/user-media/${userId}/profile`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   } catch (error: any) {
-    console.error("Failed to upload signature:", error);
+    console.error("Failed to upload profile photo:", error);
     throw error;
   }
 };
 
-export const getUserProfilePhoto = async (): Promise<string | null> => {
+
+export const getUserProfilePhoto = async (
+  userId: number
+): Promise<string | null> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const res = await docManagerAPI.get(
       `/api/document-manager/user-media/${userId}/profile`,
@@ -236,6 +247,7 @@ export const getUserProfilePhoto = async (): Promise<string | null> => {
 
     return URL.createObjectURL(res.data);
   } catch (error: any) {
+
     // Silently handle 404/500 errors - user may not have a profile photo
     if (error.response?.status === 404 || error.response?.status === 500) {
       return null;
@@ -245,11 +257,13 @@ export const getUserProfilePhoto = async (): Promise<string | null> => {
   }
 };
 
-export const editUserProfilePhoto = async (file: File): Promise<void> => {
+
+export const editUserProfilePhoto = async (
+  userId: number,
+  file: File
+): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
     const formData = new FormData();
     formData.append("filedata", file);
@@ -264,18 +278,16 @@ export const editUserProfilePhoto = async (file: File): Promise<void> => {
       }
     );
   } catch (error: any) {
-    console.error("Failed to edit signature:", error);
+    console.error("Failed to edit profile photo:", error);
     throw error;
   }
 };
 
-export const deleteUserProfilePhoto = async (): Promise<void> => {
+
+export const deleteUserProfilePhoto = async (userId: number): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
-    const claims = await fetchClaims();
-    const userId = claims.id;
 
-    // Add ?type=PROFILE (or lowercase "profile" if your MediaTypes enum handles it case-insensitively)
     await docManagerAPI.delete(`/api/document-manager/user-media/${userId}`, {
       params: { type: "PROFILE" },
     });
@@ -286,7 +298,6 @@ export const deleteUserProfilePhoto = async (): Promise<void> => {
     throw error;
   }
 };
-
 
 
 export const uploadOrganizationImage = async (orgId: number, file: File): Promise<void> => {

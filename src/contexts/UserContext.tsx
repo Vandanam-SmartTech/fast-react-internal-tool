@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchClaims } from '../services/jwtService';
-
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { fetchClaims } from "../services/jwtService";
 
 interface SelectedOrg {
   orgId?: string;
@@ -26,7 +25,7 @@ interface UserClaims {
   global_roles?: string[];
   org_roles?: Record<string, OrgRole>;
   has_password_changed?: boolean;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 interface UserContextType {
@@ -42,8 +41,8 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
 };
@@ -55,56 +54,110 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [userClaims, setUserClaims] = useState<UserClaims | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedOrg, setSelectedOrg] = useState<SelectedOrg | null>(null);
+  const [selectedOrg, setSelectedOrgState] = useState<SelectedOrg | null>(null);
 
+  /* ===============================
+     Refresh Claims
+  =============================== */
   const refreshUserClaims = async (): Promise<UserClaims | null> => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = localStorage.getItem("jwtToken");
       if (!token) {
-        setUserClaims(null);
-        setLoading(false);
+        clearUserClaims();
         return null;
       }
 
-      const claims = await fetchClaims(false); // Use cache
+      const claims = await fetchClaims();
       setUserClaims(claims);
-      return claims; 
-    } catch {
-      setUserClaims(null);
+      return claims;
+    } catch (error) {
+      console.error("Failed to fetch user claims:", error);
+      clearUserClaims();
       return null;
     } finally {
       setLoading(false);
     }
   };
 
+  /* ===============================
+     Clear User
+  =============================== */
   const clearUserClaims = () => {
     setUserClaims(null);
-    setSelectedOrg(null);
+    setSelectedOrgState(null);
+    localStorage.removeItem("selectedOrg");
   };
 
+  /* ===============================
+     Sync Selected Org to localStorage
+  =============================== */
+  const setSelectedOrg = (org: SelectedOrg | null) => {
+    setSelectedOrgState(org);
+
+    if (org) {
+      localStorage.setItem("selectedOrg", JSON.stringify(org));
+    } else {
+      localStorage.removeItem("selectedOrg");
+    }
+  };
+
+  /* ===============================
+     Restore Selected Org on Load
+  =============================== */
+  useEffect(() => {
+    const storedOrg = localStorage.getItem("selectedOrg");
+
+    if (storedOrg) {
+      try {
+        const parsed = JSON.parse(storedOrg);
+        setSelectedOrgState(parsed);
+      } catch {
+        localStorage.removeItem("selectedOrg");
+      }
+    }
+  }, []);
+
+  /* ===============================
+     Validate Selected Org
+  =============================== */
+  useEffect(() => {
+    if (!userClaims || !selectedOrg?.orgId) return;
+
+    const validOrg = userClaims.org_roles?.[selectedOrg.orgId];
+
+    if (!validOrg) {
+      console.warn("Invalid selectedOrg detected. Clearing...");
+      setSelectedOrg(null);
+    }
+  }, [userClaims]);
+
+  /* ===============================
+     Initial Claims Load
+  =============================== */
   useEffect(() => {
     refreshUserClaims();
+  }, []);
 
+  /* ===============================
+     Listen for Token Changes (Multi-tab)
+  =============================== */
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'jwtToken') {
-        e.newValue ? refreshUserClaims() : clearUserClaims();
+      if (e.key === "jwtToken") {
+        if (e.newValue) {
+          refreshUserClaims();
+        } else {
+          clearUserClaims();
+        }
       }
     };
 
-    const handleUserUpdate = () => refreshUserClaims();
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('userUpdated', handleUserUpdate);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userUpdated', handleUserUpdate);
-    };
+    window.addEventListener("storage", handleStorageChange);
+    return () =>
+      window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-
-
-  const value = {
+  const value: UserContextType = {
     userClaims,
     loading,
     refreshUserClaims,

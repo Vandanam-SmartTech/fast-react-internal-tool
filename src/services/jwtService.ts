@@ -131,23 +131,6 @@ const cachedFetch = async <T>(key: string, fetcher: () => Promise<T>): Promise<T
   return data;
 };
 
-export const fetchRepresentatives = async () => {
-  return cachedFetch('representatives', async () => {
-    const response = await getJwtAPI().get('/api/users/all');
-    return response.data.reduce((acc: any[], user: any) => {
-      if (user.roles.some((role: any) => role.name === "ROLE_REPRESENTATIVE")) {
-        acc.push({
-          userId: user.userId,
-          name: user.nameAsPerGovId,
-          representativeCode: user.representativeCode,
-          mobileNumber: user.mobileNumber,
-          emailAddress: user.emailAddress
-        });
-      }
-      return acc;
-    }, []);
-  });
-};
 
 export const fetchAdmins = async () => {
   return cachedFetch('admins', async () => {
@@ -285,18 +268,6 @@ export const getUserOrgRolesById = async (userId: number, organizationId: number
   }
 };
 
-export const fetchRepresentativesPaginated = async (page = 0, role?: string) => {
-  const params: any = { page };
-  if (role) params.role = role;
-  
-  const response = await getJwtAPI().get('/api/users/paginated/by-role', { params });
-  return {
-    content: response.data.content,
-    totalPages: response.data.totalPages,
-    totalElements: response.data.totalElements,
-    currentPage: response.data.number,
-  };
-};
 
 export const fetchDistricts = async () => {
   return cachedFetch('districts', async () => {

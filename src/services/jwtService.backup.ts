@@ -94,31 +94,6 @@ export const fetchClaims = () => {
 };
 
 
-export const fetchRepresentatives = async () => {
-  const jwtAPI = getJwtAPI();
-  try {
-    const response = await jwtAPI.get('/api/users/all');
-    return response.data
-      .filter((user: { roles: any[] }) => user.roles.some(role => role.name === "ROLE_REPRESENTATIVE"))
-      .map((user: {
-        userId: any;
-        nameAsPerGovId: any;
-        representativeCode: any;
-        mobileNumber: any;
-        emailAddress: any;
-      }) => ({
-        userId: user.userId,
-        name: user.nameAsPerGovId,
-        representativeCode: user.representativeCode,
-        mobileNumber: user.mobileNumber,
-        emailAddress: user.emailAddress
-      }));
-  } catch (error) {
-    console.error("Error fetching representatives:", error);
-    return [];
-  }
-};
-
 export const fetchAdmins = async () => {
   const jwtAPI = getJwtAPI();
   try {
@@ -351,29 +326,6 @@ export const getUserOrgRolesById = async (
   }
 };
 
-export const fetchRepresentativesPaginated = async (page = 0, role?: string) => {
-  const jwtAPI = getJwtAPI();
-  try {
-    const params: any = { page };
-    if (role) {
-      params.role = role;
-    }
-
-    const response = await jwtAPI.get('/api/users/paginated/by-role', {
-      params,
-    });
-
-    return {
-      content: response.data.content,
-      totalPages: response.data.totalPages,
-      totalElements: response.data.totalElements,
-      currentPage: response.data.number,
-    };
-  } catch (error) {
-    console.error('Error fetching representatives:', error);
-    throw new Error('Failed to fetch representatives.');
-  }
-};
 
 export const fetchDistricts = async () => {
   const jwtAPI = getJwtAPI();

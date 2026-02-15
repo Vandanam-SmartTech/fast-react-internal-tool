@@ -15,7 +15,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'axios'],
     exclude: ['react-leaflet', 'leaflet'],
-    esbuildOptions: { target: 'es2020' }
+    esbuildOptions: { target: 'es2015' }
   },
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router-dom']
@@ -69,7 +69,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 250,
     sourcemap: false,
-    target: 'es2020',
+    target: 'es2015',
     reportCompressedSize: false,
     assetsInlineLimit: 4096
   },
@@ -78,7 +78,7 @@ export default defineConfig({
   },
   server: { 
     host: '0.0.0.0', 
-    port: 5173,
+    port: 8081,
     hmr: {
       protocol: 'ws',
       host: 'localhost'
