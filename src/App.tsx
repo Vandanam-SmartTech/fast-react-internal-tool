@@ -21,6 +21,7 @@ import { SystemSpecifications } from './pages/SystemSpecifications/SystemSpecifi
 import { ViewSystemSpecifications } from './pages/SystemSpecifications/ViewSystemSpecifications';
 import { PaymentPlaceholder } from './pages/Payment/PaymentPlaceholder';
 import { PreviewSystemSpecification } from './pages/SystemSpecifications/PreviewSystemSpecification';
+import { CheckoutSystemSpecification } from './pages/SystemSpecifications/CheckoutSystemSpecification';
 import OnboardedConsumers from './pages/ConsumerList/OnboardedConsumers';
 import PasswordReset from './pages/Auth/PasswordReset';
 import ChangePassword from './pages/Auth/ChangePassword';
@@ -354,6 +355,15 @@ const AppContent: React.FC = () => {
               element={
                 <PrivateRoute>
                   <PreviewSystemSpecification />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/checkout-system-specification"
+              element={
+                <PrivateRoute>
+                  <CheckoutSystemSpecification />
                 </PrivateRoute>
               }
             />

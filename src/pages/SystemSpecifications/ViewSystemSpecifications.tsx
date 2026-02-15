@@ -319,12 +319,9 @@ export const ViewSystemSpecifications = () => {
     const handleProceedToBuy = () => {
         if (!selectedSpec) return;
 
-        const amount = (selectedSpec.systemCost || 0) + (selectedSpec.fabricationCost || 0);
-
-        navigate('/payment', {
+        navigate('/checkout-system-specification', {
             state: {
-                amount: amount,
-                quotationId: `Q-${selectedSpec.id}`, // Mock ID
+                selectedSpec: selectedSpec,
                 connectionId,
                 consumerId,
                 customerId
@@ -376,7 +373,7 @@ export const ViewSystemSpecifications = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                         <Plus className="w-4 h-4" />
-                        Customize Details
+                        Customize Your Plan
                     </button>}
                 </div>
 
