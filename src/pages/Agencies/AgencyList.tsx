@@ -512,7 +512,6 @@ const AgencyList: React.FC = () => {
                 )}
               </DialogActions>
             </Dialog>
-
     </div>
   );
 };
