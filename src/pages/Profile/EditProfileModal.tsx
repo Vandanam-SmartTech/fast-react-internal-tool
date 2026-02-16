@@ -60,13 +60,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
         setLoading(true);
         try {
 
-            const payload = {
-                ...user, 
-                nameAsPerGovId: formData.nameAsPerGovId,
-                emailAddress: formData.emailAddress,
-                contactNumber: formData.contactNumber,
-                preferredName: formData.preferredName,
-            };
 
             const updatePayload = {
                 id: user.id,
@@ -74,13 +67,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
                 emailAddress: formData.emailAddress,
                 contactNumber: formData.contactNumber,
                 preferredName: formData.preferredName,
-                username: user.username || user.sub, 
+                username: user.username || user.sub,
+                isActive: user.isActive,
+                userCode: user.userCode,
+                alternateContactNumber: user.alternateContactNumber,
+                pinCode: user.pinCode,
+                addressLine1: user.addressLine1,
+                addressLine2: user.addressLine2,
             };
 
             await updateUser(user.id, updatePayload);
 
-            toast.success('Profile updated successfully',{
-                autoClose:2000,
+            toast.success('Profile updated successfully', {
+                autoClose: 2000,
                 hideProgressBar: true
             });
             onUpdate(); // Refresh parent
