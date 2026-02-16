@@ -8,6 +8,7 @@ import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
 import { loadCropperCSS } from '../utils/cssLoader';
+import { getTalukaNameByCode, getVillageNameByCode } from '../services/jwtService';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -48,19 +49,56 @@ const Header: React.FC = () => {
     height: number;
   } | null>(null);
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    const selectedOrgStr = localStorage.getItem('selectedOrg');
-    if (selectedOrgStr) {
-      try {
-        const selectedOrg = JSON.parse(selectedOrgStr);
-        setSelectedOrgName(selectedOrg.orgName || '');
-        setSelectedRole(selectedOrg.role || '');
-      } catch (error) {
-        console.error('Error parsing selectedOrg from localStorage:', error);
+  //   const selectedOrgStr = localStorage.getItem('selectedOrg');
+  //   if (selectedOrgStr) {
+  //     try {
+  //       const selectedOrg = JSON.parse(selectedOrgStr);
+  //       setSelectedOrgName(selectedOrg.orgName || '');
+  //       setSelectedRole(selectedOrg.role || '');
+  //     } catch (error) {
+  //       console.error('Error parsing selectedOrg from localStorage:', error);
+  //     }
+  //   }
+  // }, [userClaims]);
+
+  useEffect(() => {
+  const fetchOrgName = async () => {
+    const selectedOrgStr = localStorage.getItem("selectedOrg");
+
+    if (!selectedOrgStr) return;
+
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+
+      setSelectedRole(selectedOrg.role || "");
+
+      // 🔹 ROLE_BDO → fetch Taluka Name
+      if (selectedOrg.role === "ROLE_BDO" && selectedOrg.deptCode) {
+        const talukaName = await getTalukaNameByCode(Number(selectedOrg.deptCode));
+        setSelectedOrgName(talukaName);
       }
+
+      // 🔹 ROLE_GRAMSEVAK → fetch Village Name
+      else if (selectedOrg.role === "ROLE_GRAMSEVAK" && selectedOrg.deptCode) {
+        const villageName = await getVillageNameByCode(Number(selectedOrg.deptCode));
+        setSelectedOrgName(villageName);
+      }
+
+      // 🔹 Other Roles → use orgName directly
+      else {
+        setSelectedOrgName(selectedOrg.orgName || "");
+      }
+
+    } catch (error) {
+      console.error("Error parsing selectedOrg from localStorage:", error);
     }
-  }, [userClaims]);
+  };
+
+  fetchOrgName();
+}, [userClaims]);
+
 
   useEffect(() => {
     const storedState = localStorage.getItem('sidebarOpen');

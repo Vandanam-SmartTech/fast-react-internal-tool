@@ -18,6 +18,8 @@ interface Consumer {
   customerId: number;
   consumerId: number;
   connectionType: string;
+  gharkulNumber: string;
+  isGharkulCustomer: boolean;
 }
 
 const OnboardedConsumers: React.FC = () => {
@@ -617,8 +619,9 @@ const OnboardedConsumers: React.FC = () => {
           <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
             <User className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
             <span className="text-xs text-secondary-700 dark:text-secondary-300">
-              Consumer ID: {consumer.consumerId}
+              Consumer #: {consumer.consumerId ?? consumer.gharkulNumber}
             </span>
+
           </div>
 
           <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/20 dark:to-solar-900/20 rounded-lg border border-primary-100 dark:border-primary-800">

@@ -33,7 +33,7 @@ const AdminDashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 1000);
 
     return () => clearInterval(timeInterval);
   }, []);
