@@ -49,19 +49,6 @@ const Header: React.FC = () => {
     height: number;
   } | null>(null);
 
-  // useEffect(() => {
-
-  //   const selectedOrgStr = localStorage.getItem('selectedOrg');
-  //   if (selectedOrgStr) {
-  //     try {
-  //       const selectedOrg = JSON.parse(selectedOrgStr);
-  //       setSelectedOrgName(selectedOrg.orgName || '');
-  //       setSelectedRole(selectedOrg.role || '');
-  //     } catch (error) {
-  //       console.error('Error parsing selectedOrg from localStorage:', error);
-  //     }
-  //   }
-  // }, [userClaims]);
 
   useEffect(() => {
   const fetchOrgName = async () => {
@@ -131,6 +118,7 @@ const Header: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
 const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode: number | null) => {
     const newOrg = { orgId, orgName, role, deptCode };
 
@@ -190,6 +178,9 @@ const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode:
 
 
   useEffect(() => {
+
+    if (!userClaims?.id) return;
+
     loadProfilePhoto();
 
     const handlePhotoUpdate = (e: Event) => {
@@ -213,7 +204,7 @@ const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode:
     return () => {
       window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
     };
-  }, []);
+  }, [userClaims?.id]);
 
 
 const handleRemovePhoto = async () => {

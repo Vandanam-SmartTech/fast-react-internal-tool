@@ -7,7 +7,7 @@ import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
 import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto, deleteUserSignaturePhoto } from '../../services/documentManagerService';
 import { useUser } from '../../contexts/UserContext';
-import { fetchClaims } from '../../services/jwtService';
+import { fetchClaims, getUserById } from '../../services/jwtService';
 import { croppedImg } from '../../utils/croppedImage';
 import EditProfileModal from './EditProfileModal';
 
@@ -22,6 +22,7 @@ const Profile: React.FC = () => {
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
 
   const { userClaims: user } = useUser();
+  const userId = user?.id;
 
   const [showCropModalForProfile, setShowCropModalForProfile] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -35,8 +36,12 @@ const Profile: React.FC = () => {
   const [removingPhoto, setRemovingPhoto] = useState(false);
 
   const navigate = useNavigate();
-  const [claims, setClaims] = useState<any>(null);
-  const [loadingClaims, setLoadingClaims] = useState(false);
+  // const [claims, setClaims] = useState<any>(null);
+  // const [loadingClaims, setLoadingClaims] = useState(false);
+
+  const [userDetails, setUserDetails] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(false);
+
 
 
   // Cropping states
@@ -70,23 +75,29 @@ const Profile: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadClaims = async () => {
-      try {
-        setLoadingClaims(true);
-        const data = await fetchClaims();
-        setClaims(data);
-      } catch (err) {
-        console.error("Failed to load claims", err);
-      } finally {
-        setLoadingClaims(false);
-      }
-    };
+    if (!userId) return;
+    fetchUserDetails(userId);
+  }, [userId]);
 
-    loadClaims();
-  }, []);
+  const fetchUserDetails = async (id: number) => {
+    setLoadingUser(true);
+    try {
+      const response = await getUserById(id);
+      if (response.data) {
+        setUserDetails(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user details", error);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+
 
 
   useEffect(() => {
+    if (!userId) return;
     loadProfilePhoto();
 
     const handlePhotoUpdate = (e: Event) => {
@@ -104,13 +115,12 @@ const Profile: React.FC = () => {
       }
     };
 
-
     window.addEventListener("profilePhotoUpdated", handlePhotoUpdate);
 
     return () => {
       window.removeEventListener("profilePhotoUpdated", handlePhotoUpdate);
     };
-  }, []);
+  }, [userId]);
 
   const handleRemovePhoto = async () => {
     if (!user?.id) return;
@@ -482,21 +492,22 @@ const Profile: React.FC = () => {
     }
   };
 
-
   useEffect(() => {
+    if (!userId) return;
     fetchSignature();
-  }, []);
+  }, [userId]);
 
-  if (loadingClaims) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
+
+  // if (loadingClaims) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+  //         <p className="mt-4 text-gray-600">Loading profile...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // if (loadingClaims) {
   //   return <p>Loading...</p>;
@@ -561,14 +572,14 @@ const Profile: React.FC = () => {
                   <div className="flex flex-col">
                     {/* Full Name */}
                     <p className="text-lg sm:text-xl font-semibold text-gray-900">
-                      {claims?.name_as_per_gov_id || "NA"}
+                      {userDetails?.nameAsPerGovId || "NA"}
                     </p>
 
                     {/* Preferred Name */}
                     <p className="text-sm text-gray-700">
                       <span className="font-medium text-gray-500">Preferred Name:</span>{" "}
                       <span className="text-gray-800">
-                        {claims?.preferred_name || "NA"}
+                        {userDetails?.preferredName || "NA"}
                       </span>
                     </p>
 
@@ -579,22 +590,20 @@ const Profile: React.FC = () => {
 
                         <span
                           className="text-gray-800 truncate max-w-[160px] sm:max-w-full"
-                          title={claims?.email_address || "NA"}
+                          title={userDetails?.emailAddress || "NA"}
                         >
-                          {claims?.email_address || "NA"}
+                          {userDetails?.emailAddress || "NA"}
                         </span>
                       </p>
 
                       <p className="text-sm text-gray-700">
                         <span className="font-medium text-gray-500">Mobile:</span>{" "}
                         <span className="text-gray-800">
-                          {claims?.contact_number || "NA"}
+                          {userDetails?.contactNumber || "NA"}
                         </span>
                       </p>
                     </div>
                   </div>
-
-
                 </div>
 
                 {/* Action Buttons */}
@@ -767,7 +776,7 @@ const Profile: React.FC = () => {
             </CardBody>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardBody className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -801,7 +810,7 @@ const Profile: React.FC = () => {
 
               </div>
             </CardBody>
-          </Card>
+          </Card> */}
 
 
 
@@ -1110,14 +1119,12 @@ const Profile: React.FC = () => {
           </div>
         )}
 
-
-
         <EditProfileModal
           isOpen={showEditProfileModal}
           onClose={() => setShowEditProfileModal(false)}
-          user={claims || user}
+          user={userDetails}
           onUpdate={() => {
-            fetchClaims().then(data => setClaims(data));
+            if (userId) fetchUserDetails(userId);
           }}
         />
 

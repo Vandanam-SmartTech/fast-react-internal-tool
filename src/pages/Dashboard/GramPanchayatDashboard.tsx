@@ -255,7 +255,7 @@ const GramPanchayatDashboard: React.FC = () => {
               Loading...
             </div>
           ) : hasProjectData ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={projectData}
@@ -294,7 +294,7 @@ const GramPanchayatDashboard: React.FC = () => {
           </h2>
 
           {hasLoanData ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart
                 data={loanData}
                 layout="vertical"

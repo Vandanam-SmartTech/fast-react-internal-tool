@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { updateUser, refreshToken } from '../../services/jwtService';
+import { updateUser } from '../../services/jwtService';
 
 interface EditProfileModalProps {
     isOpen: boolean;
@@ -22,9 +22,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
     useEffect(() => {
         if (user && isOpen) {
             setFormData({
-                nameAsPerGovId: user.name_as_per_gov_id || '',
-                emailAddress: user.email_address || '',
-                contactNumber: user.contact_number || '',
+                nameAsPerGovId: user.nameAsPerGovId || '',
+                emailAddress: user.emailAddress || '',
+                contactNumber: user.contactNumber || '',
                 preferredName: user.preferredName || '',
             });
         }
@@ -59,42 +59,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
 
         setLoading(true);
         try {
-            // Prepare payload - in a real app you might need to merge with other required fields if the API demands them,
-            // but assuming PATCH-like behavior or that we only send what's changed/needed.
-            // If the API requires FULL user object, we might need to fetch full user details first in a real scenario.
-            // However, based on EditUser.tsx, we likely need to send more data or the API might reset other fields?
-            // Re-reading EditUser.tsx -> it fetches userById then updates. 
-            // Safe bet: The API might expect the full object.
-            // But for this 'modal' we only have these 3 fields. 
-            // Let's assume the backend handles partial updates OR we must rely on `user` claims being enough?
-            // Actually `user` claims might not have *everything*.
-            // Ideally we should fetch the latest user object here to be safe and merge.
-
-            // Let's rely on what we have, but to be safe similar to EditUser, let's just send these.
-            // Use the UpdateUser API.
 
             const payload = {
-                ...user, // spread existing (might be incomplete if claims are limited)
+                ...user, 
                 nameAsPerGovId: formData.nameAsPerGovId,
                 emailAddress: formData.emailAddress,
                 contactNumber: formData.contactNumber,
                 preferredName: formData.preferredName,
-                // Map claims back to API expectations if needed? 
-                // actually `user` prop here is likely the decoded token claims.
-                // It's safer if we construct the object carefully or if the API supports partial.
-                // If API is strict, this might fail. 
-                // Strategy: We will try to send just the fields we want to update if the API supports it.
-                // If not, we might need to fetch full user data first.
-                // Given `EditUser.tsx` fetches `getUserById`, let's do robust thing:
-                // We will just send what we edited and hope `updateUser` merges or handles it.
-                // Re-checking EditUser.tsx: it sends `userData` which is full state.
-                // Let's trigger a fetch inside here? No, let's keep it simple for now and rely on `updateUser` service.
-                // We will pass the ID from user.id.
             };
-
-            // NOTE: We are sending a mix of snake_case (from claims) and camelCase (from form). 
-            // The `updateUser` service usually expects the payload structure of the Entity.
-            // Let's assume we need to send the proper Entity structure.
 
             const updatePayload = {
                 id: user.id,
@@ -102,19 +74,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
                 emailAddress: formData.emailAddress,
                 contactNumber: formData.contactNumber,
                 preferredName: formData.preferredName,
-                // We might need other required fields like 'username', 'userCode'. 
-                // If these are missing, the update might fail if the backend validates @NotNull on them.
-                // Let's trust that the backend handles partial updates or that we can get away with it.
-                // If this fails, we will need to fetch `getUserById` in this modal first.
-                // For now, let's try to include what we can from claims.
-                username: user.username || user.sub, // claims usually have sub as username
+                username: user.username || user.sub, 
             };
 
             await updateUser(user.id, updatePayload);
-
-            // Refresh token if self-update
-            const tokenResponse = await refreshToken();
-            localStorage.setItem("jwtToken", tokenResponse.jwt);
 
             toast.success('Profile updated successfully',{
                 autoClose:2000,

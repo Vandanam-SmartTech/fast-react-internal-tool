@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
 import { updateUser, getUserById } from '../../services/jwtService';
 import { toast } from 'react-toastify';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, refreshToken } from '../../services/jwtService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import ReusableDropdown from '../../components/ReusableDropdown';
 import { useUser } from '../../contexts/UserContext';
@@ -233,12 +233,6 @@ const EditUser: React.FC = () => {
             try {
                 const userData = { ...formData };
                 await updateUser(userId, userData);
-                if (contextUserId === userId) {
-                    const tokenResponse = await refreshToken();
-
-                    // store new access token
-                    localStorage.setItem("jwtToken", tokenResponse.jwt);
-                }
 
                 toast.success("User updated successfully", {
                     autoClose: 1000,
