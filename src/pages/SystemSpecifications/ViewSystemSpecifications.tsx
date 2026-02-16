@@ -391,15 +391,26 @@ export const ViewSystemSpecifications = () => {
                     <div className="w-full lg:w-2/3 space-y-4">
 
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Choose Your Solar Panels</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium text-gray-700">Choose Your Solar Panels</label>
+                                {selectedPanelSpecId && (
+                                    <button
+                                        onClick={() => setSelectedPanelSpecId(null)}
+                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md transition"
+                                    >
+                                        <CloseIcon className="w-3 h-3" />
+                                        SHOW ALL PACKAGES
+                                    </button>
+                                )}
+                            </div>
                             <select
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                 value={selectedPanelSpecId || ""}
-                                onChange={(e) => setSelectedPanelSpecId(Number(e.target.value))}
+                                onChange={(e) => setSelectedPanelSpecId(e.target.value === "" ? null : Number(e.target.value))}
                             >
-                                <option value="" disabled>Select a Panel</option>
+                                <option value="">All Panels (Show All Packages)</option>
                                 {panelSpecs.map((spec: any) => (
-                                    <option key={spec.id || spec.id} value={spec.id || spec.id}>
+                                    <option key={spec.id} value={spec.id}>
                                         {spec.panelBrandName} - {spec.ratedWattageW}W - {spec.modelNumber}
                                     </option>
                                 ))}
