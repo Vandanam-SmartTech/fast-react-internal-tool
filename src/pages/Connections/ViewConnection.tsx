@@ -636,7 +636,6 @@ export const ViewConnection = () => {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         maxWidth="xs"
-        fullWidth
       >
         <DialogTitle>
           {dialogType === "success" && "Success"}
@@ -691,7 +690,7 @@ export const ViewConnection = () => {
         open={messageBoxOpen}
         onClose={handleMessageBoxClose}
         maxWidth="xs"
-        fullWidth
+
       >
         <DialogTitle>
           {messageBoxSeverity === "success" ? "Success" : "Error"}

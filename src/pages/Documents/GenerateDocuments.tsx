@@ -1306,7 +1306,6 @@ const handleView = async (id: number, fileName: string) => {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           maxWidth="xs"
-          fullWidth
         >
           <DialogTitle>Confirm</DialogTitle>
           <DialogContent dividers>

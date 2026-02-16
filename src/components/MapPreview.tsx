@@ -100,7 +100,6 @@ const MapPreview = ({ latitude, longitude, onLocationChange }: Props) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         maxWidth="xs"
-        fullWidth
       >
         <DialogTitle id="alert-dialog-title">Confirm</DialogTitle>
         <DialogContent dividers>
