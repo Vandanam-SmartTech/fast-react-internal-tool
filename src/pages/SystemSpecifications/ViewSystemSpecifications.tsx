@@ -80,7 +80,6 @@ export const ViewSystemSpecifications = () => {
     const [allSpecs, setAllSpecs] = useState<SystemSpec[]>([]);
     const [selectedSpec, setSelectedSpec] = useState<SystemSpec | null>(null);
     const [loading, setLoading] = useState(true);
-    const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
     const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
     const [, setConnectionDetails] = useState<any>(null);
     const [, setConnectionType] = useState("");
@@ -146,12 +145,10 @@ export const ViewSystemSpecifications = () => {
                 setConnectionDetails(data);
 
                 if (data?.phaseTypeId !== null && data?.phaseTypeId !== null && data?.connectionTypeName && data?.isGharkulCustomer !== null) {
-                    setPhaseTypeId(data.phaseTypeId);
                     setConnectionType(data.connectionTypeName);
                     setIsGharkulCustomer(!!data?.isGharkulCustomer);
                     console.log("Fetched Phase Type Id, monthly avg unit from API:", data.phaseTypeId, data.avgMonthlyConsumption);
                 } else {
-                    setPhaseTypeId(null);
                     setConnectionType("");
                     setIsGharkulCustomer(false);
                 }
@@ -179,18 +176,20 @@ export const ViewSystemSpecifications = () => {
         loadPanelSpecs();
     }, [orgId]);
 
-    // Fetch System Packages when a panel is selected
+    // Fetch System Packages when orgId or panel is selected
     useEffect(() => {
         const fetchPackages = async () => {
-            if (orgId && selectedPanelSpecId) {
+            if (orgId && isGharkulCustomer !== null) {
                 try {
                     setLoading(true);
                     // Assuming isGharkulCustomer is boolean, default to false if null
                     const isGharkul = !!isGharkulCustomer;
 
                     // Note: ensure phaseTypeId is passed if needed, otherwise ignore or pass 0/null
-                    const packages = await getSystemPackagesWithSpecs(isGharkul, orgId, selectedPanelSpecId);
-                    console.log("Params: ", isGharkulCustomer, orgId, selectedPanelSpecId);
+                    // If selectedPanelSpecId is null, it will fetch all packages for the org
+                    const packages = await getSystemPackagesWithSpecs(isGharkul, orgId, selectedPanelSpecId || undefined);
+                    console.log("Params: ", isGharkul, orgId, selectedPanelSpecId);
+
                     // Map API response to SystemSpec interface
                     const mappedSpecs: SystemSpec[] = packages.map((pkg: any) => {
                         const specs = pkg.systemSpecs || {};
@@ -256,10 +255,8 @@ export const ViewSystemSpecifications = () => {
             }
         };
 
-        if (selectedPanelSpecId) {
-            fetchPackages();
-        }
-    }, [selectedPanelSpecId, orgId, isGharkulCustomer, phaseTypeId, connectionId]);
+        fetchPackages();
+    }, [selectedPanelSpecId, orgId, isGharkulCustomer, connectionId]);
 
     const formatIndianNumber = (value?: number) => {
         if (value === undefined || value === null) return "N/A";
