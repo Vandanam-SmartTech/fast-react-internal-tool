@@ -61,6 +61,26 @@ export const SystemSpecifications = lazy(() => import('../pages/SystemSpecificat
 export const MaterialDetails = lazy(() => import('../pages/Materials/MaterialDetails'));
 export const PageNotFound = lazy(() => import('../pages/PageNotFound'));
 
+export const ViewSystemSpecifications = lazy(() =>
+  import('../pages/SystemSpecifications/ViewSystemSpecifications')
+    .then(m => ({ default: m.ViewSystemSpecifications }))
+);
+
+export const PaymentPlaceholder = lazy(() =>
+  import('../pages/Payment/PaymentPlaceholder')
+    .then(m => ({ default: m.PaymentPlaceholder }))
+);
+
+export const PreviewSystemSpecification = lazy(() =>
+  import('../pages/SystemSpecifications/PreviewSystemSpecification')
+    .then(m => ({ default: m.PreviewSystemSpecification }))
+);
+
+export const CheckoutSystemSpecification = lazy(() =>
+  import('../pages/SystemSpecifications/CheckoutSystemSpecification')
+    .then(m => ({ default: m.CheckoutSystemSpecification }))
+);
+
 // Components
 export const ScrollToTop = lazy(() => import('../components/ScrollToTop'));
 export const Sidebar = lazy(() => import('../components/Sidebar'));
@@ -72,3 +92,5 @@ export const ToastContainer = lazy(() => import('react-toastify').then(m => ({ d
 // Routes
 export const PrivateRoute = lazy(() => import('../routes/PrivateRoute'));
 export const RoleProtectedRoute = lazy(() => import('../routes/RoleProtectedRoute'));
+
+//

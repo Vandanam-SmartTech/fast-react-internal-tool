@@ -56,7 +56,7 @@ const ConsumerCard = memo(({ consumer, userRole, onView, onNavigate }: any) => (
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => onNavigate('/view-connection', { customerId: consumer.customerId || consumer.id, connectionId: conn.id, consumerId: conn.consumerId })} title="View Connection"><Eye className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('/system-specifications', { connectionId: conn.id, consumerId: conn.consumerId, customerId: consumer.customerId || consumer.id })} title="Get System Specs"><Lightbulb className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('/view-system-specifications', { connectionId: conn.id, consumerId: conn.consumerId, customerId: consumer.customerId || consumer.id })} title="Get System Specs"><Lightbulb className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="sm" onClick={() => onNavigate('/generate-documents', { consumer: { id: conn.id, customerId: consumer.customerId || consumer.id, govIdName: consumer.govIdName, consumerId: conn.consumerId, mobileNumber: consumer.mobileNumber, emailAddress: consumer.emailAddress } })} title="Manage Documents"><FileText className="w-4 h-4" /></Button>
               </div>
             </div>

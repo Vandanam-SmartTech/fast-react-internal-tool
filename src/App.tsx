@@ -70,9 +70,8 @@ const AppContent: React.FC = () => {
       </Suspense>
 
       {/* Main content area */}
-      <main className={`flex-1 transition-all duration-300 ${
-        showSidebar && sidebarOpen ? 'md:ml-64' : ''
-      }`}>
+      <main className={`flex-1 transition-all duration-300 ${showSidebar && sidebarOpen ? 'md:ml-64' : ''
+        }`}>
         <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
           <Suspense fallback={<Loader />}>
           <Routes>
@@ -113,7 +112,7 @@ const AppContent: React.FC = () => {
               }
             />
 
-          
+
 
             {/* Dashboard Routes */}
             <Route
@@ -206,8 +205,61 @@ const AppContent: React.FC = () => {
             <Route path="/installation-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.InstallationForm /></LazyRoutes.PrivateRoute>} />
 
             {/* System Routes */}
-            <Route path="/system-specifications" element={<LazyRoutes.PrivateRoute><LazyRoutes.SystemSpecifications /></LazyRoutes.PrivateRoute>} />
-            <Route path="/onboarded-consumers" element={<LazyRoutes.PrivateRoute><LazyRoutes.OnboardedConsumers /></LazyRoutes.PrivateRoute>} />
+            <Route
+              path="/system-specifications"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.SystemSpecifications />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/view-system-specifications"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.ViewSystemSpecifications />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/payment"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.PaymentPlaceholder />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/preview-system-specification"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.PreviewSystemSpecification />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/checkout-system-specification"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.CheckoutSystemSpecification />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/onboarded-consumers"
+              element={
+                <LazyRoutes.PrivateRoute>
+                  <LazyRoutes.OnboardedConsumers />
+                </LazyRoutes.PrivateRoute>
+              }
+            />
+            {/* <Route path="/system-specifications" element={<LazyRoutes.PrivateRoute><LazyRoutes.SystemSpecifications /></LazyRoutes.PrivateRoute>} />
+            <Route path="/onboarded-consumers" element={<LazyRoutes.PrivateRoute><LazyRoutes.OnboardedConsumers /></LazyRoutes.PrivateRoute>} /> */}
 
             {/* Material Routes */}
             <Route path="/material-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.MaterialDetails /></LazyRoutes.PrivateRoute>} />

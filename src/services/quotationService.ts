@@ -42,9 +42,10 @@ export const generateQuotationPDF = async (selectedSpecId: number, quotationGene
       `/api/quotation-details/generate-pdf/${selectedSpecId}`,
       {
         responseType: "blob",
-        params: { quotationGeneratedDate: formattedDate,
+        params: {
+          quotationGeneratedDate: formattedDate,
           quotationNumber,
-         },
+        },
       }
     );
 
@@ -196,7 +197,7 @@ export const fetchCustomerAgreedDetails = async (connectionId: number) => {
     const status = error.response?.status;
     const message = error.response?.data || error.message;
     console.error(`Error fetching customer-agreed details. Status: ${status}, Message: ${message}`);
-    return { success: false }; 
+    return { success: false };
   }
 };
 
@@ -341,7 +342,7 @@ export const saveInverterSpecPackage = async (requestData: any): Promise<any> =>
 
   try {
     const response = await quotationAPI.post(
-      `/api/system-spec-inverter-packages?inverterSpecId=${requestData.inverterSpecId}`, 
+      `/api/system-spec-inverter-packages?inverterSpecId=${requestData.inverterSpecId}`,
       {
         systemSpecsPackageId: requestData.systemSpecsPackageId,
         inverterCount: requestData.inverterCount,
@@ -604,7 +605,7 @@ export const fetchInverterBrands = async (
       params: { phaseTypeId, gridTypeId, orgId },
     });
 
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("API Error:", error);
     throw new Error("Failed to fetch inverter brands from server");
@@ -622,7 +623,7 @@ export const fetchInverterBrandCapacities = async (
   try {
     console.log("Fetching inverter capacities...");
     console.log("Request params:", {
-      inverterBrandId,orgId,phaseTypeId,gridTypeId
+      inverterBrandId, orgId, phaseTypeId, gridTypeId
     });
 
     const response = await quotationAPI.get(`/api/org-inverter-specs`, {
@@ -699,7 +700,7 @@ export const fetchPanelBrands = async (
       params: { materialOriginId },
     });
 
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("API Error:", error);
     throw new Error("Failed to fetch panel brands from server");
@@ -719,7 +720,7 @@ export const fetchPanelSpecsByOrg = async (
       params: { materialOriginId, orgId },
     });
 
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("API Error:", error);
     throw new Error("Failed to fetch panel brands from server");
@@ -909,15 +910,15 @@ export const updatePanelType = async (panelTypeId: number, typeName: string, typ
     const response = await quotationAPI.put(`/api/panel-types/${panelTypeId}`, {
       typeName: typeName,
       typeDescription: typeDescription,
-      typicalEfficiency: Number(typicalEfficiency),  
+      typicalEfficiency: Number(typicalEfficiency),
       yearIntroduced: Number(yearIntroduced),
     });
 
     return response.data;
   } catch (error: any) {
-    toast.error("Failed to update brand name",{
-      autoClose:1000,
-      hideProgressBar:true
+    toast.error("Failed to update brand name", {
+      autoClose: 1000,
+      hideProgressBar: true
     });
     return null;
   }
@@ -934,10 +935,10 @@ export const getSavedSystemSpecs = async (connectionId: number): Promise<any[]> 
 
   try {
     const response = await quotationAPI.get(`/api/connection-system-specs/by-connection/${connectionId}`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching saved system specs:", error);
-    return []; 
+    return [];
   }
 };
 
@@ -974,10 +975,10 @@ export const getSecondaryId = async (systemSpecificationId: number): Promise<any
 
   try {
     const response = await quotationAPI.get(`/api/quotation-details/${systemSpecificationId}`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching secondary Id:", error);
-    return []; 
+    return [];
   }
 };
 
@@ -1529,3 +1530,28 @@ export const addPipeSpecForOrg = async (
 
 
 
+
+export const getSystemPackagesWithSpecs = async (
+  isGharkulPackage: boolean,
+  orgId: number,
+  orgPanelSpecId?: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    console.log("Fetching system packages with specs...");
+    // console.log("Request params:", { isGharkulPackage, orgId, orgPanelSpecId });
+
+    const response = await quotationAPI.get("/api/system-packages/with-specs", {
+      params: {
+        isGharkulPackage,
+        orgId,
+        orgPanelSpecId
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw new Error("Failed to fetch system packages from server");
+  }
+};
