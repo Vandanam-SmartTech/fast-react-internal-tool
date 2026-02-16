@@ -327,7 +327,7 @@ const handleRemovePhoto = async () => {
             {/* Super Admin Display */}
             {isSuperAdmin && (
               <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200 ml-[40px] sm:ml-0">
-                <Shield className="h-4 w-4 text-primary-600" />
+                
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm">Super Admin</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">System Administrator</span>
@@ -338,7 +338,7 @@ const handleRemovePhoto = async () => {
             {/* Organization and Role Display */}
             {selectedOrgName && selectedRole && !isSuperAdmin && (
               <div className="flex items-center gap-3 text-secondary-700 dark:text-secondary-200">
-                <Building className="h-4 w-4 text-primary-600 hidden sm:block" />
+                
                 <div className="flex flex-col ml-[40px] md:ml-[0px] lg:ml-[0px]">
                   <span className="font-semibold text-sm">{selectedOrgName}</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">
@@ -466,12 +466,16 @@ const handleRemovePhoto = async () => {
               size="sm"
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               leftIcon={
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
+                <div
+  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center overflow-hidden ${
+    !profilePhoto ? "bg-primary-600" : ""
+  }`}
+>
                   {profilePhoto ? (
                     <img
                       src={profilePhoto}
                       alt="User"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full"
                       loading="lazy"
                       decoding="async"
                     />
@@ -498,12 +502,16 @@ const handleRemovePhoto = async () => {
                     <div className="relative group w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
 
                       {/* Avatar */}
-                      <div className="w-full h-full bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
+                      <div
+  className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${
+    !profilePhoto ? "bg-primary-600" : ""
+  }`}
+>
                         {profilePhoto ? (
                           <img
                             src={profilePhoto}
                             alt="User"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-full block"
                             loading="lazy"
                             decoding="async"
                           />

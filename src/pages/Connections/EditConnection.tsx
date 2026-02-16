@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getConnectionByConnectionId, updateConsumerConnectionDetails, checkConsumerNumberExists } from "../../services/customerRequisitionService";
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType } from '../../services/customerRequisitionService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, fetchConnectionType, fetchPhaseType, fetchAddressType, fetchCorrectionType, fetchConsumerData } from '../../services/customerRequisitionService';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import MapPreview from '../../components/MapPreview';
 import { UserCircleIcon, BoltIcon, HomeModernIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
@@ -242,6 +242,65 @@ export const EditConnection = () => {
 
 
   const navigate = useNavigate();
+
+  // const resetConsumerAutoFill = () => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     latitude: "",
+  //     longitude: "",
+  //     addressLine1: "",
+  //     avgMonthlyConsumption: "",
+  //     discomId: "",
+  //     billedTo: "",
+  //   }));
+  // };
+
+    useEffect(() => {
+  const isValidConsumerNumber = /^[0-9]{12}$/.test(formData.consumerId);
+  const isConfirmed =
+    confirmConsumerNumber === formData.consumerId &&
+    confirmConsumerNumber !== "";
+
+  const shouldFetch =
+    formData.isDiscomConsumer === "Yes" &&
+    isValidConsumerNumber &&
+    isConfirmed &&
+    !consumerNumberExists;
+
+  if (!shouldFetch) return;
+
+  const fetchData = async () => {
+    try {
+      const data = await fetchConsumerData(Number(confirmConsumerNumber));
+
+      if (!data || Object.keys(data).length === 0) return;
+
+      setFormData((prev) => ({
+        ...prev,
+
+        // ✅ Only fill if empty
+        latitude: prev.latitude || data.latitude?.toString() || "",
+        longitude: prev.longitude || data.longitude?.toString() || "",
+        addressLine1: prev.addressLine1 || data.address || "",
+        avgMonthlyConsumption:
+          prev.avgMonthlyConsumption ||
+          data.avgConsumption?.toString() ||
+          "",
+        discomId: prev.discomId || data.bu?.toString() || "",
+        billedTo: prev.billedTo || data.consumerName || "",
+      }));
+    } catch (err) {
+      console.error("Failed to fetch consumer data", err);
+    }
+  };
+
+  fetchData();
+}, [
+  confirmConsumerNumber,
+  formData.consumerId,
+  formData.isDiscomConsumer,
+  consumerNumberExists,
+]);
 
   useEffect(() => {
     const fetchDistrictsData = async () => {

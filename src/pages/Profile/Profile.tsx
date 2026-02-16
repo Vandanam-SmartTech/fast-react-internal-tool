@@ -529,12 +529,15 @@ const Profile: React.FC = () => {
 
 
                   {/* Profile Photo Section */}
-                  <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative flex-shrink-0">
+                  <div
+                    className={`w-12 h-12 sm:w-12 sm:h-12 rounded-full flex items-center justify-center overflow-hidden relative flex-shrink-0 ${!profilePhoto ? "bg-gray-200" : ""
+                      }`}
+                  >
                     {profilePhoto ? (
                       <img
                         src={profilePhoto}
                         alt="User"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-full block"
                       />
                     ) : (
                       <User className="w-6 h-6 text-gray-600" />

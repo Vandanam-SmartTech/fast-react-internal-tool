@@ -164,7 +164,7 @@ const GramPanchayatDashboard: React.FC = () => {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-4">
+    <div className="p-4 max-w-7xl mx-auto space-y-2">
 
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
