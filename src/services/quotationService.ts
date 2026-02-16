@@ -1532,9 +1532,9 @@ export const addPipeSpecForOrg = async (
 
 
 export const getSystemPackagesWithSpecs = async (
-  isGharkulPackage: boolean,
-  orgId: number,
-  orgPanelSpecId: number
+  isGharkulPackage?: boolean,
+  orgId?: number,
+  orgPanelSpecId?: number
 ): Promise<any[]> => {
   const quotationAPI = getQuotationAPI();
   try {
