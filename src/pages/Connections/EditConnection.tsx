@@ -25,6 +25,32 @@ interface Village {
   pinCode: string;
 }
 
+interface FormData {
+  consumerId: string;
+  isDiscomConsumer: string;
+  phaseTypeId: number;
+  connectionTypeId: number;
+  addressTypeId: number;
+  latitude: string;
+  longitude: string;
+  gstIn: string;
+  billedTo: string;
+  addressLine1: string;
+  addressLine2: string;
+  villageCode: number;
+  pinCode: string;
+  isNameCorrection: string;
+  correctionTypeId: number | null;
+  avgMonthlyConsumption: string;
+  isOnboardedCustomers: boolean;
+  discomId: string;
+  isActive: boolean;
+  isGharkulCustomer: string;
+  gharkulNumber: string;
+  districtCode?: number;
+  talukaCode?: number;
+}
+
 const validationRules = {
   consumerNumber: {
     pattern: /^[0-9]{12}$/,
@@ -138,6 +164,15 @@ export const EditConnection = () => {
   const customerId = location.state?.customerId || null;
   const connectionId = location.state?.connectionId;
 
+  const [missingInfo, setMissingInfo] = useState(false);
+
+  useEffect(() => {
+    if (!connectionId) {
+      setMissingInfo(true);
+      setLoading(false);
+    }
+  }, [connectionId]);
+
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
   const [originalConsumerNumber, setOriginalConsumerNumber] = useState("");
 
@@ -181,7 +216,7 @@ export const EditConnection = () => {
 
 
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<FormData>({
     consumerId: "",
     isDiscomConsumer: "Yes",
     phaseTypeId: 1,
@@ -391,10 +426,10 @@ export const EditConnection = () => {
       }
     }
 
-    if (!formData.avgMonthlyConsumption || isNaN(formData.avgMonthlyConsumption)) {
+    if (!formData.avgMonthlyConsumption || isNaN(Number(formData.avgMonthlyConsumption))) {
       errors.push("Monthly Average Consumption Units is required");
     } else {
-      const consumptionValidation = validateField('monthlyAvgConsumptionUnits', formData.avgMonthlyConsumption);
+      const consumptionValidation = validateField('avgMonthlyConsumption', formData.avgMonthlyConsumption);
       if (!consumptionValidation.isValid) {
         errors.push(consumptionValidation.message);
       }
@@ -484,21 +519,6 @@ export const EditConnection = () => {
     }));
   };
 
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value, 10);
-    const selectedVillage = villages.find((village) => village.code === value);
-
-    if (selectedVillage) {
-      setVillageCode(value);
-      setPinCode(selectedVillage.pinCode || "");
-      setFormData((prev: any) => ({
-        ...prev,
-        villageCode: value,
-        pinCode: selectedVillage.pinCode,
-      }));
-    }
-  };
-
   const handlepinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPinCode(value);
@@ -506,12 +526,12 @@ export const EditConnection = () => {
     console.log("Current state PINcode:", value);
   };
 
-  const handleNameCorrection = (e) => {
+  const handleNameCorrection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,
       isNameCorrection: value,
-      correctionType: value === "No" ? "" : prev.correctionType,
+      correctionTypeId: value === "No" ? null : prev.correctionTypeId,
     }));
   };
 
@@ -542,7 +562,7 @@ export const EditConnection = () => {
           longitude: data.longitude,
           isOnboardedCustomers: data.isOnboardedCustomers ?? false,
           discomId: data.discomId,
-          isGharkulCustomer: data.isGharkulCustomer ? "Yes": "No",
+          isGharkulCustomer: data.isGharkulCustomer ? "Yes" : "No",
           gharkulNumber: data.gharkulNumber,
         });
         setDistrictCode(data.districtCode);
@@ -558,6 +578,30 @@ export const EditConnection = () => {
     };
     fetchConnection();
   }, [connectionId]);
+
+  if (missingInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Missing Information</h2>
+          <p className="text-gray-600 mb-6">
+            Connection ID or Customer Information is missing. Please navigate here from the View Customer page.
+          </p>
+          <button
+            onClick={() => navigate('/list-of-consumers')}
+            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
+          >
+            Go to Customers List
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div>Loading connection details...</div>;
@@ -612,12 +656,12 @@ export const EditConnection = () => {
       }
 
       if (name === 'connectionTypeId') {
-      const selectedType = connectionTypes.find(
-        (type) => type.id === Number(value)
-      );
-      const isHT = selectedType?.nameEn?.toLowerCase().includes('ht');
-      updatedForm.phaseTypeId = isHT ? 2 : 1;
-    }
+        const selectedType = connectionTypes.find(
+          (type) => type.id === Number(value)
+        );
+        const isHT = selectedType?.nameEn?.toLowerCase().includes('ht');
+        updatedForm.phaseTypeId = isHT ? 2 : 1;
+      }
 
       return updatedForm;
     });
@@ -670,7 +714,7 @@ export const EditConnection = () => {
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
       correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
-      gharkulNumber: formData.isGharkulCustomer === "Yes"? formData.gharkulNumber : null,
+      gharkulNumber: formData.isGharkulCustomer === "Yes" ? formData.gharkulNumber : null,
       avgMonthlyConsumption: formData.avgMonthlyConsumption,
       villageCode: formData.villageCode,
       pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
@@ -760,7 +804,7 @@ export const EditConnection = () => {
                         : Cog6ToothIcon;
 
                 const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details";
-                
+
                 return (
                   <button
                     key={tab}
@@ -859,7 +903,7 @@ export const EditConnection = () => {
                   value={formData.consumerId}
                   onChange={handleChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.replace(/[^0-9]/g, "");
                   }}
                   maxLength={12}
                   pattern="^[0-9]{12}$"
@@ -897,7 +941,7 @@ export const EditConnection = () => {
                   value={confirmConsumerNumber}
                   onChange={handleConfirmConsumerNumberChange}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                    (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.replace(/[^0-9]/g, "");
                   }}
                   placeholder="Confirm consumer number"
                   maxLength={12}
@@ -930,7 +974,7 @@ export const EditConnection = () => {
                   name="connectionTypeId"
                   value={formData.connectionTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "connectionTypeId", value: val } })
+                    handleChange({ target: { name: "connectionTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={connectionTypes.map((type) => ({
                     value: type.id,
@@ -947,7 +991,7 @@ export const EditConnection = () => {
                   name="phaseTypeId"
                   value={formData.phaseTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "phaseTypeId", value: val } })
+                    handleChange({ target: { name: "phaseTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={phaseTypes.map((type) => ({
                     value: type.id,
@@ -1102,7 +1146,7 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="district"
                   value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)}
                   options={[
                     { value: 0, label: districtName || "Select District" },
                     ...districts.map((district) => ({
@@ -1122,7 +1166,7 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)}
                   options={[
                     { value: 0, label: talukaName || "Select Taluka" },
                     ...talukas.map((taluka) => ({
@@ -1142,7 +1186,19 @@ export const EditConnection = () => {
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  onChange={(val) => {
+                    const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+                    const selectedVillage = villages.find((village) => village.code === numVal);
+                    if (selectedVillage) {
+                      setVillageCode(numVal);
+                      setPinCode(selectedVillage.pinCode || "");
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        villageCode: numVal,
+                        pinCode: selectedVillage.pinCode,
+                      }));
+                    }
+                  }}
                   options={[
                     { value: 0, label: villageName || "Select Village" },
                     ...villages.map((village) => ({
@@ -1185,7 +1241,7 @@ export const EditConnection = () => {
                   name="addressTypeId"
                   value={formData.addressTypeId}
                   onChange={(val) =>
-                    handleChange({ target: { name: "addressTypeId", value: val } })
+                    handleChange({ target: { name: "addressTypeId", value: val.toString() } } as React.ChangeEvent<HTMLSelectElement>)
                   }
                   options={addressTypes.map((type) => ({
                     value: type.id,
@@ -1515,6 +1571,7 @@ export const EditConnection = () => {
                         longitude: connection.longitude || "",
                         isOnboardedCustomers: connection.isOnboardedCustomers ?? false,
                         discomId: connection.discomId || "",
+                        isActive: connection.isActive ?? true,
                       });
 
                     }

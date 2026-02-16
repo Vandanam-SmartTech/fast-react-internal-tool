@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { Users, UserCheck, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
-import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
+import { safeConnectWebSocket } from '../../utils/websocketHelper';
 
 const StaffDashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -13,9 +13,6 @@ const StaffDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-
-  const [, setData] = useState([]);
-  const [, setStatsLoading] = useState(true);
   const navigate = useNavigate();
   const { userClaims } = useUser();
 
@@ -35,38 +32,41 @@ const StaffDashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(timeInterval);
   }, []);
 
-  const buildCustomerParams = () => {
+  const buildCustomerParams = useCallback(() => {
     const selectedOrgStr = localStorage.getItem("selectedOrg");
     if (!selectedOrgStr) return null;
 
-    const selectedOrg = JSON.parse(selectedOrgStr);
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+      const params: Record<string, any> = {};
 
-    const params: Record<string, any> = {};
+      if (
+        selectedOrg.role === "ROLE_ORG_STAFF" ||
+        selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
+      ) {
+        params.orgId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      } else if (
+        selectedOrg.role === "ROLE_AGENCY_STAFF" ||
+        selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
+      ) {
+        params.agencyId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      }
 
-    if (
-      selectedOrg.role === "ROLE_ORG_STAFF" ||
-      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
-    ) {
-      params.orgId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
-    } else if (
-      selectedOrg.role === "ROLE_AGENCY_STAFF" ||
-      selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
-    ) {
-      params.agencyId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
+      return params;
+    } catch {
+      return null;
     }
-
-    return params;
-  };
+  }, []);
 
 
-  const refreshCustomerCount = async (animate = true) => {
+  const refreshCustomerCount = useCallback(async (animate = true) => {
     try {
       const params = buildCustomerParams();
       if (!params) return;
@@ -87,53 +87,36 @@ const StaffDashboard: React.FC = () => {
     } catch (err) {
       console.error("Failed to refresh customer count", err);
     }
-  };
+  }, [buildCustomerParams]);
 
 
 
   useEffect(() => {
-    connectCustomerSocket((event) => {
+    const cleanup = safeConnectWebSocket((event) => {
       if (event === "CUSTOMER_ADDED") {
         refreshCustomerCount(true);
       }
     });
-
-    return () => {
-      disconnectCustomerSocket();
-    };
-  }, []);
+    return cleanup;
+  }, [refreshCustomerCount]);
 
   useEffect(() => {
-    refreshCustomerCount(false);
-
     const params = buildCustomerParams();
     if (!params) return;
 
-    getOnboardedCustomerCount(params)
-      .then((actualCount) => {
-        setOnboardedCount(actualCount);
-        setAnimatedOnboardedCount(actualCount);
-      })
-      .catch(console.error);
+    refreshCustomerCount(false);
 
-    getCustomerStats(params)
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
-
-        setData(filtered);
-      })
-      .catch(console.error)
-      .finally(() => setStatsLoading(false));
-  }, []);
+    Promise.all([
+      getOnboardedCustomerCount(params),
+      getCustomerStats(params)
+    ]).then(([actualCount]) => {
+      setOnboardedCount(actualCount);
+      setAnimatedOnboardedCount(actualCount);
+    }).catch(console.error);
+  }, [buildCustomerParams, refreshCustomerCount]);
 
 
-  const animateCountUp = (
+  const animateCountUp = useCallback((
     from: number,
     to: number,
     setDisplay: (val: number) => void
@@ -147,8 +130,13 @@ const StaffDashboard: React.FC = () => {
     }
 
     const step = Math.max(Math.floor(diff / 30), 1);
+    let isCancelled = false;
 
     const interval = setInterval(() => {
+      if (isCancelled) {
+        clearInterval(interval);
+        return;
+      }
       current += step;
       if (current >= to) {
         setDisplay(to);
@@ -157,7 +145,12 @@ const StaffDashboard: React.FC = () => {
         setDisplay(current);
       }
     }, 20);
-  };
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
 
   const handleActivate = (path: string) => navigate(path);
@@ -170,8 +163,7 @@ const StaffDashboard: React.FC = () => {
     }
   };
 
-  const dashboardItems = [
-
+  const dashboardItems = useMemo(() => [
     {
       title: 'Manage Customers',
       description: 'List, View, Add, Update customers',
@@ -179,8 +171,7 @@ const StaffDashboard: React.FC = () => {
       path: '/manage-customers',
       color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
     },
-
-  ];
+  ], []);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">

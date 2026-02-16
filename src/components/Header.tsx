@@ -7,6 +7,7 @@ import { Logo } from './ui';
 import { croppedImg } from '../utils/croppedImage';
 import Cropper from 'react-easy-crop';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
+import { loadCropperCSS } from '../utils/cssLoader';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Header: React.FC = () => {
 
   const [selectedOrgName, setSelectedOrgName] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+  const [selectedDeptCode, setSelectedDeptCode] = useState<number | null>(null);
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -91,9 +93,8 @@ const Header: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleOrgChange = (orgId: string, orgName: string, role: string) => {
-    const newOrg = { orgId, orgName, role };
+const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode: number | null) => {
+    const newOrg = { orgId, orgName, role, deptCode };
 
     setSelectedOrg(newOrg);
     localStorage.setItem('selectedOrg', JSON.stringify(newOrg));
@@ -117,12 +118,10 @@ const Header: React.FC = () => {
     } else if (role === 'ROLE_SUPER_ADMIN') {
       navigate('/super-admin-dashboard');
     } else if (role === 'ROLE_BDO') {
-      navigate ('/bdo-dashboard');
-    } else if (role === 'ROLE_GRAMSEVAK'){
+      navigate('/bdo-dashboard');
+    } else if (role === 'ROLE_GRAMSEVAK') {
       navigate('/grampanchayat-dashboard');
     }
-
-    window.location.reload();
 
   };
 
@@ -137,12 +136,14 @@ const Header: React.FC = () => {
   };
 
   const loadProfilePhoto = async () => {
-    const photoUrl = await getUserProfilePhoto();
+    if (!userClaims?.id) return; // safety check
+
+    const photoUrl = await getUserProfilePhoto(userClaims.id);
+
     if (photoUrl) {
       setProfilePhoto(photoUrl);
       setHasUploadedPhoto(true);
     } else {
-      // When photo is deleted, reset UI
       setProfilePhoto(null);
       setHasUploadedPhoto(false);
     }
@@ -177,24 +178,34 @@ const Header: React.FC = () => {
   }, []);
 
 
-  const handleRemovePhoto = async () => {
-    try {
-      setRemovingPhoto(true);
-      await deleteUserProfilePhoto(); // Delete API call
-      await loadProfilePhoto();       // Refresh UI state immediately
-      setShowCropModal(false); // Close modal
+const handleRemovePhoto = async () => {
+  if (!userClaims?.id) return;
 
-      // 🔥 Notify other components about removal
-      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
-    } catch (error) {
-      console.error("Error removing photo:", error);
-    } finally {
-      setRemovingPhoto(false);
-    }
-  };
+  try {
+    setRemovingPhoto(true);
+
+    // Pass userId from context
+    await deleteUserProfilePhoto(userClaims.id);
+
+    // Refresh UI state immediately
+    await loadProfilePhoto();
+
+    setShowCropModal(false); // Close modal
+
+    // 🔥 Notify other components about removal
+    window.dispatchEvent(
+      new CustomEvent("profilePhotoUpdated", { detail: "" })
+    );
+  } catch (error) {
+    console.error("Error removing photo:", error);
+  } finally {
+    setRemovingPhoto(false);
+  }
+};
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    loadCropperCSS();
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -208,9 +219,13 @@ const Header: React.FC = () => {
     }
   };
 
-
-  const handleCropSave = async () => {
+ const handleCropSave = async () => {
     if (!previewUrl || !croppedAreaPixels) return;
+
+    if (!userClaims?.id) {
+      console.error("User ID not available");
+      return;
+    }
 
     setLoading(true);
 
@@ -233,9 +248,9 @@ const Header: React.FC = () => {
 
 
       if (hasUploadedPhoto) {
-        await editUserProfilePhoto(file);
+        await editUserProfilePhoto(userClaims.id, file);
       } else {
-        await uploadUserProfilePhoto(file);
+        await uploadUserProfilePhoto(userClaims.id, file);
         setHasUploadedPhoto(true);
       }
 
@@ -382,7 +397,7 @@ const Header: React.FC = () => {
                             <button
                               key={`${orgId}-${role}`}
                               onClick={() =>
-                                handleOrgChange(orgId, orgData.org_name, role)
+                                handleOrgChange(orgId, orgData.org_name, role, orgData.dept_code)
                               }
                               className={`w-full text-left px-4 py-3 text-sm hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-l-4 ${isSelected
                                 ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-l-primary-600"
@@ -428,6 +443,8 @@ const Header: React.FC = () => {
                       src={profilePhoto}
                       alt="User"
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
@@ -458,33 +475,36 @@ const Header: React.FC = () => {
                             src={profilePhoto}
                             alt="User"
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <User className="h-5 w-5 text-white" />
                         )}
                       </div>
 
-                      <div
-                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                        onClick={() => {
-                          if (profilePhoto) {
+                        <div
+                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                          onClick={() => {
+                            loadCropperCSS();
+                            if (profilePhoto) {
 
-                            setCrop({ x: 0, y: 0 });
-                            setZoom(1);
-                            setRotation(0);
-                            setCroppedAreaPixels(null);
+                              setCrop({ x: 0, y: 0 });
+                              setZoom(1);
+                              setRotation(0);
+                              setCroppedAreaPixels(null);
 
 
-                            setPreviewUrl(profilePhoto);
-                            setShowCropModal(true);
-                          } else {
+                              setPreviewUrl(profilePhoto);
+                              setShowCropModal(true);
+                            } else {
 
-                            document.getElementById("profile-file-input")?.click();
-                          }
-                        }}
-                      >
-                        <Camera className="w-5 h-5 text-white" />
-                      </div>
+                              document.getElementById("profile-file-input")?.click();
+                            }
+                          }}
+                        >
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
 
                       <input
                         id="profile-file-input"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
-import bgImage from '../../assets/Solar_Image.jpg';
+import bgImage from '../../assets/Solar_Image.webp';
 import { Logo } from '../../components/ui';
 import { verifyOtp, sendOtpToEmail } from '../../services/otpService';
 import { validateUser } from '../../services/jwtService';

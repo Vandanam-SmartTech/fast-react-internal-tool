@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { getOnboardedCustomerCount, getCustomerCount, getCustomerStats } from '../../services/customerRequisitionService';
 import { useNavigate } from 'react-router-dom';
 import { UserCheck, Users, Calendar, Clock } from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
-import { connectCustomerSocket, disconnectCustomerSocket } from '../../services/websocket';
+import { safeConnectWebSocket } from '../../utils/websocketHelper';
 
 const BDODashboard: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -14,11 +14,7 @@ const BDODashboard: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [animatedOnboardedCount, setAnimatedOnboardedCount] = useState(0);
-  const [, setData] = useState([]);
   const { userClaims } = useUser();
-  const [, setStatsLoading] = useState(true);
-
-
 
   useEffect(() => {
     const setTimeBasedGreeting = () => {
@@ -36,43 +32,51 @@ const BDODashboard: React.FC = () => {
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(timeInterval);
   }, []);
 
-  const buildCustomerParams = () => {
+  const buildCustomerParams = useCallback(() => {
     const selectedOrgStr = localStorage.getItem("selectedOrg");
     if (!selectedOrgStr) return null;
 
-    const selectedOrg = JSON.parse(selectedOrgStr);
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+      
+      if (!selectedOrg || typeof selectedOrg !== 'object' || !selectedOrg.role) {
+        console.warn("Invalid selectedOrg structure");
+        return null;
+      }
 
-    const params: Record<string, any> = {};
+      const params: Record<string, any> = {};
 
-    if (
-      selectedOrg.role === "ROLE_ORG_STAFF" ||
-      selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
-    ) {
-      params.orgId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
-    } else if(
-      selectedOrg.role === "ROLE_BDO"
-    ){
-      params.userRole = selectedOrg.role;
-      params.talukaCode = selectedOrg.deptCode
-    }else if (
-      selectedOrg.role === "ROLE_AGENCY_STAFF" ||
-      selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
-    ) {
-      params.agencyId = selectedOrg.orgId;
-      params.userRole = selectedOrg.role;
+      if (
+        selectedOrg.role === "ROLE_ORG_STAFF" ||
+        selectedOrg.role === "ROLE_ORG_REPRESENTATIVE"
+      ) {
+        params.orgId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      } else if(selectedOrg.role === "ROLE_BDO") {
+        params.userRole = selectedOrg.role;
+        params.talukaCode = selectedOrg.deptCode;
+      } else if (
+        selectedOrg.role === "ROLE_AGENCY_STAFF" ||
+        selectedOrg.role === "ROLE_AGENCY_REPRESENTATIVE"
+      ) {
+        params.agencyId = selectedOrg.orgId;
+        params.userRole = selectedOrg.role;
+      }
+
+      return Object.keys(params).length > 0 ? params : null;
+    } catch (err) {
+      console.error("Failed to parse selectedOrg from localStorage:", err);
+      return null;
     }
-
-    return params;
-  };
+  }, []);
 
 
-  const refreshCustomerCount = async (animate = true) => {
+  const refreshCustomerCount = useCallback(async (animate = true) => {
     try {
       const params = buildCustomerParams();
       if (!params) return;
@@ -93,53 +97,36 @@ const BDODashboard: React.FC = () => {
     } catch (err) {
       console.error("Failed to refresh customer count", err);
     }
-  };
+  }, [buildCustomerParams]);
 
 
 
   useEffect(() => {
-    connectCustomerSocket((event) => {
+    const cleanup = safeConnectWebSocket((event) => {
       if (event === "CUSTOMER_ADDED") {
         refreshCustomerCount(true);
       }
     });
-
-    return () => {
-      disconnectCustomerSocket();
-    };
-  }, []);
+    return cleanup;
+  }, [refreshCustomerCount]);
 
   useEffect(() => {
-    refreshCustomerCount(false);
-
     const params = buildCustomerParams();
     if (!params) return;
 
-    getOnboardedCustomerCount(params)
-      .then((actualCount) => {
-        setOnboardedCount(actualCount);
-        setAnimatedOnboardedCount(actualCount);
-      })
-      .catch(console.error);
+    refreshCustomerCount(false);
 
-    getCustomerStats(params)
-      .then((rawData) => {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-        const filtered = rawData.filter((entry: any) => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= oneYearAgo;
-        });
-
-        setData(filtered);
-      })
-      .catch(console.error)
-      .finally(() => setStatsLoading(false));
-  }, []);
+    Promise.all([
+      getOnboardedCustomerCount(params),
+      getCustomerStats(params)
+    ]).then(([actualCount]) => {
+      setOnboardedCount(actualCount);
+      setAnimatedOnboardedCount(actualCount);
+    }).catch(console.error);
+  }, [buildCustomerParams, refreshCustomerCount]);
 
 
-  const animateCountUp = (
+  const animateCountUp = useCallback((
     from: number,
     to: number,
     setDisplay: (val: number) => void
@@ -153,7 +140,6 @@ const BDODashboard: React.FC = () => {
     }
 
     const step = Math.max(Math.floor(diff / 30), 1);
-
     const interval = setInterval(() => {
       current += step;
       if (current >= to) {
@@ -162,8 +148,12 @@ const BDODashboard: React.FC = () => {
       } else {
         setDisplay(current);
       }
-    }, 20);
-  };
+    }, 50);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleActivate = (path: string) => navigate(path);
 
@@ -175,7 +165,7 @@ const BDODashboard: React.FC = () => {
     }
   };
 
-  const dashboardItems = [
+  const dashboardItems = useMemo(() => [
      {
           title: 'Manage Customers',
           description: 'List, View, Add, Update customers',
@@ -183,7 +173,7 @@ const BDODashboard: React.FC = () => {
           path: '/manage-customers',
           color: 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-700',
         },
-  ];
+  ], []);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-2">
@@ -222,46 +212,7 @@ const BDODashboard: React.FC = () => {
       </div>
 
       <div className="space-y-3">
-        {/* <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
-          Management Tools
-        </h2>
-    
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        {dashboardItems.map((item, index) => (
-            <Card
-              key={index}
-              hover
-              onClick={() => navigate(item.path)}
-              className={`bg-gradient-to-br ${item.color}`}
-            >
-              <CardBody className="p-3 md:p-4 flex items-center">
-                <div className="flex items-center gap-2 w-full">
-
-                  <div className="p-1 bg-white dark:bg-secondary-800 rounded-lg shadow-soft">
-                    {item.icon}
-                  </div>
-
-                  <div className="flex-1 min-w-0 flex flex-col justify-center">
-
-                    <h3 className="font-semibold text-secondary-900
-                     text-sm sm:text-base lg:text-lg
-                     leading-tight mb-0.5">
-                      {item.title}
-                    </h3>
-
-                    <p className="text-secondary-700 dark:text-secondary-300
-                    text-xs sm:text-sm
-                    leading-snug line-clamp-2 mb-1">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-        ))}
-      </div> */}
-
-      <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
+        <h2 className="text-base sm:text-lg font-semibold text-secondary-900">
           Customer Records
         </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">

@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImage from '../../assets/Vandanam_SmartTech_Logo.png';
+import logoImage from '../../assets/Vandanam_SmartTech_Logo_213_105.png';
 
 export interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -7,10 +7,10 @@ export interface LogoProps {
   alt?: string;
 }
 
-const Logo: React.FC<LogoProps> = ({ 
-  size = 'md', 
-  className = '', 
-  alt = 'Vandanam SmartTech Logo' 
+const Logo: React.FC<LogoProps> = ({
+  size = 'md',
+  className = '',
+  alt = 'Vandanam SmartTech Logo'
 }) => {
   const sizeClasses = {
     sm: 'h-6 w-auto',
@@ -21,10 +21,12 @@ const Logo: React.FC<LogoProps> = ({
   };
 
   return (
-    <img 
-      src={logoImage} 
-      alt={alt} 
+    <img
+      src={logoImage}
+      alt={alt}
       className={`${sizeClasses[size]} ${className}`}
+      fetchPriority="high"
+      decoding="async"
     />
   );
 };

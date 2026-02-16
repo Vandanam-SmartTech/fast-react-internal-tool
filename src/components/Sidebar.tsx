@@ -4,7 +4,6 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "./ui";
 import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight, Package, Layers } from "lucide-react";
 import Button from "./ui/Button";
-import { fetchClaims } from "../services/jwtService";
 import { useUser } from "../contexts/UserContext";
 
 interface SidebarProps {
@@ -182,111 +181,99 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   };
 
 
+ useEffect(() => {
+  if (!userClaims) return;
 
-  useEffect(() => {
+  const allRoles: string[] = [];
 
-    const fetchRole = async (checkPageAccess = false) => {
-      try {
-        const claims = await fetchClaims();
-        const allRoles: string[] = [];
+  // Global roles
+  if (Array.isArray(userClaims.global_roles)) {
+    allRoles.push(...userClaims.global_roles);
+  }
 
-        if (Array.isArray(claims.global_roles)) {
-          allRoles.push(...claims.global_roles);
-        }
+  // Org role from selectedOrg
+  const selectedOrgStr = localStorage.getItem("selectedOrg");
 
-        const selectedOrgStr = localStorage.getItem("selectedOrg");
-        if (selectedOrgStr) {
-          try {
-            const selectedOrg = JSON.parse(selectedOrgStr);
-            if (selectedOrg.role) {
-              allRoles.push(selectedOrg.role);
-            } else if (claims.org_roles?.[selectedOrg.orgId]?.roles?.length) {
-              allRoles.push(claims.org_roles[selectedOrg.orgId].roles[0]);
-            }
-          } catch {
-            console.error("Invalid selectedOrg format in localStorage");
-          }
-        }
+  if (selectedOrgStr) {
+    try {
+      const selectedOrg = JSON.parse(selectedOrgStr);
+      const orgData = userClaims.org_roles?.[selectedOrg.orgId];
 
-        setRoles(allRoles);
-
-        if (checkPageAccess) {
-          const currentPath = location.pathname;
-
-          const restrictedPages = [
-            "/admin-management",
-            "/user-management",
-            "/product-management"
-          ];
-          const dashboardPages = [
-            "/org-admin-dashboard",
-            "/super-admin-dashboard",
-            "/representative-dashboard",
-            "/agency-admin-dashboard",
-            "/staff-dashboard",
-            "/grampanchayat-dashboard",
-            "/bdo-dashboard",
-          ];
-
-          if (restrictedPages.includes(currentPath)) {
-            if (
-              currentPath === "/admin-management" &&
-              !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN"))
-            ) {
-              redirectToDashboard(allRoles);
-            }
-            if (
-              currentPath === "/user-management" &&
-              !(allRoles.includes("ROLE_SUPER_ADMIN") || allRoles.includes("ROLE_ORG_ADMIN") || allRoles.includes("ROLE_AGENCY_ADMIN"))
-            ) {
-              redirectToDashboard(allRoles);
-            }
-          } else if (dashboardPages.includes(currentPath)) {
-
-            redirectToDashboard(allRoles);
-          }
-
-        }
-      } catch (err) {
-        console.error("Error fetching claims:", err);
+      if (selectedOrg.role) {
+        allRoles.push(selectedOrg.role);
+      } else if (orgData?.roles?.length) {
+        allRoles.push(orgData.roles[0]);
       }
-    };
+    } catch {
+      console.error("Invalid selectedOrg format in localStorage");
+    }
+  }
 
-    const redirectToDashboard = (allRoles: string[]) => {
-      if (allRoles.includes("ROLE_SUPER_ADMIN")) {
-        navigate("/super-admin-dashboard");
-      } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
-        navigate("/org-admin-dashboard");
-      } else if (allRoles.includes("ROLE_ORG_REPRESENTATIVE")) {
-        navigate("/representative-dashboard");
-      } else if (allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")) {
-        navigate("/representative-dashboard");
-      } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
-        navigate("/agency-admin-dashboard");
-      } else if (allRoles.includes("ROLE_ORG_STAFF")) {
-        navigate("/staff-dashboard");
-      } else if (allRoles.includes("ROLE_AGENCY_STAFF")) {
-        navigate("/staff-dashboard");
-      }else if (allRoles.includes("ROLE_GRAMSEVAK")) {
-        navigate("/grampanchayat-dashboard");
-      }else if (allRoles.includes("ROLE_BDO")) {
-        navigate("/bdo-dashboard");
-      } else {
-        navigate("/login");
-      }
-    };
+  setRoles(allRoles);
 
-    fetchRole();
+  // 🔥 Optional: redirect if page access invalid
+  const currentPath = location.pathname;
 
-    const handleOrgChange = () => {
-      fetchRole(true);
-    };
+  const restrictedPages = [
+    "/admin-management",
+    "/user-management",
+    "/product-management",
+    "/package-management"
+  ];
 
-    window.addEventListener("organizationChanged", handleOrgChange);
-    return () => {
-      window.removeEventListener("organizationChanged", handleOrgChange);
-    };
-  }, [navigate, location.pathname]);
+  const dashboardPages = [
+    "/org-admin-dashboard",
+    "/super-admin-dashboard",
+    "/representative-dashboard",
+    "/agency-admin-dashboard",
+    "/staff-dashboard",
+    "/grampanchayat-dashboard",
+    "/bdo-dashboard",
+  ];
+
+  const redirectToDashboard = () => {
+    if (allRoles.includes("ROLE_SUPER_ADMIN")) {
+      navigate("/super-admin-dashboard");
+    } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
+      navigate("/org-admin-dashboard");
+    } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
+      navigate("/agency-admin-dashboard");
+    } else if (
+      allRoles.includes("ROLE_ORG_REPRESENTATIVE") ||
+      allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")
+    ) {
+      navigate("/representative-dashboard");
+    } else if (
+      allRoles.includes("ROLE_ORG_STAFF") ||
+      allRoles.includes("ROLE_AGENCY_STAFF")
+    ) {
+      navigate("/staff-dashboard");
+    } else if (allRoles.includes("ROLE_GRAMSEVAK")) {
+      navigate("/grampanchayat-dashboard");
+    } else if (allRoles.includes("ROLE_BDO")) {
+      navigate("/bdo-dashboard");
+    } else {
+      navigate("/login");
+    }
+  };
+
+  // Restriction validation
+  if (
+    restrictedPages.includes(currentPath) &&
+    !(
+      allRoles.includes("ROLE_SUPER_ADMIN") ||
+      allRoles.includes("ROLE_ORG_ADMIN") ||
+      allRoles.includes("ROLE_AGENCY_ADMIN")
+    )
+  ) {
+    redirectToDashboard();
+  }
+
+  if (dashboardPages.includes(currentPath)) {
+    redirectToDashboard();
+  }
+
+}, [userClaims, location.pathname, navigate]);
 
 
 
@@ -469,16 +456,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-               {/* {(roles.includes("ROLE_ORG_ADMIN")) && (
+               {(roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToPackageManagement}
-                  className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
+                  className={`nav-link w-full justify-start ${isActive("/package-management") ? "nav-link-active" : "nav-link-inactive"
                     }`}
                 >
                   <Layers size={20} />
                   <span>Package Management</span>
                 </button>
-              )} */}
+              )}
 
             </nav>
 

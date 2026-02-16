@@ -6,13 +6,14 @@ import Modal from "../../components/ui/Modal";
 import Card from "../../components/ui/Card";
 import { Plus } from "lucide-react";
 import {
-  generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
-  fetchInverterBrandCapacities, fetchPanelBrands, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, getSavedSystemSpecs, updateSystemSpecs, updateInverterSpecs, getSavedSystemSpecPackages,
-  getPriceDetails, saveSystemSpecPackage, saveInverterSpecPackage
+   saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
+  fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
+  fetchBatteryBrandCapacities, updateSystemSpecs, updateInverterSpecs, getSavedSystemSpecPackages,
+  getPriceDetails, saveSystemSpecPackage, saveInverterSpecPackage, fetchPanelSpecsByOrg, fetchPipeSpecification, savePipeSpecs
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { Eye, Pencil } from "lucide-react";
+import { toast } from "react-toastify";
 
 
 interface Organization {
@@ -23,11 +24,6 @@ interface Organization {
 interface Agency {
   id: number;
   name: string;
-}
-
-interface PhaseType {
-  id: number;
-  nameEn: string;
 }
 
 interface Package {
@@ -63,7 +59,7 @@ const PackageManagement: React.FC = () => {
   const [organizationId, setOrganizationId] = useState<number | "">("");
   const [agencyList, setAgencyList] = useState<Agency[]>([]);
   const [agencyId, setAgencyId] = useState<number | "">("");
-  const [phaseTypes, setPhaseTypes] = useState([]);
+  const [phaseTypes, setPhaseTypes] = useState<any[]>([]);
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
   const [selectedPhaseType, setSelectedPhaseType] = useState<string>("");
   const [packages, setPackages] = useState<Package[]>([]);
@@ -132,6 +128,7 @@ const PackageManagement: React.FC = () => {
     systemCost: 0,
     fabricationCost: 0,
     totalCost: 0,
+    phaseTypeId: null,
     installationSpaceType: "",
     installationStructureType: "Static",
     hasWaterSprinkler: false,
@@ -505,6 +502,17 @@ const PackageManagement: React.FC = () => {
     }
   };
 
+    useEffect(() => {
+      const loadPipeSpecs = async () => {
+        const data = await fetchPipeSpecification(Number(selectedOrg?.orgId));
+        setPipes(data);
+      };
+  
+      if (selectedOrg?.orgId) {
+        loadPipeSpecs();
+      }
+    }, [selectedOrg?.orgId]);
+
   const handlePipeChange = (index: number, field: string, value: any) => {
     const updatedPipes = [...(formData.pipes || [])];
     // Ensure the row exists
@@ -549,62 +557,76 @@ const PackageManagement: React.FC = () => {
 
 
   useEffect(() => {
-    const loadPanelBrands = async () => {
-      if (!isPrefilling) {
+      const loadPanelBrands = async () => {
+        if (!materialOriginId || !selectedOrg?.orgId) return;
+  
+        // reset dependent state
         setPanels([]);
-        setPanelSpecId(null);
+        setOrgPanelSpecId(null);
         setPanelCapacities([]);
         setSystemCapacityKw(null);
         setFormData((prev) => ({
           ...prev,
-          panelSpecId: null,
-          systemCapacityKw: null
+          orgPanelSpecId: null,
+          systemCapacityKw: null,
         }));
-      }
-
-      if (materialOriginId) {
+  
         try {
-          const data = await fetchPanelBrands(Number(materialOriginId));
-          setPanels([...data]);
+          const data = await fetchPanelSpecsByOrg(
+            Number(materialOriginId),
+            Number(selectedOrg?.orgId)
+          );
+          setPanels(data);
         } catch (error) {
           console.error("Failed to fetch panel brands:", error);
           setPanels([]);
-        } finally {
-          setIsPrefilling(false);
         }
-      }
-    };
-
-    loadPanelBrands();
-  }, [materialOriginId]);
+      };
+  
+      loadPanelBrands();
+    }, [materialOriginId, selectedOrg?.orgId]);   // ✅ include orgId
 
 
   useEffect(() => {
     const loadPanelBrandCapacities = async () => {
-      if (!isPrefilling) {
+
+      if (
+        phaseTypeId === null ||
+        orgPanelSpecId === null ||
+        materialOriginId === null
+      ) {
+      
+        return;
+      }
+
+      if (!formData.systemCapacityKw) {
+        
         setPanelCapacities([]);
         setSystemCapacityKw(null);
         setFormData((prev) => ({
           ...prev,
-          systemCapacityKw: null
+          systemCapacityKw: null,
         }));
       }
 
-      if (phaseTypeId !== null && panelSpecId !== null) {
-        try {
-          const data = await fetchPanelBrandCapacities(phaseTypeId, panelSpecId);
-          setPanelCapacities([...data]);
-        } catch (error) {
-          console.error("Failed to fetch panel brand capacities:", error);
-          setPanelCapacities([]);
-        } finally {
-          setIsPrefilling(false);
-        }
+      try {
+      
+        const data = await fetchPanelBrandCapacities(
+          phaseTypeId,
+          orgPanelSpecId
+        );
+
+        setPanelCapacities([...data]);
+      } catch (error) {
+        console.error("❌ Failed to fetch panel brand capacities:", error);
+        setPanelCapacities([]);
       }
     };
 
     loadPanelBrandCapacities();
-  }, [phaseTypeId, panelSpecId]);
+  }, [phaseTypeId, orgPanelSpecId, materialOriginId]);
+
+
 
 
   useEffect(() => {
@@ -687,63 +709,79 @@ const PackageManagement: React.FC = () => {
   //     }
   //   }, [connectionId]);
 
-  // const handleSaveSpecPackage = async () => {
-  //   try {
+  const handleSaveSpecPackage = async () => {
+    try {
 
-  //     if (!formData.inverterBrandId || !formData.inverterSpecId) {
-  //       toast.error("Please select both Inverter Brand and Inverter Specification before saving.", {
-  //         autoClose: 1500,
-  //         hideProgressBar: true,
-  //       });
-  //       return;
-  //     }
-
-  //     setIsSubmitting(true);
+      setIsSubmitting(true);
 
 
-  //     const systemResponse = await saveSystemSpecPackage({
-  //       ...formData,
-  //       specSourceId: 2,
-  //       panelSpecsId: formData.panelSpecId,
-  //       batterySpecsId: formData.batterySpecId,
-  //       orgId: organizationId,
-  //       agencyId
-  //     });
+      const systemResponse = await saveSystemSpecPackage({
+        ...formData,
+        installationSpaceType: null,
+        title: formData.title,
+        description: formData.description,
+        orgPanelSpecId: formData.orgPanelSpecId,
+        orgBatterySpecId: formData.orgBatterySpecId,
+        orgId: selectedOrg?.orgId,
+        batteryCount: formData.orgBatterySpecId ? 1 : null,
+      });
 
-  //     console.log("System specs saved:", systemResponse);
+      console.log("System specs saved:", systemResponse);
 
-  //     const systemSpecsPackageId = systemResponse.id;
+      const systemSpecsId = systemResponse.id;
 
-  //     const inverterResponse = await saveInverterSpecPackage({
-  //       systemSpecsPackageId,
-  //       inverterSpecId: formData.inverterSpecId,
-  //       inverterCount: 1,
-  //     });
+      // ---------------------- SAVE INVERTERS ------------------------------
 
-  //     console.log("Inverter specs saved:", inverterResponse);
+      const inverterList = formData.inverters.map((inv) => ({
+        systemSpecsId,
+        orgInverterSpecId: inv.orgInverterSpecId,
+        inverterCount: inv.inverterCount || 1,
+      }));
 
-  //     await fetchSavedSpecPackages();
+      console.log("Inverter list to save:", inverterList);
 
-  //     setIsModalOpen(false);
+      await saveInverterSpecs(inverterList);
 
-  //     toast.success("Package created successfully!", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error saving specs:", error);
-  //     toast.error("Failed to create package.", {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+      // ---------------------- SAVE PIPE SPECS ------------------------------
+      
+            // Save pipes if they exist, regardless of Heavy Duty Ramp checkbox
+            if (formData.pipes && formData.pipes.length > 0 && formData.pipes.some((p) => p.orgPipeSpecId)) {
+              const pipeList = formData.pipes
+                .filter((pipe) => pipe.orgPipeSpecId) // Only save pipes with valid spec IDs
+                .map((pipe) => ({
+                  systemSpecsId,
+                  orgPipeSpecId: pipe.orgPipeSpecId,
+                  pipeCount: pipe.pipeCount || 1,
+                }));
+      
+              console.log("Pipe list to save:", pipeList);
+      
+              await savePipeSpecs(pipeList);
+            }
+      
+
+      await fetchAllPackages();
+
+      setIsModalOpen(false);
+
+      toast.success("Package created successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (error) {
+      console.error("Error saving specs:", error);
+      toast.error("Failed to create package.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-2">
+    <div className="p-4 max-w-7xl mx-auto py-2">
 
       <div className="flex items-center justify-between gap-4 mb-3">
 
@@ -884,13 +922,13 @@ const PackageManagement: React.FC = () => {
         title="Add New Package"
         size="full"
       >
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* ✅ Grid for two-column layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* --- Column 1 --- */}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Package Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Package Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 name="title"
@@ -915,57 +953,85 @@ const PackageManagement: React.FC = () => {
               />
             </div>
 
+            <div className="md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phase Type <span className="text-red-500">*</span>
+                  </label>
+                  <ReusableDropdown
+                    name="phaseTypeId"
+                    value={formData.phaseTypeId ?? ""}
+                    onChange={(val) => {
+                      const selectedId = val === "" ? null : Number(val);
+                      setPhaseTypeId(selectedId);
+                      handleChange({
+                        target: { name: "phaseTypeId", value: selectedId },
+                      } as any);
+                    }}
+                    options={phaseTypes.map((phase) => ({
+                      value: phase.id,
+                      label: phase.nameEn,
+                    }))}
+                    placeholder="Select Phase Type"
+                    className="mt-1"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Grid Type
-              </label>
-              <ReusableDropdown
-                name="gridTypeId"
-                value={formData.gridTypeId ?? ""}
-                onChange={(val) => {
-                  const selectedId = val === "" ? null : Number(val);
-                  setGridTypeId(selectedId);
-                  handleChange({
-                    target: { name: "gridTypeId", value: selectedId },
-                  } as any);
-                }}
-                options={grids.map((grid) => ({
-                  value: grid.id,
-                  label: grid.gridType,
-                }))}
-                placeholder="Select Grid Type"
-                className="mt-1"
-              />
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Grid Type <span className="text-red-500">*</span>
+                  </label>
+                  <ReusableDropdown
+                    name="gridTypeId"
+                    value={formData.gridTypeId ?? ""}
+                    onChange={(val) => {
+                      const selectedId = val === "" ? null : Number(val);
+                      setGridTypeId(selectedId);
+                      handleChange({
+                        target: { name: "gridTypeId", value: selectedId },
+                      } as any);
+                    }}
+                    options={grids.map((grid) => ({
+                      value: grid.id,
+                      label: grid.gridType,
+                    }))}
+                    placeholder="Select Grid Type"
+                    className="mt-1"
+                  />
+                </div>
+
+
+                {/* --- Column 2 --- */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Material Origin Type <span className="text-red-500">*</span>
+                  </label>
+                  <ReusableDropdown
+                    name="materialOriginId"
+                    value={formData.materialOriginId ?? ""}
+                    onChange={(val) => {
+                      const selectedId = val === "" ? null : Number(val);
+                      setMaterialOriginId(selectedId);
+                      handleChange({
+                        target: { name: "materialOriginId", value: selectedId },
+                      } as any);
+                    }}
+                    options={origins.map((origin) => ({
+                      value: origin.id,
+                      label: origin.originCode,
+                    }))}
+                    placeholder="Select Material Origin Type"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
             </div>
 
-
-            {/* --- Column 2 --- */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Material Origin Type
-              </label>
-              <ReusableDropdown
-                name="materialOriginId"
-                value={formData.materialOriginId ?? ""}
-                onChange={(val) => {
-                  const selectedId = val === "" ? null : Number(val);
-                  setMaterialOriginId(selectedId);
-                  handleChange({
-                    target: { name: "materialOriginId", value: selectedId },
-                  } as any);
-                }}
-                options={origins.map((origin) => ({
-                  value: origin.id,
-                  label: origin.originCode,
-                }))}
-                placeholder="Select Material Origin Type"
-                className="mt-1"
-              />
-            </div>
             {/* --- Column 3 --- */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Specification</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">PV Panel Specification <span className="text-red-500">*</span></label>
               <ReusableDropdown
                 name="orgPanelSpecId"
                 value={formData.orgPanelSpecId ?? ""}
@@ -1000,32 +1066,25 @@ const PackageManagement: React.FC = () => {
 
             {/* --- Column 4 --- */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                PV System Capacity (kW)
-              </label>
-              <select
-                id="systemCapacityKw"
-                name="systemCapacityKw"
-                value={formData.systemCapacityKw ?? ""}
-                onChange={(e) => {
-                  const selectedValue = e.target.value === "" ? null : Number(e.target.value);
-                  setSystemCapacityKw(selectedValue);
-                  handleChange({
-                    target: { name: "systemCapacityKw", value: selectedValue },
-                  } as any);
-                }}
-                disabled={!materialOriginId || !panelSpecId}
-                className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed"
-                required
-              >
-                <option value="">Select PV System Capacity</option>
-                {panelCapacities.map((panelCapacity) => (
-                  <option key={panelCapacity} value={panelCapacity}>
-                    {panelCapacity}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">PV System Capacity (kW) <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="systemCapacityKw"
+                  value={formData.systemCapacityKw ?? ""}
+                  onChange={(val) => {
+                    const selectedValue = val === "" ? null : Number(val);
+                    setSystemCapacityKw(selectedValue);
+                    handleChange({
+                      target: { name: "systemCapacityKw", value: selectedValue },
+                    } as any);
+                  }}
+                  options={panelCapacities.map((panelCapacity) => ({
+                    value: panelCapacity,
+                    label: `${panelCapacity} kW`,
+                  }))}
+                  placeholder="Select PV System Capacity"
+                  className={`mt-1 ${!materialOriginId || !orgPanelSpecId ? "opacity-60 pointer-events-none" : ""}`}
+                />
+              </div>
 
             <div className="md:col-span-2">
               <div className="space-y-4">
@@ -1068,7 +1127,7 @@ const PackageManagement: React.FC = () => {
 
                     {/* Inverter Brand */}
                     <div className="col-span-12 md:col-span-5">
-                      <label className="block text-sm font-medium text-gray-700">Inverter Brand</label>
+                      <label className="block text-sm font-medium text-gray-700">Inverter Brand <span className="text-red-500">*</span></label>
                       <ReusableDropdown
                         name="inverterBrandId"
                         value={inv.inverterBrandId ?? ""}
@@ -1085,7 +1144,7 @@ const PackageManagement: React.FC = () => {
 
                     {/* Inverter Spec */}
                     <div className="col-span-12 md:col-span-5">
-                      <label className="block text-sm font-medium text-gray-700">Inverter Specification</label>
+                      <label className="block text-sm font-medium text-gray-700">Inverter Specification <span className="text-red-500">*</span></label>
                       <ReusableDropdown
                         name="orgInverterSpecId"
                         value={inv.orgInverterSpecId ?? ""}
@@ -1269,7 +1328,7 @@ const PackageManagement: React.FC = () => {
 
                     {/* Pipe Specification - 5 columns */}
                     <div className="col-span-12 md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700">Pipe Specification</label>
+                      <label className="block text-sm font-medium text-gray-700">Pipe Specification <span className="text-red-500">*</span></label>
                       <ReusableDropdown
                         name="orgPipeSpecId"
                         value={pipe.orgPipeSpecId ?? ""}
@@ -1344,9 +1403,9 @@ const PackageManagement: React.FC = () => {
 
           <div className="col-span-full space-y-6 mt-6">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Solar System Cost (₹)
                 </label>
                 <input
@@ -1359,12 +1418,13 @@ const PackageManagement: React.FC = () => {
                       systemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
                     })
                   }
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Solar System Cost"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fabrication Cost (₹)
                 </label>
                 <input
@@ -1377,12 +1437,13 @@ const PackageManagement: React.FC = () => {
                       fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
                     })
                   }
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Fabrication Cost"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Total Cost (₹)
                 </label>
                 <input
@@ -1390,22 +1451,25 @@ const PackageManagement: React.FC = () => {
                   name="totalCost"
                   value={formatIndianNumber(formData.totalCost)}
                   readOnly
-                  className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Total Cost"
+                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
             </div>
 
           </div>
 
-          {/* <div className="flex justify-center gap-3 pt-4">
+          <div className="flex justify-center gap-3 pt-4">
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </Button>
 
-                <Button variant="primary" onClick={handleSaveSpecPackage}>
+                <Button variant="primary"
+                 onClick={handleSaveSpecPackage}
+                 >
                   Add Package
                 </Button>
-              </div> */}
+              </div>
         </div>
       </Modal>
 

@@ -1,32 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { fetchClaims } from '../services/jwtService';
+import { useUser } from '../contexts/UserContext';
 
 interface RoleProtectedRouteProps {
   allowedRoles: string[];
   children: React.ReactNode;
 }
 
-const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, children }) => {
-  const [authorized, setAuthorized] = useState<null | boolean>(null);
+const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
+  allowedRoles,
+  children,
+}) => {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
+  const { userClaims, setSelectedOrg, clearUserClaims, loading } = useUser();
+
   useEffect(() => {
-    const checkAccess = async () => {
+    const checkAccess = () => {
       const token = localStorage.getItem('jwtToken');
+
+      if(loading) return null;
+
       if (!token) {
         setRedirectPath('/login');
         return;
       }
 
-      const claims = await fetchClaims();
-      if (!claims) {
+      if (!userClaims) {
         setRedirectPath('/login');
         return;
       }
 
-
-      if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
+      if (userClaims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         if (allowedRoles.includes('ROLE_SUPER_ADMIN')) {
           setAuthorized(true);
         } else {
@@ -35,60 +41,44 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         return;
       }
 
-      const orgRoles = claims.org_roles ? Object.entries(claims.org_roles) : [];
-      if (orgRoles.length === 0) {
-        setRedirectPath('/login');
-        return;
-      }
-
       const selectedOrgRaw = localStorage.getItem('selectedOrg');
+
       if (!selectedOrgRaw) {
         setRedirectPath('/login');
         return;
       }
 
       try {
-        const selectedOrg = JSON.parse(selectedOrgRaw);
+        const parsedOrg = JSON.parse(selectedOrgRaw);
+        const orgId = parsedOrg.orgId;
+        const role = parsedOrg.role;
 
+        const orgData = userClaims.org_roles?.[orgId];
 
-        const matchingOrg = orgRoles.find(([orgId]) => orgId === selectedOrg.orgId);
-        if (!matchingOrg) {
-
-          localStorage.removeItem('jwtToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('selectedOrg');
-          setRedirectPath('/login');
+        if (!orgData) {
+          forceLogout();
           return;
         }
 
-        const [orgId, orgData] = matchingOrg;
         const currentRole =
-          selectedOrg.role && orgData.roles.includes(selectedOrg.role)
-            ? selectedOrg.role
+          role && orgData.roles.includes(role)
+            ? role
             : orgData.roles[0];
 
-        
-        localStorage.setItem(
-          'selectedOrg',
-          JSON.stringify({
-            orgId,
-            orgName: orgData.org_name,
-            role: currentRole,
-            deptCode: orgData.dept_code ?? null,
-          })
-        );
-
+        setSelectedOrg({
+          orgId,
+          orgName: orgData.org_name,
+          role: currentRole,
+          deptCode: orgData.dept_code ?? null,
+        });
 
         if (allowedRoles.includes(currentRole)) {
           setAuthorized(true);
         } else {
-          
           redirectToDashboard(currentRole);
         }
-      } catch (err) {
-        console.error('Failed to parse selectedOrg:', err);
-        localStorage.removeItem('selectedOrg');
-        setRedirectPath('/login');
+      } catch (error) {
+        forceLogout();
       }
     };
 
@@ -108,9 +98,6 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
         case 'ROLE_AGENCY_REPRESENTATIVE':
           setRedirectPath('/representative-dashboard');
           break;
-        case 'ROLE_CUSTOMER':
-          setRedirectPath('/manage-customers');
-          break;
         case 'ROLE_GRAMSEVAK':
           setRedirectPath('/grampanchayat-dashboard');
           break;
@@ -118,22 +105,27 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ allowedRoles, c
           setRedirectPath('/bdo-dashboard');
           break;
         default:
-          localStorage.removeItem('jwtToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('selectedOrg');
-          setRedirectPath('/login');
+          forceLogout();
       }
     };
 
+    const forceLogout = () => {
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('selectedOrg');
+      clearUserClaims();
+      setRedirectPath('/login');
+    };
+
     checkAccess();
-  }, [allowedRoles]);
+  }, [allowedRoles, userClaims]);
 
   if (redirectPath) {
     return <Navigate to={redirectPath} replace />;
   }
 
   if (authorized === null) {
-    return null; 
+    return null;
   }
 
   return <>{children}</>;

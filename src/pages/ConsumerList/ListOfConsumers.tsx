@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { fetchConsumersWithConnections, searchCustomers, fetchVillages, fetchConsumersWithConnectionsOptimized } from "../../services/customerRequisitionService";
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { fetchConsumersWithConnectionsOptimized, searchCustomers, fetchVillages } from "../../services/customerRequisitionService";
 import { useNavigate } from "react-router-dom";
 import { fetchOrganizations, getChildOrganizations, fetchUsersByOrgId, Organization } from "../../services/organizationService";
 import { fetchClaims } from "../../services/jwtService";
@@ -19,761 +19,244 @@ interface Consumer {
   connectionData?: { id: number; consumerId: string; customerId: number; gharkulNumber: string }[];
 }
 
+const ConsumerCard = memo(({ consumer, userRole, onView, onNavigate }: any) => (
+  <Card className="group rounded-xl border border-secondary-200 bg-white shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <CardBody className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold text-secondary-900 truncate">{consumer.govIdName}</h3>
+        <Button variant="outline" size="sm" className="px-1 py-1" onClick={() => onView(consumer)} title="View Customer">
+          <Eye className="w-3 h-3" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+        <div className="flex items-center gap-2 p-2 bg-secondary-50 rounded-lg">
+          <Mail className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+          <span className="text-xs text-secondary-700 truncate">{consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "Email not provided"}</span>
+        </div>
+        <div className="flex items-center gap-2 p-2 bg-secondary-50 rounded-lg">
+          <Phone className="w-4 h-4 text-secondary-600 flex-shrink-0" />
+          <span className="text-sm text-secondary-700">{consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "Mobile not provided"}</span>
+        </div>
+      </div>
+      {consumer.connectionData?.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between mb-1.5">
+            <h4 className="text-sm font-medium text-secondary-700 flex items-center gap-1.5">
+              <Zap className="w-4 h-4" />{consumer.connectionData.length} {consumer.connectionData.length === 1 ? "Connection" : "Connections"}
+            </h4>
+            {!(userRole === "ROLE_BDO" || userRole === "ROLE_GRAMSEVAK") && (
+              <Button variant="outline" size="sm" onClick={() => onNavigate('/connection-form', { customerId: consumer.customerId || consumer.id, govIdName: consumer.govIdName })} leftIcon={<Plus className="w-4 h-4" />}>Add Connection</Button>
+            )}
+          </div>
+          {consumer.connectionData.map((conn: any, idx: number) => (
+            <div key={conn.id} className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 rounded-lg border border-primary-100">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-primary-700">Connection {idx + 1}</div>
+                <div className="text-[11px] text-secondary-700 font-mono">{conn.consumerId ?? conn.gharkulNumber}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('/view-connection', { customerId: consumer.customerId || consumer.id, connectionId: conn.id, consumerId: conn.consumerId })} title="View Connection"><Eye className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('/view-system-specifications', { connectionId: conn.id, consumerId: conn.consumerId, customerId: consumer.customerId || consumer.id })} title="Get System Specs"><Lightbulb className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('/generate-documents', { consumer: { id: conn.id, customerId: consumer.customerId || consumer.id, govIdName: consumer.govIdName, consumerId: conn.consumerId, mobileNumber: consumer.mobileNumber, emailAddress: consumer.emailAddress } })} title="Manage Documents"><FileText className="w-4 h-4" /></Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {consumer.connectionData?.length === 0 && (
+        <Button variant="outline" size="sm" onClick={() => onNavigate('/connection-form', { customerId: consumer.customerId || consumer.id, govIdName: consumer.govIdName })} leftIcon={<Plus className="w-4 h-4" />}>Add Connection</Button>
+      )}
+    </CardBody>
+  </Card>
+));
 
-export const ListOfConsumers = () => {
+export const ListOfConsumers = memo(() => {
   const navigate = useNavigate();
-  const [consumers, setConsumers] = useState<Consumer[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
-  const [isLoadingAll,] = useState<boolean>(false);
-  const [totalCustomers, setTotalCustomers] = useState(0);
-
   const [villages, setVillages] = useState<any[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<string>("");
-
-  const [hasMore, setHasMore] = useState(true);
-
-
-
-  // refs to handle debounced searching and race conditions
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestSearchSeqRef = useRef<number>(0);
-
+  const [selectedVillage, setSelectedVillage] = useState("");
   const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
-
   const [agencies, setAgencies] = useState<Organization[]>([]);
   const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
-  const [userRole, setUserRole] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
-
+  const [userRole, setUserRole] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-
-
-  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
-  const userRoleFromLocalStorage = userInfo?.role;
-
-  const ITEMS_PER_PAGE = 9;     // UI pagination
-  const BATCH_SIZE = 90;        // Backend fetch size
-
   const [allConsumers, setAllConsumers] = useState<any[]>([]);
   const [backendPage, setBackendPage] = useState(0);
   const [hasMoreBackend, setHasMoreBackend] = useState(true);
 
-  const handleViewConsumer = (consumer: Consumer) => {
-    const customerId = consumer.customerId || consumer.id;
-    console.log('Viewing consumer:', { consumer, customerId });
-
-    if (!customerId) {
-      console.error('No customer ID found for consumer:', consumer);
-      return;
-    }
-
-    navigate(`/view-customer`, {
-      state: { consumer, customerId }
-    });
-  };
-
-  useEffect(() => {
-    const loadRoleAndOrganizations = async () => {
-      try {
-        const claims = await fetchClaims();
-
-        if (claims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-          setUserRole("ROLE_SUPER_ADMIN");
-
-          // Only fetch organizations if SUPER ADMIN
-          const orgs = await fetchOrganizations();
-          setOrganizations(orgs.map((o) => ({ id: o.id as number, name: o.name })));
-        } else {
-          // For other roles, you can set role here
-          setUserRole(claims.role || "");
-        }
-      } catch (error) {
-        console.error("Error fetching claims or organizations:", error);
-      } finally {
-        setIsInitialized(true);
-      }
-    };
-
-    loadRoleAndOrganizations();
-  }, []);
-
-  useEffect(() => {
-    const loadAgencies = async () => {
-      try {
-        if (!selectedOrgId) return;
-
-        const data = await getChildOrganizations(selectedOrgId);
-        setAgencies(data);
-      } catch (error) {
-        console.error("Error loading agencies:", error);
-      }
-    };
-
-    loadAgencies();
-  }, [selectedOrgId]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (userInfo?.role === "ROLE_ORG_ADMIN") {
-
-      setSelectedOrgId(userInfo.orgId);
-
-
-      getChildOrganizations(userInfo.orgId).then((res) => {
-        if (res?.length) {
-          setAgencies(res);
-        } else {
-          resetAndLoad
-        }
-      });
-    }
-  }, [isInitialized]);
-
-
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        let orgIdToFetch: number | null = null;
-
-        if (selectedAgencyId) {
-          orgIdToFetch = selectedAgencyId;
-        } else if (selectedOrgId) {
-          orgIdToFetch = selectedOrgId;
-        } else if (userInfo?.role === "ROLE_ORG_STAFF") {
-          orgIdToFetch = userInfo.orgId;
-        } else if (userInfo?.role === "ROLE_AGENCY_STAFF") {
-          orgIdToFetch = userInfo.orgId;
-        }
-
-        if (orgIdToFetch) {
-          const data = await fetchUsersByOrgId(orgIdToFetch);
-          setUsers(data);
-        } else {
-          setUsers([]);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setUsers([]);
-      }
-    };
-    loadUsers();
-  }, [selectedOrgId, selectedAgencyId, userInfo?.role, userInfo?.orgId]);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestSearchSeqRef = useRef(0);
+  const userInfo = useMemo(() => JSON.parse(localStorage.getItem("selectedOrg") || "{}"), []);
+  const ITEMS_PER_PAGE = 9;
+  const BATCH_SIZE = 90;
 
   const villageOptions = [
-  { value: "", label: "All Villages" }, // optional if you want default
-  ...villages.map((village) => ({
-    value: village.code,
-    label: village.nameEnglish,
-  })),
-];
+    { value: "", label: "All Villages" }, // optional if you want default
+    ...villages.map((village) => ({
+      value: village.code,
+      label: village.nameEnglish,
+    })),
+  ];
 
 
-  useEffect(() => {
-    if (userRoleFromLocalStorage === "ROLE_BDO" && userInfo?.deptCode) {
-      fetchVillages(userInfo.deptCode)
-        .then((data) => {
-          setVillages(data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [userRoleFromLocalStorage, userInfo?.deptCode]);
+  const handleViewConsumer = useCallback((consumer: Consumer) => {
+    const customerId = consumer.customerId || consumer.id;
+    if (!customerId) return;
+    navigate('/view-customer', { state: { consumer, customerId } });
+  }, [navigate]);
 
-  const resetAndLoad = async () => {
-    setAllConsumers([]);
-    setCurrentPage(0);
-    setBackendPage(0);
-    setHasMoreBackend(true);
+  const handleNavigate = useCallback((path: string, state: any) => {
+    navigate(path, { state });
+  }, [navigate]);
 
-    await loadConsumers(0);
-  };
-
-  useEffect(() => {
-    setAllConsumers([]);
-    setCurrentPage(0);
-    setBackendPage(0);
-    setHasMoreBackend(true);
-
-    resetAndLoad();
-  }, []);
-
-
-  useEffect(() => {
+  const loadConsumers = useCallback(async (pageNumber: number) => {
     if (!isInitialized) return;
-
-    // Only BDO reacts to village change
-    if (userInfo?.role !== "ROLE_BDO") return;
-
-    resetAndLoad();
-  }, [selectedVillage, isInitialized, userInfo?.role]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (!selectedOrgId && !selectedAgencyId && !userRole && !selectedUserId) return;
-
-    resetAndLoad();
-  }, [selectedOrgId, selectedAgencyId, userRole, selectedUserId, isInitialized]);
-
-
-  useEffect(() => {
-    const handleOrgChange = () => {
-      if (!isInitialized) return;
-
-      resetAndLoad();
-    };
-
-    window.addEventListener('organizationChanged', handleOrgChange);
-    return () => window.removeEventListener('organizationChanged', handleOrgChange);
-  }, [isInitialized]);
-
-
-
-
-  const displayDataForCustomers = allConsumers.slice(
-    currentPage * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  );
-
-  const totalPagesLoaded = Math.ceil(
-    allConsumers.length / ITEMS_PER_PAGE
-  );
-
-  const displaySearchData = searchResults.slice(
-    currentPage * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
-  );
-
-  const totalSearchPages = Math.ceil(
-    searchResults.length / ITEMS_PER_PAGE
-  );
-
-
-  const handleNextPage = async () => {
-    const nextPage = currentPage + 1;
-    const isSearching = searchQuery.trim() !== "";
-
-    if (!isSearching) {
-      if (
-        nextPage >= totalPagesLoaded &&
-        hasMoreBackend &&
-        !loading
-      ) {
-        await loadConsumers(backendPage + 1);
-      }
-    }
-
-    setCurrentPage(nextPage);
-  };
-
-
-  const handlePreviousPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (selectedUserId !== null) {
-      resetAndLoad();
-    }
-  }, [selectedUserId, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (!userInfo?.role) return;
-
-    // For roles that should auto load on page mount
-    if (
-      userInfo.role === "ROLE_GRAMSEVAK" ||
-      userInfo.role === "ROLE_ORG_ADMIN" ||
-      userInfo.role === "ROLE_AGENCY_ADMIN" ||
-      userInfo.role === "ROLE_ORG_STAFF" ||
-      userInfo.role === "ROLE_AGENCY_STAFF" ||
-      userInfo.role === "ROLE_ORG_REPRESENTATIVE" ||
-      userInfo.role === "ROLE_AGENCY_REPRESENTATIVE"
-    ) {
-      resetAndLoad();
-    }
-
-  }, [isInitialized, userInfo?.role]);
-
-
-
-  const loadConsumers = async (pageNumber: number) => {
-    if (!isInitialized) {
-      return;
-    }
-
     try {
       setLoading(true);
-
       let orgId = selectedOrgId ?? null;
       let agencyId = selectedAgencyId ?? null;
       let userId = selectedUserId ?? null;
       let villageCode: number | null = null;
       let talukaCode: number | null = null;
-
       let effectiveUserRole = userRole || userInfo?.role || null;
 
-
       if (userInfo?.role === "ROLE_BDO") {
-        if (selectedVillage !== "") {
+        if (selectedVillage) {
           villageCode = Number(selectedVillage);
-          effectiveUserRole = "ROLE_BDO"
         } else {
           talukaCode = userInfo?.deptCode ?? null;
-          effectiveUserRole = "ROLE_BDO";
         }
+        effectiveUserRole = "ROLE_BDO";
       }
-
-
       if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
         orgId = userInfo.orgId;
         effectiveUserRole = "ROLE_ORG_ADMIN";
       }
-
       if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
         orgId = null;
         effectiveUserRole = "ROLE_AGENCY_ADMIN";
       }
-
       if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
         orgId = userInfo.orgId;
         effectiveUserRole = "ROLE_ORG_STAFF";
       }
-
       if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
         effectiveUserRole = "ROLE_AGENCY_STAFF";
         orgId = null;
       }
-
       if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
         orgId = userInfo.orgId;
-        effectiveUserRole = "ROLE_ORG_REPRESENTATIVE"
+        effectiveUserRole = "ROLE_ORG_REPRESENTATIVE";
       }
-
       if (userInfo?.role === "ROLE_GRAMSEVAK") {
         villageCode = userInfo.deptCode;
-        effectiveUserRole = "ROLE_GRAMSEVAK"
+        effectiveUserRole = "ROLE_GRAMSEVAK";
       }
-
       if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
         agencyId = userInfo.orgId;
-        effectiveUserRole = "ROLE_AGENCY_REPRESENTATIVE"
+        effectiveUserRole = "ROLE_AGENCY_REPRESENTATIVE";
         orgId = null;
       }
 
-
-      const params = {
-        orgId,
-        agencyId,
-        userRole: userRole || effectiveUserRole || null,
-        userId,
-        isGharkulCustomer: false,
-        villageCode,
-        talukaCode,
-        limit: BATCH_SIZE,
-      };
-
-      console.log("Fetching consumers with params:", params);
-
-      const data = await fetchConsumersWithConnectionsOptimized(
-        pageNumber,
-        BATCH_SIZE,
-        params
-      );
-      // Append new data
+      const data = await fetchConsumersWithConnectionsOptimized(pageNumber, BATCH_SIZE, {
+        orgId, agencyId, userRole: effectiveUserRole, userId, isGharkulCustomer: false, villageCode, talukaCode
+      });
       setAllConsumers(prev => [...prev, ...data.content]);
-
-      // If returned less than 90 → no more backend data
-      if (data.content.length < BATCH_SIZE) {
-        setHasMoreBackend(false);
-      }
-
+      if (data.content.length < BATCH_SIZE) setHasMoreBackend(false);
       setBackendPage(pageNumber);
     } catch (error) {
       console.error("Error fetching consumers:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isInitialized, selectedOrgId, selectedAgencyId, selectedUserId, userRole, userInfo, selectedVillage, BATCH_SIZE]);
 
-  const handleSearch = (searchTerm: string) => {
-    setSearchQuery(searchTerm);
-  };
+  const resetAndLoad = useCallback(async () => {
+    setAllConsumers([]);
+    setCurrentPage(0);
+    setBackendPage(0);
+    setHasMoreBackend(true);
+    await loadConsumers(0);
+  }, [loadConsumers]);
 
-  // Debounced remote search with race protection
   useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    fetchClaims().then(claims => {
+      if (claims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+        setUserRole("ROLE_SUPER_ADMIN");
+        fetchOrganizations().then(orgs => setOrganizations(orgs.map(o => ({ id: o.id as number, name: o.name }))));
+      } else {
+        setUserRole(claims?.role || "");
+      }
+      setIsInitialized(true);
+    }).catch(() => {
+      setIsInitialized(true);
+      setLoading(false);
+    });
+  }, []);
 
+  useEffect(() => {
+    if (selectedOrgId) getChildOrganizations(selectedOrgId).then(setAgencies);
+  }, [selectedOrgId]);
+
+  useEffect(() => {
+    if (!isInitialized || !userInfo?.role) return;
+    if (userInfo.role === "ROLE_ORG_ADMIN") {
+      setSelectedOrgId(userInfo.orgId);
+      getChildOrganizations(userInfo.orgId).then(res => res?.length && setAgencies(res));
+    }
+  }, [isInitialized, userInfo]);
+
+  useEffect(() => {
+    const orgIdToFetch = selectedAgencyId || selectedOrgId || (userInfo?.role === "ROLE_ORG_STAFF" || userInfo?.role === "ROLE_AGENCY_STAFF" ? userInfo.orgId : null);
+    if (orgIdToFetch) fetchUsersByOrgId(orgIdToFetch).then(setUsers).catch(() => setUsers([]));
+  }, [selectedOrgId, selectedAgencyId, userInfo]);
+
+  useEffect(() => {
+    if (userInfo?.role === "ROLE_BDO" && userInfo?.deptCode) {
+      fetchVillages(userInfo.deptCode).then(setVillages);
+    }
+  }, [userInfo]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    resetAndLoad();
+  }, [selectedVillage, selectedOrgId, selectedAgencyId, selectedUserId, isInitialized, resetAndLoad]);
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     const trimmed = searchQuery.trim();
-
-    if (trimmed === "") {
-      setSearchResults([]);
-      return;
-    }
-
+    if (!trimmed) { setSearchResults([]); return; }
     if (trimmed.length < 2) return;
 
     searchTimeoutRef.current = setTimeout(async () => {
       const currentSeq = ++latestSearchSeqRef.current;
-
       try {
-        let orgId = selectedOrgId ?? null;
-        let agencyId = selectedAgencyId ?? null;
-        let userId = selectedUserId ?? null;
-        let villageCode: number | null = null;
-        let talukaCode: number | null = null;
-
-        let effectiveUserRole = userRole || userInfo?.role || null;
-
-        if (userInfo?.role === "ROLE_BDO") {
-          if (selectedVillage !== "") {
-            villageCode = Number(selectedVillage);
-            effectiveUserRole = "ROLE_BDO";
-          } else {
-            talukaCode = userInfo?.deptCode ?? null;
-            effectiveUserRole = "ROLE_BDO";
-          }
-        }
-
-        if (userInfo?.role === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
-          orgId = userInfo.orgId;
-          effectiveUserRole = "ROLE_ORG_ADMIN";
-        }
-        if (userInfo?.role === "ROLE_AGENCY_ADMIN" && userInfo?.orgId) {
-          agencyId = userInfo.orgId;
-          effectiveUserRole = "ROLE_AGENCY_ADMIN";
-          orgId = null;
-        }
-        if (userInfo?.role === "ROLE_ORG_STAFF" && userInfo?.orgId) {
-          orgId = userInfo.orgId;
-          effectiveUserRole = "ROLE_ORG_STAFF";
-        }
-        if (userInfo?.role === "ROLE_AGENCY_STAFF" && userInfo?.orgId) {
-          agencyId = userInfo.orgId;
-          orgId = null;
-          effectiveUserRole = "ROLE_AGENCY_STAFF";
-        }
-        if (userInfo?.role === "ROLE_ORG_REPRESENTATIVE" && userInfo?.orgId) {
-          orgId = userInfo.orgId;
-          effectiveUserRole = "ROLE_ORG_REPRESENTATIVE";
-        }
-        if (userInfo?.role === "ROLE_GRAMSEVAK") {
-          villageCode = userInfo.deptCode;
-          effectiveUserRole = "ROLE_GRAMSEVAK";
-        }
-        if (userInfo?.role === "ROLE_AGENCY_REPRESENTATIVE" && userInfo?.orgId) {
-          agencyId = userInfo.orgId;
-          effectiveUserRole = "ROLE_AGENCY_REPRESENTATIVE";
-          orgId = null;
-        }
-
-        const params = {
-          orgId,
-          agencyId,
-          userRole: userRole || effectiveUserRole || null,
-          userId,
-          villageCode,
-          talukaCode
-        };
-
-        console.log("Sending search request with params:", { searchTerm: trimmed, ...params });
-        const data = await searchCustomers(
-          trimmed,
-          0,                 // page number
-          BATCH_SIZE,        // limit
-          params
-        );
-
-        if (currentSeq === latestSearchSeqRef.current) {
-          if (Array.isArray(data)) {
-            setSearchResults(data);
-          } else {
-            setSearchResults(data.content ?? []);
-          }
-        }
+        const data = await searchCustomers(trimmed, 0, BATCH_SIZE, {
+          orgId: selectedOrgId, agencyId: selectedAgencyId, userRole: userRole || userInfo?.role, userId: selectedUserId,
+          villageCode: selectedVillage ? Number(selectedVillage) : null, talukaCode: userInfo?.deptCode
+        });
+        if (currentSeq === latestSearchSeqRef.current) setSearchResults(Array.isArray(data) ? data : data.content ?? []);
+      } catch { if (currentSeq === latestSearchSeqRef.current) setSearchResults([]); }
+    }, 300);
+  }, [searchQuery, selectedOrgId, selectedAgencyId, selectedUserId, userRole, userInfo, selectedVillage]);
 
 
-      } catch (error) {
-        if (currentSeq === latestSearchSeqRef.current) {
-          setSearchResults([]);
-        }
-      }
-    }, 300); // increased debounce slightly
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [
-    searchQuery,
-    selectedOrgId,
-    selectedAgencyId,
-    selectedUserId,
-    userRole,
-    userInfo?.role,
-    userInfo?.deptCode,
-    selectedVillage
-  ]);
-
-  const finalDisplayData =
-    searchQuery.trim() !== ""
-      ? displaySearchData
-      : displayDataForCustomers;
-
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [searchQuery]);
-
-
-
-  const renderPagination = () => {
-    const isSearching = searchQuery.trim() !== "";
-
-    const totalPages = isSearching
-      ? totalSearchPages
-      : totalPagesLoaded;
-
-    if (totalPages <= 1) return null;
-
-    return (
-      <div className="flex justify-center gap-3 mt-4">
-        {/* Previous */}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage === 0}
-          onClick={handlePreviousPage}
-        >
-          Previous
-        </Button>
-
-        {/* Page info */}
-        <span className="text-sm flex items-center px-2">
-          Page {currentPage + 1}
-        </span>
-
-        {/* Next */}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={
-            isSearching
-              ? currentPage >= totalPages - 1
-              : loading ||
-              (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)
-          }
-          onClick={handleNextPage}
-        >
-          Next
-        </Button>
-      </div>
-    );
-  };
-
-
-
-  const renderConsumerCard = (consumer: Consumer) => (
-    <Card key={consumer.customerId || consumer.id} className="group rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <CardBody className="p-4">
-        {/* Header with status indicators */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold tracking-tight text-secondary-900 dark:text-secondary-100 truncate">
-              {consumer.govIdName}
-            </h3>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="px-1 py-1 text-xs gap-0.5 transition-all duration-200 hover:bg-secondary-100 dark:hover:bg-secondary-700 hover:scale-105 hover:shadow-md"
-              onClick={() => handleViewConsumer(consumer)}
-              title="View Customer"
-            >
-              <Eye className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-
-
-        {/* Contact Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
-            <Mail className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-xs text-secondary-700 dark:text-secondary-300 truncate">
-              {consumer.emailAddress ? obfuscateEmail(consumer.emailAddress) : "Email not provided"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 p-2 bg-secondary-50 dark:bg-secondary-800 rounded-lg ring-1 ring-secondary-100 dark:ring-secondary-700">
-            <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400 flex-shrink-0" />
-            <span className="text-sm text-secondary-700 dark:text-secondary-300">
-              {consumer.mobileNumber ? obfuscatePhoneNumber(consumer.mobileNumber) : "Mobile not provided"}
-            </span>
-          </div>
-        </div>
-
-        {/* Connections Section  */}
-        {consumer.connectionData && consumer.connectionData.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between mb-1.5">
-              <h4 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center gap-1.5">
-                <Zap className="w-4 h-4" />
-                {consumer.connectionData?.length || 0}{" "}
-                {(consumer.connectionData?.length || 0) === 1 ? "Connection" : "Connections"}
-
-              </h4>
-
-              {!(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  navigate(`/connection-form`, {
-                    state: {
-                      customerId: consumer.customerId || consumer.id,
-                      govIdName: consumer.govIdName,
-                    },
-                  })
-                }
-                leftIcon={<Plus className="w-4 h-4" />}
-                className="whitespace-nowrap"
-              >
-                Add Connection
-              </Button>}
-            </div>
-
-            {consumer.connectionData.map((connection, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary-50 to-solar-50 dark:from-primary-900/10 dark:to-solar-900/10 rounded-lg border border-primary-100 dark:border-primary-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                    Connection {index + 1}
-                  </div>
-
-                  <div className="text-[11px] text-secondary-700 dark:text-secondary-300 font-mono">
-                    {connection.consumerId ?? connection.gharkulNumber}
-                  </div>
-
-                </div>
-
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate(`/view-connection`, {
-                        state: {
-                          customerId: consumer.customerId || consumer.id,
-                          connectionId: connection.id,
-                          consumerId: connection.consumerId,
-                        },
-                      })
-                    }
-                    title="View Connection"
-                    className="text-primary-600 hover:text-primary-700"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate(`/view-system-specifications`, {
-                        state: {
-                          connectionId: connection.id,
-                          consumerId: connection.consumerId,
-                          customerId: consumer.customerId || consumer.id,
-                        },
-                      })
-                    }
-                    title="Get System Specs"
-                    className="text-solar-600 hover:text-solar-700"
-                  >
-                    <Lightbulb className="w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate(`/generate-documents`, {
-                        state: {
-                          consumer: {
-                            id: connection.id,
-                            customerId: consumer.customerId || consumer.id,
-                            govIdName: consumer.govIdName,
-                            consumerId: connection.consumerId,
-                            mobileNumber: consumer.mobileNumber,
-                            emailAddress: consumer.emailAddress,
-                          },
-                        },
-                      })
-                    }
-                    className="text-blue-600 hover:text-blue-700"
-                    title="Manage Documents"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-
-          </div>
-        )}
-
-        {consumer.connectionData && consumer.connectionData.length === 0 && (
-          <div className="mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                navigate(`/connection-form`, {
-                  state: {
-                    customerId: consumer.customerId || consumer.id,
-                    govIdName: consumer.govIdName,
-                  },
-                })
-              }
-              leftIcon={<Plus className="w-4 h-4" />}
-              className="whitespace-nowrap"
-            >
-              Add Connection
-            </Button>
-          </div>
-        )}
-
-      </CardBody>
-    </Card>
-  );
+  const displayDataForCustomers = useMemo(() => allConsumers.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE), [allConsumers, currentPage]);
+  const totalPagesLoaded = useMemo(() => Math.ceil(allConsumers.length / ITEMS_PER_PAGE), [allConsumers.length]);
+  const displaySearchData = useMemo(() => searchResults.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE), [searchResults, currentPage]);
+  const totalSearchPages = useMemo(() => Math.ceil(searchResults.length / ITEMS_PER_PAGE), [searchResults.length]);
+  const finalDisplayData = useMemo(() => searchQuery.trim() ? displaySearchData : displayDataForCustomers, [searchQuery, displaySearchData, displayDataForCustomers]);
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-2">
-
+    <div className="p-4 max-w-7xl mx-auto py-2">
 
       <div className="mb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -789,43 +272,7 @@ export const ListOfConsumers = () => {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
 
-            {/* Checkbox */}
-            {/* {userRoleFromLocalStorage !== "ROLE_GRAMSEVAK" &&
-              userRoleFromLocalStorage !== "ROLE_BDO" && (<div className="flex items-center gap-2 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  id="viewGharkulCustomer"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label
-                  htmlFor="viewGharkulCustomer"
-                  className="text-sm font-medium text-gray-700 cursor-pointer"
-                >
-                  Gharkul Customers
-                </label>
-              </div>)} */}
-
-            {/* {userRoleFromLocalStorage === "ROLE_BDO" && (
-              <div className="flex items-center gap-2 whitespace-nowrap">
-
-                <select
-                  id="villageSelect"
-                  value={selectedVillage}
-                  onChange={(e) => setSelectedVillage(e.target.value)}
-                  className="block w-full appearance-none p-2 pr-32 border rounded-md shadow-sm focus:border-blue-500"
-                >
-                  <option value="">All Villages</option>
-                  {villages.map((village) => (
-                    <option key={village.code} value={village.code}>
-                      {village.nameEnglish}
-                    </option>
-                  ))}
-                </select>
-
-              </div>
-            )} */}
-
-            {userRoleFromLocalStorage === "ROLE_BDO" && (
+            {userInfo?.role === "ROLE_BDO" && (
               <div className="flex items-center gap-2 whitespace-nowrap w-64">
                 <ReusableDropdown
                   value={selectedVillage || ""}
@@ -835,8 +282,6 @@ export const ListOfConsumers = () => {
                 />
               </div>
             )}
-
-
 
             <div className="flex gap-4">
               {userRole === "ROLE_SUPER_ADMIN" && (
@@ -919,8 +364,6 @@ export const ListOfConsumers = () => {
                 </div>
               )}
 
-
-
               {agencies.length > 0 && (
                 <div className="relative w-60">
                   <select
@@ -988,8 +431,8 @@ export const ListOfConsumers = () => {
               )}
 
 
-              {userRoleFromLocalStorage !== "ROLE_ORG_REPRESENTATIVE" &&
-                userRoleFromLocalStorage !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
+              {userInfo?.role !== "ROLE_ORG_REPRESENTATIVE" &&
+                userInfo?.role !== "ROLE_AGENCY_REPRESENTATIVE" && users.length > 0 && (
                   <div className="relative w-60">
                     <select
                       name="customer"
@@ -1058,96 +501,28 @@ export const ListOfConsumers = () => {
       </div>
 
 
-
-      {/* Search and Filter Section */}
-      <div className="mb-6 space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary-500 dark:text-secondary-400" />
-          <input
-            type="text"
-            placeholder="Search customers by name, email, mobile number, consumer number, gharkul number..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-secondary-200 dark:border-secondary-700 rounded-xl bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-          />
-        </div>
-
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-500" />
+        <input type="text" placeholder="Search customers..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-primary-500" />
       </div>
-
-      {/* Results Summary */}
-      <div className="mb-4 flex items-center justify-between">
-        {/* <div className="text-sm text-secondary-700 dark:text-secondary-300">
-          {loading || isLoadingAll ? (
-            isLoadingAll ? "Loading all customers for search..." : "Loading customers..."
-          ) : searchQuery.trim() === "" ? (
-            `Showing ${displayData.length} of ${totalCustomers} customers`
-          ) : (
-            `Showing ${displayData.length} customer${displayData.length !== 1 ? "s" : ""}`
-          )}
-
-        </div> */}
-
-        {!loading && !isLoadingAll && finalDisplayData.length > 0 && (
-          <div className="text-sm text-secondary-700 dark:text-secondary-300">
-            {searchQuery.trim() !== ""}
-          </div>
-        )}
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            Loading customers...
-          </div>
-        </div>
-      )}
-
-      {/* Loading All Data for Search */}
-      {isLoadingAll && (
-        <div className="text-center py-12">
-          <div className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
-            <RefreshCw className="w-5 h-5 animate-spin" />
-            Loading all customers for search...
-          </div>
-        </div>
-      )}
-
-      {/* Results Grid */}
-      {!loading && !isLoadingAll && (
+      {loading ? (
+        <div className="text-center py-12"><RefreshCw className="w-5 h-5 animate-spin inline mr-2" />Loading...</div>
+      ) : finalDisplayData.length === 0 ? (
+        <Card className="text-center py-12"><CardBody><Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" /><h3 className="text-lg font-medium mb-2">No customers found</h3></CardBody></Card>
+      ) : (
         <>
-          {finalDisplayData.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardBody>
-                <Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-secondary-900 dark:text-secondary-100 mb-2">
-                  No customers found
-                </h3>
-                <p className="text-secondary-700 dark:text-secondary-300">
-                  {searchQuery.trim() !== ""
-                    ? `No customers match your search for "${searchQuery}"`
-                    : "No customers available at the moment."
-                  }
-                </p>
-              </CardBody>
-            </Card>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {finalDisplayData.map(renderConsumerCard)}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {renderPagination() && (
-            <div className="flex justify-center items-center mt-8 gap-2">
-              {renderPagination()}
-            </div>
-          )}
+          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {finalDisplayData.map((c: Consumer) => (
+              <ConsumerCard key={`consumer-${c.id}`} consumer={c} userRole={userInfo?.role} onView={handleViewConsumer} onNavigate={handleNavigate} />
+            ))}
+          </div>
+          <div className="flex justify-center gap-3 mt-4">
+            <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setCurrentPage(p => p - 1)}>Previous</Button>
+            <span className="text-sm flex items-center px-2">Page {currentPage + 1}</span>
+            <Button variant="outline" size="sm" disabled={searchQuery.trim() ? currentPage >= totalSearchPages - 1 : loading || (!hasMoreBackend && currentPage >= totalPagesLoaded - 1)} onClick={async () => { const next = currentPage + 1; if (!searchQuery.trim() && next >= totalPagesLoaded && hasMoreBackend && !loading) await loadConsumers(backendPage + 1); setCurrentPage(next); }}>Next</Button>
+          </div>
         </>
       )}
     </div>
   );
-};
-
+});

@@ -79,7 +79,7 @@ return (
         border rounded-md shadow-sm transition-all duration-150
         ${
           disabled
-            ? "bg-gray-200 cursor-not-allowed border-gray-300 text-gray-500"
+            ? "bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500"
             : "bg-white border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
         }
       `}

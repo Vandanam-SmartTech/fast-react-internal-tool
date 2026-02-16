@@ -1,113 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { fetchClaims } from '../services/jwtService';
+import { useUser } from '../contexts/UserContext';
 
 const HomeRedirect: React.FC = () => {
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
+  const { userClaims, loading, setSelectedOrg, clearUserClaims } = useUser();
+
   useEffect(() => {
-    const redirectBasedOnRole = async () => {
+    const redirectBasedOnRole = () => {
       const token = localStorage.getItem('jwtToken');
+
+      if(loading) return null;
 
       if (!token) {
         setRedirectPath('/login');
         return;
       }
 
-      const claims = await fetchClaims();
-      if (!claims) {
+      if (!userClaims) {
         setRedirectPath('/login');
         return;
       }
 
-      // ✅ 1. Check password change requirement
-      if (!claims.has_password_changed) {
+      if (!userClaims.has_password_changed) {
         setRedirectPath('/password-reset');
         return;
       }
 
-      // ✅ 2. Global Super Admin shortcut
-      if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
+      if (userClaims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
         setRedirectPath('/super-admin-dashboard');
         return;
       }
 
-      // ✅ 3. Extract org roles
-      const orgRoles = claims.org_roles ? Object.entries(claims.org_roles) : [];
+      const orgRoles = userClaims.org_roles
+        ? Object.entries(userClaims.org_roles)
+        : [];
 
       if (orgRoles.length === 0) {
         setRedirectPath('/login');
         return;
       }
 
-      // ✅ 4. If user has exactly one org, select it automatically
       if (orgRoles.length === 1) {
         const [orgId, orgData] = orgRoles[0];
-        const role = orgData.roles[0]; // pick first role as default
+        const role = orgData.roles[0];
 
-        localStorage.setItem(
-          'selectedOrg',
-          JSON.stringify({
-            orgId,
-            orgName: orgData.org_name,
-            role,
-            deptCode: orgData.dept_code ?? null,
-          })
-        );
-
-        routeByOrgRole(role);
+        syncSelectedOrg(orgId, orgData, role);
+        routeByRole(role);
         return;
       }
 
-      // ✅ 5. If multiple orgs, validate selectedOrg against claims
       const selectedOrgRaw = localStorage.getItem('selectedOrg');
+
       if (!selectedOrgRaw) {
-        // No org selected yet -> redirect to login or org selector page
         setRedirectPath('/login');
         return;
       }
 
       try {
         const parsedOrg = JSON.parse(selectedOrgRaw);
+        const orgData = userClaims.org_roles?.[parsedOrg.orgId];
 
-        // ✅ Cross-check: ensure orgId from localStorage exists in claims.org_roles
-        const matchingOrg = orgRoles.find(([orgId]) => orgId === parsedOrg.orgId);
-        if (!matchingOrg) {
-          // Invalid org -> logout
-          localStorage.removeItem('jwtToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('selectedOrg');
-          setRedirectPath('/login');
+        if (!orgData) {
+          forceLogout();
           return;
         }
-
-        // ✅ Valid org, but update localStorage with latest data from claims
-        const [orgId, orgData] = matchingOrg;
 
         const roleToUse =
           parsedOrg.role && orgData.roles.includes(parsedOrg.role)
             ? parsedOrg.role
             : orgData.roles[0];
 
-        localStorage.setItem(
-          'selectedOrg',
-          JSON.stringify({
-            orgId,
-            orgName: orgData.org_name,
-            role: roleToUse,
-            deptCode: orgData.dept_code ?? null,
-          })
-        );
-
-        routeByOrgRole(roleToUse);
+        syncSelectedOrg(parsedOrg.orgId, orgData, roleToUse);
+        routeByRole(roleToUse);
       } catch (error) {
-        console.error("Failed to parse selectedOrg:", error);
-        localStorage.removeItem('selectedOrg');
-        setRedirectPath('/login');
+        forceLogout();
       }
     };
 
-    const routeByOrgRole = (role: string) => {
+    const syncSelectedOrg = (
+      orgId: string,
+      orgData: any,
+      role: string
+    ) => {
+      const updatedOrg = {
+        orgId,
+        orgName: orgData.org_name,
+        role,
+        deptCode: orgData.dept_code ?? null,
+      };
+
+      localStorage.setItem('selectedOrg', JSON.stringify(updatedOrg));
+      setSelectedOrg(updatedOrg);
+    };
+
+    const routeByRole = (role: string) => {
       switch (role) {
         case 'ROLE_ORG_ADMIN':
           setRedirectPath('/org-admin-dashboard');
@@ -133,20 +121,26 @@ const HomeRedirect: React.FC = () => {
           setRedirectPath('/bdo-dashboard');
           break;
         default:
-          // Invalid role -> logout
-          localStorage.removeItem('jwtToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('selectedOrg');
-          setRedirectPath('/login');
+          forceLogout();
       }
     };
 
-    redirectBasedOnRole();
-  }, []);
+    const forceLogout = () => {
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('selectedOrg');
+      clearUserClaims();
+      setRedirectPath('/login');
+    };
 
-  if (!redirectPath) return null;
+    if (!loading) {
+      redirectBasedOnRole();
+    }
+  }, [userClaims, loading]);
 
-  return <Navigate to={redirectPath} />;
+  if (loading || !redirectPath) return null;
+
+  return <Navigate to={redirectPath} replace />;
 };
 
 export default HomeRedirect;

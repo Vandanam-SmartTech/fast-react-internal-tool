@@ -419,26 +419,35 @@ export const fetchConsumersWithConnectionsOptimized = async (
 
 
 
-export const fetchOnboardedConsumers = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null }) => {
-  const crsAPI = getCrsAPI();
-  try {
-    console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
-
-    const response = await crsAPI.get('/api/customers/onboarded', {
-      params: { page, ...params },
-    });
-
-    return {
-      content: response.data.content,
-      totalPages: response.data.totalPages,
-      totalElements: response.data.totalElements,
-      currentPage: response.data.number,
-      size: response.data.size,
-    };
-  } catch (error) {
-    console.error('Error fetching consumers with connections:', error);
-    throw new Error('Failed to fetch consumers with connections.');
+export const fetchOnboardedConsumers = async (
+  page = 0,
+  limit = 9,
+  params: {
+    orgId?: number | null;
+    orgName?: string | null;
+    agencyId?: number | null;
+    agencyName?: string | null;
+    userRole?: string | null;
+    userId?: number | null;
+    isGharkulCustomer: boolean | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
   }
+) => {
+  const crsAPI = getCrsAPI();
+    const response = await crsAPI.get(
+    "/api/customers/onboarded-pagination",
+    {
+      params: { page, limit, ...params },
+    }
+  );
+    return {
+    content: response.data,
+    currentPage: page,
+    size: response.data.length,
+    hasMore: response.data.length === limit, // 👈 important
+  };
+
 };
 
 export const getCustomerCount = async (params: Record<string, any>): Promise<number> => {
@@ -679,32 +688,41 @@ export const searchCustomers = async (
 
 
 
-export const searchOnboardedConsumers = async (
+export const searchOnboardedConsumers =async (
   searchTerm: string,
-  params: { orgId?: number | null; agencyId?: number | null; userRole?: string | null; userId?: number | null }
-): Promise<any[]> => {
+  page: number,
+  limit: number,
+  params: {
+    orgId?: number | null;
+    agencyId?: number | null;
+    userRole?: string | null;
+    userId?: number | null;
+    villageCode?: number | null;
+    talukaCode?: number | null;
+  }
+): Promise<any> => {
   const crsAPI = getCrsAPI();
   try {
-    console.log("CRS API Parameters for searchCustomers:", { ...params, searchTerm });
+    console.log("CRS API Parameters for searchCustomers:", {  searchTerm,
+      page,
+      limit,
+      ...params, });
 
     const response = await crsAPI.post(`/api/customers/search/onboarded`, {
-      searchTerm,
+       searchTerm,
+      page,
+      limit,
       ...params,
     });
 
-    const data = response.data;
+     return response.data;
 
-    if (Array.isArray(data)) {
-      return data;
-    } else {
-      console.error("Invalid API response format:", data);
-      throw new Error("Failed to parse search results");
-    }
-  } catch (error) {
+    } catch (error) {
     console.error("Error fetching search results:", error);
     throw new Error("Failed to fetch search results");
   }
 };
+
 
 export const getMaterialsByConnectionId = async (connectionId: number) => {
   const crsAPI = getCrsAPI();

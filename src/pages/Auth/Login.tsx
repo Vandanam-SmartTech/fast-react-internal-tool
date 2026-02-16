@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, setAuthToken, fetchClaims } from '../../services/jwtService';
+import { login, setAuthToken } from '../../services/jwtService';
 import { User, Lock, Sun, Shield, Zap, Sparkles, ArrowLeft } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
 import { Logo } from '../../components/ui';
-import bgImage from '../../assets/Solar_Image.jpg';
 import ReusableDropdown from '../../components/ReusableDropdown';
+import { useUser } from '../../contexts/UserContext';
+import bgImage from '../../assets/Solar_Image.webp';
 
 interface OrgRoleData {
   roles: string[];
@@ -42,6 +43,7 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshUserClaims } = useUser();
 
   useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
@@ -49,20 +51,18 @@ const Login = () => {
       if (!token) return;
 
 
-      window.dispatchEvent(new Event('userUpdated'));
+      const claims = await refreshUserClaims(); // ✅ use context
 
-      const claims = await fetchClaims();
-      if (!claims) return;
-
-
-      handleRoleRouting(claims);
+      if (claims) {
+        handleRoleRouting(claims);
+      }
     };
 
     checkAlreadyLoggedIn();
   }, []);
 
 
-  const handleLogin = async (e: React.FormEvent) => {
+const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -70,12 +70,16 @@ const Login = () => {
     try {
       const { jwt, refreshToken } = await login({ identifier, password });
       localStorage.setItem('jwtToken', jwt);
-      localStorage.setItem('refreshToken',refreshToken);
+      localStorage.setItem('refreshToken', refreshToken);
       setAuthToken(jwt, refreshToken);
 
-      window.dispatchEvent(new Event('userUpdated'));
+      const claims = await refreshUserClaims();
 
-      const claims = await fetchClaims();
+      if (!claims) {
+        setError("Unable to load user details. Please try again.");
+        return;
+      }
+
 
       if (!claims.has_password_changed) {
         navigate('/password-reset');
@@ -94,6 +98,7 @@ const Login = () => {
 
 
 
+
   const handleRoleRouting = (claims: UserClaims) => {
     if (claims.global_roles?.includes('ROLE_SUPER_ADMIN')) {
       navigate('/super-admin-dashboard');
@@ -108,14 +113,15 @@ const Login = () => {
       return;
     }
 
-    const options: RoleOption[] = orgEntries.flatMap(([orgId, orgData]) =>
-      orgData.roles.map((role: string) => ({
+    const options: RoleOption[] = orgEntries.flatMap(([orgId, orgData]) => {
+      const data = orgData as OrgRoleData;
+      return data.roles.map((role: string) => ({
         orgId,
-        orgName: orgData.org_name,
+        orgName: data.org_name,
         role,
-        deptCode: orgData.dept_code ?? null,
-      }))
-    );
+        deptCode: data.dept_code ?? null,
+      }));
+    });
 
     if (options.length === 1) {
       const { role, orgId, orgName, deptCode } = options[0];
@@ -172,7 +178,7 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen relative flex justify-center overflow-hidden items-start pt-24 md:items-center md:pt-0"
+      className="min-h-screen relative flex items-center justify-center overflow-hidden"
 
       style={{
         backgroundImage: `linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(251, 191, 36, 0.1) 100%), url(${bgImage})`,
