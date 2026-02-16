@@ -1,21 +1,17 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, CreditCard, FileText, Info } from "lucide-react";
+import { ArrowLeft, Download, CreditCard, Info } from "lucide-react";
 import { generateQuotationPDF } from "../../services/quotationService";
 import { toast } from "react-toastify";
 
-interface Inverter {
-    inverterBrandName: string;
-    inverterCapacity: number;
-    inverterCount: number;
-}
+
 
 export const CheckoutSystemSpecification = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { selectedSpec, consumerId, connectionId, customerId } = location.state || {};
 
-    const [flowMode, setFlowMode] = useState<"selection" | "review" | "post-pay">("selection");
+    const [flowMode] = useState<"review" | "post-pay">("review");
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -111,42 +107,7 @@ export const CheckoutSystemSpecification = () => {
 
                     {/* Interaction Area */}
                     <div className="md:col-span-2">
-                        {flowMode === "selection" && (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center space-y-8">
-                                <div className="space-y-2">
-                                    <h3 className="text-xl font-bold text-gray-800">How would you like to proceed?</h3>
-                                    <p className="text-gray-500">Choose your preferred path to complete the order.</p>
-                                </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => setFlowMode("review")}
-                                        className="flex flex-col items-center gap-4 p-6 border-2 border-blue-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
-                                    >
-                                        <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                            <FileText className="w-6 h-6" />
-                                        </div>
-                                        <div className="text-center">
-                                            <h4 className="font-bold text-gray-800">Review Quotation</h4>
-                                            <p className="text-xs text-gray-500 mt-1">Read Terms & Conditions before payment</p>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={handleProceedToPayment}
-                                        className="flex flex-col items-center gap-4 p-6 border-2 border-green-100 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all group"
-                                    >
-                                        <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                                            <CreditCard className="w-6 h-6" />
-                                        </div>
-                                        <div className="text-center">
-                                            <h4 className="font-bold text-gray-800">Pay Directly</h4>
-                                            <p className="text-xs text-gray-500 mt-1">Make payment now, get quotation later</p>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
 
                         {flowMode === "review" && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -197,7 +158,7 @@ export const CheckoutSystemSpecification = () => {
 
                                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                                     <button
-                                        onClick={() => setFlowMode("selection")}
+                                        onClick={() => navigate(-1)}
                                         className="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 transition"
                                     >
                                         Back
