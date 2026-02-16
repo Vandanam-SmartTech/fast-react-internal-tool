@@ -164,6 +164,15 @@ export const EditConnection = () => {
   const customerId = location.state?.customerId || null;
   const connectionId = location.state?.connectionId;
 
+  const [missingInfo, setMissingInfo] = useState(false);
+
+  useEffect(() => {
+    if (!connectionId) {
+      setMissingInfo(true);
+      setLoading(false);
+    }
+  }, [connectionId]);
+
   const [consumerNumberExists, setConsumerNumberExists] = useState(false);
   const [originalConsumerNumber, setOriginalConsumerNumber] = useState("");
 
@@ -553,7 +562,7 @@ export const EditConnection = () => {
           longitude: data.longitude,
           isOnboardedCustomers: data.isOnboardedCustomers ?? false,
           discomId: data.discomId,
-          isGharkulCustomer: data.isGharkulCustomer ? "Yes": "No",
+          isGharkulCustomer: data.isGharkulCustomer ? "Yes" : "No",
           gharkulNumber: data.gharkulNumber,
         });
         setDistrictCode(data.districtCode);
@@ -569,6 +578,30 @@ export const EditConnection = () => {
     };
     fetchConnection();
   }, [connectionId]);
+
+  if (missingInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Missing Information</h2>
+          <p className="text-gray-600 mb-6">
+            Connection ID or Customer Information is missing. Please navigate here from the View Customer page.
+          </p>
+          <button
+            onClick={() => navigate('/list-of-consumers')}
+            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
+          >
+            Go to Customers List
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div>Loading connection details...</div>;
@@ -623,12 +656,12 @@ export const EditConnection = () => {
       }
 
       if (name === 'connectionTypeId') {
-      const selectedType = connectionTypes.find(
-        (type) => type.id === Number(value)
-      );
-      const isHT = selectedType?.nameEn?.toLowerCase().includes('ht');
-      updatedForm.phaseTypeId = isHT ? 2 : 1;
-    }
+        const selectedType = connectionTypes.find(
+          (type) => type.id === Number(value)
+        );
+        const isHT = selectedType?.nameEn?.toLowerCase().includes('ht');
+        updatedForm.phaseTypeId = isHT ? 2 : 1;
+      }
 
       return updatedForm;
     });
@@ -681,7 +714,7 @@ export const EditConnection = () => {
       addressTypeId: formData.addressTypeId,
       connectionTypeId: formData.connectionTypeId,
       correctionTypeId: formData.isNameCorrection === "Yes" ? formData.correctionTypeId : null,
-      gharkulNumber: formData.isGharkulCustomer === "Yes"? formData.gharkulNumber : null,
+      gharkulNumber: formData.isGharkulCustomer === "Yes" ? formData.gharkulNumber : null,
       avgMonthlyConsumption: formData.avgMonthlyConsumption,
       villageCode: formData.villageCode,
       pinCode: formData.pinCode ? parseInt(formData.pinCode, 10) : null,
@@ -771,7 +804,7 @@ export const EditConnection = () => {
                         : Cog6ToothIcon;
 
                 const shouldHighlightIcon = tab === "Customer Details" || tab === "Connection Details";
-                
+
                 return (
                   <button
                     key={tab}

@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'axios'],
-    exclude: ['react-leaflet', 'leaflet'],
+    exclude: [],
     esbuildOptions: { target: 'es2015' }
   },
   resolve: {
@@ -71,8 +71,8 @@ export default defineConfig({
   define: {
     global: 'globalThis'
   },
-  server: { 
-    host: '0.0.0.0', 
+  server: {
+    host: '0.0.0.0',
     port: 8080,
     hmr: {
       protocol: 'ws',

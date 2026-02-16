@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
+import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil, Building, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
@@ -9,6 +9,7 @@ import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserPro
 import { useUser } from '../../contexts/UserContext';
 import { fetchClaims } from '../../services/jwtService';
 import { croppedImg } from '../../utils/croppedImage';
+import EditProfileModal from './EditProfileModal';
 
 const Profile: React.FC = () => {
 
@@ -28,6 +29,8 @@ const Profile: React.FC = () => {
 
   const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
   const [loadingForProfile, setLoadingForProfile] = useState(false);
+
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
 
   const [removingPhoto, setRemovingPhoto] = useState(false);
 
@@ -53,12 +56,14 @@ const Profile: React.FC = () => {
 
 
   const loadProfilePhoto = async () => {
-    const photoUrl = await getUserProfilePhoto();
+    if (!user?.id) return; // safety check
+
+    const photoUrl = await getUserProfilePhoto(user.id);
+
     if (photoUrl) {
       setProfilePhoto(photoUrl);
       setHasUploadedPhoto(true);
     } else {
-
       setProfilePhoto(null);
       setHasUploadedPhoto(false);
     }
@@ -108,13 +113,23 @@ const Profile: React.FC = () => {
   }, []);
 
   const handleRemovePhoto = async () => {
+    if (!user?.id) return;
+
     try {
       setRemovingPhoto(true);
-      await deleteUserProfilePhoto();
-      await loadProfilePhoto();
-      setShowCropModalForProfile(false);
 
-      window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: "" }));
+      // Pass userId from context
+      await deleteUserProfilePhoto(user.id);
+
+      // Refresh UI state immediately
+      await loadProfilePhoto();
+
+      setShowCropModal(false); // Close modal
+
+      // 🔥 Notify other components about removal
+      window.dispatchEvent(
+        new CustomEvent("profilePhotoUpdated", { detail: "" })
+      );
     } catch (error) {
       console.error("Error removing photo:", error);
     } finally {
@@ -144,6 +159,11 @@ const Profile: React.FC = () => {
   const handleCropSaveForProfile = async () => {
     if (!previewUrlForProfile || !croppedAreaPixelsForProfile) return;
 
+    if (!user?.id) {
+      console.error("User ID not found in context");
+      return;
+    }
+
     setLoadingForProfile(true);
 
     try {
@@ -165,9 +185,9 @@ const Profile: React.FC = () => {
 
 
       if (hasUploadedPhoto) {
-        await editUserProfilePhoto(file);
+        await editUserProfilePhoto(user.id, file);
       } else {
-        await uploadUserProfilePhoto(file);
+        await uploadUserProfilePhoto(user.id, file);
         setHasUploadedPhoto(true);
       }
 
@@ -341,12 +361,18 @@ const Profile: React.FC = () => {
 
 
   const fetchSignature = async () => {
-    const url = await getUserSignature();
+    if (!user?.id) return;   // safety check
+
+    const url = await getUserSignature(user.id);
     setSignatureUrl(url);
   };
 
   const handleUploadSignature = async () => {
     if (!previewUrl) return;
+    if (!user?.id) {
+      console.error("User ID not found in context");
+      return;
+    }
 
     try {
       setUploading(true);
@@ -355,7 +381,7 @@ const Profile: React.FC = () => {
       const blob = await response.blob();
       const file = new File([blob], 'signature.png', { type: 'image/png' });
 
-      await uploadUserSignature(file);
+      await uploadUserSignature(user.id, file);
 
       toast.success("Signature uploaded successfully", {
         autoClose: 1000,
@@ -382,6 +408,11 @@ const Profile: React.FC = () => {
   const handleEditSignature = async () => {
     if (!previewUrl) return;
 
+    if (!user?.id) {
+      console.error("User ID not found in context");
+      return;
+    }
+
     try {
       setUploading(true);
 
@@ -389,7 +420,7 @@ const Profile: React.FC = () => {
       const blob = await response.blob();
       const file = new File([blob], "signature.png", { type: "image/png" });
 
-      await editUserSignature(file);
+      await editUserSignature(user.id, file);
 
       toast.success("Signature updated successfully", {
         autoClose: 1000,
@@ -415,12 +446,16 @@ const Profile: React.FC = () => {
 
   const handleRemoveSignature = async () => {
     if (!signatureUrl) return; // nothing to remove
+    if (!user?.id) {
+      console.error("User ID not found in context");
+      return;
+    }
 
     try {
       setUploading(true); // show loader if needed
 
       // Call API to delete signature
-      await deleteUserSignaturePhoto();
+      await deleteUserSignaturePhoto(user.id);
 
       toast.success("Signature removed successfully", {
         autoClose: 1000,
@@ -451,8 +486,6 @@ const Profile: React.FC = () => {
   useEffect(() => {
     fetchSignature();
   }, []);
-
-
 
   if (loadingClaims) {
     return (
@@ -571,7 +604,7 @@ const Profile: React.FC = () => {
                     variant="outline"
                     leftIcon={<Pencil className="w-4 h-4" />}
                     className="w-full sm:w-auto whitespace-nowrap"
-                    onClick={() => navigate("/edit-user",{state:{userId:user?.id}})}
+                    onClick={() => setShowEditProfileModal(true)}
                   >
                     Edit Details
                   </Button>
@@ -734,7 +767,7 @@ const Profile: React.FC = () => {
             </CardBody>
           </Card>
 
-          {/* <Card>
+          <Card>
             <CardBody className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -768,7 +801,7 @@ const Profile: React.FC = () => {
 
               </div>
             </CardBody>
-          </Card> */}
+          </Card>
 
 
 
@@ -1078,6 +1111,15 @@ const Profile: React.FC = () => {
         )}
 
 
+
+        <EditProfileModal
+          isOpen={showEditProfileModal}
+          onClose={() => setShowEditProfileModal(false)}
+          user={claims || user}
+          onUpdate={() => {
+            fetchClaims().then(data => setClaims(data));
+          }}
+        />
 
       </div>
     </div>
