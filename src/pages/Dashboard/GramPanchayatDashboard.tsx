@@ -5,7 +5,7 @@ import {
 } from "../../services/customerRequisitionService";
 import { useUser } from "../../contexts/UserContext";
 import ReusableDropdown from "../../components/ReusableDropdown";
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, Users, UserCheck, Percent } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 
@@ -47,7 +47,7 @@ const GramPanchayatDashboard: React.FC = () => {
   const [count, setCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-    const formatNumber = (num: number): string => {
+  const formatNumber = (num: number): string => {
     if (num >= 1_000_000_000) {
       return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "B";
     }
@@ -65,12 +65,12 @@ const GramPanchayatDashboard: React.FC = () => {
   /* ---------------- Load Data ---------------- */
 
   useEffect(() => {
-  const selectedOrgStr = localStorage.getItem("selectedOrg");
-  if (!selectedOrgStr) return;
+    const selectedOrgStr = localStorage.getItem("selectedOrg");
+    if (!selectedOrgStr) return;
 
-  const selectedOrg = JSON.parse(selectedOrgStr);
+    const selectedOrg = JSON.parse(selectedOrgStr);
 
-}, []);
+  }, []);
 
 
   const loadDashboardData = useCallback(async () => {
@@ -164,80 +164,154 @@ const GramPanchayatDashboard: React.FC = () => {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-2">
+    <div className="p-4 max-w-7xl mx-auto space-y-3.5">
 
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-  <div>
-    <h1 className="font-bold text-secondary-900 text-lg sm:text-xl lg:text-2xl leading-tight">
-      {userClaims?.preferred_name
-        ? `${greeting}, ${userClaims.preferred_name}!`
-        : 'Welcome back!'}
-    </h1>
-    <p className="mt-1 text-secondary-700 dark:text-secondary-300 text-xs sm:text-sm lg:text-base">
-      Here's what's happening with your village today
-    </p>
-  </div>
+        <div>
+          <h1 className="font-bold text-secondary-900 text-lg sm:text-xl lg:text-2xl leading-tight">
+            {userClaims?.preferred_name
+              ? `${greeting}, ${userClaims.preferred_name}!`
+              : 'Welcome back!'}
+          </h1>
+          <p className="mt-1 text-secondary-700 dark:text-secondary-300 text-xs sm:text-sm lg:text-base">
+            Here's what's happening with your village today
+          </p>
+        </div>
 
-  <div className="flex flex-col sm:flex-row items-center gap-4">
-   
+        <div className="flex flex-col sm:flex-row items-center gap-4">
 
-    <div className="hidden lg:flex items-center gap-3 text-sm text-secondary-600 dark:text-secondary-300 bg-white/60 backdrop-blur px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
-      <div className="flex items-center gap-2">
-        <Clock className="h-4 w-4" />
-        <span>
-          {currentTime.toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false
-          })}
-        </span>
+
+          <div className="hidden lg:flex items-center gap-3 text-sm text-secondary-600 dark:text-secondary-300 bg-white/60 backdrop-blur px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>
+                {currentTime.toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: false
+                })}
+              </span>
+            </div>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-indigo-500" />
+              <span>{currentTime.toLocaleDateString("en-IN")}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="w-px h-4 bg-gray-300"></div>
-      <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-indigo-500" />
-        <span>{currentTime.toLocaleDateString("en-IN")}</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+        {/* Total Customers */}
         <div
           onClick={() => navigate("/list-of-consumers")}
-          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+          className="flex items-center justify-between
+    p-3 rounded-xl border
+    bg-purple-50 dark:bg-purple-900/20
+    border-purple-200 dark:border-purple-700
+    cursor-pointer transition-all duration-200
+    hover:shadow-md hover:-translate-y-1"
         >
-          <p className="text-sm opacity-80">Total Applications</p>
-          <h3 className="text-lg font-semibold mt-1">
-            {formatNumber(totalCustomers)}
-          </h3>
+          <div>
+            <p className="font-medium text-purple-600 text-xs sm:text-sm">
+              Total Customers
+            </p>
+            <p
+              className="font-bold text-purple-900 dark:text-purple-300 text-lg sm:text-2xl"
+              aria-live="polite"
+              title={totalCustomers?.toLocaleString()}
+            >
+              {formatNumber(totalCustomers)}
+            </p>
+
+          </div>
+
+          <div className="p-2 sm:p-2.5 bg-purple-200 dark:bg-purple-800/40 rounded-lg">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-700 dark:text-purple-300" />
+          </div>
         </div>
+
 
         {/* Onboarded */}
         <div
           onClick={() => navigate("/onboarded-consumers")}
-          className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-4 rounded-xl shadow-md cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+          className="flex items-center justify-between
+    p-3 rounded-xl border
+    bg-emerald-50 dark:bg-emerald-900/20
+    border-emerald-200 dark:border-emerald-700
+    cursor-pointer transition-all duration-200
+    hover:shadow-md hover:-translate-y-1"
         >
-          <p className="text-sm opacity-80">Onboarded</p>
-          <h3 className="text-lg font-semibold mt-1">
-            {formatNumber(totalOnboarded)}
-          </h3>
+          <div>
+            <p className="font-medium text-emerald-600 text-xs sm:text-sm">
+              Onboarded Customers
+            </p>
+            <p className="font-bold text-emerald-900 dark:text-emerald-300 text-lg sm:text-2xl"
+              aria-live="polite"
+              title={totalOnboarded?.toLocaleString()}>
+              {formatNumber(totalOnboarded)}
+            </p>
+          </div>
+
+          <div className="p-2 sm:p-2.5 bg-emerald-200 dark:bg-emerald-800/40 rounded-lg">
+            <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-700 dark:text-emerald-300" />
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-4 rounded-xl shadow-md">
-          <p className="text-sm opacity-80">Completion Rate</p>
-          <h3 className="text-lg font-semibold mt-1">{completionPercentage}%</h3>
+
+        {/* Completion Rate */}
+        <div
+          className="flex items-center justify-between
+    p-3 rounded-xl border
+    bg-indigo-50 dark:bg-indigo-900/20
+    border-indigo-200 dark:border-indigo-700
+    transition-all duration-200
+    hover:shadow-md hover:-translate-y-1"
+        >
+          <div>
+            <p className="font-medium text-indigo-600 text-xs sm:text-sm">
+              Completion Rate
+            </p>
+            <p className="font-bold text-indigo-900 dark:text-indigo-300 text-lg sm:text-2xl">
+              {completionPercentage}%
+            </p>
+          </div>
+
+          <div className="p-2 sm:p-2.5 bg-indigo-200 dark:bg-indigo-800/40 rounded-lg">
+            <Percent className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-700 dark:text-indigo-300" />
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-400 to-yellow-500 text-white p-4 rounded-xl shadow-md">
-          <p className="text-sm opacity-80">Remaining</p>
-          <h3 className="text-lg font-semibold mt-1">
-            {formatNumber(totalCustomers - totalOnboarded)}
-          </h3>
+
+        {/* Remaining */}
+        <div
+          className="flex items-center justify-between
+    p-3 rounded-xl border
+    bg-orange-50 dark:bg-orange-900/20
+    border-orange-200 dark:border-orange-700
+    transition-all duration-200
+    hover:shadow-md hover:-translate-y-1"
+        >
+          <div>
+            <p className="font-medium text-orange-600 text-xs sm:text-sm">
+              Remaining
+            </p>
+            <p className="font-bold text-orange-900 dark:text-orange-300 text-lg sm:text-2xl"
+              aria-live="polite"
+              title={(totalCustomers - totalOnboarded)?.toLocaleString()}>
+              {formatNumber(totalCustomers - totalOnboarded)}
+            </p>
+          </div>
+
+          <div className="p-2 sm:p-2.5 bg-orange-200 dark:bg-orange-800/40 rounded-lg">
+            <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-700 dark:text-orange-300" />
+          </div>
         </div>
+
       </div>
 
 
@@ -300,18 +374,26 @@ const GramPanchayatDashboard: React.FC = () => {
                 layout="vertical"
                 margin={{ left: 20 }}
               >
+                {/* Define gradients */}
+                <defs>
+                  <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#3B82F6" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
                 <YAxis type="category" dataKey="name" />
                 <Tooltip />
+
                 <Bar
                   dataKey="value"
-                  fill="#3B82F6"
-                  radius={[0, 8, 8, 0]}
+                  fill="url(#barGradient)"  // use the gradient here
+                  radius={[0, 8, 8, 0]}     // rounded corners
                   barSize={28}
                   isAnimationActive={false}
                 />
-
               </BarChart>
             </ResponsiveContainer>
           ) : (
