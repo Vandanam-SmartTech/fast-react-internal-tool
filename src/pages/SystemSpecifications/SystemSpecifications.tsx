@@ -5,7 +5,8 @@ import {
   generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
-  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId, getSavedSystemSpecPackages
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId, getSavedSystemSpecPackages,
+  getSystemSpecsById
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -129,7 +130,7 @@ export const SystemSpecifications = () => {
 
   const [isPrefilling, setIsPrefilling] = useState(false);
 
-  const [isFormOpen, setIsFormOpen] = useState(savedSpecs.length === 0 || savedSpecs.length === 1);
+  const [isFormOpen, setIsFormOpen] = useState(false); // Initially false, will be set true if no specs or prefilling
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -154,8 +155,8 @@ export const SystemSpecifications = () => {
   const [activeLoadedSpecId, setActiveLoadedSpecId] = useState<number | null>(null);
 
   const [stdSpecPackages, setStdSpecPackages] = useState<any[]>([]);
-
   const [isLoadingStdSpecs, setIsLoadingStdSpecs] = useState(false);
+  const isPrefillingSettled = useRef(false);
 
 
 
@@ -359,11 +360,11 @@ export const SystemSpecifications = () => {
         setSystemSpecificationId(lockedSpec.id);
 
         try {
-          const secondaryData = await getSecondaryId(lockedSpec.id);
+          const secondaryData: any = await getSecondaryId(lockedSpec.id);
 
           const secondaryIdValue = Array.isArray(secondaryData)
-            ? secondaryData[0]?.id
-            : secondaryData?.id;
+            ? (secondaryData[0] as any)?.id
+            : (secondaryData as any)?.id;
 
           if (secondaryIdValue) {
             setSecondaryId(secondaryIdValue);
@@ -390,6 +391,108 @@ export const SystemSpecifications = () => {
       fetchSavedSpecs();
     }
   }, [connectionId]);
+
+  useEffect(() => {
+    if (savedSpecs.length === 0 || savedSpecs.length === 1) {
+      setIsFormOpen(true);
+    }
+  }, [savedSpecs.length]);
+
+
+  // Handle Prefilling
+  const hasPrefilledRef = useRef(false);
+  useEffect(() => {
+    const prefillId = location.state?.prefillSystemSpecId;
+    if (prefillId && !hasPrefilledRef.current && orgId && phaseTypeId) {
+      const prefill = async () => {
+        setIsLoading(true);
+        setIsPrefilling(true);
+        try {
+          const spec = await getSystemSpecsById(prefillId);
+          if (spec) {
+            setPriceAlreadySetFromCustomerData(true);
+            const currentGridTypeId = spec.gridTypeId || (spec.inverters?.length > 0 ? spec.inverters[0].gridTypeId : null);
+
+            setFormData({
+              systemCost: spec.systemCost || 0,
+              fabricationCost: spec.fabricationCost || 0,
+              totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
+              installationSpaceType: spec.installationSpaceType || formData.installationSpaceType,
+              installationStructureType: spec.installationStructureType || "Static",
+              hasWaterSprinkler: !!spec.hasWaterSprinkler,
+              hasHeavydutyRamp: !!spec.hasHeavydutyRamp,
+              hasHeavydutyStairs: !!spec.hasHeavydutyStairs,
+              materialOriginId: spec.materialOriginId || null,
+              gridTypeId: currentGridTypeId || null,
+              panelBrandId: spec.panelBrandId || null,
+              orgPanelSpecId: spec.orgPanelSpecId || null,
+              batteryBrandId: spec.batteryBrandId || null,
+              orgBatterySpecId: spec.orgBatterySpecId || null,
+              systemCapacityKw: spec.systemCapacityKw || null,
+              inverters: spec.inverters?.map((inv: any) => ({
+                inverterBrandId: inv.inverterBrandId,
+                orgInverterSpecId: inv.orgInverterSpecId,
+                inverterCount: inv.inverterCount || 1,
+              })) || [{ inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 }],
+              pipes: spec.pipes?.map((p: any) => ({
+                orgPipeSpecId: p.orgPipeSpecId,
+                pipeCount: p.pipeCount || 1,
+              })) || [{ orgPipeSpecId: null, pipeCount: 1 }],
+            });
+
+            // Set specific states that drive other fetches
+            setMaterialOriginId(spec.materialOriginId || null);
+            setGridTypeId(currentGridTypeId || null);
+            setOrgPanelSpecId(spec.orgPanelSpecId || null);
+            setSystemCapacityKw(spec.systemCapacityKw || null);
+            setBatteryBrandId(spec.batteryBrandId || null);
+            setOrgBatterySpecId(spec.orgBatterySpecId || null);
+
+            // Fetch inverter capacities for each row manually if prefilling
+            if (spec.inverters && currentGridTypeId) {
+              const capMap: Record<number, any[]> = {};
+              for (let i = 0; i < spec.inverters.length; i++) {
+                const inv = spec.inverters[i];
+                if (inv.inverterBrandId) {
+                  const capacities = await fetchInverterBrandCapacities(
+                    inv.inverterBrandId,
+                    Number(orgId),
+                    Number(phaseTypeId),
+                    Number(currentGridTypeId)
+                  );
+                  capMap[i] = Array.isArray(capacities) ? capacities : [];
+                }
+              }
+              setInverterCapacitiesMap(capMap);
+            }
+
+            setIsFormOpen(true);
+            setPriceAlreadySetFromCustomerData(true);
+            hasPrefilledRef.current = true;
+          }
+        } catch (error) {
+          console.error("Prefill failed:", error);
+          toast.error("Failed to load selected package details.");
+        } finally {
+          setIsLoading(false);
+          // Removed setIsPrefilling(false) from here to allow ripple effects to see it as true
+        }
+      };
+      prefill();
+    }
+  }, [location.state?.prefillSystemSpecId, orgId, phaseTypeId]);
+
+  // Delayed reset for isPrefilling to ensure ripple effects (useEffect hooks)
+  // that depend on state changes made during prefilling correctly see isPrefilling=true
+  useEffect(() => {
+    if (isPrefilling && !isPrefillingSettled.current) {
+      const timer = setTimeout(() => {
+        setIsPrefilling(false);
+        isPrefillingSettled.current = true;
+      }, 1000); // 1s buffer for all async effects/renders to settle
+      return () => clearTimeout(timer);
+    }
+  }, [isPrefilling]);
 
 
 
@@ -436,7 +539,6 @@ export const SystemSpecifications = () => {
         setInverters(Array.isArray(data) ? data : []);
       }
 
-      setIsPrefilling(false);
     };
 
     loadInverterBrands();
@@ -475,15 +577,17 @@ export const SystemSpecifications = () => {
       if (!materialOriginId || !orgId) return;
 
       // reset dependent state
-      setPanels([]);
-      setOrgPanelSpecId(null);
-      setPanelCapacities([]);
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        orgPanelSpecId: null,
-        systemCapacityKw: null,
-      }));
+      if (!isPrefilling) {
+        setPanels([]);
+        setOrgPanelSpecId(null);
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          orgPanelSpecId: null,
+          systemCapacityKw: null,
+        }));
+      }
 
       try {
         const data = await fetchPanelSpecsByOrg(
@@ -509,12 +613,11 @@ export const SystemSpecifications = () => {
         orgPanelSpecId === null ||
         materialOriginId === null
       ) {
-      
+
         return;
       }
 
-      if (!formData.systemCapacityKw) {
-        
+      if (!formData.systemCapacityKw && !isPrefilling) {
         setPanelCapacities([]);
         setSystemCapacityKw(null);
         setFormData((prev) => ({
@@ -524,7 +627,7 @@ export const SystemSpecifications = () => {
       }
 
       try {
-      
+
         const data = await fetchPanelBrandCapacities(
           phaseTypeId,
           orgPanelSpecId
@@ -553,15 +656,17 @@ export const SystemSpecifications = () => {
         if (data) setBatteryBrands(data);
       } else {
         // reset battery-related state
-        setBatteryBrands([]);
-        setBatteryBrandId(null);
-        setOrgBatterySpecId(null);
-        setBatteryCapacities([]);
-        setFormData((prev) => ({
-          ...prev,
-          batteryBrandId: null,
-          orgBatterySpecId: null,
-        }));
+        if (!isPrefilling) {
+          setBatteryBrands([]);
+          setBatteryBrandId(null);
+          setOrgBatterySpecId(null);
+          setBatteryCapacities([]);
+          setFormData((prev) => ({
+            ...prev,
+            batteryBrandId: null,
+            orgBatterySpecId: null,
+          }));
+        }
       }
     };
 
@@ -571,12 +676,14 @@ export const SystemSpecifications = () => {
 
   useEffect(() => {
     // reset dependent state
-    setBatteryCapacities([]);
-    setOrgBatterySpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      orgBatterySpecId: null,
-    }));
+    if (!isPrefilling) {
+      setBatteryCapacities([]);
+      setOrgBatterySpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        orgBatterySpecId: null,
+      }));
+    }
 
     if (batteryBrandId !== null && orgId) {
       const loadBatteryCapacities = async () => {
@@ -611,12 +718,12 @@ export const SystemSpecifications = () => {
 
 
 
-  const handleInverterChange = async (index, field, value) => {
+  const handleInverterChange = async (index: number, field: string, value: any) => {
     const updatedInverters = [...(formData.inverters || [])];
     // Ensure the row exists
-    if (!updatedInverters[index]) updatedInverters[index] = {};
+    if (!updatedInverters[index]) (updatedInverters as any)[index] = {};
 
-    updatedInverters[index][field] = value;
+    (updatedInverters[index] as any)[field] = value;
 
     // If brand changed, reset spec and fetch capacities for that row
     if (field === "inverterBrandId") {
@@ -674,7 +781,7 @@ export const SystemSpecifications = () => {
   };
 
 
-  const removeInverter = (index) => {
+  const removeInverter = (index: number) => {
     setFormData((prev) => {
       const updated = (prev.inverters || []).filter((_, i) => i !== index);
       return { ...prev, inverters: updated };
@@ -684,9 +791,10 @@ export const SystemSpecifications = () => {
       const updatedMap = { ...prev };
       delete updatedMap[index];
       // Re-index remaining capacities so that map stays in sync with inverters
-      const reIndexed = Object.keys(updatedMap).reduce((acc, key) => {
-        const newIndex = key > index ? key - 1 : key;
-        acc[newIndex] = updatedMap[key];
+      const reIndexed = Object.keys(updatedMap).reduce((acc: Record<number, any[]>, key) => {
+        const keyNum = Number(key);
+        const newIndex = keyNum > index ? keyNum - 1 : keyNum;
+        acc[newIndex] = updatedMap[keyNum];
         return acc;
       }, {});
       return reIndexed;
@@ -842,7 +950,8 @@ export const SystemSpecifications = () => {
   };
 
 
-  const handleSelectSpec = async (spec) => {
+  const handleSelectSpec = async (spec: any) => {
+    setPriceAlreadySetFromCustomerData(true);
     setIsPrefilling(true);
     setSelectedSpecId(spec.id);
 
@@ -867,7 +976,7 @@ export const SystemSpecifications = () => {
     setOrgBatterySpecId(spec.orgBatterySpecId || null);
 
     // STEP 2: Build inverter list
-    const inverterList = (spec.inverters || []).map((inv) => ({
+    const inverterList = (spec.inverters || []).map((inv: any) => ({
       inverterBrandId: inv.inverterBrandId,
       inverterBrandName: inv.inverterBrandName,
       orgInverterSpecId: inv.orgInverterSpecId,
@@ -904,7 +1013,7 @@ export const SystemSpecifications = () => {
     setInverterCapacitiesMap(capacitiesMap);
 
     // STEP 4: Build pipe list if available
-    const pipeList = (spec.pipes || []).map((pipe) => ({
+    const pipeList = (spec.pipes || []).map((pipe: any) => ({
       orgPipeSpecId: pipe.orgPipeSpecId,
       pipeCount: pipe.pipeCount || 1,
     }));
@@ -1580,7 +1689,7 @@ export const SystemSpecifications = () => {
         className={`mx-auto px-4 sm:px-6 lg:px-8 ${isGharkulCustomer ? "max-w-7xl" : "max-w-4xl"
           }`}
       > */}
-        <div
+      <div
         className={`mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl`}
       >
         <div className="flex items-center gap-2 mb-2">
