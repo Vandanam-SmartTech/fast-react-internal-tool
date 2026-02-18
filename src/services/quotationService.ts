@@ -1555,3 +1555,14 @@ export const getSystemPackagesWithSpecs = async (
     throw new Error("Failed to fetch system packages from server");
   }
 };
+
+export const getSystemSpecsById = async (id: number): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get(`/api/system-specs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching system specs by ID:", error);
+    throw new Error("Failed to fetch system specifications.");
+  }
+};

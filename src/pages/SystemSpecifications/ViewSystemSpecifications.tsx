@@ -68,6 +68,7 @@ interface SystemSpec {
     hasHeavydutyStairs?: boolean;
     validFrom?: string;
     validThru?: string;
+    systemSpecsId?: number;
 }
 
 
@@ -197,6 +198,7 @@ export const ViewSystemSpecifications = () => {
                             id: pkg.id || specs.id || Math.random(), // Use package ID primarily
                             connectionId: Number(connectionId),
                             isRunningCopy: false, // These are templates
+                            systemSpecsId: specs.id,
 
                             title: pkg.title,
                             panelBrandShortName: specs.panelBrandShortName,
@@ -282,7 +284,12 @@ export const ViewSystemSpecifications = () => {
 
     const handleAddPackage = () => {
         navigate(`/system-specifications`, {
-            state: { consumerId, customerId, connectionId },
+            state: {
+                consumerId,
+                customerId,
+                connectionId,
+                prefillSystemSpecId: selectedSpec?.systemSpecsId
+            },
         });
     };
 
@@ -319,13 +326,14 @@ export const ViewSystemSpecifications = () => {
                         <h1 className="text-xl font-bold text-gray-700">Confirm & Pay</h1>
                     </div>
 
-                    {userInfo?.role === "ROLE_ORG_ADMIN" && <button
-                        onClick={handleAddPackage}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Customize Your Plan
-                    </button>}
+                    {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                        userInfo?.role === "ROLE_BDO") && <button
+                            onClick={handleAddPackage}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Customize Your Plan
+                        </button>}
                 </div>
 
                 {/* Progress Steps */}
