@@ -534,7 +534,7 @@ export const CustomerForm = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1">
               {/* Left: Heading */}
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-1 sm:gap-2">
                 <UserCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 text-green-500" />
@@ -723,7 +723,7 @@ export const CustomerForm = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Customer Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -740,7 +740,7 @@ export const CustomerForm = () => {
                   required
                   maxLength={50}
                   title="Please enter only your first and last name (e.g., John Doe)"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
 
                 {formData.govIdName?.trim().length > 0 &&
@@ -752,7 +752,7 @@ export const CustomerForm = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Name</label>
                 <input
                   type="text"
                   name="preferredName"
@@ -766,7 +766,7 @@ export const CustomerForm = () => {
                     }
                   }}
                   maxLength={50}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
                   <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
@@ -774,13 +774,13 @@ export const CustomerForm = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Mobile Number <span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative flex mt-1">
                   {/* Country Code Box */}
-                  <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">
+                  <span className="inline-flex items-center px-3 py-1.5 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">
                     +91
                   </span>
 
@@ -802,7 +802,7 @@ export const CustomerForm = () => {
                     }}
                     placeholder="9567023456"
                     required
-                    className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                    className="w-full px-3 py-1.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                     title="Enter a valid 10-digit mobile number starting with 6-9"
                     onCopy={(e) => e.preventDefault()}
                     onCut={(e) => e.preventDefault()}
@@ -826,7 +826,7 @@ export const CustomerForm = () => {
 
               {/* Confirm Mobile Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Mobile Number <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Mobile Number <span className="text-red-500">*</span></label>
                 <input
                   type="tel"
                   name="confirmMobileNumber"
@@ -836,7 +836,7 @@ export const CustomerForm = () => {
                   maxLength={10}
                   pattern="[6-9]{1}[0-9]{9}"
                   required
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                   title="Re-enter the same 10-digit mobile number"
                   disabled={!(
                     /^[6-9]{1}[0-9]{9}$/.test(formData.mobileNumber) && !mobileExists
@@ -854,7 +854,7 @@ export const CustomerForm = () => {
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
 
@@ -881,7 +881,7 @@ export const CustomerForm = () => {
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
 
                 {/* Error messages */}
@@ -920,7 +920,7 @@ export const CustomerForm = () => {
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Email Address</label>
                 <input
                   type="email"
                   name="confirmEmailAddress"
@@ -929,7 +929,7 @@ export const CustomerForm = () => {
                   placeholder="Confirm email address"
                   maxLength={50}
                   pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                   title="Re-enter the same email"
                   disabled={!(
                     /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress) && !emailExists

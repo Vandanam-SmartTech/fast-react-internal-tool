@@ -888,7 +888,7 @@ useEffect(() => {
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   <span className="sm:hidden">Is active grid connection?</span> {/* Mobile */}
                   <span className="hidden sm:inline">Does the customer currently have an active grid connection?</span> {/* Desktop */}
                 </label>
@@ -929,7 +929,7 @@ useEffect(() => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   12-Digit Consumer Number{" "}
                   {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
@@ -951,7 +951,7 @@ useEffect(() => {
                   required={formData.isDiscomConsumer === "Yes"}
                   disabled={formData.isDiscomConsumer === "No"}
                   placeholder="e.g. 987654321000"
-                  className={`w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  className={`w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.consumerNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
                     } ${formData.isDiscomConsumer === "No" ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}`}
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
@@ -966,7 +966,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm Consumer Number{" "}
                   {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
@@ -986,7 +986,7 @@ useEffect(() => {
                   maxLength={12}
                   pattern="^[0-9]{12}$"
                   required={formData.isDiscomConsumer === "Yes"}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                   title="Re-enter the same 12-digit consumer number"
                   disabled={
                     formData.isDiscomConsumer === "No" ||
@@ -1003,7 +1003,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Connection Type{" "}
                   {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
@@ -1025,7 +1025,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phase Type <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
@@ -1042,7 +1042,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Monthly Average Consumption Units <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1065,12 +1065,12 @@ useEffect(() => {
                   required
                   placeholder="e.g. 1"
                   title="Enter a positive integer greater than 0"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   DISCOM ID{" "}
                   {formData.isDiscomConsumer === "Yes" && (
                     <span className="text-red-500">*</span>
@@ -1091,7 +1091,7 @@ useEffect(() => {
                   required={formData.isDiscomConsumer === "Yes"}
                   disabled={formData.isDiscomConsumer === "No"}
                   title="DISCOM ID must be a positive integer greater than 0"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed border-gray-300"
                 />
               </div>
 
@@ -1108,7 +1108,7 @@ useEffect(() => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   GST Number
                 </label>
                 <input
@@ -1123,7 +1123,7 @@ useEffect(() => {
                   title="GSTIN must be in format: 22AAAAA0000A1Z6"
                   placeholder="e.g. 22AAAAA0000A1Z6"
                   maxLength={15}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.gstIn && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.gstIn}</p>
@@ -1131,7 +1131,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name on Electricity Bill <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1144,7 +1144,7 @@ useEffect(() => {
                   title="Billed To must be 2-50 characters, alphabets and spaces only"
                   maxLength={50}
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.billedTo && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.billedTo}</p>
@@ -1165,18 +1165,18 @@ useEffect(() => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   State <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value="Maharashtra"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   District <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
@@ -1198,7 +1198,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Taluka <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
@@ -1220,7 +1220,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Village <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
@@ -1242,7 +1242,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   PIN Code <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1256,7 +1256,7 @@ useEffect(() => {
                   maxLength={6}
                   inputMode="numeric"
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.pinCode && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.pinCode}</p>
@@ -1264,7 +1264,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address Type <span className="text-red-500">*</span>
                 </label>
                 <ReusableDropdown
@@ -1283,7 +1283,7 @@ useEffect(() => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address Line 1 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1296,7 +1296,7 @@ useEffect(() => {
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.addressLine1 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine1}</p>
@@ -1304,7 +1304,7 @@ useEffect(() => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address Line 2
                 </label>
                 <input
@@ -1316,7 +1316,7 @@ useEffect(() => {
                   pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
                   title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                   maxLength={100}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.addressLine2 && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.addressLine2}</p>
@@ -1324,7 +1324,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Latitude
                 </label>
                 <input
@@ -1338,7 +1338,7 @@ useEffect(() => {
                   max="90"
                   step="any"
                   title="Latitude must be between -90 and 90"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.latitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.latitude}</p>
@@ -1346,7 +1346,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Longitude
                 </label>
                 <input
@@ -1360,7 +1360,7 @@ useEffect(() => {
                   max="180"
                   step="any"
                   title="Longitude must be between -180 and 180"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
                 {fieldErrors.longitude && (
                   <p className="text-red-600 text-sm mt-1">{fieldErrors.longitude}</p>
@@ -1414,7 +1414,7 @@ useEffect(() => {
                   Gharkul Connection
                 </h3>
 
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Is Gharkul Connection?
                 </label>
 
@@ -1446,7 +1446,7 @@ useEffect(() => {
 
                 {formData.isGharkulCustomer === "Yes" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Gharkul Number
                     </label>
                     <input
@@ -1455,7 +1455,7 @@ useEffect(() => {
                       value={formData.gharkulNumber || ""}
                       onChange={handleChange}
                       placeholder="Enter Gharkul Number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 )}
@@ -1470,7 +1470,7 @@ useEffect(() => {
                   Name Correction
                 </h3>
 
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Does the connection require a name correction?
                 </label>
 

@@ -385,7 +385,7 @@ const EditOrganization: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Legal Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -396,12 +396,12 @@ const EditOrganization: React.FC = () => {
                   placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
                   required
                   disabled
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Display Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -411,13 +411,13 @@ const EditOrganization: React.FC = () => {
                   onChange={handleChange}
                   placeholder="e.g. EcoVolt Solar Solutions"
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name (Short Name) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -427,12 +427,12 @@ const EditOrganization: React.FC = () => {
                   onChange={handleChange}
                   placeholder="e.g. SunTech, EcoVolt, SolarMax"
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Contact Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -450,7 +450,7 @@ const EditOrganization: React.FC = () => {
                   placeholder="e.g. 9567023456"
                   maxLength={10}
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   title="Enter a valid 10-digit mobile number starting with 6-9"
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
@@ -465,7 +465,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address <span className="text-red-500">*</span>
                 </label>
 
@@ -492,7 +492,7 @@ const EditOrganization: React.FC = () => {
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
 
                 {/* Error messages */}
@@ -526,7 +526,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   GST Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -543,7 +543,7 @@ const EditOrganization: React.FC = () => {
                   }
                   maxLength={15}
                   placeholder="e.g. 22AAAAA0000A1Z6"
-                  className={`w-full px-3 py-2.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+                  className={`w-full px-3 py-1.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
                     }`}
                 />
 
@@ -554,7 +554,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Government Registration Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -564,12 +564,12 @@ const EditOrganization: React.FC = () => {
                   onChange={handleChange}
                   maxLength={50}
                   placeholder="e.g. L01631KA2010PTC096843"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
                 <ReusableDropdown
                   name="district"
                   value={districtCode}
@@ -587,7 +587,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
                 <ReusableDropdown
                   name="talukaCode"
                   value={talukaCode}
@@ -605,7 +605,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
                 <ReusableDropdown
                   name="villageCode"
                   value={villageCode}
@@ -623,7 +623,7 @@ const EditOrganization: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   id="pinCode"
@@ -632,14 +632,14 @@ const EditOrganization: React.FC = () => {
                   onChange={handlepinCodeChange}
                   placeholder="e.g. 416000"
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address Line 1 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -649,12 +649,12 @@ const EditOrganization: React.FC = () => {
                   placeholder="e.g. Flat No, House No, Street Name"
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address Line 2
                 </label>
                 <input
@@ -663,7 +663,7 @@ const EditOrganization: React.FC = () => {
                   value={formData.addressLine2 || ''}
                   onChange={handleChange}
                   placeholder="e.g. Apartment, Suite, Unit, Building"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
             </div>

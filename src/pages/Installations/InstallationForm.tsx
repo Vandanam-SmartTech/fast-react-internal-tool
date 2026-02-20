@@ -258,19 +258,8 @@ export const InstallationForm = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
               {/* Input Fields */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
-                {/* <select
-                name="installationSpaceTypeId"
-                value={formData.installationSpaceTypeId}
-                onChange={handleChange}
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              >
-                {installationSpaceTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nameEnglish}
-                  </option>
-                ))}
-              </select> */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Installation Space Type <span className="text-red-500">*</span></label>
+
 
                 <ReusableDropdown
                   name="installationSpaceTypeId"
@@ -289,45 +278,11 @@ export const InstallationForm = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Installation Space Title <span className="text-red-500">*</span>
                 </label>
 
-                {/* <select
-                name="installationSpaceTitle"
-                value={formData.installationSpaceTitle}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === 'Other') {
-
-                    setFormData((prev) => ({
-                      ...prev,
-                      installationSpaceTitle: 'Other',
-                      customInstallationSpaceTitle: '',
-                    }));
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      installationSpaceTitle: value,
-                      customInstallationSpaceTitle: '',
-                    }));
-                  }
-                }}
-                required
-                className="w-full px-2 py-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              >
-                <option value="" disabled>Select Installation Title</option>
-                <option value="At center">At center</option>
-                <option value="At SW corner">At SW corner</option>
-                <option value="At SE corner">At SE corner</option>
-                <option value="At NW corner">At NW corner</option>
-                <option value="At NE corner">At NE corner</option>
-                <option value="At East side">At East side</option>
-                <option value="At West side">At West side</option>
-                <option value="At North side">At North side</option>
-                <option value="At South side">At South side</option>
-                <option value="Other">Other</option>
-              </select> */}
+           
 
                 <ReusableDropdown
                   name="installationSpaceTitle"
@@ -378,7 +333,7 @@ export const InstallationForm = () => {
                     }}
                     required
                     placeholder="Specify installation space title"
-                    className="mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                    className="mt-2 w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
                 )}
 
@@ -386,7 +341,7 @@ export const InstallationForm = () => {
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">East-West-Length (Feet) <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -401,12 +356,12 @@ export const InstallationForm = () => {
                   }}
                   required
                   placeholder="e.g. 10"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">South-North-Length (Feet) <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -421,12 +376,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Structure to Inverter Distance (Feet)</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -441,12 +396,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Inverter to GenMeter Distance (Feet)</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -461,12 +416,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Earthing Pit to Inverter Distance (Feet)</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -481,12 +436,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lightning Arrester to Ground Distance (Feet)</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -501,12 +456,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Height of Structure (feet)</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -521,12 +476,12 @@ export const InstallationForm = () => {
                       handleChange(e);
                     }
                   }}
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description about Installation</label>
                 <input
                   type="text"
                   id="descriptionOfInstallation"
@@ -534,7 +489,7 @@ export const InstallationForm = () => {
                   value={formData.descriptionOfInstallation}
                   onChange={handleChange}
                   placeholder="e.g. Designated area is on rooftop"
-                  className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
 

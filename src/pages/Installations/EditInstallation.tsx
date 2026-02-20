@@ -264,7 +264,7 @@ export const EditInstallation = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Installation Space Type <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Installation Space Type <span className="text-red-500">*</span></label>
               <ReusableDropdown
                 name="installationSpaceTypeId"
                 value={formData.installationSpaceTypeId || ""}
@@ -281,7 +281,7 @@ export const EditInstallation = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Installation Space Title <span className="text-red-500">*</span>
               </label>
 
@@ -330,7 +330,7 @@ export const EditInstallation = () => {
                   onChange={handleChange}
                   required
                   placeholder="Specify installation space title"
-                  className=" mt-2 w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className=" mt-2 w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               )}
 
@@ -338,7 +338,7 @@ export const EditInstallation = () => {
 
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">East-West-Length (Feet) <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">East-West-Length (Feet) <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -353,12 +353,12 @@ export const EditInstallation = () => {
                   }
                 }}
                 placeholder="e.g. 10"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">South-North-Length (Feet) <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">South-North-Length (Feet) <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -373,12 +373,12 @@ export const EditInstallation = () => {
                     handleChange(e);
                   }
                 }}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Structure to Inverter Distance (Feet)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Structure to Inverter Distance (Feet)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -393,12 +393,12 @@ export const EditInstallation = () => {
                     handleChange(e);
                   }
                 }}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Inverter to GenMeter Distance (Feet)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Inverter to GenMeter Distance (Feet)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -413,12 +413,12 @@ export const EditInstallation = () => {
                     handleChange(e);
                   }
                 }}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Earthing Pit to Inverter Distance (Feet)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Earthing Pit to Inverter Distance (Feet)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -433,12 +433,12 @@ export const EditInstallation = () => {
                     handleChange(e);
                   }
                 }}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Lightning Arrester to Ground Distance (Feet)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lightning Arrester to Ground Distance (Feet)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -453,12 +453,12 @@ export const EditInstallation = () => {
                     handleChange(e);
                   }
                 }}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Height of Structure (feet)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Height of Structure (feet)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -480,7 +480,7 @@ export const EditInstallation = () => {
 
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description about Installation</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description about Installation</label>
               <input
                 type="text"
                 id="descriptionOfInstallation"
@@ -488,7 +488,7 @@ export const EditInstallation = () => {
                 value={formData.descriptionOfInstallation}
                 onChange={handleChange}
                 placeholder="e.g. Designated area is on rooftop"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 

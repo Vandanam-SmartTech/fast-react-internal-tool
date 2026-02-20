@@ -348,7 +348,7 @@ const loadAgency = async (agencyId: number) => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Legal Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -358,12 +358,12 @@ const loadAgency = async (agencyId: number) => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
               required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Display Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -373,13 +373,13 @@ const loadAgency = async (agencyId: number) => {
               onChange={handleChange}
               placeholder="e.g. EcoVolt Solar Solutions"
               required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Name (Short Name) <span className="text-red-500">*</span>
             </label>
             <input
@@ -389,12 +389,12 @@ const loadAgency = async (agencyId: number) => {
               onChange={handleChange}
               placeholder="e.g. SunTech, EcoVolt, SolarMax"
               required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -412,7 +412,7 @@ const loadAgency = async (agencyId: number) => {
               placeholder="e.g. 9567023456"
               maxLength={10}
               required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               title="Enter a valid 10-digit mobile number starting with 6-9"
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
@@ -427,7 +427,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Email Address <span className="text-red-500">*</span>
             </label>
 
@@ -454,7 +454,7 @@ const loadAgency = async (agencyId: number) => {
               onCopy={(e) => e.preventDefault()}
               onCut={(e) => e.preventDefault()}
               onPaste={(e) => e.preventDefault()}
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
 
             {/* Error messages */}
@@ -488,7 +488,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               GST Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -505,7 +505,7 @@ const loadAgency = async (agencyId: number) => {
               }
               maxLength={15}
               placeholder="e.g. 22AAAAA0000A1Z6"
-              className={`w-full px-3 py-2.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+              className={`w-full px-3 py-1.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
                 }`}
             />
 
@@ -516,7 +516,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Government Registration Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -526,12 +526,12 @@ const loadAgency = async (agencyId: number) => {
               onChange={handleChange}
               maxLength={50}
               placeholder="e.g. L01631KA2010PTC096843"
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">District <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
             <ReusableDropdown
               name="district"
               value={districtCode}
@@ -549,7 +549,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Taluka <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
             <ReusableDropdown
               name="talukaCode"
               value={talukaCode}
@@ -567,7 +567,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Village <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
             <ReusableDropdown
               name="villageCode"
               value={villageCode}
@@ -585,7 +585,7 @@ const loadAgency = async (agencyId: number) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">PIN Code <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
             <input
               type="text"
               id="pinCode"
@@ -594,13 +594,13 @@ const loadAgency = async (agencyId: number) => {
               onChange={handlepinCodeChange}
               placeholder="e.g. 416000"
               required
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Address Line 1 <span className="text-red-500">*</span>
             </label>
             <input
@@ -610,12 +610,12 @@ const loadAgency = async (agencyId: number) => {
               onChange={handleChange}
 
               placeholder="e.g. Flat No, House No, Street Name"
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Address Line 2
             </label>
             <input
@@ -624,7 +624,7 @@ const loadAgency = async (agencyId: number) => {
               placeholder="e.g. Apartment, Suite, Unit, Building"
               value={formData.addressLine2 || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
             />
           </div>
               </div>

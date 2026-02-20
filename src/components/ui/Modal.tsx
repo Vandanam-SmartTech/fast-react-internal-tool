@@ -59,47 +59,46 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+return (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    onClick={handleBackdropClick}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby={title ? 'modal-title' : undefined}
+  >
     <div
-      className="modal-overlay animate-fade-in"
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
+      ref={modalRef}
+      className={`bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto ${className}`}
+      role="document"
     >
-      <div
-        ref={modalRef}
-        className={`modal-content ${sizeClasses[size]} ${className} animate-scale-in`}
-        role="document"
-      >
-        {(title || showCloseButton) && (
-          <div className="modal-header flex justify-between items-center border-b border-gray-200 px-3 py-3">
-  {title && (
-    <h2 id="modal-title" className="text-lg font-semibold text-secondary-900">
-      {title}
-    </h2>
-  )}
-  {showCloseButton && (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onClose}
-      className="p-1 h-8 w-8"
-      aria-label="Close modal"
-    >
-      <X className="h-4 w-4" />
-    </Button>
-  )}
-</div>
-
-        )}
-        
-        <div className="modal-body">
-          {children}
+      {(title || showCloseButton) && (
+        <div className="flex justify-between items-center border-b border-gray-200 px-4 py-3">
+          {title && (
+            <h2 id="modal-title" className="text-lg font-semibold">
+              {title}
+            </h2>
+          )}
+          {showCloseButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="p-1 h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
+      )}
+
+      <div className="p-4">
+        {children}
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default Modal;

@@ -313,7 +313,7 @@ const EditUser: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Name as per Gov ID <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -330,7 +330,7 @@ const EditUser: React.FC = () => {
                                     required
                                     maxLength={50}
                                     title="Please enter only your first and last name (e.g., John Doe)"
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
 
                                 {formData.nameAsPerGovId?.trim().length > 0 &&
@@ -342,7 +342,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Name</label>
                                 <input
                                     type="text"
                                     name="preferredName"
@@ -355,7 +355,7 @@ const EditUser: React.FC = () => {
                                         }
                                     }}
                                     maxLength={50}
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                                 {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
                                     <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
@@ -364,7 +364,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Username <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -375,12 +375,12 @@ const EditUser: React.FC = () => {
                                     onChange={handleChange}
                                     required
                                     maxLength={30}
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     User Code <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -391,12 +391,12 @@ const EditUser: React.FC = () => {
                                     onChange={handleChange}
                                     required
                                     maxLength={30}
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Contact Number <span className="text-red-500">*</span>
                                 </label>
 
@@ -423,7 +423,7 @@ const EditUser: React.FC = () => {
                                         }}
                                         placeholder="9567023456"
                                         required
-                                        className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                        className="w-full px-3 py-1.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                         title="Enter a valid 10-digit mobile number starting with 6-9"
                                         onCopy={(e) => e.preventDefault()}
                                         onCut={(e) => e.preventDefault()}
@@ -446,7 +446,7 @@ const EditUser: React.FC = () => {
 
                             {/* Confirm Mobile Number */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Contact Number <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Contact Number <span className="text-red-500">*</span></label>
                                 <input
                                     type="tel"
                                     name="confirmContactNumber"
@@ -456,7 +456,7 @@ const EditUser: React.FC = () => {
                                     maxLength={10}
                                     pattern="[6-9]{1}[0-9]{9}"
                                     required
-                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                                     title="Re-enter the same 10-digit mobile number"
                                     disabled={!(
                                         /^[6-9]{1}[0-9]{9}$/.test(formData.contactNumber)
@@ -538,7 +538,7 @@ const EditUser: React.FC = () => {
 )} */}
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Email Address <span className="text-red-500">*</span>
                                 </label>
 
@@ -567,7 +567,7 @@ const EditUser: React.FC = () => {
                                     onCut={(e) => e.preventDefault()}
                                     onPaste={(e) => e.preventDefault()}
                                     required
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
 
                                 {/* Error messages */}
@@ -603,7 +603,7 @@ const EditUser: React.FC = () => {
 
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Email Address <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Email Address <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     name="confirmEmailAddress"
@@ -612,7 +612,7 @@ const EditUser: React.FC = () => {
                                     placeholder="Confirm email address"
                                     maxLength={50}
                                     pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
-                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                                     title="Re-enter the same email"
                                     disabled={!(
                                         /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress)
@@ -630,7 +630,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     District <span className="text-red-500">*</span>
                                 </label>
                                 <ReusableDropdown
@@ -650,7 +650,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Taluka <span className="text-red-500">*</span>
                                 </label>
                                 <ReusableDropdown
@@ -670,7 +670,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Village
                                 </label>
                                 <ReusableDropdown
@@ -690,7 +690,7 @@ const EditUser: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     PIN Code <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -703,12 +703,12 @@ const EditUser: React.FC = () => {
                                     maxLength={6}
                                     inputMode="numeric"
                                     required
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Address Line 1 <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -721,12 +721,12 @@ const EditUser: React.FC = () => {
                                     title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                                     maxLength={100}
                                     required
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Address Line 2
                                 </label>
                                 <input
@@ -738,7 +738,7 @@ const EditUser: React.FC = () => {
                                     pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
                                     title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                                     maxLength={100}
-                                    className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                                    className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                                 />
                             </div>
                         </div>

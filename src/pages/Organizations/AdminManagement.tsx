@@ -1074,7 +1074,7 @@ const AdminManagement: React.FC = () => {
               </select>
             </div>
 
-            {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(
+            {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE','ROLE_AGENCY_ELECTRICIAN'].includes(
               roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
             ) && (
                 <div className="lg:col-span-2">
@@ -1149,7 +1149,7 @@ const AdminManagement: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Add New User with Role</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Name as per Gov ID <span className="text-red-500">*</span>
               </label>
               <input
@@ -1166,7 +1166,7 @@ const AdminManagement: React.FC = () => {
                 required
                 maxLength={50}
                 title="Please enter only your first and last name (e.g., John Doe)"
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
 
               {formData.nameAsPerGovId?.trim().length > 0 &&
@@ -1178,7 +1178,7 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Name</label>
               <input
                 type="text"
                 name="preferredName"
@@ -1191,7 +1191,7 @@ const AdminManagement: React.FC = () => {
                   }
                 }}
                 maxLength={50}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
               {formData.preferredName && !/^[A-Za-z\s]*$/.test(formData.preferredName) && (
                 <p className="text-red-500 text-sm mt-1">Only letters and spaces are allowed.</p>
@@ -1200,7 +1200,7 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Username <span className="text-red-500">*</span>
               </label>
               <input
@@ -1211,12 +1211,12 @@ const AdminManagement: React.FC = () => {
                 onChange={handleChange}
                 required
                 maxLength={30}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 User Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -1227,12 +1227,12 @@ const AdminManagement: React.FC = () => {
                 onChange={handleChange}
                 required
                 maxLength={30}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contact Number <span className="text-red-500">*</span>
               </label>
 
@@ -1259,7 +1259,7 @@ const AdminManagement: React.FC = () => {
                   }}
                   placeholder="9567023456"
                   required
-                  className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  className="w-full px-3 py-1.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   title="Enter a valid 10-digit mobile number starting with 6-9"
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
@@ -1282,7 +1282,7 @@ const AdminManagement: React.FC = () => {
 
             {/* Confirm Mobile Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Contact Number <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Contact Number <span className="text-red-500">*</span></label>
               <input
                 type="tel"
                 name="confirmContactNumber"
@@ -1292,7 +1292,7 @@ const AdminManagement: React.FC = () => {
                 maxLength={10}
                 pattern="[6-9]{1}[0-9]{9}"
                 required
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                 title="Re-enter the same 10-digit mobile number"
                 disabled={!(
                   /^[6-9]{1}[0-9]{9}$/.test(formData.contactNumber)
@@ -1376,7 +1376,7 @@ const AdminManagement: React.FC = () => {
 
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address <span className="text-red-500">*</span>
               </label>
 
@@ -1403,7 +1403,7 @@ const AdminManagement: React.FC = () => {
                 onCopy={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
                 onPaste={(e) => e.preventDefault()}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
 
               {/* Error messages */}
@@ -1439,7 +1439,7 @@ const AdminManagement: React.FC = () => {
 
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Email Address <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Email Address <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 name="confirmEmailAddress"
@@ -1448,7 +1448,7 @@ const AdminManagement: React.FC = () => {
                 placeholder="Confirm email address"
                 maxLength={50}
                 pattern="^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
                 title="Re-enter the same email"
                 disabled={!(
                   /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(formData.emailAddress)
@@ -1465,7 +1465,7 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 District <span className="text-red-500">*</span>
               </label>
               <select
@@ -1473,7 +1473,7 @@ const AdminManagement: React.FC = () => {
                 value={districtCode}
                 onChange={handleDistrictChange}
                 required
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value={0}>{districtName || "Select District"}</option>
                 {districts.map((district) => (
@@ -1485,7 +1485,7 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Taluka <span className="text-red-500">*</span>
               </label>
               <select
@@ -1493,7 +1493,7 @@ const AdminManagement: React.FC = () => {
                 value={talukaCode}
                 onChange={handleTalukaChange}
                 required
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value={0}>{talukaName || "Select Taluka"}</option>
                 {talukas.map((taluka) => (
@@ -1505,14 +1505,14 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Village
               </label>
               <select
                 name="villageCode"
                 value={villageCode}
                 onChange={handleVillageChange}
-                className="w-full px-2 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value={0}>{villageName || "Select Village"}</option>
                 {villages.map((village) => (
@@ -1524,7 +1524,7 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 PIN Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -1537,12 +1537,12 @@ const AdminManagement: React.FC = () => {
                 maxLength={6}
                 inputMode="numeric"
                 required
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address Line 1 <span className="text-red-500">*</span>
               </label>
               <input
@@ -1555,12 +1555,12 @@ const AdminManagement: React.FC = () => {
                 title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                 maxLength={100}
                 required
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address Line 2
               </label>
               <input
@@ -1572,7 +1572,7 @@ const AdminManagement: React.FC = () => {
                 pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
                 title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
                 maxLength={100}
-                className="w-full px-3 py-2.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
               />
             </div>
 
@@ -1581,14 +1581,14 @@ const AdminManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 {/* Role Dropdown */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Role <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newAssignment.roleId}
                     onChange={handleRoleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Role</option>
                     {roles
@@ -1617,14 +1617,14 @@ const AdminManagement: React.FC = () => {
                 {/* Organization Dropdown */}
                 {userRole === "ROLE_SUPER_ADMIN" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Organization
                     </label>
                     <select
                       value={newAssignment.organizationId}
                       onChange={handleOrganizationChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Organization</option>
                       {organizations.map((org) => (
@@ -1641,7 +1641,7 @@ const AdminManagement: React.FC = () => {
                 {userRole !== "ROLE_AGENCY_ADMIN" &&
                   !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName) && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Agency
                       </label>
                       <select
@@ -1653,7 +1653,7 @@ const AdminManagement: React.FC = () => {
                           }))
                         }
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select Agency</option>
                         {agencies.map((agency) => (
