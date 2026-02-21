@@ -22,7 +22,7 @@ const AgencyList: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [, setTotalElements] = useState<number>(0);
 
-  const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
+  const [organizationLogos, setOrganizationLogos] = useState<Map<number, string | null>>(new Map());
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"error" | "confirm" | "success">("success");
@@ -46,13 +46,17 @@ const AgencyList: React.FC = () => {
   };
 
   useEffect(() => {
-    agencies.forEach(async () => {
-      if (orgId && !organizationLogos.has(orgId)) {
-        const imageUrl = await fetchOrganizationImage(orgId);
-        setOrganizationLogos(prev => new Map(prev).set(orgId!, imageUrl));
+    agencies.forEach(async (agency) => {
+      if (agency.id && !organizationLogos.has(agency.id)) {
+        const imageUrl = await fetchOrganizationImage(agency.id);
+        setOrganizationLogos(prev => {
+          const updated = new Map(prev);
+          updated.set(agency.id!, imageUrl);
+          return updated;
+        });
       }
     });
-  }, [agencies, organizationLogos]);
+  }, [agencies]);
 
 
 
@@ -72,23 +76,23 @@ const AgencyList: React.FC = () => {
     }
   };
 
-    const dropdownRef = useRef<HTMLDivElement | null>(null);
-  
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          dropdownRef.current &&
-          !dropdownRef.current.contains(event.target as Node)
-        ) {
-          setOpenDropdown(null);
-        }
-      };
-  
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, []);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdown(null);
@@ -187,18 +191,18 @@ const AgencyList: React.FC = () => {
       setLoading(true);
       try {
         await deleteOrganization(id);
-        toast.success("Agency deleted successfully",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.success("Agency deleted successfully", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
 
         if (orgId) {
           loadAgencies(currentPage, parseInt(orgId));
         }
       } catch (error) {
-        toast.error("Failed to delete agency",{
-          autoClose:1000,
-          hideProgressBar:true
+        toast.error("Failed to delete agency", {
+          autoClose: 1000,
+          hideProgressBar: true
         });
       } finally {
         setLoading(false);
@@ -218,28 +222,28 @@ const AgencyList: React.FC = () => {
         {/* Header Row */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center justify-between sm:justify-start gap-3">
-             
+
             <h1
               className="text-xl sm:text-2xl lg:text-3xl
                    leading-tight font-bold text-secondary-900
                    flex items-center"
             >
               <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full hover:bg-gray-200 transition"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
               Agencies
             </h1>
 
             {/* Mobile Add */}
             <button
               onClick={() =>
-              navigate("/agency-form", {
-                state: { orgId: orgId, gstNumber: gstNumber },
-              })
-            }
+                navigate("/agency-form", {
+                  state: { orgId: orgId, gstNumber: gstNumber },
+                })
+              }
               className="sm:hidden bg-blue-600 text-white px-3 py-1.5 rounded-md
                    text-sm flex items-center gap-1 hover:bg-blue-700"
             >
@@ -248,34 +252,34 @@ const AgencyList: React.FC = () => {
             </button>
           </div>
 
-        {/* Search and Add Button */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Search and Add Button */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search agencies..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={() =>
-              navigate("/agency-form", {
-                state: { orgId: orgId, gstNumber: gstNumber },
-              })
-            }
-             className="hidden sm:flex bg-blue-600 text-white px-4 py-2 rounded-lg
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search agencies..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={() =>
+                navigate("/agency-form", {
+                  state: { orgId: orgId, gstNumber: gstNumber },
+                })
+              }
+              className="hidden sm:flex bg-blue-600 text-white px-4 py-2 rounded-lg
                    items-center gap-2 hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Agency
-          </button>
+            >
+              <Plus className="h-4 w-4" />
+              Add Agency
+            </button>
+          </div>
         </div>
       </div>
-      </div>
-          
+
       {/* Cards Grid */}
       {filteredAgencies.length === 0 ? (
         <div className="text-center py-12">
@@ -311,19 +315,25 @@ const AgencyList: React.FC = () => {
                   <div
                     className="flex items-center gap-2 min-w-0 flex-1 "
                   >
-                    <div className="relative group h-12 w-12 flex-shrink-0 cursor-pointer">
-                      {organizationLogos.has(orgId!) ? (
-                        <img
-                          src={organizationLogos.get(orgId!)}
-                          alt={`${agency.name} logo`}
-                          className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-blue-600" />
-                        </div>
-                      )}
-
+                    <div className="relative group h-12 w-12 flex-shrink-0">
+                      {(() => {
+                        const agencyId = agency.id;
+                        const logoUrl = agencyId ? organizationLogos.get(agencyId) : null;
+                        if (logoUrl) {
+                          return (
+                            <img
+                              src={logoUrl}
+                              alt={`${agency.name} logo`}
+                              className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+                            />
+                          );
+                        }
+                        return (
+                          <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
+                            <Building2 className="h-6 w-6 text-blue-600" />
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -395,7 +405,7 @@ const AgencyList: React.FC = () => {
                 {/* Display Name */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-900">
-                    
+
                     <span className="truncate" title={agency.legalName || 'Not Available'}>
                       {agency.legalName || 'Not Available'}
                     </span>
@@ -454,64 +464,64 @@ const AgencyList: React.FC = () => {
         </div>
       )}
 
-            <Dialog
-              open={dialogOpen}
-              onClose={() => setDialogOpen(false)}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
-              maxWidth="xs"
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        maxWidth="xs"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {dialogType === "success" && "Success"}
+          {dialogType === "error" && "Error"}
+          {dialogType === "confirm" && "Confirm"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity={
+              dialogType === "success"
+                ? "success"
+                : dialogType === "error"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {dialogMessage}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          {dialogType === "confirm" ? (
+            <>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                }}
+              >
+                No
+              </MuiButton>
+              <MuiButton
+                onClick={() => {
+                  setDialogOpen(false);
+                  if (dialogAction) dialogAction();
+                }}
+                autoFocus
+              >
+                Yes
+              </MuiButton>
+            </>
+          ) : (
+            <MuiButton
+              onClick={() => {
+                setDialogOpen(false);
+                if (dialogAction) dialogAction();
+              }}
+              autoFocus
             >
-              <DialogTitle id="alert-dialog-title">
-                {dialogType === "success" && "Success"}
-                {dialogType === "error" && "Error"}
-                {dialogType === "confirm" && "Confirm"}
-              </DialogTitle>
-              <DialogContent dividers>
-                <Alert
-                  severity={
-                    dialogType === "success"
-                      ? "success"
-                      : dialogType === "error"
-                        ? "error"
-                        : "info"
-                  }
-                >
-                  {dialogMessage}
-                </Alert>
-              </DialogContent>
-              <DialogActions>
-                {dialogType === "confirm" ? (
-                  <>
-                    <MuiButton
-                      onClick={() => {
-                        setDialogOpen(false);
-                      }}
-                    >
-                      No
-                    </MuiButton>
-                    <MuiButton
-                      onClick={() => {
-                        setDialogOpen(false);
-                        if (dialogAction) dialogAction();
-                      }}
-                      autoFocus
-                    >
-                      Yes
-                    </MuiButton>
-                  </>
-                ) : (
-                  <MuiButton
-                    onClick={() => {
-                      setDialogOpen(false);
-                      if (dialogAction) dialogAction();
-                    }}
-                    autoFocus
-                  >
-                    OK
-                  </MuiButton>
-                )}
-              </DialogActions>
-            </Dialog>
+              OK
+            </MuiButton>
+          )}
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

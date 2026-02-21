@@ -264,7 +264,6 @@ export const ListOfConsumers = memo(() => {
     { value: "REGISTRATION", label: "Registered" },
     { value: "APPLICATION", label: "Applied" },
     { value: "ONBOARDED", label: "Onboarded" },
-    { value: "AGREEMENT", label: "Agreement Uploaded" },
     { value: "MATERIAL DELIVERED", label: "Material Delivered" },
     { value: "INSTALLATION COMPLETED", label: "Installation Completed" },
   ];
@@ -272,11 +271,12 @@ export const ListOfConsumers = memo(() => {
   const progressSteps = [
     "Registration",
     "Application",
-    "Payment",
+    "20% Payment",
     "Onboarded",
     "Material Delivered",
+    "70% Payment",
     "Installation",
-    "Payment",
+    "100% Payment",
     "Discom Inspected",
     "Discom Commissioned",
     "Subsidy Process"

@@ -22,7 +22,7 @@ const OrganizationList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [, setTotalElements] = useState<number>(0);
-  const [organizationLogos, setOrganizationLogos] = useState<Map<number, string>>(new Map());
+  const [organizationLogos, setOrganizationLogos] = useState<Map<number, string | null>>(new Map());
 
   const [showImageModal, setShowImageModal] = useState(false);
   const [, setSelectedFile] = useState<File | null>(null);
@@ -439,21 +439,28 @@ const OrganizationList: React.FC = () => {
                     <div
                       className="relative group h-12 w-12 flex-shrink-0 cursor-pointer"
                       onClick={() => {
-                        setCreatedOrgId(org.id);
+                        if (org.id) setCreatedOrgId(org.id);
                         setShowImageModal(true);
                       }}
                     >
-                      {organizationLogos.has(org.id!) ? (
-                        <img
-                          src={organizationLogos.get(org.id!)}
-                          alt={`${org.name} logo`}
-                          className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
-                          <Building className="h-6 w-6 text-blue-600" />
-                        </div>
-                      )}
+                      {(() => {
+                        const orgId = org.id;
+                        const logoUrl = orgId ? organizationLogos.get(orgId) : null;
+                        if (logoUrl) {
+                          return (
+                            <img
+                              src={logoUrl}
+                              alt={`${org.name} logo`}
+                              className="h-12 w-12 object-contain rounded-full border border-gray-200 p-1 bg-white"
+                            />
+                          );
+                        }
+                        return (
+                          <div className="h-12 w-12 rounded-full border border-gray-200 bg-white p-2 flex items-center justify-center">
+                            <Building className="h-6 w-6 text-blue-600" />
+                          </div>
+                        );
+                      })()}
 
                       {/* Camera overlay */}
                       <div className="absolute inset-0 rounded-full bg-black bg-opacity-30

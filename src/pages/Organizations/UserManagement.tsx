@@ -402,13 +402,14 @@ const UserManagement: React.FC = () => {
             <div>
               <select
                 value={statusFilter}
-                onChange={(e) => handleStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                className="form-select w-full"
+                onChange={(e) =>
+                  handleStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-
               </select>
             </div>
 
@@ -416,7 +417,7 @@ const UserManagement: React.FC = () => {
               <select
                 value={roleFilter}
                 onChange={(e) => handleRoleFilter(e.target.value)}
-                className="form-select w-full border-gray-300 rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Roles</option>
                 {getFilteredRoles().map((role) => (

@@ -9,7 +9,8 @@ import {
   saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, updateSystemSpecs, updateInverterSpecs, getSavedSystemSpecPackages,
-  getPriceDetails, saveSystemSpecPackage, saveInverterSpecPackage, fetchPanelSpecsByOrg, fetchPipeSpecification, savePipeSpecs
+  getPriceDetails, saveSystemSpecPackage, saveInverterSpecPackage, fetchPanelSpecsByOrg, fetchPipeSpecification, savePipeSpecs,
+  editSystemSpecPackage
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { Eye, Pencil } from "lucide-react";
@@ -114,6 +115,8 @@ const PackageManagement: React.FC = () => {
   const [isCustomSpecs, setIsCustomSpecs] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingPackageId, setEditingPackageId] = useState<number | null>(null);
 
   const [inverterCapacitiesMap, setInverterCapacitiesMap] = useState<Record<number, any[]>>({});
 
@@ -123,8 +126,7 @@ const PackageManagement: React.FC = () => {
 
 
 
-  // Form state
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     systemCost: 0,
     fabricationCost: 0,
     totalCost: 0,
@@ -150,7 +152,10 @@ const PackageManagement: React.FC = () => {
     pipes: [
       { orgPipeSpecId: null, pipeCount: 1 },
     ],
-  });
+  };
+
+  // Form state
+  const [formData, setFormData] = useState(initialFormData);
 
 
   const formatIndianNumber = (value: number): string => {
@@ -161,7 +166,8 @@ const PackageManagement: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const target = e.target as HTMLInputElement;
+    const { name, value, type, checked } = target;
 
     const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
 
@@ -169,9 +175,6 @@ const PackageManagement: React.FC = () => {
       ...formData,
       [name]: newValue,
     };
-
-    // Pipe details are now independent of Heavy Duty Ramp checkbox
-    // No special handling needed when hasHeavydutyRamp changes
 
     updatedFormData.totalCost =
       (Number(updatedFormData.systemCost) || 0) +
@@ -372,17 +375,17 @@ const PackageManagement: React.FC = () => {
 
       if (inverterBrandId !== null && gridTypeId !== null) {
         try {
-          const data = await fetchInverterBrandCapacities(inverterBrandId);
-          setInverterCapacities([...data]);
+          // Note: Managed centrally in handleEditPackage for better control
+          // const data = await fetchInverterBrandCapacities(inverterBrandId);
+          // setInverterCapacities([...data]);
         } catch (error) {
           console.error("Failed to fetch inverter brand capacities:", error);
           setInverterCapacities([]);
         } finally {
-          setIsPrefilling(false);
+          // setIsPrefilling(false);
         }
       }
     };
-
     loadInverterBrandCapacities();
   }, [inverterBrandId]);
 
@@ -531,15 +534,17 @@ const PackageManagement: React.FC = () => {
       if (!materialOriginId || !selectedOrg?.orgId) return;
 
       // reset dependent state
-      setPanels([]);
-      setOrgPanelSpecId(null);
-      setPanelCapacities([]);
-      setSystemCapacityKw(null);
-      setFormData((prev) => ({
-        ...prev,
-        orgPanelSpecId: null,
-        systemCapacityKw: null,
-      }));
+      if (!isPrefilling) {
+        setPanels([]);
+        setOrgPanelSpecId(null);
+        setPanelCapacities([]);
+        setSystemCapacityKw(null);
+        setFormData((prev) => ({
+          ...prev,
+          orgPanelSpecId: null,
+          systemCapacityKw: null,
+        }));
+      }
 
       try {
         const data = await fetchPanelSpecsByOrg(
@@ -570,13 +575,14 @@ const PackageManagement: React.FC = () => {
       }
 
       if (!formData.systemCapacityKw) {
-
-        setPanelCapacities([]);
-        setSystemCapacityKw(null);
-        setFormData((prev) => ({
-          ...prev,
-          systemCapacityKw: null,
-        }));
+        if (!isPrefilling) {
+          setPanelCapacities([]);
+          setSystemCapacityKw(null);
+          setFormData((prev) => ({
+            ...prev,
+            systemCapacityKw: null,
+          }));
+        }
       }
 
       try {
@@ -608,15 +614,17 @@ const PackageManagement: React.FC = () => {
         if (data) setBatteryBrands(data);
       } else {
         // reset battery-related state
-        setBatteryBrands([]);
-        setBatteryBrandId(null);
-        setOrgBatterySpecId(null);
-        setBatteryCapacities([]);
-        setFormData((prev) => ({
-          ...prev,
-          batteryBrandId: null,
-          orgBatterySpecId: null,
-        }));
+        if (!isPrefilling) {
+          setBatteryBrands([]);
+          setBatteryBrandId(null);
+          setOrgBatterySpecId(null);
+          setBatteryCapacities([]);
+          setFormData((prev) => ({
+            ...prev,
+            batteryBrandId: null,
+            orgBatterySpecId: null,
+          }));
+        }
       }
     };
 
@@ -625,12 +633,14 @@ const PackageManagement: React.FC = () => {
 
   useEffect(() => {
     // reset dependent state
-    setBatteryCapacities([]);
-    setOrgBatterySpecId(null);
-    setFormData((prev) => ({
-      ...prev,
-      orgBatterySpecId: null,
-    }));
+    if (!isPrefilling) {
+      setBatteryCapacities([]);
+      setOrgBatterySpecId(null);
+      setFormData((prev) => ({
+        ...prev,
+        orgBatterySpecId: null,
+      }));
+    }
 
     if (batteryBrandId !== null && selectedOrg?.orgId) {
       const loadBatteryCapacities = async () => {
@@ -653,62 +663,192 @@ const PackageManagement: React.FC = () => {
 
 
   const handleOpenSpecsModal = () => {
+    setFormData(initialFormData);
+    setPhaseTypeId(null);
+    setMaterialOriginId(null);
+    setGridTypeId(null);
+    setInverterBrandId(null);
+    setPanelBrandId(null);
+    setOrgPanelSpecId(null);
+    setSystemCapacityKw(null);
+    setBatteryBrandId(null);
+    setInverterCapacitiesMap({});
+    setIsEditing(false);
+    setEditingPackageId(null);
     setIsModalOpen(true);
   };
 
- const handleEditPackage = (id: number) => {
-  const selectedPackage = savedSpecs.find(pkg => pkg.id === id);
-  if (!selectedPackage) return;
+  const handleEditPackage = async (id: number) => {
+    const selectedPackage = savedSpecs.find(pkg => pkg.id === id);
+    if (!selectedPackage) return;
 
-  const specs = selectedPackage.systemSpecs;
+    setIsPrefilling(true);
+    const specs = selectedPackage.systemSpecs;
 
-  // ✅ Extract inverter list safely
-  const inverterList = specs?.inverters?.length
-    ? specs.inverters
-    : [{ inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 }];
+    // ✅ Extract inverter list safely
+    const inverterList = specs?.inverters?.length
+      ? specs.inverters
+      : [{ inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 }];
 
-  // ✅ Get gridTypeId & phaseTypeId from first inverter (if exists)
-  const gridTypeId = specs?.inverters?.[0]?.gridTypeId ?? null;
-  const phaseTypeId = specs?.inverters?.[0]?.phaseTypeId ?? null;
+    // ✅ Get base IDs
+    const gId = specs?.inverters?.[0]?.gridTypeId ?? null;
+    const pId = specs?.inverters?.[0]?.phaseTypeId ?? null;
+    const mId = specs?.materialOriginId || null;
 
-  setFormData({
-    systemCost: specs?.systemCost || 0,
-    fabricationCost: specs?.fabricationCost || 0,
-    totalCost: (specs?.systemCost || 0) + (specs?.fabricationCost || 0),
+    // ✅ Set individual states FIRST to trigger dependent fetches
+    setPhaseTypeId(pId);
+    setGridTypeId(gId);
+    setMaterialOriginId(mId);
+    setOrgPanelSpecId(specs?.orgPanelSpecId || null);
+    setSystemCapacityKw(specs?.systemCapacityKw || null);
+    setBatteryBrandId(specs?.batteryBrandId || null);
 
-    installationSpaceType: specs?.installationSpaceType || "",
-    installationStructureType: specs?.installationStructureType || "Static",
+    // ✅ Pre-fetch inverter capacities for the map
+    const capsMap: Record<number, any[]> = {};
+    for (let i = 0; i < inverterList.length; i++) {
+      const inv = inverterList[i];
+      if (inv.inverterBrandId) {
+        try {
+          const capacities = await fetchInverterBrandCapacities(
+            inv.inverterBrandId,
+            Number(selectedOrg?.orgId),
+            Number(pId),
+            Number(gId)
+          );
+          capsMap[i] = Array.isArray(capacities) ? capacities : [];
+        } catch (error) {
+          console.error(`Failed to fetch capacities for inverter at index ${i}:`, error);
+          capsMap[i] = [];
+        }
+      }
+    }
+    setInverterCapacitiesMap(capsMap);
 
-    hasWaterSprinkler: specs?.hasWaterSprinkler || false,
-    hasHeavydutyRamp: specs?.hasHeavydutyRamp || false,
-    hasHeavydutyStairs: specs?.hasHeavydutyStairs || false,
+    setFormData({
+      systemCost: specs?.systemCost || 0,
+      fabricationCost: specs?.fabricationCost || 0,
+      totalCost: (specs?.systemCost || 0) + (specs?.fabricationCost || 0),
 
-    materialOriginId: specs?.materialOriginId || null,
-    orgPanelSpecId: specs?.orgPanelSpecId || null,
-    orgBatterySpecId: specs?.orgBatterySpecId || null,
-    batteryBrandId: specs?.batteryBrandId || null,
-    panelBrandId: specs?.panelBrandId || null,
-    systemCapacityKw: specs?.systemCapacityKw || null,
+      installationSpaceType: specs?.installationSpaceType || "",
+      installationStructureType: specs?.installationStructureType || "Static",
 
-    // ✅ SET THESE FIRST
-    gridTypeId: gridTypeId,
-    phaseTypeId: phaseTypeId,
+      hasWaterSprinkler: specs?.hasWaterSprinkler || false,
+      hasHeavydutyRamp: specs?.hasHeavydutyRamp || false,
+      hasHeavydutyStairs: specs?.hasHeavydutyStairs || false,
 
-    isGharkulPackage: selectedPackage?.isGharkulPackage || false,
-    title: selectedPackage?.title || "",
-    description: selectedPackage?.description || "",
+      materialOriginId: mId,
+      orgPanelSpecId: specs?.orgPanelSpecId || null,
+      orgBatterySpecId: specs?.orgBatterySpecId || null,
+      batteryBrandId: specs?.batteryBrandId || null,
+      panelBrandId: specs?.panelBrandId || null,
+      systemCapacityKw: specs?.systemCapacityKw || null,
 
-    // ✅ Then set inverter list
-    inverters: inverterList,
+      gridTypeId: gId,
+      phaseTypeId: pId,
 
-    pipes:
-      specs?.pipes?.length > 0
-        ? specs.pipes
-        : [{ orgPipeSpecId: null, pipeCount: 1 }],
-  });
+      isGharkulPackage: selectedPackage?.isGharkulPackage || false,
+      title: selectedPackage?.title || "",
+      description: selectedPackage?.description || "",
 
-  setIsModalOpen(true);
-};
+      inverters: inverterList,
+
+      pipes:
+        specs?.pipes?.length > 0
+          ? specs.pipes
+          : [{ orgPipeSpecId: null, pipeCount: 1 }],
+    });
+
+    setIsEditing(true);
+    setEditingPackageId(id);
+    setIsModalOpen(true);
+
+    // Provide a longer timeout for all effects to settle
+    setTimeout(() => {
+      setIsPrefilling(false);
+    }, 1000);
+  };
+
+  const handleEditSpecPackage = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        isGharkulPackage: formData.isGharkulPackage,
+        orgId: selectedOrg?.orgId,
+
+        systemSpecs: {
+          installationSpaceType: formData.installationSpaceType,
+          installationStructureType: formData.installationStructureType,
+          systemCost: formData.systemCost,
+          fabricationCost: formData.fabricationCost,
+          batteryCount: formData.orgBatterySpecId ? 1 : null,
+          orgPanelSpecId: formData.orgPanelSpecId,
+          orgBatterySpecId: formData.orgBatterySpecId,
+          specSourceId: 2,
+          systemCapacityKw: formData.systemCapacityKw,
+          hasWaterSprinkler: formData.hasWaterSprinkler,
+          hasHeavydutyRamp: formData.hasHeavydutyRamp,
+          hasHeavydutyStairs: formData.hasHeavydutyStairs,
+        },
+      };
+
+      console.log("Final Payload:", payload);
+
+      if (!editingPackageId) throw new Error("Missing Package ID for editing.");
+
+      const systemResponse = await editSystemSpecPackage(editingPackageId, payload);
+
+      const systemSpecsId = systemResponse.systemSpecs.id;
+
+      // ---------------------- SAVE INVERTERS ------------------------------
+
+      const inverterList = formData.inverters.map((inv) => ({
+        systemSpecsId,
+        orgInverterSpecId: inv.orgInverterSpecId,
+        inverterCount: inv.inverterCount || 1,
+      }));
+
+      await saveInverterSpecs(inverterList);
+
+      // ---------------------- SAVE PIPE SPECS ------------------------------
+
+      if (
+        formData.pipes &&
+        formData.pipes.length > 0 &&
+        formData.pipes.some((p) => p.orgPipeSpecId)
+      ) {
+        const pipeList = formData.pipes
+          .filter((pipe) => pipe.orgPipeSpecId)
+          .map((pipe) => ({
+            systemSpecsId,
+            orgPipeSpecId: pipe.orgPipeSpecId,
+            pipeCount: pipe.pipeCount || 1,
+          }));
+
+        await savePipeSpecs(pipeList);
+      }
+
+      await fetchAllPackages();
+
+      setIsModalOpen(false);
+
+      toast.success("Package updated successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (error) {
+      console.error("Error updating specs:", error);
+      toast.error("Failed to update package.", {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
 
 
@@ -934,7 +1074,7 @@ const PackageManagement: React.FC = () => {
 
               {/* Left Side - Title */}
               <h2 className="text-lg font-semibold">
-                Add New Package
+                {isEditing ? "Edit Package" : "Add New Package"}
               </h2>
 
               {/* Right Side - Checkbox + Close */}
@@ -979,37 +1119,37 @@ const PackageManagement: React.FC = () => {
 
 
 
-                  {/* Package Title */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Package Title <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      placeholder="Package Title"
-                      onChange={handleChange}
-                      maxLength={50}
-                      className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                    />
-                  </div>
+              {/* Package Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Package Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  placeholder="Package Title"
+                  onChange={handleChange}
+                  maxLength={50}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
 
-                  {/* Package Description */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Package Description
-                    </label>
-                    <input
-                      type="text"
-                      name="description"
-                      value={formData.description}
-                      placeholder="Package Description"
-                      onChange={handleChange}
-                      maxLength={50}
-                      className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                    />
-                  </div>
+              {/* Package Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Package Description
+                </label>
+                <input
+                  type="text"
+                  name="description"
+                  value={formData.description}
+                  placeholder="Package Description"
+                  onChange={handleChange}
+                  maxLength={50}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
 
 
 
@@ -1525,10 +1665,12 @@ const PackageManagement: React.FC = () => {
                 Cancel
               </Button>
 
-              <Button variant="primary"
-                onClick={handleSaveSpecPackage}
+              <Button
+                variant="primary"
+                onClick={isEditing ? handleEditSpecPackage : handleSaveSpecPackage}
+                loading={isSubmitting}
               >
-                Add Package
+                {isSubmitting ? "" : isEditing ? "Edit Package" : "Add Package"}
               </Button>
             </div>
           </div>

@@ -300,8 +300,20 @@ export const saveSystemSpecPackage = async (requestData: any): Promise<any> => {
     const response = await quotationAPI.post(`/api/system-packages`, requestData);
     return response.data;
   } catch (error) {
-    console.error("Error saving system specs:", error);
-    throw new Error("Failed to save system specs.");
+    console.error("Error saving system specs package:", error);
+    throw new Error("Failed to save system specs package.");
+  }
+};
+
+export const editSystemSpecPackage = async (systemSPecPackageId: number, requestData: any): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.put(`/api/system-packages/${systemSPecPackageId}`, requestData);
+    return response.data;
+  } catch (error) {
+    console.error("Error editing system specs package:", error);
+    throw new Error("Failed to save system specs package.");
   }
 };
 
