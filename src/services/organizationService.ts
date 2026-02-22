@@ -334,7 +334,21 @@ export const fetchUsersByOrgId = async (organizationId: string | number) => {
   }
 };
 
-export const fetchAllUsersByOrgId = async (organizationId: string | number) => {
+export const fetchAllUsersByOrgId = async (organizationId: string | number, page = 0, size = 9) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get(
+      `/api/users/getAllUsers/organizations/${organizationId}/paginated`,
+      { params: { page, size } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch organization users:", error);
+    throw error;
+  }
+};
+
+export const fetchAllUsersByOrgIdNonPaginated = async (organizationId: string | number) => {
   const orgAPI = getOrgAPI();
   try {
     const response = await orgAPI.get(

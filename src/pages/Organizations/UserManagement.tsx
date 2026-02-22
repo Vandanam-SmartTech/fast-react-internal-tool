@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
-import { fetchOrganizations, Organization, fetchAllUsersByOrgId } from '../../services/organizationService';
+import { fetchOrganizations, Organization, fetchAllUsersByOrgId, fetchAllUsersByOrgIdNonPaginated } from '../../services/organizationService';
 import { toast } from 'react-toastify';
 import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -33,6 +33,12 @@ const UserManagement: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState("all");
   //const [userRole, setUserRole] = useState("");
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(9);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [inactiveCount, setInactiveCount] = useState(0);
 
 
 
@@ -108,6 +114,8 @@ const UserManagement: React.FC = () => {
       const data = await fetchAllUsers();
       setUsers(data);
       setFilteredUsers(data);
+      setActiveCount(data.filter((u: any) => u.isActive).length);
+      setInactiveCount(data.filter((u: any) => !u.isActive).length);
     } catch (error) {
       toast.error("Failed to load users");
     } finally {
@@ -115,19 +123,31 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const loadUsersByOrg = async (organizationId: string | number) => {
+  const loadUsersByOrg = async (organizationId: string | number, page = 0) => {
     try {
       setLoading(true);
-      const data = await fetchAllUsersByOrgId(organizationId);
+      const [paginatedData, allUsers] = await Promise.all([
+        fetchAllUsersByOrgId(organizationId, page, pageSize),
+        fetchAllUsersByOrgIdNonPaginated(organizationId)
+      ]);
 
-      if (data?.success === false && data?.message?.includes("Users not found")) {
+      if (paginatedData?.success === false && paginatedData?.message?.includes("Users not found")) {
         setUsers([]);
         setFilteredUsers([]);
+        setTotalPages(0);
+        setTotalElements(0);
+        setActiveCount(0);
+        setInactiveCount(0);
         return;
       }
 
-      setUsers(data);
-      setFilteredUsers(data);
+      setUsers(paginatedData.content || []);
+      setFilteredUsers(paginatedData.content || []);
+      setTotalPages(paginatedData.totalPages || 0);
+      setTotalElements(paginatedData.totalElements || 0);
+      setCurrentPage(paginatedData.number || page);
+      setActiveCount(allUsers?.filter((u: any) => u.isActive).length || 0);
+      setInactiveCount(allUsers?.filter((u: any) => !u.isActive).length || 0);
     } catch (error: any) {
       if (!error.response?.data?.message?.includes("Users not found")) {
         toast.error("Failed to load organization users", {
@@ -137,6 +157,10 @@ const UserManagement: React.FC = () => {
       } else {
         setUsers([]);
         setFilteredUsers([]);
+        setTotalPages(0);
+        setTotalElements(0);
+        setActiveCount(0);
+        setInactiveCount(0);
       }
     } finally {
       setLoading(false);
@@ -201,7 +225,7 @@ const UserManagement: React.FC = () => {
             userInfo?.role === "ROLE_ORG_ADMIN" ||
             userInfo?.role === "ROLE_AGENCY_ADMIN"
           ) {
-            await loadUsersByOrg(userInfo?.orgId);
+            await loadUsersByOrg(userInfo?.orgId, currentPage);
           }
         } else {
           toast.error("Failed to deactivate user");
@@ -467,7 +491,7 @@ const UserManagement: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-primary-600">Total Users</p>
-                <p className="text-2xl font-bold text-primary-900">{users.length}</p>
+                <p className="text-2xl font-bold text-primary-900">{totalElements}</p>
               </div>
               <div className="p-2 bg-primary-200 rounded-lg">
                 <Users className="h-6 w-6 text-primary-700" />
@@ -481,7 +505,7 @@ const UserManagement: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-success-600">Active Users</p>
-                <p className="text-2xl font-bold text-success-900">{users.filter(u => u.isActive).length}</p>
+                <p className="text-2xl font-bold text-success-900">{activeCount}</p>
               </div>
               <div className="p-2 bg-success-200 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-success-700" />
@@ -495,7 +519,7 @@ const UserManagement: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-warning-600">Inactive Users</p>
-                <p className="text-2xl font-bold text-warning-900">{users.filter(u => !u.isActive).length}</p>
+                <p className="text-2xl font-bold text-warning-900">{inactiveCount}</p>
               </div>
               <div className="p-2 bg-warning-200 rounded-lg">
                 <XCircle className="h-6 w-6 text-warning-700" />
@@ -508,7 +532,7 @@ const UserManagement: React.FC = () => {
           <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-secondary-600">Filtered Results</p>
+                <p className="text-sm font-medium text-secondary-600">Current Page</p>
                 <p className="text-2xl font-bold text-secondary-900">{filteredUsers.length}</p>
               </div>
               <div className="p-2 bg-secondary-200 rounded-lg">
@@ -643,6 +667,72 @@ const UserManagement: React.FC = () => {
           <UserCard key={user.id} user={user} />
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Card>
+          <CardBody className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-secondary-600">
+                Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements)} of {totalElements} users
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newPage = 0;
+                    setCurrentPage(newPage);
+                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                  }}
+                  disabled={currentPage === 0}
+                >
+                  First
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                  }}
+                  disabled={currentPage === 0}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-secondary-700 px-2">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                  }}
+                  disabled={currentPage >= totalPages - 1}
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newPage = totalPages - 1;
+                    setCurrentPage(newPage);
+                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                  }}
+                  disabled={currentPage >= totalPages - 1}
+                >
+                  Last
+                </Button>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       {/* Empty State */}
       {filteredUsers.length === 0 && (
