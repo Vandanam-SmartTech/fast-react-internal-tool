@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Shield, Eye, Plus } from 'lucide-react';
-import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole, fetchAllUsersByOrgId } from '../../services/organizationService';
+import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole, fetchAllUsersByOrgIdNonPaginated } from '../../services/organizationService';
 import { createRole, RoleDto } from '../../services/roleService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers, assignUserRole } from '../../services/jwtService';
 import { toast } from 'react-toastify';
@@ -296,7 +296,7 @@ const AdminManagement: React.FC = () => {
         allUsers = await fetchAllUsers();
       } else if (["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(userRole)) {
         // Org/Agency Admins can see users within their organization only
-        allUsers = await fetchAllUsersByOrgId(userInfo?.orgId);
+        allUsers = await fetchAllUsersByOrgIdNonPaginated(userInfo?.orgId);
       }
 
       const admins = allUsers.filter(
@@ -370,7 +370,8 @@ const AdminManagement: React.FC = () => {
       await assignUserOrgRole(
         Number(userId),
         Number(organizationIdToSend),
-        Number(newAssignment.roleId)
+        Number(newAssignment.roleId),
+        null
       );
 
       toast.success("User added and role assigned successfully");
