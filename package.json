@@ -46,7 +46,7 @@
     "cssnano": "^7.1.2",
     "eslint": "^9.9.1",
     "eslint-formatter-html": "^2.7.3",
-    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
@@ -60,7 +60,14 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-imagemin": "^0.1.0"
   },
+  "overrides": {
+    "eslint": "^9.9.1",
+    "eslint-plugin-react": "^7.37.2",
+    "minimatch": "^10.0.0"
+  },
   "resolutions": {
-    "react": "18.3.1"
+    "react": "18.3.1",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react": "^7.37.2"
   }
 }
