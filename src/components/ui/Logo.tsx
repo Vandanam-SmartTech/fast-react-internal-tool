@@ -25,7 +25,6 @@ const Logo: React.FC<LogoProps> = ({
       src={logoImage}
       alt={alt}
       className={`${sizeClasses[size]} ${className}`}
-      fetchPriority="high"
       decoding="async"
     />
   );

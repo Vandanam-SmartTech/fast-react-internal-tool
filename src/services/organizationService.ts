@@ -348,6 +348,20 @@ export const fetchAllUsersByOrgId = async (organizationId: string | number, page
   }
 };
 
+// Optimized bootstrap endpoint - single call for all user data
+export const fetchUsersBootstrap = async (organizationId: string | number, page = 0, size = 9) => {
+  const orgAPI = getOrgAPI();
+  try {
+    const response = await orgAPI.get('/api/bootstrap', {
+      params: { organizationId, page, size }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch bootstrap data:", error);
+    throw error;
+  }
+};
+
 export const fetchAllUsersByOrgIdNonPaginated = async (organizationId: string | number) => {
   const orgAPI = getOrgAPI();
   try {

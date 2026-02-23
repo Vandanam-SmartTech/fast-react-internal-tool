@@ -328,6 +328,7 @@ const handleLogin = async (e: React.FormEvent) => {
                   placeholder="Enter password"
                   leftIcon={<Lock className="h-4 w-4" />}
                   showPasswordToggle
+                  autoComplete="current-password"
                   required
                 />
 

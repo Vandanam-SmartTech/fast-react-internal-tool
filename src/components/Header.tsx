@@ -338,16 +338,25 @@ const handleRemovePhoto = async () => {
             {/* Organization and Role Display */}
             {selectedOrgName && selectedRole && !isSuperAdmin && (
               <div className="flex items-center gap-3 text-secondary-700 dark:text-secondary-200">
-                
-                <div className="flex flex-col ml-[40px] md:ml-[0px] lg:ml-[0px]">
-                  <span className="font-semibold text-sm">{selectedOrgName}</span>
-                  <span className="text-xs text-secondary-500 dark:text-secondary-400">
-                    {{
-                      ROLE_BDO: "Panchayat Samiti Adhikari",
-                      ROLE_GRAMSEVAK: "Gram Adhikari",
-                    }[selectedRole] || selectedRole.replace("ROLE_", "").replace("_", " ")}
-                  </span>
-
+                <div className="ml-[40px] md:ml-[0px] lg:ml-[0px]">
+                  {Object.keys(userClaims?.org_roles || {}).length === 1 ? (
+                    <span className="font-semibold text-sm">
+                      {selectedOrgName} - {{
+                        ROLE_BDO: "Panchayat Samiti Adhikari",
+                        ROLE_GRAMSEVAK: "Gram Adhikari",
+                      }[selectedRole] || selectedRole.replace("ROLE_", "").replace("_", " ")}
+                    </span>
+                  ) : (
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm">{selectedOrgName}</span>
+                      <span className="text-xs text-secondary-500 dark:text-secondary-400">
+                        {{
+                          ROLE_BDO: "Panchayat Samiti Adhikari",
+                          ROLE_GRAMSEVAK: "Gram Adhikari",
+                        }[selectedRole] || selectedRole.replace("ROLE_", "").replace("_", " ")}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

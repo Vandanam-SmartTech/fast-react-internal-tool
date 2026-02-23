@@ -280,6 +280,7 @@ This application is heavily optimized for production performance:
 - 🔄 **[MIGRATION.md](./MIGRATION.md)** - Migration guide for changes
 - ⚡ **[COMMANDS.md](./COMMANDS.md)** - Quick commands reference
 - 📦 **[INSTALL_DEPS.md](./INSTALL_DEPS.md)** - Optional dependencies guide
+- 🚀 **[BOOTSTRAP_INTEGRATION.md](./BOOTSTRAP_INTEGRATION.md)** - Bootstrap API integration guide
 
 ## 📱 Responsive Design
 

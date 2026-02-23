@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
-import { fetchAllUsers, deleteUser, getAllRoles } from '../../services/jwtService';
-import { fetchOrganizations, Organization, fetchAllUsersByOrgId, fetchAllUsersByOrgIdNonPaginated } from '../../services/organizationService';
+import { deleteUser } from '../../services/jwtService';
+import { fetchBootstrapData } from '../../services/bootstrapService';
 import { toast } from 'react-toastify';
 import Card, { CardBody } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -15,12 +15,13 @@ const UserManagement: React.FC = () => {
   const { userClaims } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-  const [, setOrganizations] = useState<Organization[]>([]);
   const [userRole, setUserRole] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   //const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [showFilters,] = useState(false);
   const navigate = useNavigate();
 
@@ -39,8 +40,24 @@ const UserManagement: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [inactiveCount, setInactiveCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
 
 
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Apply filters - reload data from backend
+  useEffect(() => {
+    if (userRole) {
+      loadBootstrapData(0); // Reset to page 0 when filters change
+    }
+  }, [debouncedSearchTerm, statusFilter, roleFilter]);
 
   useEffect(() => {
     if (!userClaims) return;
@@ -51,37 +68,78 @@ const UserManagement: React.FC = () => {
     // Determine user role
     if (userClaims.global_roles?.includes("ROLE_SUPER_ADMIN")) {
       setUserRole("ROLE_SUPER_ADMIN");
-      loadOrganizations();
-      loadAllUsers();
+      loadBootstrapData();
     } else if (
       storedUserInfo?.role === "ROLE_ORG_ADMIN" ||
       storedUserInfo?.role === "ROLE_AGENCY_ADMIN"
     ) {
       setUserRole(storedUserInfo.role);
-      loadUsersByOrg(storedUserInfo.orgId);
+      loadBootstrapData();
     }
-
-
-    loadRoles();
   }, [userClaims]);
 
-  const loadRoles = async () => {
+  const loadBootstrapData = async (page = 0) => {
     try {
-      const data = await getAllRoles();
-      setRoles(data);
+      setFetching(true);
+      const data = await fetchBootstrapData(
+        page, 
+        pageSize,
+        statusFilter !== 'all' ? statusFilter : undefined,
+        roleFilter !== 'all' ? roleFilter : undefined,
+        debouncedSearchTerm || undefined
+      );
+      
+      // Handle SUPER_ADMIN response
+      if (data.users) {
+        const usersData = Array.isArray(data.filteredUsers) ? data.filteredUsers : data.users;
+        setUsers(usersData);
+        setFilteredUsers(usersData);
+      }
+      
+      // Handle ORG_ADMIN/AGENCY_ADMIN response
+      if (data.usersPaginated) {
+        const usersData = Array.isArray(data.filteredUsers) ? data.filteredUsers : data.usersPaginated.content;
+        setUsers(usersData);
+        setFilteredUsers(usersData);
+        setTotalPages(data.usersPaginated.totalPages);
+        setCurrentPage(data.usersPaginated.number);
+      }
+      
+      // Set stats from backend response
+      setTotalElements(data.totalUsers || 0);
+      setActiveCount(data.activeUsers || 0);
+      setInactiveCount(data.inactiveUsers || 0);
+      setFilteredCount(data.filteredUsers || data.filteredCount || data.totalUsers || 0);
+      
+      // Set roles from JWT
+      if (data.roles) {
+        console.log('Roles from backend:', data.roles);
+        setRoles(data.roles.map((r: any, idx: number) => ({ id: idx, name: r.name })));
+      }
     } catch (error) {
-      console.error("Failed to load roles", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+      setFetching(false);
     }
   };
 
   // Filter roles based on logged-in user
   const getFilteredRoles = () => {
+    const allRoles = [...roles];
+    console.log('All roles before filtering:', allRoles);
+    console.log('Current userRole:', userRole);
+    
     if (userRole === "ROLE_SUPER_ADMIN") {
-      return roles; // show all roles
+      return allRoles; // show all roles
     } else if (userRole === "ROLE_ORG_ADMIN") {
-      return roles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
+      // ORG_ADMIN can see all roles except SUPER_ADMIN
+      const filtered = allRoles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
+      console.log('Filtered roles for ORG_ADMIN:', filtered);
+      return filtered;
     } else if (userRole === "ROLE_AGENCY_ADMIN") {
-      return roles.filter(
+      // AGENCY_ADMIN can only see agency roles
+      return allRoles.filter(
         (r) =>
           ![
             "ROLE_SUPER_ADMIN",
@@ -99,111 +157,14 @@ const UserManagement: React.FC = () => {
 
 
 
-  const loadOrganizations = async () => {
-    try {
-      const data = await fetchOrganizations();
-      setOrganizations(data);
-    } catch (error) {
-      console.error("Failed to load organizations");
-    }
-  };
 
-  const loadAllUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchAllUsers();
-      setUsers(data);
-      setFilteredUsers(data);
-      setActiveCount(data.filter((u: any) => u.isActive).length);
-      setInactiveCount(data.filter((u: any) => !u.isActive).length);
-    } catch (error) {
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsersByOrg = async (organizationId: string | number, page = 0) => {
-    try {
-      setLoading(true);
-      const [paginatedData, allUsers] = await Promise.all([
-        fetchAllUsersByOrgId(organizationId, page, pageSize),
-        fetchAllUsersByOrgIdNonPaginated(organizationId)
-      ]);
-
-      if (paginatedData?.success === false && paginatedData?.message?.includes("Users not found")) {
-        setUsers([]);
-        setFilteredUsers([]);
-        setTotalPages(0);
-        setTotalElements(0);
-        setActiveCount(0);
-        setInactiveCount(0);
-        return;
-      }
-
-      setUsers(paginatedData.content || []);
-      setFilteredUsers(paginatedData.content || []);
-      setTotalPages(paginatedData.totalPages || 0);
-      setTotalElements(paginatedData.totalElements || 0);
-      setCurrentPage(paginatedData.number || page);
-      setActiveCount(allUsers?.filter((u: any) => u.isActive).length || 0);
-      setInactiveCount(allUsers?.filter((u: any) => !u.isActive).length || 0);
-    } catch (error: any) {
-      if (!error.response?.data?.message?.includes("Users not found")) {
-        toast.error("Failed to load organization users", {
-          autoClose: 1000,
-          hideProgressBar: true
-        });
-      } else {
-        setUsers([]);
-        setFilteredUsers([]);
-        setTotalPages(0);
-        setTotalElements(0);
-        setActiveCount(0);
-        setInactiveCount(0);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    applyFilters(term, statusFilter, roleFilter);
   };
 
-  const applyFilters = (search: string, status: string, role: string) => {
-    let filtered = users.filter(user => {
-      const matchesSearch =
-        user.username?.toLowerCase().includes(search.toLowerCase()) ||
-        user.nameAsPerGovId?.toLowerCase().includes(search.toLowerCase()) ||
-        user.emailAddress?.toLowerCase().includes(search.toLowerCase()) ||
-        user.contactNumber?.includes(search);
 
-      const matchesStatus = status === 'all' ||
-        (status === 'active' && user.isActive) ||
-        (status === 'inactive' && !user.isActive);
-
-      const matchesRole = role === 'all' ||
-        user.roles?.some((r: any) => r.name.includes(role)) ||
-        user.organizationRoles?.some((r: any) => r.roleName.includes(role));
-
-      return matchesSearch && matchesStatus && matchesRole;
-    });
-
-    setFilteredUsers(filtered);
-  };
-
-  const handleStatusFilter = (status: 'all' | 'active' | 'inactive') => {
-    setStatusFilter(status);
-    applyFilters(searchTerm, status, roleFilter);
-  };
-
-  const handleRoleFilter = (role: string) => {
-    setRoleFilter(role);
-    applyFilters(searchTerm, statusFilter, role);
-  };
 
   const handleDelete = (userId: number) => {
     setDialogType("confirm");
@@ -219,14 +180,7 @@ const UserManagement: React.FC = () => {
             hideProgressBar: true,
           });
 
-          if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
-            await loadAllUsers();
-          } else if (
-            userInfo?.role === "ROLE_ORG_ADMIN" ||
-            userInfo?.role === "ROLE_AGENCY_ADMIN"
-          ) {
-            await loadUsersByOrg(userInfo?.orgId, currentPage);
-          }
+          await loadBootstrapData(currentPage);
         } else {
           toast.error("Failed to deactivate user");
         }
@@ -252,124 +206,136 @@ const UserManagement: React.FC = () => {
     return 'badge-ghost';
   };
 
-  const UserCard: React.FC<{ user: any }> = ({ user }) => (
-    <Card className="hover:shadow-medium transition-all duration-200" hover={true}>
-      <CardBody className="p-4">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs tracking-wide uppercase">
+  const UserCard: React.FC<{ user: any }> = React.memo(({ user }) => (
+    <Card className="hover:shadow-lg transition-all duration-300 border border-secondary-200 hover:border-primary-300" hover={true}>
+      <CardBody className="p-5">
+        {/* Header with Avatar and Status */}
+        <div className="flex items-start gap-3 mb-4">
+          <div className="relative">
+            <div className="w-14 h-14 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-full flex items-center justify-center shadow-md ring-2 ring-primary-100">
+              <span className="text-white font-bold text-lg tracking-wide uppercase">
                 {user.username?.slice(0, 2)}
               </span>
-
             </div>
-
-            <div>
-              <h3 className="font-semibold text-secondary-900">
-                {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
-              </h3>
-              <p className="text-sm text-secondary-600 dark:text-secondary-300">
-                @{user.username}
-              </p>
+            <div className="absolute -bottom-1 -right-1">
+              {user.isActive ? (
+                <div className="bg-success-500 rounded-full p-1 ring-2 ring-white">
+                  <CheckCircle className="h-3 w-3 text-white" />
+                </div>
+              ) : (
+                <div className="bg-error-500 rounded-full p-1 ring-2 ring-white">
+                  <XCircle className="h-3 w-3 text-white" />
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {user.isActive ? (
-              <CheckCircle className="h-5 w-5 text-success-600" />
-            ) : (
-              <XCircle className="h-5 w-5 text-error-600" />
-            )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-lg text-secondary-900 truncate">
+              {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
+            </h3>
+            <p className="text-sm text-secondary-500 font-medium">
+              @{user.username}
+            </p>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${user.isActive ? 'bg-success-100 text-success-700' : 'bg-error-100 text-error-700'}`}>
+              {user.isActive ? 'Active' : 'Inactive'}
+            </span>
           </div>
         </div>
 
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+        {/* Contact Information */}
+        <div className="space-y-2 mb-4 bg-secondary-50 rounded-lg p-3">
           {user.emailAddress && (
-            <div className="flex items-start gap-2 text-sm text-secondary-700 dark:text-secondary-300">
-              <Mail className="h-4 w-4 shrink-0 mt-0.5" />
-              <span className="break-all sm:break-words">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                <Mail className="h-4 w-4 text-primary-600" />
+              </div>
+              <span className="text-secondary-700 truncate flex-1" title={user.emailAddress}>
                 {user.emailAddress}
               </span>
             </div>
           )}
 
           {user.contactNumber && (
-            <div className="flex items-start gap-2 text-sm text-secondary-700 dark:text-secondary-300">
-              <Phone className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>+91 {user.contactNumber}</span>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="flex-shrink-0 w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center">
+                <Phone className="h-4 w-4 text-success-600" />
+              </div>
+              <span className="text-secondary-700 font-medium">
+                +91 {user.contactNumber}
+              </span>
             </div>
           )}
         </div>
 
-
-        <div className="mb-2">
-          <h4 className="text-sm font-medium text-secondary-700 mb-2">Roles</h4>
-          <div className="flex flex-wrap gap-1">
+        {/* Roles Section */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="h-4 w-4 text-secondary-600" />
+            <h4 className="text-sm font-semibold text-secondary-700">Roles</h4>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
             {user.roles?.map((role: any, index: number) => (
-              <span key={`global-${index}`} className={`badge ${getRoleBadgeColor(role.name)} text-xs`}>
+              <span key={`global-${index}`} className={`badge ${getRoleBadgeColor(role.name)} text-xs font-medium px-2.5 py-1`}>
                 {role.name.replace('ROLE_', '')} (Global)
               </span>
             ))}
             {user.organizationRoles?.map((orgRole: any, index: number) => (
-              <span key={`org-${index}`} className={`badge ${getRoleBadgeColor(orgRole.roleName)} text-xs`}>
+              <span key={`org-${index}`} className={`badge ${getRoleBadgeColor(orgRole.roleName)} text-xs font-medium px-2.5 py-1`}>
                 {orgRole.roleName.replace('ROLE_', '')} ({orgRole.organizationName})
               </span>
             ))}
             {(!user.roles?.length && !user.organizationRoles?.length) && (
-              <span className="text-xs text-secondary-600 dark:text-secondary-300">No roles assigned</span>
+              <span className="text-xs text-secondary-500 italic">No roles assigned</span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-secondary-200">
-          <span className={`badge ${user.isActive ? 'badge-success' : 'badge-error'}`}>
-            {user.isActive ? 'Active' : 'Inactive'}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              title="View User"
-              onClick={() => navigate("/user-view", { state: { userId: user.id } })}
-              className="p-1 h-8 w-8"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-3 border-t border-secondary-200">
+          <Button
+            variant="outline"
+            size="sm"
+            title="View User"
+            onClick={() => navigate("/user-view", { state: { userId: user.id } })}
+            className="flex-1 h-9"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Edit User"
-              onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
-              className="p-1 h-8 w-8"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Edit User"
+            onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
+            className="flex-1 h-9"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Manage Role"
-              onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
-              className="p-1 h-8 w-8"
-            >
-              <Shield className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Delete User"
-              onClick={() => handleDelete(user.id)}
-              className="p-1 h-8 w-8 text-error-600 hover:text-error-700"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Manage Role"
+            onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
+            className="flex-1 h-9"
+          >
+            <Shield className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Delete User"
+            onClick={() => handleDelete(user.id)}
+            className="h-9 w-9 text-error-600 hover:text-error-700 hover:bg-error-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </CardBody>
     </Card>
-  );
+  ));
 
   if (loading) {
     return (
@@ -426,9 +392,7 @@ const UserManagement: React.FC = () => {
             <div>
               <select
                 value={statusFilter}
-                onChange={(e) =>
-                  handleStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
-                }
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Status</option>
@@ -440,7 +404,7 @@ const UserManagement: React.FC = () => {
             <div>
               <select
                 value={roleFilter}
-                onChange={(e) => handleRoleFilter(e.target.value)}
+                onChange={(e) => setRoleFilter(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Roles</option>
@@ -460,23 +424,23 @@ const UserManagement: React.FC = () => {
                 <Button
                   variant={statusFilter === 'all' ? 'primary' : 'outline'}
                   size="sm"
-                  onClick={() => handleStatusFilter('all')}
+                  onClick={() => setStatusFilter('all')}
                 >
-                  All ({users.length})
+                  All ({totalElements})
                 </Button>
                 <Button
                   variant={statusFilter === 'active' ? 'primary' : 'outline'}
                   size="sm"
-                  onClick={() => handleStatusFilter('active')}
+                  onClick={() => setStatusFilter('active')}
                 >
-                  Active ({users.filter(u => u.isActive).length})
+                  Active ({activeCount})
                 </Button>
                 <Button
                   variant={statusFilter === 'inactive' ? 'primary' : 'outline'}
                   size="sm"
-                  onClick={() => handleStatusFilter('inactive')}
+                  onClick={() => setStatusFilter('inactive')}
                 >
-                  Inactive ({users.filter(u => !u.isActive).length})
+                  Inactive ({inactiveCount})
                 </Button>
               </div>
             </div>
@@ -532,8 +496,8 @@ const UserManagement: React.FC = () => {
           <CardBody className="p-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-secondary-600">Current Page</p>
-                <p className="text-2xl font-bold text-secondary-900">{filteredUsers.length}</p>
+                <p className="text-sm font-medium text-secondary-600">Filtered Results</p>
+                <p className="text-2xl font-bold text-secondary-900">{filteredCount}</p>
               </div>
               <div className="p-2 bg-secondary-200 rounded-lg">
                 <Filter className="h-6 w-6 text-secondary-700" />
@@ -662,11 +626,20 @@ const UserManagement: React.FC = () => {
       )} */}
 
       {/*-------Showing users in card view only---------*/}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredUsers.map((user) => (
-          <UserCard key={user.id} user={user} />
-        ))}
-      </div>
+      {fetching ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="h-6 w-6 animate-spin text-primary-600" />
+            <span className="text-secondary-700">Loading users...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredUsers.map((user) => (
+            <UserCard key={user.id} user={user} />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -683,7 +656,7 @@ const UserManagement: React.FC = () => {
                   onClick={() => {
                     const newPage = 0;
                     setCurrentPage(newPage);
-                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                    loadBootstrapData(newPage);
                   }}
                   disabled={currentPage === 0}
                 >
@@ -695,7 +668,7 @@ const UserManagement: React.FC = () => {
                   onClick={() => {
                     const newPage = currentPage - 1;
                     setCurrentPage(newPage);
-                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                    loadBootstrapData(newPage);
                   }}
                   disabled={currentPage === 0}
                 >
@@ -710,7 +683,7 @@ const UserManagement: React.FC = () => {
                   onClick={() => {
                     const newPage = currentPage + 1;
                     setCurrentPage(newPage);
-                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                    loadBootstrapData(newPage);
                   }}
                   disabled={currentPage >= totalPages - 1}
                 >
@@ -722,7 +695,7 @@ const UserManagement: React.FC = () => {
                   onClick={() => {
                     const newPage = totalPages - 1;
                     setCurrentPage(newPage);
-                    if (userInfo?.orgId) loadUsersByOrg(userInfo.orgId, newPage);
+                    loadBootstrapData(newPage);
                   }}
                   disabled={currentPage >= totalPages - 1}
                 >
