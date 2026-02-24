@@ -1578,3 +1578,14 @@ export const getSystemSpecsById = async (id: number): Promise<any> => {
     throw new Error("Failed to fetch system specifications.");
   }
 };
+
+export const getRunningCopySystemSpec = async (connectionId: number): Promise<any | null> => {
+  const quotationAPI = getQuotationAPI();
+  try {
+    const response = await quotationAPI.get(`/api/connection-system-specs/running-copy/${connectionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching running copy system spec:", error);
+    return null;
+  }
+};

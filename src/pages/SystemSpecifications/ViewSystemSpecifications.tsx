@@ -9,7 +9,7 @@ import {
     WrenchIcon,
     ArrowsPointingOutIcon
 } from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
+import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs, getRunningCopySystemSpec } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
@@ -242,9 +242,69 @@ export const ViewSystemSpecifications = () => {
                         };
                     });
 
-                    setAllSpecs(mappedSpecs);
-                    if (mappedSpecs.length > 0) {
-                        setSelectedSpec(mappedSpecs[0]);
+                    // Fetch customized system spec (running copy)
+                    let finalSpecs = [...mappedSpecs];
+                    try {
+                        const runningCopy = await getRunningCopySystemSpec(Number(connectionId));
+                        if (runningCopy) {
+                            const specs = runningCopy.systemSpecs || runningCopy; // Adjust based on API structure
+                            const customizedSpec: SystemSpec = {
+                                id: runningCopy.id || Math.random(),
+                                connectionId: Number(connectionId),
+                                isRunningCopy: true, // Mark as customized
+                                systemSpecsId: specs.id,
+
+                                title: "Your Customized Plan",
+                                panelBrandShortName: specs.panelBrandShortName,
+                                panelRatedWattageW: specs.panelRatedWattageW || specs.panelRatedWattage,
+                                systemCapacityKw: specs.systemCapacityKw,
+                                panelCount: specs.panelCount,
+
+                                systemCost: specs.systemCost,
+                                fabricationCost: specs.fabricationCost,
+                                totalCost: (specs.systemCost || 0) + (specs.fabricationCost || 0),
+
+                                batteryBrandName: specs.batteryBrandName,
+                                batteryCount: specs.batteryCount,
+                                batteryCapacityKw: specs.batteryCapacityKw,
+
+                                inverters: specs.inverters?.map((inv: any) => ({
+                                    inverterBrandName: inv.inverterBrandName,
+                                    inverterCount: inv.inverterCount,
+                                    inverterCapacity: inv.inverterCapacity || 0,
+                                    gridTypeName: inv.gridTypeName || "",
+                                    productWarranty: inv.productWarranty
+                                })) || [],
+
+                                pipes: specs.pipes?.map((p: any) => ({
+                                    pipeBrandName: p.pipeBrandName,
+                                    pipeCount: p.pipeCount,
+                                    pipeWidth: p.pipeWidth,
+                                    pipeHeight: p.pipeHeight,
+                                    pipeThickness: p.pipeThickness,
+                                    pipeLength: p.pipeLength
+                                })) || [],
+
+                                installationStructureType: specs.installationStructureType,
+                                hasWaterSprinkler: specs.hasWaterSprinkler,
+                                hasHeavydutyRamp: specs.hasHeavydutyRamp,
+                                hasHeavydutyStairs: specs.hasHeavydutyStairs,
+                                validFrom: runningCopy.validFrom,
+                                validThru: runningCopy.validThru,
+                                description: "This is your customized system configuration.",
+                                createdAt: specs.createdAt || new Date().toISOString(),
+                            };
+
+                            // Remove duplicate if it was already in the list
+                            finalSpecs = [customizedSpec, ...mappedSpecs.filter(s => s.systemSpecsId !== customizedSpec.systemSpecsId)];
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch running copy", err);
+                    }
+
+                    setAllSpecs(finalSpecs);
+                    if (finalSpecs.length > 0) {
+                        setSelectedSpec(finalSpecs[0]);
                     } else {
                         setSelectedSpec(null);
                     }
@@ -438,22 +498,33 @@ export const ViewSystemSpecifications = () => {
                                         key={spec.id}
                                         onClick={() => setSelectedSpec(spec)}
                                         className={`bg-white rounded-xl shadow-sm border-2 p-4 cursor-pointer transition-all duration-200 group relative ${selectedSpec?.id === spec.id
-                                            ? "border-blue-500 ring-4 ring-blue-50 bg-blue-50/10"
-                                            : "border-gray-100 hover:border-blue-200 hover:shadow-md"
+                                            ? spec.isRunningCopy
+                                                ? "border-amber-500 ring-4 ring-amber-50 bg-amber-50/10"
+                                                : "border-blue-500 ring-4 ring-blue-50 bg-blue-50/10"
+                                            : spec.isRunningCopy
+                                                ? "border-amber-100 hover:border-amber-200 hover:shadow-md bg-amber-50/5"
+                                                : "border-gray-100 hover:border-blue-200 hover:shadow-md"
                                             }`}
                                     >
+                                        {spec.isRunningCopy && (
+                                            <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm z-10 animate-pulse">
+                                                CUSTOMIZED
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex items-start gap-3 flex-1">
-                                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSpec?.id === spec.id ? "border-blue-600 bg-blue-600" : "border-gray-300 group-hover:border-blue-400"
+                                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSpec?.id === spec.id
+                                                    ? spec.isRunningCopy ? "border-amber-600 bg-amber-600" : "border-blue-600 bg-blue-600"
+                                                    : "border-gray-300 group-hover:border-blue-400"
                                                     }`}>
                                                     {selectedSpec?.id === spec.id && <div className="w-2 h-2 bg-white rounded-full" />}
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                        <h4 className="text-base font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                        <h4 className={`text-base font-extrabold transition-colors ${spec.isRunningCopy ? "text-amber-900 group-hover:text-amber-700" : "text-gray-900 group-hover:text-blue-700"}`}>
                                                             {spec.title || `${spec.systemCapacityKw} kW System`}
                                                         </h4>
-                                                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                                                        <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${spec.isRunningCopy ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
                                                             {spec.systemCapacityKw} kW
                                                         </span>
                                                     </div>
