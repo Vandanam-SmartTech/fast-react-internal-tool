@@ -9,10 +9,11 @@ import {
     WrenchIcon,
     ArrowsPointingOutIcon
 } from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs, getRunningCopySystemSpec } from "../../services/quotationService";
+import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs, getRunningCopySystemSpec, saveSystemSpecs, saveInverterSpecs, savePipeSpecs } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import { useUser } from "../../contexts/UserContext";
 
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
@@ -69,6 +70,16 @@ interface SystemSpec {
     validFrom?: string;
     validThru?: string;
     systemSpecsId?: number;
+
+    // Added for Order Creation
+    orgPanelSpecId?: number;
+    orgBatterySpecId?: number;
+    bosSpecsId?: number;
+    specSourceId?: number;
+    userId?: number;
+    orgId?: number;
+    finalInverters?: any[];
+    finalPipes?: any[];
 }
 
 
@@ -81,6 +92,8 @@ export const ViewSystemSpecifications = () => {
     const [allSpecs, setAllSpecs] = useState<SystemSpec[]>([]);
     const [selectedSpec, setSelectedSpec] = useState<SystemSpec | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const { userClaims } = useUser();
     const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
     const [, setConnectionDetails] = useState<any>(null);
     const [, setConnectionType] = useState("");
@@ -239,6 +252,16 @@ export const ViewSystemSpecifications = () => {
                             validThru: pkg.validThru,
                             description: pkg.description,
                             createdAt: specs.createdAt || new Date().toISOString(),
+
+                            // IDs for Order Creation
+                            orgPanelSpecId: specs.orgPanelSpecId,
+                            orgBatterySpecId: specs.orgBatterySpecId,
+                            bosSpecsId: specs.bosSpecsId || 1, // Defaulting if not present
+                            specSourceId: specs.specSourceId || 1, // Defaulting if not present
+
+                            // Raw Inverters/Pipes for re-saving
+                            finalInverters: specs.inverters || [],
+                            finalPipes: specs.pipes || []
                         };
                     });
 
@@ -293,6 +316,16 @@ export const ViewSystemSpecifications = () => {
                                 validThru: runningCopy.validThru,
                                 description: "This is your customized system configuration.",
                                 createdAt: specs.createdAt || new Date().toISOString(),
+
+                                // IDs for Order Creation
+                                orgPanelSpecId: specs.orgPanelSpecId,
+                                orgBatterySpecId: specs.orgBatterySpecId,
+                                bosSpecsId: specs.bosSpecsId || 1,
+                                specSourceId: specs.specSourceId || 1,
+
+                                // Raw Inverters/Pipes for re-saving
+                                finalInverters: specs.inverters || [],
+                                finalPipes: specs.pipes || []
                             };
 
                             // Remove duplicate if it was already in the list
@@ -329,17 +362,78 @@ export const ViewSystemSpecifications = () => {
 
 
 
-    const handleProceedToBuy = () => {
+    const handleConfirmOrder = async () => {
         if (!selectedSpec) return;
 
-        navigate('/checkout-system-specification', {
-            state: {
-                selectedSpec: selectedSpec,
-                connectionId,
-                consumerId,
-                customerId
+        setIsSaving(true);
+        try {
+            // 1. Save System Spec
+            const payload = {
+                installationSpaceType: selectedSpec.installationSpaceType || null,
+                installationStructureType: selectedSpec.installationStructureType || "Static",
+                systemCost: selectedSpec.systemCost || 0,
+                fabricationCost: selectedSpec.fabricationCost || 0,
+                connectionId: Number(connectionId),
+                hasWaterSprinkler: !!selectedSpec.hasWaterSprinkler,
+                hasHeavydutyRamp: !!selectedSpec.hasHeavydutyRamp,
+                hasHeavydutyStairs: !!selectedSpec.hasHeavydutyStairs,
+                orgPanelSpecId: selectedSpec.orgPanelSpecId,
+                orgBatterySpecId: selectedSpec.orgBatterySpecId,
+                batteryCount: selectedSpec.batteryCount || (selectedSpec.orgBatterySpecId ? 1 : null),
+                bosSpecsId: selectedSpec.bosSpecsId || 1,
+                specSourceId: selectedSpec.specSourceId || 1,
+                userId: userClaims?.id,
+                orgId: orgId,
+                systemCapacityKw: selectedSpec.systemCapacityKw,
+                isRunningCopy: true
+            };
+
+            const systemResponse = await saveSystemSpecs(payload);
+            const newSystemSpecsId = systemResponse.id;
+
+            // 2. Save Inverters if any
+            if (selectedSpec.finalInverters && selectedSpec.finalInverters.length > 0) {
+                const inverterList = selectedSpec.finalInverters.map((inv: any) => ({
+                    systemSpecsId: newSystemSpecsId,
+                    orgInverterSpecId: inv.orgInverterSpecId || inv.id, // Fallback if necessary
+                    inverterCount: inv.inverterCount || 1,
+                }));
+                await saveInverterSpecs(inverterList);
             }
-        });
+
+            // 3. Save Pipes if any
+            if (selectedSpec.finalPipes && selectedSpec.finalPipes.length > 0) {
+                const pipeList = selectedSpec.finalPipes.map((p: any) => ({
+                    systemSpecsId: newSystemSpecsId,
+                    orgPipeSpecId: p.orgPipeSpecId || p.id,
+                    pipeCount: p.pipeCount || 1,
+                }));
+                await savePipeSpecs(pipeList);
+            }
+
+            toast.success("Order confirmed successfully!");
+
+            // 4. Navigate to Checkout with the NEW ID
+            navigate('/checkout-system-specification', {
+                state: {
+                    selectedSpec: { ...selectedSpec, id: newSystemSpecsId },
+                    connectionId,
+                    consumerId,
+                    customerId
+                }
+            });
+
+        } catch (error) {
+            console.error("Failed to confirm order", error);
+            toast.error("Failed to confirm order. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleProceedToBuy = () => {
+        // This is now replaced by handleConfirmOrder
+        handleConfirmOrder();
     };
 
     const handleAddPackage = () => {
@@ -615,13 +709,14 @@ export const ViewSystemSpecifications = () => {
                                     </div>
                                 </div>
 
-                                {/* Proceed to Buy */}
+                                {/* Confirm Order */}
                                 <button
-                                    onClick={handleProceedToBuy}
-                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4"
+                                    onClick={handleConfirmOrder}
+                                    disabled={isSaving}
+                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <CreditCard className="w-5 h-5" />
-                                    Proceed to Buy
+                                    {isSaving ? "Processing..." : "Confirm Order"}
                                 </button>
                             </div>
                         ) : (
