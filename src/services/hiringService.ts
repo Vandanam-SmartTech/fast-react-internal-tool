@@ -87,4 +87,5 @@ export const getUserCount = async (): Promise<number> => {
     console.error('Error fetching user count:', error);
     throw error;
   }
+
 };
