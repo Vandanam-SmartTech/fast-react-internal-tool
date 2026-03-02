@@ -9,10 +9,11 @@ import {
     WrenchIcon,
     ArrowsPointingOutIcon
 } from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs } from "../../services/quotationService";
+import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs, getRunningCopySystemSpec, saveSystemSpecs, saveInverterSpecs, savePipeSpecs } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import { useUser } from "../../contexts/UserContext";
 
 const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
@@ -68,6 +69,17 @@ interface SystemSpec {
     hasHeavydutyStairs?: boolean;
     validFrom?: string;
     validThru?: string;
+    systemSpecsId?: number;
+
+    // Added for Order Creation
+    orgPanelSpecId?: number;
+    orgBatterySpecId?: number;
+    bosSpecsId?: number;
+    specSourceId?: number;
+    userId?: number;
+    orgId?: number;
+    finalInverters?: any[];
+    finalPipes?: any[];
 }
 
 
@@ -80,6 +92,8 @@ export const ViewSystemSpecifications = () => {
     const [allSpecs, setAllSpecs] = useState<SystemSpec[]>([]);
     const [selectedSpec, setSelectedSpec] = useState<SystemSpec | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const { userClaims } = useUser();
     const [isGharkulCustomer, setIsGharkulCustomer] = useState<boolean | null>(null);
     const [, setConnectionDetails] = useState<any>(null);
     const [, setConnectionType] = useState("");
@@ -197,6 +211,7 @@ export const ViewSystemSpecifications = () => {
                             id: pkg.id || specs.id || Math.random(), // Use package ID primarily
                             connectionId: Number(connectionId),
                             isRunningCopy: false, // These are templates
+                            systemSpecsId: specs.id,
 
                             title: pkg.title,
                             panelBrandShortName: specs.panelBrandShortName,
@@ -237,12 +252,92 @@ export const ViewSystemSpecifications = () => {
                             validThru: pkg.validThru,
                             description: pkg.description,
                             createdAt: specs.createdAt || new Date().toISOString(),
+
+                            // IDs for Order Creation
+                            orgPanelSpecId: specs.orgPanelSpecId,
+                            orgBatterySpecId: specs.orgBatterySpecId,
+                            bosSpecsId: specs.bosSpecsId || 1, // Defaulting if not present
+                            specSourceId: specs.specSourceId || 1, // Defaulting if not present
+
+                            // Raw Inverters/Pipes for re-saving
+                            finalInverters: specs.inverters || [],
+                            finalPipes: specs.pipes || []
                         };
                     });
 
-                    setAllSpecs(mappedSpecs);
-                    if (mappedSpecs.length > 0) {
-                        setSelectedSpec(mappedSpecs[0]);
+                    // Fetch customized system spec (running copy)
+                    let finalSpecs = [...mappedSpecs];
+                    try {
+                        const runningCopy = await getRunningCopySystemSpec(Number(connectionId));
+                        if (runningCopy) {
+                            const specs = runningCopy.systemSpecs || runningCopy; // Adjust based on API structure
+                            const customizedSpec: SystemSpec = {
+                                id: runningCopy.id || Math.random(),
+                                connectionId: Number(connectionId),
+                                isRunningCopy: true, // Mark as customized
+                                systemSpecsId: specs.id,
+
+                                title: "Your Customized Plan",
+                                panelBrandShortName: specs.panelBrandShortName,
+                                panelRatedWattageW: specs.panelRatedWattageW || specs.panelRatedWattage,
+                                systemCapacityKw: specs.systemCapacityKw,
+                                panelCount: specs.panelCount,
+
+                                systemCost: specs.systemCost,
+                                fabricationCost: specs.fabricationCost,
+                                totalCost: (specs.systemCost || 0) + (specs.fabricationCost || 0),
+
+                                batteryBrandName: specs.batteryBrandName,
+                                batteryCount: specs.batteryCount,
+                                batteryCapacityKw: specs.batteryCapacityKw,
+
+                                inverters: specs.inverters?.map((inv: any) => ({
+                                    inverterBrandName: inv.inverterBrandName,
+                                    inverterCount: inv.inverterCount,
+                                    inverterCapacity: inv.inverterCapacity || 0,
+                                    gridTypeName: inv.gridTypeName || "",
+                                    productWarranty: inv.productWarranty
+                                })) || [],
+
+                                pipes: specs.pipes?.map((p: any) => ({
+                                    pipeBrandName: p.pipeBrandName,
+                                    pipeCount: p.pipeCount,
+                                    pipeWidth: p.pipeWidth,
+                                    pipeHeight: p.pipeHeight,
+                                    pipeThickness: p.pipeThickness,
+                                    pipeLength: p.pipeLength
+                                })) || [],
+
+                                installationStructureType: specs.installationStructureType,
+                                hasWaterSprinkler: specs.hasWaterSprinkler,
+                                hasHeavydutyRamp: specs.hasHeavydutyRamp,
+                                hasHeavydutyStairs: specs.hasHeavydutyStairs,
+                                validFrom: runningCopy.validFrom,
+                                validThru: runningCopy.validThru,
+                                description: "This is your customized system configuration.",
+                                createdAt: specs.createdAt || new Date().toISOString(),
+
+                                // IDs for Order Creation
+                                orgPanelSpecId: specs.orgPanelSpecId,
+                                orgBatterySpecId: specs.orgBatterySpecId,
+                                bosSpecsId: specs.bosSpecsId || 1,
+                                specSourceId: specs.specSourceId || 1,
+
+                                // Raw Inverters/Pipes for re-saving
+                                finalInverters: specs.inverters || [],
+                                finalPipes: specs.pipes || []
+                            };
+
+                            // Remove duplicate if it was already in the list
+                            finalSpecs = [customizedSpec, ...mappedSpecs.filter(s => s.systemSpecsId !== customizedSpec.systemSpecsId)];
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch running copy", err);
+                    }
+
+                    setAllSpecs(finalSpecs);
+                    if (finalSpecs.length > 0) {
+                        setSelectedSpec(finalSpecs[0]);
                     } else {
                         setSelectedSpec(null);
                     }
@@ -267,22 +362,88 @@ export const ViewSystemSpecifications = () => {
 
 
 
-    const handleProceedToBuy = () => {
+    const handleConfirmOrder = async () => {
         if (!selectedSpec) return;
 
-        navigate('/checkout-system-specification', {
-            state: {
-                selectedSpec: selectedSpec,
-                connectionId,
-                consumerId,
-                customerId
+        setIsSaving(true);
+        try {
+            // 1. Save System Spec
+            const payload = {
+                installationSpaceType: selectedSpec.installationSpaceType || null,
+                installationStructureType: selectedSpec.installationStructureType || "Static",
+                systemCost: selectedSpec.systemCost || 0,
+                fabricationCost: selectedSpec.fabricationCost || 0,
+                connectionId: Number(connectionId),
+                hasWaterSprinkler: !!selectedSpec.hasWaterSprinkler,
+                hasHeavydutyRamp: !!selectedSpec.hasHeavydutyRamp,
+                hasHeavydutyStairs: !!selectedSpec.hasHeavydutyStairs,
+                orgPanelSpecId: selectedSpec.orgPanelSpecId,
+                orgBatterySpecId: selectedSpec.orgBatterySpecId,
+                batteryCount: selectedSpec.batteryCount || (selectedSpec.orgBatterySpecId ? 1 : null),
+                bosSpecsId: selectedSpec.bosSpecsId || 1,
+                specSourceId: selectedSpec.specSourceId || 1,
+                userId: userClaims?.id,
+                orgId: orgId,
+                systemCapacityKw: selectedSpec.systemCapacityKw,
+                isRunningCopy: true
+            };
+
+            const systemResponse = await saveSystemSpecs(payload);
+            const newSystemSpecsId = systemResponse.id;
+
+            // 2. Save Inverters if any
+            if (selectedSpec.finalInverters && selectedSpec.finalInverters.length > 0) {
+                const inverterList = selectedSpec.finalInverters.map((inv: any) => ({
+                    systemSpecsId: newSystemSpecsId,
+                    orgInverterSpecId: inv.orgInverterSpecId || inv.id, // Fallback if necessary
+                    inverterCount: inv.inverterCount || 1,
+                }));
+                await saveInverterSpecs(inverterList);
             }
-        });
+
+            // 3. Save Pipes if any
+            if (selectedSpec.finalPipes && selectedSpec.finalPipes.length > 0) {
+                const pipeList = selectedSpec.finalPipes.map((p: any) => ({
+                    systemSpecsId: newSystemSpecsId,
+                    orgPipeSpecId: p.orgPipeSpecId || p.id,
+                    pipeCount: p.pipeCount || 1,
+                }));
+                await savePipeSpecs(pipeList);
+            }
+
+            toast.success("Order confirmed successfully!");
+
+            // 4. Navigate to Checkout with the NEW ID
+            navigate('/checkout-system-specification', {
+                state: {
+                    selectedSpec: { ...selectedSpec, id: newSystemSpecsId },
+                    connectionId,
+                    consumerId,
+                    customerId
+                }
+            });
+
+        } catch (error) {
+            console.error("Failed to confirm order", error);
+            toast.error("Failed to confirm order. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleProceedToBuy = () => {
+        // This is now replaced by handleConfirmOrder
+        handleConfirmOrder();
     };
 
     const handleAddPackage = () => {
         navigate(`/system-specifications`, {
-            state: { consumerId, customerId, connectionId },
+            state: {
+                consumerId,
+                customerId,
+                connectionId,
+                prefillSystemSpecId: selectedSpec?.systemSpecsId
+            },
         });
     };
 
@@ -319,13 +480,14 @@ export const ViewSystemSpecifications = () => {
                         <h1 className="text-xl font-bold text-gray-700">Confirm & Pay</h1>
                     </div>
 
-                    {userInfo?.role === "ROLE_ORG_ADMIN" && <button
-                        onClick={handleAddPackage}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Customize Your Plan
-                    </button>}
+                    {(userInfo?.role === "ROLE_ORG_ADMIN" ||
+                        userInfo?.role === "ROLE_BDO") && <button
+                            onClick={handleAddPackage}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Customize Your Plan
+                        </button>}
                 </div>
 
                 {/* Progress Steps */}
@@ -430,22 +592,33 @@ export const ViewSystemSpecifications = () => {
                                         key={spec.id}
                                         onClick={() => setSelectedSpec(spec)}
                                         className={`bg-white rounded-xl shadow-sm border-2 p-4 cursor-pointer transition-all duration-200 group relative ${selectedSpec?.id === spec.id
-                                            ? "border-blue-500 ring-4 ring-blue-50 bg-blue-50/10"
-                                            : "border-gray-100 hover:border-blue-200 hover:shadow-md"
+                                            ? spec.isRunningCopy
+                                                ? "border-amber-500 ring-4 ring-amber-50 bg-amber-50/10"
+                                                : "border-blue-500 ring-4 ring-blue-50 bg-blue-50/10"
+                                            : spec.isRunningCopy
+                                                ? "border-amber-100 hover:border-amber-200 hover:shadow-md bg-amber-50/5"
+                                                : "border-gray-100 hover:border-blue-200 hover:shadow-md"
                                             }`}
                                     >
+                                        {spec.isRunningCopy && (
+                                            <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm z-10 animate-pulse">
+                                                CUSTOMIZED
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex items-start gap-3 flex-1">
-                                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSpec?.id === spec.id ? "border-blue-600 bg-blue-600" : "border-gray-300 group-hover:border-blue-400"
+                                                <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSpec?.id === spec.id
+                                                    ? spec.isRunningCopy ? "border-amber-600 bg-amber-600" : "border-blue-600 bg-blue-600"
+                                                    : "border-gray-300 group-hover:border-blue-400"
                                                     }`}>
                                                     {selectedSpec?.id === spec.id && <div className="w-2 h-2 bg-white rounded-full" />}
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                        <h4 className="text-base font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                        <h4 className={`text-base font-extrabold transition-colors ${spec.isRunningCopy ? "text-amber-900 group-hover:text-amber-700" : "text-gray-900 group-hover:text-blue-700"}`}>
                                                             {spec.title || `${spec.systemCapacityKw} kW System`}
                                                         </h4>
-                                                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                                                        <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${spec.isRunningCopy ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
                                                             {spec.systemCapacityKw} kW
                                                         </span>
                                                     </div>
@@ -536,13 +709,14 @@ export const ViewSystemSpecifications = () => {
                                     </div>
                                 </div>
 
-                                {/* Proceed to Buy */}
+                                {/* Confirm Order */}
                                 <button
-                                    onClick={handleProceedToBuy}
-                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4"
+                                    onClick={handleConfirmOrder}
+                                    disabled={isSaving}
+                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold shadow-sm transition mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <CreditCard className="w-5 h-5" />
-                                    Proceed to Buy
+                                    {isSaving ? "Processing..." : "Confirm Order"}
                                 </button>
                             </div>
                         ) : (
