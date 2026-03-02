@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building, Building2, UserCog, Calendar, Clock, Shield } from 'lucide-react';
+import { Users, Building, Building2, UserCog, Calendar, Clock, Shield, Briefcase} from 'lucide-react';
 import Card, { CardBody } from '../../components/ui/Card';
 import { useUser } from '../../contexts/UserContext';
 import { getOrganizationById } from '../../services/organizationService';
@@ -101,6 +101,13 @@ const AdminDashboard: React.FC = () => {
       icon: <Shield className="h-8 w-8 text-secondary-700 dark:text-secondary-300" />,
       path: '/admin-management',
       color: 'bg-gradient-to-r from-secondary-50 to-secondary-100 dark:from-secondary-900/20 dark:to-secondary-800/20 border-secondary-200 dark:border-secondary-700'
+    },
+    {
+      title: 'Manage Workforce',
+      description: 'List, view, onboard registered users',
+      icon: <Briefcase className="h-8 w-8 text-green-600 dark:text-green-400" />,
+      path: '/workforce-management',
+      color: 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700'
     }
   ], [userInfo?.orgId, gstNumber]);
 

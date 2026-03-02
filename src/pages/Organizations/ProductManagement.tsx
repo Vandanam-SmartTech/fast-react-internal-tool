@@ -21,8 +21,8 @@ const ProductManagement: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>("battery");
 
   useEffect(() => {
-  handleSectionClick("battery");
-}, []);
+    handleSectionClick("battery");
+  }, []);
 
   const { userClaims } = useUser();
   const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
@@ -1748,7 +1748,9 @@ const ProductManagement: React.FC = () => {
                                     <tr key={spec.id}>
                                       <td className="p-2 border">{spec.wattage} W</td>
                                       <td className="p-2 border">{spec.voltage} V</td>
-                                      <td className="p-2 border">₹ {spec.basePrice}</td>
+                                      <td className="p-2 border">
+                                        {spec.basePrice != null ? `₹ ${spec.basePrice}` : "NA"}
+                                      </td>
                                       <td className="p-2 border">{spec.mfgMonthYear}</td>
                                       <td className="p-2 border">{spec.modelNumber}</td>
                                       <td className="p-2 border text-center">
@@ -1802,9 +1804,10 @@ const ProductManagement: React.FC = () => {
 
                                     <div className="flex items-center gap-1">
                                       <span className="font-semibold">Base Price:</span>
-                                      <span>₹ {spec.basePrice}</span>
+                                      <span>
+                                        {spec.basePrice != null ? `₹ ${spec.basePrice}` : "NA"}
+                                      </span>
                                     </div>
-
                                     <div className="flex items-center gap-1">
                                       <span className="font-semibold">MFG Date:</span>
                                       <span>{spec.mfgMonthYear}</span>
@@ -2660,7 +2663,7 @@ const ProductManagement: React.FC = () => {
                         </div>
 
                         {/* SPECS TABLE */}
-                        {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
+                        {/* {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
                           <div className="p-4 bg-gray-50">
                             <table className="min-w-full text-left mb-4 border rounded bg-white">
                               <thead className="bg-gray-200">
@@ -2700,6 +2703,84 @@ const ProductManagement: React.FC = () => {
                               </tbody>
                             </table>
                           </div>
+                        )} */}
+
+                        {/* DESKTOP TABLE */}
+                        {expandedSelectedInverterBrand === inverterBrand.inverterBrandId && (
+                          <>
+                            <div className="hidden md:block p-4 bg-gray-50">
+                              <table className="min-w-full text-left mb-4 border rounded bg-white">
+                                <thead className="bg-gray-200">
+                                  <tr>
+                                    <th className="p-2 border">Phase Type - Grid Type</th>
+                                    <th className="p-2 border">Inverter Capacity</th>
+                                    <th className="p-2 border">Base Price</th>
+                                    <th className="p-2 border">ALMM Model Number</th>
+                                    <th className="p-2 border text-center">Action</th>
+                                  </tr>
+                                </thead>
+
+                                <tbody>
+                                  {inverterBrand.selectedInverterSpecs.map((inverterSpec: any) => (
+                                    <tr key={inverterSpec.id}>
+                                      <td className="p-2 border">({inverterSpec.phaseTypeName}) - ({inverterSpec.gridTypeName})</td>
+                                      <td className="p-2 border">{inverterSpec.inverterCapacity} kW</td>
+                                      <td className="p-2 border">
+                                        {inverterSpec.basePrice !== null && inverterSpec.basePrice !== undefined
+                                          ? `₹ ${inverterSpec.basePrice}`
+                                          : "NA"}
+                                      </td>
+                                      <td className="p-2 border">{inverterSpec.almmModelNumber}</td>
+                                      <td className="p-2 border text-center">
+                                        <button
+                                          className="text-yellow-600 hover:underline"
+                                          onClick={() => {
+                                            handleEditSelectedInverterSpec(inverterSpec);
+                                            setShowFormForInverterBrand(null);
+                                            setShowSelectedInverterSpecModal(true);
+                                          }}
+                                        >
+                                          Edit
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* MOBILE CARD VIEW */}
+                            <div className="md:hidden p-4 bg-gray-50 space-y-3">
+                              {inverterBrand.selectedInverterSpecs.map((inverterSpec: any) => (
+                                <div key={inverterSpec.id} className="border rounded-lg p-3 bg-white shadow-sm">
+                                  <div className="text-sm space-y-1">
+                                    <div><span className="font-semibold">Inverter Capacity:</span> {inverterSpec.inverterCapacity} kW</div>
+                                    <div><span className="font-semibold">Phase / Grid:</span> {inverterSpec.phaseTypeName} ({inverterSpec.gridTypeName})</div>
+                                    <div>
+                                      <span className="font-semibold">Base Price:</span>{" "}
+                                      {inverterSpec.basePrice != null
+                                        ? `₹ ${inverterSpec.basePrice}`
+                                        : "NA"}
+                                    </div>
+                                    <div><span className="font-semibold">ALMM Model:</span> {inverterSpec.almmModelNumber}</div>
+                                  </div>
+
+                                  <div className="mt-2 flex justify-end">
+                                    <button
+                                      className="text-yellow-600 text-sm font-medium"
+                                      onClick={() => {
+                                        handleEditSelectedInverterSpec(inverterSpec);
+                                        setShowFormForInverterBrand(null);
+                                        setShowSelectedInverterSpecModal(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
                     )
@@ -3901,7 +3982,9 @@ const ProductManagement: React.FC = () => {
                                     <tr key={panelSpec.id}>
                                       <td className="p-2 border">{panelSpec.ratedWattageW} W</td>
                                       <td className="p-2 border">{panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</td>
-                                      <td className="p-2 border">₹ {panelSpec.basePrice}</td>
+                                      <td className="p-2 border">
+                                        {panelSpec.basePrice != null ? `₹ ${panelSpec.basePrice}` : "NA"}
+                                      </td>
                                       <td className="p-2 border">{panelSpec.modelNumber}</td>
                                       <td className="p-2 border text-center">
                                         <button
@@ -3928,7 +4011,12 @@ const ProductManagement: React.FC = () => {
                                   <div className="text-sm space-y-1">
                                     <div><span className="font-semibold">Wattage:</span> {panelSpec.ratedWattageW} W</div>
                                     <div><span className="font-semibold">Material / Type:</span> {panelSpec.materialOriginCode} ({panelSpec.panelTypeName})</div>
-                                    <div><span className="font-semibold">Base Price:</span> ₹ {panelSpec.basePrice}</div>
+                                    <div>
+                                      <span className="font-semibold">Base Price:</span>{" "}
+                                      {panelSpec.basePrice != null
+                                        ? `₹ ${panelSpec.basePrice}`
+                                        : "NA"}
+                                    </div>
                                     <div><span className="font-semibold">Model:</span> {panelSpec.modelNumber}</div>
                                   </div>
 
@@ -3964,16 +4052,7 @@ const ProductManagement: React.FC = () => {
 
             {showSelectedPanelSpecModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
-                <div className="
-    bg-white
-    w-full
-    sm:w-[90%]
-    sm:max-w-3xl
-    max-h-[95vh]
-    overflow-y-auto
-    rounded-t-2xl sm:rounded-lg
-    p-4 sm:p-6
-  ">
+                <div className="bg-white w-full sm:w-[90%] sm:max-w-3xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-lg p-4 sm:p-6">
 
                   <div className="sticky top-0 bg-white z-10 flex justify-between items-center pb-3 mb-4 border-b">
                     <h2 className="text-base sm:text-xl font-semibold">
@@ -4903,7 +4982,9 @@ const ProductManagement: React.FC = () => {
                                     <td className="p-2 border">
                                       {pipeSpec.weightKg} kg
                                     </td>
-                                    <td className="p-2 border">₹ {pipeSpec.basePrice}</td>
+                                    <td className="p-2 border">
+                                      {pipeSpec.basePrice != null ? `₹ ${pipeSpec.basePrice}` : "NA"}
+                                    </td>
 
                                     <td className="p-2 border text-center flex gap-3 justify-center">
                                       <button

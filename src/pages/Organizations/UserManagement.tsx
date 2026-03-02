@@ -9,7 +9,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Alert } from '@mui/material';
 import { useUser } from '../../contexts/UserContext';
-
+import { getAllRoles } from '../../services/jwtService';
 
 const UserManagement: React.FC = () => {
   const { userClaims } = useUser();
@@ -76,26 +76,27 @@ const UserManagement: React.FC = () => {
       setUserRole(storedUserInfo.role);
       loadBootstrapData();
     }
+    loadRoles();
   }, [userClaims]);
 
   const loadBootstrapData = async (page = 0) => {
     try {
       setFetching(true);
       const data = await fetchBootstrapData(
-        page, 
+        page,
         pageSize,
         statusFilter !== 'all' ? statusFilter : undefined,
         roleFilter !== 'all' ? roleFilter : undefined,
         debouncedSearchTerm || undefined
       );
-      
+
       // Handle SUPER_ADMIN response
       if (data.users) {
         const usersData = Array.isArray(data.filteredUsers) ? data.filteredUsers : data.users;
         setUsers(usersData);
         setFilteredUsers(usersData);
       }
-      
+
       // Handle ORG_ADMIN/AGENCY_ADMIN response
       if (data.usersPaginated) {
         const usersData = Array.isArray(data.filteredUsers) ? data.filteredUsers : data.usersPaginated.content;
@@ -104,18 +105,18 @@ const UserManagement: React.FC = () => {
         setTotalPages(data.usersPaginated.totalPages);
         setCurrentPage(data.usersPaginated.number);
       }
-      
+
       // Set stats from backend response
       setTotalElements(data.totalUsers || 0);
       setActiveCount(data.activeUsers || 0);
       setInactiveCount(data.inactiveUsers || 0);
       setFilteredCount(data.filteredUsers || data.filteredCount || data.totalUsers || 0);
-      
-      // Set roles from JWT
-      if (data.roles) {
-        console.log('Roles from backend:', data.roles);
-        setRoles(data.roles.map((r: any, idx: number) => ({ id: idx, name: r.name })));
-      }
+
+
+      // if (data.roles) {
+      //   console.log('Roles from backend:', data.roles);
+      //   setRoles(data.roles.map((r: any, idx: number) => ({ id: idx, name: r.name })));
+      // }
     } catch (error) {
       toast.error("Failed to load data");
     } finally {
@@ -124,22 +125,53 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // Filter roles based on logged-in user
+  const loadRoles = async () => {
+    try {
+      const data = await getAllRoles();
+      setRoles(data);
+    } catch (error) {
+      console.error("Failed to load roles", error);
+    }
+  };
+
+
+  // const getFilteredRoles = () => {
+  //   const allRoles = [...roles];
+  //   console.log('All roles before filtering:', allRoles);
+  //   console.log('Current userRole:', userRole);
+
+  //   if (userRole === "ROLE_SUPER_ADMIN") {
+  //     return allRoles; 
+  //   } else if (userRole === "ROLE_ORG_ADMIN") {
+
+  //     const filtered = allRoles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
+  //     console.log('Filtered roles for ORG_ADMIN:', filtered);
+  //     return filtered;
+  //   } else if (userRole === "ROLE_AGENCY_ADMIN") {
+
+  //     return allRoles.filter(
+  //       (r) =>
+  //         ![
+  //           "ROLE_SUPER_ADMIN",
+  //           "ROLE_ORG_ADMIN",
+  //           "ROLE_ORG_STAFF",
+  //           "ROLE_ORG_REPRESENTATIVE",
+  //           "ROLE_ORG_ELECTRICIAN",
+  //           "ROLE_ORG_FABRICATOR"
+  //         ].includes(r.name)
+  //     );
+  //   } else {
+  //     return [];
+  //   }
+  // };
+
   const getFilteredRoles = () => {
-    const allRoles = [...roles];
-    console.log('All roles before filtering:', allRoles);
-    console.log('Current userRole:', userRole);
-    
     if (userRole === "ROLE_SUPER_ADMIN") {
-      return allRoles; // show all roles
+      return roles; // show all roles
     } else if (userRole === "ROLE_ORG_ADMIN") {
-      // ORG_ADMIN can see all roles except SUPER_ADMIN
-      const filtered = allRoles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
-      console.log('Filtered roles for ORG_ADMIN:', filtered);
-      return filtered;
+      return roles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
     } else if (userRole === "ROLE_AGENCY_ADMIN") {
-      // AGENCY_ADMIN can only see agency roles
-      return allRoles.filter(
+      return roles.filter(
         (r) =>
           ![
             "ROLE_SUPER_ADMIN",
@@ -154,9 +186,6 @@ const UserManagement: React.FC = () => {
       return []; // if other roles shouldn't see anything
     }
   };
-
-
-
 
 
 
@@ -207,47 +236,42 @@ const UserManagement: React.FC = () => {
   };
 
   const UserCard: React.FC<{ user: any }> = React.memo(({ user }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 border border-secondary-200 hover:border-primary-300" hover={true}>
-      <CardBody className="p-5">
+    <Card className="hover:shadow-medium transition-all duration-200" hover={true}>
+      <CardBody className="p-4">
         {/* Header with Avatar and Status */}
-        <div className="flex items-start gap-3 mb-4">
-          <div className="relative">
-            <div className="w-14 h-14 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-full flex items-center justify-center shadow-md ring-2 ring-primary-100">
-              <span className="text-white font-bold text-lg tracking-wide uppercase">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-xs tracking-wide uppercase">
                 {user.username?.slice(0, 2)}
               </span>
+
             </div>
-            <div className="absolute -bottom-1 -right-1">
-              {user.isActive ? (
-                <div className="bg-success-500 rounded-full p-1 ring-2 ring-white">
-                  <CheckCircle className="h-3 w-3 text-white" />
-                </div>
-              ) : (
-                <div className="bg-error-500 rounded-full p-1 ring-2 ring-white">
-                  <XCircle className="h-3 w-3 text-white" />
-                </div>
-              )}
+
+            <div>
+              <h3 className="font-semibold text-secondary-900">
+                {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
+              </h3>
+              <p className="text-sm text-secondary-600 dark:text-secondary-300">
+                @{user.username}
+              </p>
             </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-secondary-900 truncate">
-              {user.nameAsPerGovId || user.preferredName || 'Unnamed User'}
-            </h3>
-            <p className="text-sm text-secondary-500 font-medium">
-              @{user.username}
-            </p>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${user.isActive ? 'bg-success-100 text-success-700' : 'bg-error-100 text-error-700'}`}>
-              {user.isActive ? 'Active' : 'Inactive'}
-            </span>
+          <div className="flex items-center gap-2">
+            {user.isActive ? (
+              <CheckCircle className="h-5 w-5 text-success-600" />
+            ) : (
+              <XCircle className="h-5 w-5 text-error-600" />
+            )}
           </div>
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-2 mb-4 bg-secondary-50 rounded-lg p-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-3">
           {user.emailAddress && (
-            <div className="flex items-center gap-2 text-sm">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-1 text-sm">
+              <div className="flex-shrink-0 w-6 h-6 bg-primary-100 rounded-lg flex items-center justify-center">
                 <Mail className="h-4 w-4 text-primary-600" />
               </div>
               <span className="text-secondary-700 truncate flex-1" title={user.emailAddress}>
@@ -257,8 +281,8 @@ const UserManagement: React.FC = () => {
           )}
 
           {user.contactNumber && (
-            <div className="flex items-center gap-2 text-sm">
-              <div className="flex-shrink-0 w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-1 text-sm">
+              <div className="flex-shrink-0 w-6 h-6 bg-success-100 rounded-lg flex items-center justify-center">
                 <Phone className="h-4 w-4 text-success-600" />
               </div>
               <span className="text-secondary-700 font-medium">
@@ -269,69 +293,73 @@ const UserManagement: React.FC = () => {
         </div>
 
         {/* Roles Section */}
-        <div className="mb-4">
+        <div className="mb-2">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-4 w-4 text-secondary-600" />
             <h4 className="text-sm font-semibold text-secondary-700">Roles</h4>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {user.roles?.map((role: any, index: number) => (
-              <span key={`global-${index}`} className={`badge ${getRoleBadgeColor(role.name)} text-xs font-medium px-2.5 py-1`}>
+              <span key={`global-${index}`} className={`badge ${getRoleBadgeColor(role.name)} text-xs`}>
                 {role.name.replace('ROLE_', '')} (Global)
               </span>
             ))}
             {user.organizationRoles?.map((orgRole: any, index: number) => (
-              <span key={`org-${index}`} className={`badge ${getRoleBadgeColor(orgRole.roleName)} text-xs font-medium px-2.5 py-1`}>
+              <span key={`org-${index}`} className={`badge ${getRoleBadgeColor(orgRole.roleName)} text-xs`}>
                 {orgRole.roleName.replace('ROLE_', '')} ({orgRole.organizationName})
               </span>
             ))}
             {(!user.roles?.length && !user.organizationRoles?.length) && (
-              <span className="text-xs text-secondary-500 italic">No roles assigned</span>
+              <span className="text-xs text-secondary-600 dark:text-secondary-300">No roles assigned</span>
             )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-3 border-t border-secondary-200">
-          <Button
-            variant="outline"
-            size="sm"
-            title="View User"
-            onClick={() => navigate("/user-view", { state: { userId: user.id } })}
-            className="flex-1 h-9"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center justify-between pt-2 border-t border-secondary-200">
+          <span className={`badge ${user.isActive ? 'badge-success' : 'badge-error'}`}>
+            {user.isActive ? 'Active' : 'Inactive'}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="View User"
+              onClick={() => navigate("/user-view", { state: { userId: user.id } })}
+              className="p-1 h-8 w-8"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            title="Edit User"
-            onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
-            className="flex-1 h-9"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Edit User"
+              onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
+              className="p-1 h-8 w-8"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            title="Manage Role"
-            onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
-            className="flex-1 h-9"
-          >
-            <Shield className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Delete User"
-            onClick={() => handleDelete(user.id)}
-            className="h-9 w-9 text-error-600 hover:text-error-700 hover:bg-error-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Manage Role"
+              onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
+              className="p-1 h-8 w-8"
+            >
+              <Shield className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Delete User"
+              onClick={() => handleDelete(user.id)}
+              className="p-1 h-8 w-8 text-error-600 hover:text-error-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardBody>
     </Card>
@@ -409,7 +437,7 @@ const UserManagement: React.FC = () => {
               >
                 <option value="all">All Roles</option>
                 {getFilteredRoles().map((role) => (
-                  <option key={role.id} value={role.name.replace("ROLE_", "")}>
+                  <option key={role.id} value={role.name}>
                     {role.name.replace("ROLE_", "").replaceAll("_", " ")}
                   </option>
                 ))}

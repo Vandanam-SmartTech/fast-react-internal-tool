@@ -265,27 +265,6 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  // const loadUsers = async () => {
-  //   try {
-  //     const regularUsers = await fetchRegularUsers();
-  //     setUsers(regularUsers);
-  //   } catch (error) {
-  //     toast.error('Failed to load users', {
-  //       autoClose: 1000,
-  //       hideProgressBar: true,
-  //     });
-  //   }
-  // };
-
-
-  // const loadRoles = async () => {
-  //   try {
-  //     const data = await getAllRoles();
-  //     setRoles(data);
-  //   } catch (error) {
-  //     toast.error('Failed to load roles');
-  //   }
-  // };
 
   const loadAllUsers = async () => {
     try {
@@ -386,26 +365,6 @@ const AdminManagement: React.FC = () => {
   };
 
 
-
-  // const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const roleId = e.target.value;
-  //   const roleName = roles.find((r) => r.id.toString() === roleId)?.name || "";
-  //   setSelectedRoleName(roleName);
-
-
-  //   setNewAssignment({ roleId, organizationId: "", agencyId: "" });
-  //   setAgencies([]);
-
-  //   if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
-  //     getChildOrganizations(parseInt(userInfo.orgId))
-  //       .then((res) => setAgencies(res))
-  //       .catch((err) => {
-  //         console.error("Failed to fetch agencies for ORG_ADMIN role", err);
-  //         setAgencies([]);
-  //       });
-  //   }
-  // };
-
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleId = e.target.value;
     const roleName = roles.find(r => r.id.toString() === roleId)?.name || "";
@@ -441,35 +400,6 @@ const AdminManagement: React.FC = () => {
     }
   };
 
-  // const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const orgId = e.target.value;
-  //   setNewAssignment((prev) => ({
-  //     ...prev,
-  //     organizationId: orgId,
-  //     agencyId: "",
-  //   }));
-
-
-  //   if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
-
-  //     getChildOrganizations(parseInt(userInfo.orgId))
-  //       .then((res) => setAgencies(res))
-  //       .catch((err) => {
-  //         console.error("Failed to fetch agencies for ORG_ADMIN role", err);
-  //         setAgencies([]);
-  //       });
-  //   } else if (
-  //     !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName)
-  //   ) {
-
-  //     getChildOrganizations(parseInt(orgId))
-  //       .then((res) => setAgencies(res))
-  //       .catch((err) => {
-  //         console.error("Failed to fetch agencies", err);
-  //         setAgencies([]);
-  //       });
-  //   }
-  // };
 
   const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const orgId = e.target.value;

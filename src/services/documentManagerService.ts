@@ -87,7 +87,7 @@ export const downloadDocumentById = async (id: number): Promise<Blob> => {
   return response.data;
 };
 
-export const deleteDocumentById = async (id:number): Promise<void> => {
+export const deleteDocumentById = async (id: number): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
     await docManagerAPI.delete(`/api/document-manager/documents/delete/${id}`);
@@ -97,7 +97,7 @@ export const deleteDocumentById = async (id:number): Promise<void> => {
   }
 };
 
-export const updateDocumentById = async (id:number, file: File): Promise<void> => {
+export const updateDocumentById = async (id: number, file: File): Promise<void> => {
   try {
     const docManagerAPI = getDocManagerAPI();
     const formData = new FormData();
@@ -327,7 +327,7 @@ export const fetchOrganizationImage = async (orgId: number): Promise<string | nu
     const response = await docManagerAPI.get(
       `/api/document-manager/organization-media/${orgId}/logo/image`,
       {
-        responseType: "blob", 
+        responseType: "blob",
       }
     );
 
@@ -341,6 +341,6 @@ export const fetchOrganizationImage = async (orgId: number): Promise<string | nu
     console.error("Failed to fetch logo:", error);
     return null;
   }
-  
+
 };
 

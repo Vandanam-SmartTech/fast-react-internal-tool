@@ -231,7 +231,7 @@ export const fetchAllUserRoles = async (
 
   await Promise.all(
     organizations.map(async (org) => {
-      if (!org.id) return; 
+      if (!org.id) return;
 
       const orgRoles = await fetchRolesForOrg(userId, org.id, org.name);
       allRoles.push(...orgRoles);
@@ -334,12 +334,25 @@ export const fetchUsersByOrgId = async (organizationId: string | number) => {
   }
 };
 
-export const fetchAllUsersByOrgId = async (organizationId: string | number, page = 0, size = 9) => {
+// export const fetchAllUsersByOrgId = async (organizationId: string | number, page = 0, size = 9) => {
+//   const orgAPI = getOrgAPI();
+//   try {
+//     const response = await orgAPI.get(
+//       `/api/users/getAllUsers/organizations/${organizationId}/paginated`,
+//       { params: { page, size } }
+//     );
+//     return response.data;
+//   } catch (error) {
+//     console.error("Failed to fetch organization users:", error);
+//     throw error;
+//   }
+// };
+
+export const fetchAllUsersByOrgId = async (organizationId: string | number) => {
   const orgAPI = getOrgAPI();
   try {
     const response = await orgAPI.get(
-      `/api/users/getAllUsers/organizations/${organizationId}/paginated`,
-      { params: { page, size } }
+      `/api/users/getAllUsers/organizations/${organizationId}`
     );
     return response.data;
   } catch (error) {
@@ -445,7 +458,7 @@ export const fetchPackages = async (organizationId?: number, agencyId?: number):
     const params: any = {};
     if (organizationId) params.organizationId = organizationId;
     if (agencyId) params.agencyId = agencyId;
-    
+
     const response = await orgAPI.get('/api/packages', { params });
     return response.data;
   } catch (error) {

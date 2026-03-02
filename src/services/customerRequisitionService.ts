@@ -125,22 +125,22 @@ export const saveInstallation = async (data: Record<string, any>): Promise<{ id:
   const crsAPI = getCrsAPI();
   try {
     const response = await crsAPI.post('/api/installations', data);
- 
+
     const responseData = await response.data;
-    console.log('API response data:', responseData); 
+    console.log('API response data:', responseData);
 
     if (responseData.id) {
 
-      return { id: responseData.id, message: 'Installation data saved successfully! '};
+      return { id: responseData.id, message: 'Installation data saved successfully! ' };
     } else {
 
-      return { id: null, message: responseData.message || 'Failed to save installation data. '};
+      return { id: null, message: responseData.message || 'Failed to save installation data. ' };
     }
   } catch (error: any) {
 
     console.error('Error details:', error);
 
-    return { id: null, message: 'An error occurred while saving installation data. '};
+    return { id: null, message: 'An error occurred while saving installation data. ' };
   }
 };
 
@@ -327,7 +327,7 @@ export const fetchConsumerNumber = async (customerId: number) => {
     console.warn(`Unexpected format for customerId ${customerId}:`, response.data);
     return [];
   } catch (error: any) {
-    
+
     if (error.response && error.response.status === 404) {
       console.info(`Connections not found for customer Id ${customerId}`);
     } else {
@@ -363,7 +363,7 @@ export const fetchConsumerData = async (consumerId: number) => {
 
 
 
-export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null, deptCode?:number | null }) => {
+export const fetchConsumersWithConnections = async (page = 0, params: { orgId?: number | null, orgName?: string | null, agencyId?: number | null, agencyName?: string | null, userRole?: string | null, userId?: number | null, isGharkulCustomer: boolean | null, deptCode?: number | null }) => {
   const crsAPI = getCrsAPI();
   try {
     console.log('CRS API Parameters for fetchConsumersWithConnections:', { ...params, page });
@@ -435,13 +435,13 @@ export const fetchOnboardedConsumers = async (
   }
 ) => {
   const crsAPI = getCrsAPI();
-    const response = await crsAPI.get(
+  const response = await crsAPI.get(
     "/api/customers/onboarded-pagination",
     {
       params: { page, limit, ...params },
     }
   );
-    return {
+  return {
     content: response.data,
     currentPage: page,
     size: response.data.length,
@@ -645,7 +645,7 @@ export const updateMaterialData = async (
     console.error('Error updating material data:', error);
     throw error;
   }
-  
+
 };
 
 
@@ -688,7 +688,7 @@ export const searchCustomers = async (
 
 
 
-export const searchOnboardedConsumers =async (
+export const searchOnboardedConsumers = async (
   searchTerm: string,
   page: number,
   limit: number,
@@ -703,21 +703,23 @@ export const searchOnboardedConsumers =async (
 ): Promise<any> => {
   const crsAPI = getCrsAPI();
   try {
-    console.log("CRS API Parameters for searchCustomers:", {  searchTerm,
-      page,
-      limit,
-      ...params, });
-
-    const response = await crsAPI.post(`/api/customers/search/onboarded`, {
-       searchTerm,
+    console.log("CRS API Parameters for searchCustomers:", {
+      searchTerm,
       page,
       limit,
       ...params,
     });
 
-     return response.data;
+    const response = await crsAPI.post(`/api/customers/search/onboarded`, {
+      searchTerm,
+      page,
+      limit,
+      ...params,
+    });
 
-    } catch (error) {
+    return response.data;
+
+  } catch (error) {
     console.error("Error fetching search results:", error);
     throw new Error("Failed to fetch search results");
   }
@@ -902,7 +904,7 @@ export const saveSanctionDetails = async (
     console.error("Failed to save sanction details", err);
     return null;
   }
-}; 
+};
 
 
 

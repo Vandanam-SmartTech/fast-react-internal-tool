@@ -42,14 +42,14 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           {props.required && <span className="text-error-500 ml-1">*</span>}
         </label>
       )}
-      
+
       <div className="relative">
         {leftIcon && (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400 z-10">
             {leftIcon}
           </div>
         )}
-        
+
         <select
           ref={ref}
           onChange={handleChange}
@@ -71,18 +71,18 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
             </option>
           ))}
         </select>
-        
+
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-500 dark:text-secondary-400 pointer-events-none">
           <ChevronDown className="h-4 w-4" />
         </div>
       </div>
-      
+
       {error && (
         <p className="form-error" role="alert">
           {error}
         </p>
       )}
-      
+
       {helperText && !error && (
         <p className="text-sm text-secondary-600 dark:text-secondary-300">
           {helperText}

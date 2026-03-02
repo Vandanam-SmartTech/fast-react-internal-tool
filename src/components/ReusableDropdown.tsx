@@ -35,8 +35,8 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredOptions = options.filter((opt) =>
-  opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-);
+    opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
 
 
@@ -68,95 +68,91 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
 
 
 
-return (
-  <div className={`relative w-full ${className}`}>
-    {/* Button */}
-    <button
-      ref={buttonRef}
-      type="button"
-      disabled={disabled}
-      className={`w-full flex justify-between items-center pl-4 pr-2 py-1.5 
+  return (
+    <div className={`relative w-full ${className}`}>
+      {/* Button */}
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        className={`w-full flex justify-between items-center pl-4 pr-2 py-1.5 
         border rounded-md shadow-sm transition-all duration-150
-        ${
-          disabled
+        ${disabled
             ? "bg-gray-100 cursor-not-allowed border-gray-300 text-gray-500"
             : "bg-white border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
-        }
+          }
       `}
-      onClick={() => !disabled && setIsOpen(!isOpen)}
-    >
-      <span
-        className={`block truncate max-w-[90%] ${
-          selectedOption ? "text-gray-800" : "text-gray-400"
-        }`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
       >
-        {selectedOption ? (
-          selectedOption.label
-        ) : (
-          <>
-            {placeholder}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </>
-        )}
-      </span>
-
-      <ChevronDown
-        className={`h-5 w-5 transition-transform duration-200 ${
-          isOpen ? "rotate-180" : ""
-        } text-gray-500`}
-      />
-    </button>
-
-    {/* Dropdown */}
-    {isOpen &&
-      dropdownRect &&
-      createPortal(
-        <div
-          ref={dropdownRef}
-          className="absolute z-[9999] bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto"
-          style={{
-            position: "absolute",
-            top: dropdownRect.bottom + window.scrollY + 4,
-            left: dropdownRect.left + window.scrollX,
-            width: dropdownRect.width,
-          }}
+        <span
+          className={`block truncate max-w-[90%] ${selectedOption ? "text-gray-800" : "text-gray-400"
+            }`}
         >
-          {/* 🔍 SEARCH BOX */}
-          <div className="p-2 sticky top-0 bg-white border-b border-gray-200">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
-              className="w-full px-2 py-1.5 border rounded-md outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* FILTERED OPTIONS */}
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
-              <div
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                  setSearchQuery("");
-                }}
-                className={`px-4 py-2 cursor-pointer hover:bg-blue-100 transition-colors break-words ${
-                  value === option.value ? "bg-blue-50 font-medium" : ""
-                }`}
-              >
-                {option.label}
-              </div>
-            ))
+          {selectedOption ? (
+            selectedOption.label
           ) : (
-            <div className="px-4 py-3 text-gray-500 text-sm">No results found</div>
+            <>
+              {placeholder}
+              {required && <span className="text-red-500 ml-1">*</span>}
+            </>
           )}
-        </div>,
-        document.body
-      )}
-  </div>
-);
+        </span>
+
+        <ChevronDown
+          className={`h-5 w-5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+            } text-gray-500`}
+        />
+      </button>
+
+      {/* Dropdown */}
+      {isOpen &&
+        dropdownRect &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="absolute z-[9999] bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-auto"
+            style={{
+              position: "absolute",
+              top: dropdownRect.bottom + window.scrollY + 4,
+              left: dropdownRect.left + window.scrollX,
+              width: dropdownRect.width,
+            }}
+          >
+            {/* 🔍 SEARCH BOX */}
+            <div className="p-2 sticky top-0 bg-white border-b border-gray-200">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full px-2 py-1.5 border rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* FILTERED OPTIONS */}
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <div
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                    setSearchQuery("");
+                  }}
+                  className={`px-4 py-2 cursor-pointer hover:bg-blue-100 transition-colors break-words ${value === option.value ? "bg-blue-50 font-medium" : ""
+                    }`}
+                >
+                  {option.label}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-3 text-gray-500 text-sm">No results found</div>
+            )}
+          </div>,
+          document.body
+        )}
+    </div>
+  );
 
 };
 

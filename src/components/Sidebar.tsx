@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Briefcase, Menu, X } from "lucide-react";
 import { Logo } from "./ui";
 import { UserPlus, Users, UserRoundCheck, Building, Shield, UserCheck, LayoutDashboard, ChevronDown, ChevronRight, Package, Layers } from "lucide-react";
 import Button from "./ui/Button";
@@ -87,6 +87,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
     const goToPackageManagement = () =>
     navigateWithSidebarClose("/package-management");
+
+    const goToWorkforceManagement = () =>
+      navigateWithSidebarClose("/workforce-management");
 
 
 
@@ -218,7 +221,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     "/admin-management",
     "/user-management",
     "/product-management",
-    "/package-management"
+    "/package-management",
+    "/workforce-management",
   ];
 
   const dashboardPages = [
@@ -464,6 +468,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 >
                   <Layers size={20} />
                   <span>Package Management</span>
+                </button>
+              )}
+
+               {(roles.includes("ROLE_ORG_ADMIN")) && (
+                <button
+                  onClick={goToWorkforceManagement}
+                  className={`nav-link w-full justify-start ${isActive("/workforce-management") ? "nav-link-active" : "nav-link-inactive"
+                    }`}
+                >
+                  <Briefcase size={20} />
+                  <span>Workforce Management</span>
                 </button>
               )}
 

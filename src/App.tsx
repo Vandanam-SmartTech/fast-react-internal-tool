@@ -275,7 +275,8 @@ const AppContent: React.FC = () => {
             <Route path="/organization-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.OrganizationView /></LazyRoutes.RoleProtectedRoute>} />
             <Route path="/agency-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.AgencyView /></LazyRoutes.RoleProtectedRoute>} />
             <Route path="/user-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/package-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.PackageManagement /></LazyRoutes.RoleProtectedRoute>} />
+            <Route path="/package-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.PackageManagement /></LazyRoutes.RoleProtectedRoute>} />
+            <Route path="/workforce-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.WorkforceManagement /></LazyRoutes.RoleProtectedRoute>} />
             <Route path="/product-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.ProductManagement /></LazyRoutes.RoleProtectedRoute>} />
             <Route path="/user-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserFormManagement /></LazyRoutes.RoleProtectedRoute>} />
             <Route path="/edit-user" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditUser /></LazyRoutes.PrivateRoute>} />

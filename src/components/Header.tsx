@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, LogOut, Building, User, Shield, Check, Camera, X, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, LogOut, Building, User, Check, Camera, X, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Button from './ui/Button';
 import { Logo } from './ui';
@@ -9,6 +9,7 @@ import Cropper from 'react-easy-crop';
 import { uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto } from '../services/documentManagerService';
 import { loadCropperCSS } from '../utils/cssLoader';
 import { getTalukaNameByCode, getVillageNameByCode } from '../services/jwtService';
+import { toast } from 'react-toastify';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ const Header: React.FC = () => {
 
   const [selectedOrgName, setSelectedOrgName] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
-  const [selectedDeptCode, setSelectedDeptCode] = useState<number | null>(null);
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,40 +51,40 @@ const Header: React.FC = () => {
 
 
   useEffect(() => {
-  const fetchOrgName = async () => {
-    const selectedOrgStr = localStorage.getItem("selectedOrg");
+    const fetchOrgName = async () => {
+      const selectedOrgStr = localStorage.getItem("selectedOrg");
 
-    if (!selectedOrgStr) return;
+      if (!selectedOrgStr) return;
 
-    try {
-      const selectedOrg = JSON.parse(selectedOrgStr);
+      try {
+        const selectedOrg = JSON.parse(selectedOrgStr);
 
-      setSelectedRole(selectedOrg.role || "");
+        setSelectedRole(selectedOrg.role || "");
 
-      // 🔹 ROLE_BDO → fetch Taluka Name
-      if (selectedOrg.role === "ROLE_BDO" && selectedOrg.deptCode) {
-        const talukaName = await getTalukaNameByCode(Number(selectedOrg.deptCode));
-        setSelectedOrgName(talukaName);
+        // 🔹 ROLE_BDO → fetch Taluka Name
+        if (selectedOrg.role === "ROLE_BDO" && selectedOrg.deptCode) {
+          const talukaName = await getTalukaNameByCode(Number(selectedOrg.deptCode));
+          setSelectedOrgName(talukaName);
+        }
+
+        // 🔹 ROLE_GRAMSEVAK → fetch Village Name
+        else if (selectedOrg.role === "ROLE_GRAMSEVAK" && selectedOrg.deptCode) {
+          const villageName = await getVillageNameByCode(Number(selectedOrg.deptCode));
+          setSelectedOrgName(villageName);
+        }
+
+        // 🔹 Other Roles → use orgName directly
+        else {
+          setSelectedOrgName(selectedOrg.orgName || "");
+        }
+
+      } catch (error) {
+        console.error("Error parsing selectedOrg from localStorage:", error);
       }
+    };
 
-      // 🔹 ROLE_GRAMSEVAK → fetch Village Name
-      else if (selectedOrg.role === "ROLE_GRAMSEVAK" && selectedOrg.deptCode) {
-        const villageName = await getVillageNameByCode(Number(selectedOrg.deptCode));
-        setSelectedOrgName(villageName);
-      }
-
-      // 🔹 Other Roles → use orgName directly
-      else {
-        setSelectedOrgName(selectedOrg.orgName || "");
-      }
-
-    } catch (error) {
-      console.error("Error parsing selectedOrg from localStorage:", error);
-    }
-  };
-
-  fetchOrgName();
-}, [userClaims]);
+    fetchOrgName();
+  }, [userClaims]);
 
 
   useEffect(() => {
@@ -119,7 +119,7 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode: number | null) => {
+  const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode: number | null) => {
     const newOrg = { orgId, orgName, role, deptCode };
 
     setSelectedOrg(newOrg);
@@ -207,30 +207,31 @@ const handleOrgChange = (orgId: string, orgName: string, role: string, deptCode:
   }, [userClaims?.id]);
 
 
-const handleRemovePhoto = async () => {
-  if (!userClaims?.id) return;
+  const handleRemovePhoto = async () => {
+    if (!userClaims?.id) return;
 
-  try {
-    setRemovingPhoto(true);
+    try {
+      setRemovingPhoto(true);
 
-    // Pass userId from context
-    await deleteUserProfilePhoto(userClaims.id);
+      // Pass userId from context
+      await deleteUserProfilePhoto(userClaims.id);
 
-    // Refresh UI state immediately
-    await loadProfilePhoto();
+      // Refresh UI state immediately
+      await loadProfilePhoto();
 
-    setShowCropModal(false); // Close modal
+      setShowCropModal(false); // Close modal
 
-    // 🔥 Notify other components about removal
-    window.dispatchEvent(
-      new CustomEvent("profilePhotoUpdated", { detail: "" })
-    );
-  } catch (error) {
-    console.error("Error removing photo:", error);
-  } finally {
-    setRemovingPhoto(false);
-  }
-};
+      // 🔥 Notify other components about removal
+      window.dispatchEvent(
+        new CustomEvent("profilePhotoUpdated", { detail: "" })
+      );
+    } catch (error) {
+      console.error("Error removing photo:", error);
+      toast.error("Error while removing photo, please try again later.");
+    } finally {
+      setRemovingPhoto(false);
+    }
+  };
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,7 +249,7 @@ const handleRemovePhoto = async () => {
     }
   };
 
- const handleCropSave = async () => {
+  const handleCropSave = async () => {
     if (!previewUrl || !croppedAreaPixels) return;
 
     if (!userClaims?.id) {
@@ -289,6 +290,7 @@ const handleRemovePhoto = async () => {
       window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: croppedImage }));
     } catch (err) {
       console.error("Upload failed:", err);
+      toast.error("Error while uploading photo, please try again later.");
     } finally {
       setLoading(false);
     }
@@ -327,7 +329,7 @@ const handleRemovePhoto = async () => {
             {/* Super Admin Display */}
             {isSuperAdmin && (
               <div className="flex items-center gap-2 text-secondary-700 dark:text-secondary-200 ml-[40px] sm:ml-0">
-                
+
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm">Super Admin</span>
                   <span className="text-xs text-secondary-500 dark:text-secondary-400">System Administrator</span>
@@ -476,10 +478,9 @@ const handleRemovePhoto = async () => {
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               leftIcon={
                 <div
-  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center overflow-hidden ${
-    !profilePhoto ? "bg-primary-600" : ""
-  }`}
->
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center overflow-hidden ${!profilePhoto ? "bg-primary-600" : ""
+                    }`}
+                >
                   {profilePhoto ? (
                     <img
                       src={profilePhoto}
@@ -512,10 +513,9 @@ const handleRemovePhoto = async () => {
 
                       {/* Avatar */}
                       <div
-  className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${
-    !profilePhoto ? "bg-primary-600" : ""
-  }`}
->
+                        className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${!profilePhoto ? "bg-primary-600" : ""
+                          }`}
+                      >
                         {profilePhoto ? (
                           <img
                             src={profilePhoto}
@@ -529,28 +529,28 @@ const handleRemovePhoto = async () => {
                         )}
                       </div>
 
-                        <div
-                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
-                          onClick={() => {
-                            loadCropperCSS();
-                            if (profilePhoto) {
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                        onClick={() => {
+                          loadCropperCSS();
+                          if (profilePhoto) {
 
-                              setCrop({ x: 0, y: 0 });
-                              setZoom(1);
-                              setRotation(0);
-                              setCroppedAreaPixels(null);
+                            setCrop({ x: 0, y: 0 });
+                            setZoom(1);
+                            setRotation(0);
+                            setCroppedAreaPixels(null);
 
 
-                              setPreviewUrl(profilePhoto);
-                              setShowCropModal(true);
-                            } else {
+                            setPreviewUrl(profilePhoto);
+                            setShowCropModal(true);
+                          } else {
 
-                              document.getElementById("profile-file-input")?.click();
-                            }
-                          }}
-                        >
-                          <Camera className="w-5 h-5 text-white" />
-                        </div>
+                            document.getElementById("profile-file-input")?.click();
+                          }
+                        }}
+                      >
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
 
                       <input
                         id="profile-file-input"

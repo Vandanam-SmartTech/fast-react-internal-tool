@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil, Building, Shield } from 'lucide-react';
+import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
 import Cropper, { Area } from 'react-easy-crop';
 import { uploadUserSignature, getUserSignature, editUserSignature, uploadUserProfilePhoto, getUserProfilePhoto, editUserProfilePhoto, deleteUserProfilePhoto, deleteUserSignaturePhoto } from '../../services/documentManagerService';
 import { useUser } from '../../contexts/UserContext';
-import { fetchClaims, getUserById } from '../../services/jwtService';
+import { getUserById } from '../../services/jwtService';
 import { croppedImg } from '../../utils/croppedImage';
 import EditProfileModal from './EditProfileModal';
 
@@ -40,7 +40,7 @@ const Profile: React.FC = () => {
   // const [loadingClaims, setLoadingClaims] = useState(false);
 
   const [userDetails, setUserDetails] = useState<any>(null);
-  const [loadingUser, setLoadingUser] = useState(false);
+
 
 
 
@@ -80,7 +80,6 @@ const Profile: React.FC = () => {
   }, [userId]);
 
   const fetchUserDetails = async (id: number) => {
-    setLoadingUser(true);
     try {
       const response = await getUserById(id);
       if (response.data) {
@@ -88,8 +87,6 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to fetch user details", error);
-    } finally {
-      setLoadingUser(false);
     }
   };
 
@@ -142,6 +139,7 @@ const Profile: React.FC = () => {
       );
     } catch (error) {
       console.error("Error removing photo:", error);
+      toast.error("Error while removing photo, please try again later.");
     } finally {
       setRemovingPhoto(false);
     }
@@ -207,6 +205,7 @@ const Profile: React.FC = () => {
       window.dispatchEvent(new CustomEvent("profilePhotoUpdated", { detail: croppedImageForProfile }));
     } catch (err) {
       console.error("Upload failed:", err);
+      toast.error("Error while uploading photo, please try again later.");
     } finally {
       setLoadingForProfile(false);
     }

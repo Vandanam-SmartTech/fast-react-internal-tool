@@ -29,6 +29,7 @@ export const OrganizationView = lazy(() => import('../pages/Organizations/Organi
 export const AdminManagement = lazy(() => import('../pages/Organizations/AdminManagement'));
 export const UserManagement = lazy(() => import('../pages/Organizations/UserManagement'));
 export const PackageManagement = lazy(() => import('../pages/Organizations/PackageManagement'));
+export const WorkforceManagement = lazy(() => import('../pages/Organizations/WorkforceManagement'));
 export const ProductManagement = lazy(() => import('../pages/Organizations/ProductManagement'));
 export const UserFormManagement = lazy(() => import('../pages/Organizations/UserFormManagement'));
 export const EditUser = lazy(() => import('../pages/Organizations/EditUser'));

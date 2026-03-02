@@ -76,7 +76,7 @@ export default function GenerateDocuments() {
   const [isConnectionOnboarded, setIsConnectionOnboarded] = useState<boolean>(false);
   const [fileSizeError, setFileSizeError] = useState<Record<string, boolean>>({});
 
-  const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+  const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 1 MB
 
   const connectionId = consumer?.id?.toString();
 
@@ -779,7 +779,7 @@ const handleView = async (id: number, fileName: string) => {
                         }
                         // Check for file size validation (1MB limit)
                         if (file.size > MAX_FILE_SIZE_BYTES) {
-                          toast.error(`You can't upload file greater than 1 MB`, {
+                          toast.error(`You can't upload file greater than 10 MB`, {
                             hideProgressBar: true,
                           });
                           setInputKeys((prev) => ({ ...prev, [docDef.name]: Date.now() }));

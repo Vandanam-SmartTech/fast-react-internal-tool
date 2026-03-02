@@ -260,13 +260,15 @@ const AgencyView: React.FC = () => {
 
                       {/* Header row */}
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900 truncate">{user.nameAsPerGovId}</h3>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate" title={user.nameAsPerGovId}>
+                            {user.nameAsPerGovId}
+                          </h3>
 
                           {user.isActive ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
                           ) : (
-                            <XCircle className="h-4 w-4 text-red-600" />
+                            <XCircle className="h-4 w-4 text-red-600 shrink-0" />
                           )}
                         </div>
 
@@ -309,9 +311,9 @@ const AgencyView: React.FC = () => {
                       </div>
 
                       {/* User Info */}
-                      <div className="text-xs text-gray-600 mb-2">
-                        <div>{user.emailAddress}</div>
-                        <div>{user.contactNumber}</div>
+                      <div className="text-xs text-gray-600 mb-2 min-w-0">
+                        <div className="truncate" title={user.emailAddress}>{user.emailAddress}</div>
+                        <div className="truncate">{user.contactNumber}</div>
                       </div>
 
                       {/* Roles */}
