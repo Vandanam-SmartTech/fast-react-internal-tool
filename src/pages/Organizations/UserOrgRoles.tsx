@@ -416,7 +416,7 @@ const UserOrgRoles: React.FC = () => {
 
 
               {userRole !== "ROLE_AGENCY_ADMIN" &&
-                !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_FABRICATOR", "ROLE_ORG_ELECTRICIAN","ROLE_BDO","ROLE_GRAMSEVAK"].includes(selectedRoleName) && (
+                !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_FABRICATOR", "ROLE_ORG_ELECTRICIAN", "ROLE_BDO", "ROLE_GRAMSEVAK"].includes(selectedRoleName) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Agency
@@ -467,21 +467,21 @@ const UserOrgRoles: React.FC = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         {/* Header */}
-<div className="hidden md:grid grid-cols-2 items-center bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
-  <div className="px-6 py-3 flex items-center gap-2">
-    <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
-    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-      Organization
-    </span>
-  </div>
+        <div className="hidden md:grid grid-cols-2 items-center bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+          <div className="px-6 py-3 flex items-center gap-2">
+            <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+              Organization
+            </span>
+          </div>
 
-  <div className="px-6 py-3 flex items-center gap-2">
-    <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
-    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-      Roles
-    </span>
-  </div>
-</div>
+          <div className="px-6 py-3 flex items-center gap-2">
+            <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+              Roles
+            </span>
+          </div>
+        </div>
 
 
         {/* Body */}

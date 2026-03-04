@@ -1,48 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useUser } from "../../contexts/UserContext";
 import { fetchPhaseType } from "../../services/customerRequisitionService";
 import Button from "../../components/ui/Button";
-import Modal from "../../components/ui/Modal";
 import Card from "../../components/ui/Card";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Loader2 } from "lucide-react";
 import {
-  saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
+  saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
-  fetchBatteryBrandCapacities, updateSystemSpecs, updateInverterSpecs, getSavedSystemSpecPackages,
-  getPriceDetails, saveSystemSpecPackage, saveInverterSpecPackage, fetchPanelSpecsByOrg, fetchPipeSpecification, savePipeSpecs,
+  fetchBatteryBrandCapacities, getSystemSpecPackages, getSystemPackageById,
+  getPriceDetails, saveSystemSpecPackage, fetchPanelSpecsByOrg, fetchPipeSpecification, savePipeSpecs,
   editSystemSpecPackage
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
-import { Eye, Pencil } from "lucide-react";
 import { toast } from "react-toastify";
 
-
-interface Organization {
-  id: number;
-  name: string;
-}
-
-interface Agency {
-  id: number;
-  name: string;
-}
-
-interface Package {
-  id?: number;
-  panelBrand: string;
-  panelCapacity: string;
-  inverterBrand: string;
-  phaseType: string;
-  organizationId?: number;
-  agencyId?: number;
-}
-
-interface Inverter {
-  inverterBrandName: string;
-  inverterCapacity: number;
-  inverterCount: number;
-  gridTypeName: string;
-}
 
 export interface BatterySpec {
   id: number;
@@ -53,21 +23,12 @@ export interface BatterySpec {
 }
 
 const PackageManagement: React.FC = () => {
-  const { userClaims } = useUser();
-
-  const [userRole, setUserRole] = useState<string>("");
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [organizationId, setOrganizationId] = useState<number | "">("");
-  const [agencyList, setAgencyList] = useState<Agency[]>([]);
-  const [agencyId, setAgencyId] = useState<number | "">("");
   const [phaseTypes, setPhaseTypes] = useState<any[]>([]);
   const [phaseTypeId, setPhaseTypeId] = useState<number | null>(null);
-  const [selectedPhaseType, setSelectedPhaseType] = useState<string>("");
-  const [packages, setPackages] = useState<Package[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [, setOrgBatterySpecId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
 
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
@@ -94,9 +55,6 @@ const PackageManagement: React.FC = () => {
   const [orgPanelSpecId, setOrgPanelSpecId] = useState<number | null>(null);
   const [panelCapacities, setPanelCapacities] = useState<number[]>([]);
 
-
-  const [panelSpecId, setPanelSpecId] = useState<number | null>(null);
-
   const [batteryCapacities, setBatteryCapacities] = useState<BatterySpec[]>([]);
 
 
@@ -105,14 +63,9 @@ const PackageManagement: React.FC = () => {
   const [batteryBrands, setBatteryBrands] = useState<any[]>([]);
   const [batteryBrandId, setBatteryBrandId] = useState<number | null>(null);
 
-  const [batterySpecId, setBatterySpecId] = useState<number | null>(null);
-
-
   const [isPrefilling, setIsPrefilling] = useState(false);
 
   const [priceAlreadySetFromCustomerData, setPriceAlreadySetFromCustomerData] = useState(false);
-  const [isSpecsSaved, setIsSpecsSaved] = useState(false);
-  const [isCustomSpecs, setIsCustomSpecs] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -123,8 +76,6 @@ const PackageManagement: React.FC = () => {
   const [savedSpecs, setSavedSpecs] = useState<any[]>([]);
 
   const [fetchTrigger, setFetchTrigger] = useState(0);
-
-
 
   const initialFormData = {
     systemCost: 0,
@@ -165,22 +116,25 @@ const PackageManagement: React.FC = () => {
     }).format(value);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const target = e.target as HTMLInputElement;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | any) => {
+    const target = e.target;
+    if (!target) return;
     const { name, value, type, checked } = target;
 
     const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
 
-    const updatedFormData = {
-      ...formData,
-      [name]: newValue,
-    };
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: newValue,
+      };
 
-    updatedFormData.totalCost =
-      (Number(updatedFormData.systemCost) || 0) +
-      (Number(updatedFormData.fabricationCost) || 0);
+      updated.totalCost =
+        (Number(updated.systemCost) || 0) +
+        (Number(updated.fabricationCost) || 0);
 
-    setFormData(updatedFormData);
+      return updated;
+    });
 
     if (priceAlreadySetFromCustomerData) {
       setPriceAlreadySetFromCustomerData(false);
@@ -273,12 +227,16 @@ const PackageManagement: React.FC = () => {
   }, []);
 
   const fetchAllPackages = async () => {
-    setLoading(true);
-    const data = await getSavedSystemSpecPackages(); // No param
-    setSavedSpecs(data || []);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const data = await getSystemSpecPackages(undefined, selectedOrg?.orgId);
+      setSavedSpecs(data || []);
+    } catch (error) {
+      console.error("Failed to fetch packages:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-
 
 
 
@@ -679,93 +637,98 @@ const PackageManagement: React.FC = () => {
   };
 
   const handleEditPackage = async (id: number) => {
-    const selectedPackage = savedSpecs.find(pkg => pkg.id === id);
-    if (!selectedPackage) return;
+    try {
+      const selectedPackage = await getSystemPackageById(id);
+      if (!selectedPackage) return;
 
-    setIsPrefilling(true);
-    const specs = selectedPackage.systemSpecs;
+      setIsPrefilling(true);
+      const specs = selectedPackage.systemSpecs;
 
-    // ✅ Extract inverter list safely
-    const inverterList = specs?.inverters?.length
-      ? specs.inverters
-      : [{ inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 }];
+      // ✅ Extract inverter list safely
+      const inverterList = specs?.inverters?.length
+        ? specs.inverters
+        : [{ inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 }];
 
-    // ✅ Get base IDs
-    const gId = specs?.inverters?.[0]?.gridTypeId ?? null;
-    const pId = specs?.inverters?.[0]?.phaseTypeId ?? null;
-    const mId = specs?.materialOriginId || null;
+      // ✅ Get base IDs
+      const gId = specs?.inverters?.[0]?.gridTypeId ?? null;
+      const pId = specs?.inverters?.[0]?.phaseTypeId ?? null;
+      const mId = specs?.materialOriginId || null;
 
-    // ✅ Set individual states FIRST to trigger dependent fetches
-    setPhaseTypeId(pId);
-    setGridTypeId(gId);
-    setMaterialOriginId(mId);
-    setOrgPanelSpecId(specs?.orgPanelSpecId || null);
-    setSystemCapacityKw(specs?.systemCapacityKw || null);
-    setBatteryBrandId(specs?.batteryBrandId || null);
+      // ✅ Set individual states FIRST to trigger dependent fetches
+      setPhaseTypeId(pId);
+      setGridTypeId(gId);
+      setMaterialOriginId(mId);
+      setOrgPanelSpecId(specs?.orgPanelSpecId || null);
+      setSystemCapacityKw(specs?.systemCapacityKw || null);
+      setBatteryBrandId(specs?.batteryBrandId || null);
 
-    // ✅ Pre-fetch inverter capacities for the map
-    const capsMap: Record<number, any[]> = {};
-    for (let i = 0; i < inverterList.length; i++) {
-      const inv = inverterList[i];
-      if (inv.inverterBrandId) {
-        try {
-          const capacities = await fetchInverterBrandCapacities(
-            inv.inverterBrandId,
-            Number(selectedOrg?.orgId),
-            Number(pId),
-            Number(gId)
-          );
-          capsMap[i] = Array.isArray(capacities) ? capacities : [];
-        } catch (error) {
-          console.error(`Failed to fetch capacities for inverter at index ${i}:`, error);
-          capsMap[i] = [];
+      // ✅ Pre-fetch inverter capacities for the map
+      const capsMap: Record<number, any[]> = {};
+      for (let i = 0; i < inverterList.length; i++) {
+        const inv = inverterList[i];
+        if (inv.inverterBrandId) {
+          try {
+            const capacities = await fetchInverterBrandCapacities(
+              inv.inverterBrandId,
+              Number(selectedOrg?.orgId),
+              Number(pId),
+              Number(gId)
+            );
+            capsMap[i] = Array.isArray(capacities) ? capacities : [];
+          } catch (error) {
+            console.error(`Failed to fetch capacities for inverter at index ${i}:`, error);
+            capsMap[i] = [];
+          }
         }
       }
+      setInverterCapacitiesMap(capsMap);
+
+      setFormData({
+        systemCost: specs?.systemCost || 0,
+        fabricationCost: specs?.fabricationCost || 0,
+        totalCost: (specs?.systemCost || 0) + (specs?.fabricationCost || 0),
+
+        installationSpaceType: specs?.installationSpaceType || "",
+        installationStructureType: specs?.installationStructureType || "Static",
+
+        hasWaterSprinkler: specs?.hasWaterSprinkler || false,
+        hasHeavydutyRamp: specs?.hasHeavydutyRamp || false,
+        hasHeavydutyStairs: specs?.hasHeavydutyStairs || false,
+
+        materialOriginId: mId,
+        orgPanelSpecId: specs?.orgPanelSpecId || null,
+        orgBatterySpecId: specs?.orgBatterySpecId || null,
+        batteryBrandId: specs?.batteryBrandId || null,
+        panelBrandId: specs?.panelBrandId || null,
+        systemCapacityKw: specs?.systemCapacityKw || null,
+
+        gridTypeId: gId,
+        phaseTypeId: pId,
+
+        isGharkulPackage: selectedPackage?.isGharkulPackage || false,
+        title: selectedPackage?.title || "",
+        description: selectedPackage?.description || "",
+
+        inverters: inverterList,
+
+        pipes:
+          specs?.pipes?.length > 0
+            ? specs.pipes
+            : [{ orgPipeSpecId: null, pipeCount: 1 }],
+      });
+
+      setIsEditing(true);
+      setEditingPackageId(id);
+      setIsModalOpen(true);
+
+      // Provide a longer timeout for all effects to settle
+      setTimeout(() => {
+        setIsPrefilling(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to fetch package details for edit:", error);
+      toast.error("Failed to load package details.");
     }
-    setInverterCapacitiesMap(capsMap);
-
-    setFormData({
-      systemCost: specs?.systemCost || 0,
-      fabricationCost: specs?.fabricationCost || 0,
-      totalCost: (specs?.systemCost || 0) + (specs?.fabricationCost || 0),
-
-      installationSpaceType: specs?.installationSpaceType || "",
-      installationStructureType: specs?.installationStructureType || "Static",
-
-      hasWaterSprinkler: specs?.hasWaterSprinkler || false,
-      hasHeavydutyRamp: specs?.hasHeavydutyRamp || false,
-      hasHeavydutyStairs: specs?.hasHeavydutyStairs || false,
-
-      materialOriginId: mId,
-      orgPanelSpecId: specs?.orgPanelSpecId || null,
-      orgBatterySpecId: specs?.orgBatterySpecId || null,
-      batteryBrandId: specs?.batteryBrandId || null,
-      panelBrandId: specs?.panelBrandId || null,
-      systemCapacityKw: specs?.systemCapacityKw || null,
-
-      gridTypeId: gId,
-      phaseTypeId: pId,
-
-      isGharkulPackage: selectedPackage?.isGharkulPackage || false,
-      title: selectedPackage?.title || "",
-      description: selectedPackage?.description || "",
-
-      inverters: inverterList,
-
-      pipes:
-        specs?.pipes?.length > 0
-          ? specs.pipes
-          : [{ orgPipeSpecId: null, pipeCount: 1 }],
-    });
-
-    setIsEditing(true);
-    setEditingPackageId(id);
-    setIsModalOpen(true);
-
-    // Provide a longer timeout for all effects to settle
-    setTimeout(() => {
-      setIsPrefilling(false);
-    }, 1000);
   };
 
   const handleEditSpecPackage = async () => {
@@ -957,10 +920,15 @@ const PackageManagement: React.FC = () => {
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-        {savedSpecs.length > 0 ? (
+        {loading ? (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-blue-50 shadow-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
+            <p className="text-slate-500 font-medium animate-pulse">
+              Loading available packages...
+            </p>
+          </div>
+        ) : savedSpecs.length > 0 ? (
           savedSpecs.map((pkg) => {
-            const specs = pkg.systemSpecs;
-
             return (
               <Card
                 key={pkg.id}
@@ -991,18 +959,18 @@ const PackageManagement: React.FC = () => {
                   {/* Panel + Capacity */}
                   <p className="mt-1 text-sm text-slate-700 truncate">
                     <span className="font-semibold text-blue-700">
-                      {specs?.panelBrandShortName}
+                      {pkg.panelBrandName || pkg.panelBrandShortName}
                     </span>{" "}
-                    ({specs?.panelRatedWattageW}W) -{" "}
+                    ({pkg.panelRatedWattage || pkg.panelRatedWattageW}W) -{" "}
                     <span className="font-semibold text-emerald-700">
-                      {specs?.systemCapacityKw} kW
+                      {pkg.systemCapacityKw} kW
                     </span>
                   </p>
 
                   {/* Inverters */}
                   <div className="mt-2 space-y-1 text-sm text-slate-700">
-                    {specs?.inverters?.length > 0 ? (
-                      specs.inverters.map((inv: any, index: number) => (
+                    {pkg.inverters?.length > 0 ? (
+                      pkg.inverters.map((inv: any, index: number) => (
                         <p key={index} className="truncate">
                           ⚡{" "}
                           <span className="font-semibold text-slate-900">
@@ -1018,15 +986,15 @@ const PackageManagement: React.FC = () => {
                     )}
 
                     {/* Show battery only if Hybrid */}
-                    {specs?.inverters?.some(
+                    {pkg.inverters?.some(
                       (inv: any) => inv.gridTypeName === "Hybrid"
-                    ) && specs?.batteryBrandName && (
+                    ) && pkg.batteryBrandName && (
                         <p className="truncate">
                           🔋{" "}
                           <span className="font-semibold text-slate-900">
-                            {specs?.batteryBrandName}
+                            {pkg.batteryBrandName}
                           </span>{" "}
-                          - {specs?.batteryCapacityKw} kW
+                          - {pkg.batteryCapacity || pkg.batteryCapacityKw} kW
                         </p>
                       )}
                   </div>
@@ -1038,8 +1006,8 @@ const PackageManagement: React.FC = () => {
                     </span>
                     <span className="text-lg font-bold text-blue-700">
                       ₹{(
-                        Number(specs?.systemCost ?? 0) +
-                        Number(specs?.fabricationCost ?? 0)
+                        Number(pkg.systemCost ?? 0) +
+                        Number(pkg.fabricationCost ?? 0)
                       ).toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -1613,12 +1581,12 @@ const PackageManagement: React.FC = () => {
                     type="text"
                     name="systemCost"
                     value={formatIndianNumber(formData.systemCost)}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        systemCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-                      })
-                    }
+                    onChange={(e) => {
+                      const numericValue = Number(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                      handleChange({
+                        target: { name: "systemCost", value: numericValue },
+                      } as any);
+                    }}
                     placeholder="Solar System Cost"
                     className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />
@@ -1632,12 +1600,12 @@ const PackageManagement: React.FC = () => {
                     type="text"
                     name="fabricationCost"
                     value={formatIndianNumber(formData.fabricationCost)}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        fabricationCost: Number(e.target.value.replace(/[^0-9]/g, "")) || 0,
-                      })
-                    }
+                    onChange={(e) => {
+                      const numericValue = Number(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                      handleChange({
+                        target: { name: "fabricationCost", value: numericValue },
+                      } as any);
+                    }}
                     placeholder="Fabrication Cost"
                     className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                   />

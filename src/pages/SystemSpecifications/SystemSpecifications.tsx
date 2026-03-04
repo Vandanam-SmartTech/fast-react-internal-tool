@@ -5,8 +5,8 @@ import {
   generateQuotationPDF, saveSystemSpecs, saveInverterSpecs, getMaterialOrigins, getGridTypes, fetchInverterBrands,
   fetchInverterBrandCapacities, fetchPanelBrandCapacities, fetchBatteryBrands,
   fetchBatteryBrandCapacities, getSavedSystemSpecs, getPriceDetails, getSecondaryId, fetchPanelSpecsByOrg,
-  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId, getSavedSystemSpecPackages,
-  getSystemSpecsById
+  fetchPipeSpecification, savePipeSpecs, deleteSpecAPI, markQuotationFinal, fetchFinalQuotationByConnectionId,
+  getSystemSpecPackages, getSystemPackageById, getSystemSpecsById
 } from '../../services/quotationService';
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { ArrowLeft } from "lucide-react";
@@ -321,13 +321,17 @@ export const SystemSpecifications = () => {
   }, [connectionId]);
 
   useEffect(() => {
-    const fetchSystemSpecPackages = async () => {
-      if (isGharkulCustomer === null) return;
+    if (isGharkulCustomer === null) return;
 
+    const fetchSystemSpecPackages = async () => {
       setIsLoadingStdSpecs(true);
 
       try {
-        const packages = await getSavedSystemSpecPackages(isGharkulCustomer);
+        const packages = await getSystemSpecPackages(
+          isGharkulCustomer,   // this will now always be true or false
+          orgId || undefined
+        );
+
         console.log("Fetched system spec packages:", packages);
         setStdSpecPackages(packages);
       } catch (error) {
@@ -338,7 +342,7 @@ export const SystemSpecifications = () => {
     };
 
     fetchSystemSpecPackages();
-  }, [isGharkulCustomer]);
+  }, [isGharkulCustomer, orgId]);
 
 
 
@@ -416,7 +420,7 @@ export const SystemSpecifications = () => {
             setFormData({
               systemCost: spec.systemCost || 0,
               fabricationCost: spec.fabricationCost || 0,
-              totalCost: (spec.systemCost || 0) + (spec.fabricationCost || 0),
+              totalCost: (Number(spec.systemCost) || 0) + (Number(spec.fabricationCost) || 0),
               installationSpaceType: spec.installationSpaceType || formData.installationSpaceType,
               installationStructureType: spec.installationStructureType || "Static",
               hasWaterSprinkler: !!spec.hasWaterSprinkler,
@@ -1085,24 +1089,26 @@ export const SystemSpecifications = () => {
 
 
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | any) => {
+    const target = e.target;
+    if (!target) return;
+    const { name, value, type, checked } = target;
 
     const newValue = value === "" ? null : (type === "checkbox" ? checked : value);
 
-    const updatedFormData = {
-      ...formData,
-      [name]: newValue,
-    };
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: newValue,
+      };
 
-    // Pipe details are now independent of Heavy Duty Ramp checkbox
-    // No special handling needed when hasHeavydutyRamp changes
+      updated.totalCost =
+        (Number(updated.systemCost) || 0) +
+        (Number(updated.fabricationCost) || 0);
 
-    updatedFormData.totalCost =
-      (Number(updatedFormData.systemCost) || 0) +
-      (Number(updatedFormData.fabricationCost) || 0);
+      return updated;
+    });
 
-    setFormData(updatedFormData);
     setIsCustomSpecs(true);
     setIsSpecsSaved(false);
 
@@ -1295,7 +1301,7 @@ export const SystemSpecifications = () => {
 
           const secondaryResponse = await getSecondaryId(spec.id);
           const secondaryId =
-            secondaryResponse?.id ?? secondaryResponse?.[0]?.id;
+            (secondaryResponse as any)?.id ?? (secondaryResponse as any)?.[0]?.id;
 
           if (!secondaryId) continue;
 
@@ -1597,15 +1603,22 @@ export const SystemSpecifications = () => {
   };
 
   const StdSpecCard = ({ pkg }: { pkg: any }) => {
-    const stdSpec = pkg.systemSpecs;
-
-    if (!stdSpec) return null;
-
     return (
       <div
-        onClick={() => {
-          handleSelectSpec(stdSpec);   // pass systemSpecs
-          setIsFormOpen(true);
+        onClick={async () => {
+          try {
+            setIsLoading(true);
+            const fullPackage = await getSystemPackageById(pkg.id);
+            if (fullPackage?.systemSpecs) {
+              handleSelectSpec(fullPackage.systemSpecs);
+              setIsFormOpen(true);
+            }
+          } catch (error) {
+            console.error("Failed to fetch full package details:", error);
+            toast.error("Failed to load package details.");
+          } finally {
+            setIsLoading(false);
+          }
         }}
         className="relative cursor-pointer border rounded-lg p-3 shadow transition
       bg-gradient-to-br from-yellow-50 to-white border-yellow-400 hover:shadow-lg"
@@ -1623,19 +1636,19 @@ export const SystemSpecifications = () => {
         {/* HEADER */}
         <div className="flex justify-between items-center mb-1">
           <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex-1 truncate pr-2">
-            {stdSpec.panelBrandShortName}
+            {pkg.panelBrandName || pkg.panelBrandShortName}
             <span className="text-sm font-medium text-gray-600">
-              {" "}({stdSpec.panelRatedWattageW}W)
+              {" "}({pkg.panelRatedWattage || pkg.panelRatedWattageW}W)
             </span>
             <span className="text-gray-700">
-              {" "} - {stdSpec.systemCapacityKw} kW
+              {" "} - {pkg.systemCapacityKw} kW
             </span>
           </h3>
         </div>
 
         <div className="space-y-1">
-          {stdSpec.inverters?.length > 0 ? (
-            stdSpec.inverters.map((inv: any, index: number) => (
+          {pkg.inverters?.length > 0 ? (
+            pkg.inverters.map((inv: any, index: number) => (
               <p key={index} className="text-sm text-gray-700">
                 ⚡ Inverter {index + 1}:{" "}
                 <span className="font-medium">{inv.inverterBrandName}</span>
@@ -1649,15 +1662,15 @@ export const SystemSpecifications = () => {
           )}
 
           {/* Battery only if Hybrid inverter exists */}
-          {stdSpec.inverters?.some(
+          {pkg.inverters?.some(
             (inv: any) => inv.gridTypeName === "Hybrid"
-          ) && stdSpec.batteryBrandName && (
+          ) && (pkg.batteryBrandName) && (
               <p className="text-sm text-gray-700">
                 🔋 Battery:{" "}
                 <span className="font-medium">
-                  {stdSpec.batteryBrandName}
+                  {pkg.batteryBrandName}
                 </span>
-                {" "} - {stdSpec.batteryCapacityKw} kW
+                {" "} - {pkg.batteryCapacity || pkg.batteryCapacityKw} kW
               </p>
             )}
         </div>
@@ -1667,16 +1680,11 @@ export const SystemSpecifications = () => {
           <span className="text-sm font-semibold text-blue-800">
             Total Cost: ₹
             {(
-              (stdSpec.systemCost || 0) +
-              (stdSpec.fabricationCost || 0)
+              (Number(pkg.systemCost) || 0) +
+              (Number(pkg.fabricationCost) || 0)
             ).toLocaleString("en-IN")}
           </span>
         </div>
-
-        {/* VALIDITY */}
-        {/* <div className="mt-1 text-xs text-gray-500">
-          Valid: {pkg.validFrom} → {pkg.validThrough}
-        </div> */}
       </div>
     );
   };
@@ -1801,60 +1809,8 @@ export const SystemSpecifications = () => {
           className={`flex flex-col lg:flex-row gap-5 lg:justify-center`}
         >
 
-          {/* {isGharkulCustomer && (
-            <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200 lg:w-1/4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                Standard Packages
-              </h2>
-
-              <div className="relative">
-
-                {!isLoadingStdSpecs && stdSpecPackages.length > 1 && (
-                  <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white pointer-events-none lg:hidden" />
-                )}
-
-                <div
-                  className="
-          flex gap-3
-          overflow-x-auto pb-2
-          snap-x snap-mandatory
-          lg:flex-col lg:overflow-visible
-        "
-                >
-                  {isLoadingStdSpecs ? (
-                    <div className="flex justify-center items-center py-6 gap-2 min-w-full">
-                      <RefreshCw className="w-6 h-6 animate-spin text-gray-600" />
-                      Loading...
-                    </div>
-                  ) : stdSpecPackages.length > 0 ? (
-                    stdSpecPackages.map((pkg) => (
-                      <div
-                        key={pkg.id}
-                        className="min-w-[90%] sm:min-w-[80%] lg:min-w-0 snap-start"
-                      >
-                        <StdSpecCard pkg={pkg} />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 italic">
-                      No standard packages available
-                    </p>
-                  )}
-
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
           <div
-            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 ${isGharkulCustomer ? "lg:w-3/4" : ""
-              }`}
-          > */}
-
-          <div
-            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
+            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 w-full`}
           >
 
             {/* <div
@@ -2265,6 +2221,7 @@ export const SystemSpecifications = () => {
                         <ReusableDropdown
                           name="inverterBrandId"
                           value={inv.inverterBrandId ?? ""}
+                          className="mt-1"
                           onChange={(val) =>
                             handleInverterChange(index, "inverterBrandId", val === "" ? null : Number(val))
                           }
@@ -2303,20 +2260,21 @@ export const SystemSpecifications = () => {
                           })}
                           disabled={!inv.inverterBrandId || isGharkulUser}
                           placeholder="Select Inverter Spec"
+                          className="mt-1"
                         />
                       </div>
 
                       {/* Inverter Count */}
-                      <div className="col-span-12 md:col-span-2 flex flex-col justify-end">
+                      <div className="col-span-12 md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700">Count</label>
-                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                        <div className="flex items-center border rounded-md shadow-sm bg-white mt-1">
                           <button
                             type="button"
                             disabled={isGharkulUser || ((inv.inverterCount ?? 1) <= 1)}
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-l-md  border-gray-300 transition
+                            className={`px-3 py-1.5 text-base font-bold rounded-l-md border-gray-300 transition
     ${isGharkulUser || (inv.inverterCount ?? 1) <= 1
                                 ? "text-gray-300 bg-gray-100 cursor-not-allowed"
                                 : "text-gray-600 hover:text-white hover:bg-red-500"
@@ -2334,7 +2292,7 @@ export const SystemSpecifications = () => {
                               const value = Math.max(Number(e.target.value) || 1, 1);
                               handleInverterChange(index, "inverterCount", value);
                             }}
-                            className="w-full text-center border-x p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full text-center border-x p-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
 
                           <button
@@ -2343,7 +2301,7 @@ export const SystemSpecifications = () => {
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-r-md transition border-gray-300
+                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300
     ${isGharkulUser
                                 ? "text-gray-300 bg-gray-100 cursor-not-allowed "
                                 : "text-gray-600 hover:text-white hover:bg-green-500"
@@ -2352,7 +2310,6 @@ export const SystemSpecifications = () => {
                             +
                           </button>
                         </div>
-
                       </div>
                     </div>
                   ))}
@@ -2489,20 +2446,21 @@ export const SystemSpecifications = () => {
                           }))}
                           disabled={isGharkulUser}
                           placeholder="Select Pipe Specification"
+                          className="mt-1"
                         />
                       </div>
 
                       {/* Pipe Count - 3 columns */}
                       <div className="col-span-12 md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700">Count</label>
-                        <div className="flex items-center border rounded-md shadow-sm bg-white">
+                        <div className="flex items-center border rounded-md shadow-sm bg-white mt-1">
                           <button
                             type="button"
                             disabled={isGharkulUser || (pipe.pipeCount ?? 1) <= 1}
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-l-md transition border-gray-300 ${(pipe.pipeCount ?? 1) <= 1
+                            className={`px-3 py-1.5 text-base font-bold rounded-l-md transition border-gray-300 ${(pipe.pipeCount ?? 1) <= 1
                               ? "text-gray-300 bg-gray-100 cursor-not-allowed"
                               : "text-gray-600 hover:text-white hover:bg-red-500"
                               }`}
@@ -2519,7 +2477,7 @@ export const SystemSpecifications = () => {
                               const value = Math.max(Number(e.target.value) || 1, 1);
                               handlePipeChange(index, "pipeCount", value);
                             }}
-                            className="w-full text-center border-x border-gray-200 p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full text-center border-x border-gray-200 p-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
 
                           <button
@@ -2528,7 +2486,7 @@ export const SystemSpecifications = () => {
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
                             }
-                            className={`px-3 py-2 text-lg font-bold rounded-r-md transition border-gray-300
+                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300
     ${isGharkulUser
                                 ? "text-gray-300 bg-gray-100 cursor-not-allowed "
                                 : "text-gray-600 hover:text-white hover:bg-green-500"
@@ -2622,11 +2580,10 @@ export const SystemSpecifications = () => {
                       onFocus={() => setIsEditing(true)}
                       onBlur={() => setIsEditing(false)}
                       onChange={(e) => {
-                        const rawValue = e.target.value.replace(/[^0-9]/g, "");
-                        setFormData({
-                          ...formData,
-                          systemCost: rawValue,
-                        });
+                        const numericValue = Number(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                        handleChange({
+                          target: { name: "systemCost", value: numericValue },
+                        } as any);
                       }}
                       disabled={isGharkulUser}   // ✅ disable condition
                       className={`mt-1 block w-full p-2 border rounded-md shadow-sm
@@ -2656,11 +2613,10 @@ export const SystemSpecifications = () => {
                       onFocus={() => setIsEditingFabrication(true)}
                       onBlur={() => setIsEditingFabrication(false)}
                       onChange={(e) => {
-                        const rawValue = e.target.value.replace(/[^0-9]/g, ""); // keep only digits
-                        setFormData({
-                          ...formData,
-                          fabricationCost: rawValue,
-                        });
+                        const numericValue = Number(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                        handleChange({
+                          target: { name: "fabricationCost", value: numericValue },
+                        } as any);
                       }}
                       disabled={isGharkulUser}   // ✅ disable condition
                       className={`mt-1 block w-full p-2 border rounded-md shadow-sm

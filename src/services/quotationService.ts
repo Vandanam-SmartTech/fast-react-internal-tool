@@ -976,6 +976,47 @@ export const getSavedSystemSpecPackages = async (
   }
 };
 
+export const getSystemSpecPackages = async (
+  isGharkulPackage?: boolean,
+  orgId?: number,
+  orgPanelSpecId?: number
+): Promise<any[]> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.post(
+      `/api/system-packages`,
+      {
+        ...(isGharkulPackage !== undefined && { isGharkulPackage }),
+        ...(orgId !== undefined && { orgId }),
+        ...(orgPanelSpecId !== undefined && { orgPanelSpecId }),
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching system spec packages:", error);
+    return [];
+  }
+};
+
+export const getSystemPackageById = async (
+  id: number
+): Promise<any> => {
+  const quotationAPI = getQuotationAPI();
+
+  try {
+    const response = await quotationAPI.get(
+      `/api/system-packages/${id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching system package with id ${id}:`, error);
+    throw error;
+  }
+};
+
 
 
 export const getSecondaryId = async (systemSpecificationId: number): Promise<any[]> => {
@@ -1532,16 +1573,6 @@ export const addPipeSpecForOrg = async (
     return null;
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 export const getSystemPackagesWithSpecs = async (
   isGharkulPackage: boolean,

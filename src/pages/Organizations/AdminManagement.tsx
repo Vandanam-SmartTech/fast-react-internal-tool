@@ -6,6 +6,7 @@ import { createRole, RoleDto } from '../../services/roleService';
 import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers, assignUserRole } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
+import ReusableDropdown from '../../components/ReusableDropdown';
 
 
 const AdminManagement: React.FC = () => {
@@ -271,7 +272,7 @@ const AdminManagement: React.FC = () => {
       let allUsers = [];
 
       if (userRole === "ROLE_SUPER_ADMIN") {
-        
+
         allUsers = await fetchAllUsers();
       } else if (["ROLE_ORG_ADMIN", "ROLE_AGENCY_ADMIN"].includes(userRole)) {
         // Org/Agency Admins can see users within their organization only
@@ -1005,7 +1006,7 @@ const AdminManagement: React.FC = () => {
               </select>
             </div>
 
-            {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE','ROLE_AGENCY_ELECTRICIAN'].includes(
+            {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE', 'ROLE_AGENCY_ELECTRICIAN'].includes(
               roles.find(r => r.id?.toString() === promoteData.roleId)?.name || ''
             ) && (
                 <div className="lg:col-span-2">
@@ -1395,82 +1396,75 @@ const AdminManagement: React.FC = () => {
                 )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                District <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="district"
-                value={districtCode}
-                onChange={handleDistrictChange}
-                required
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{districtName || "Select District"}</option>
-                {districts.map((district) => (
-                  <option key={district.nameEnglish} value={district.code}>
-                    {district.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
+             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="district"
+                  value={districtCode}
+                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                  options={[
+                    { value: 0, label: districtName || "Select District" },
+                    ...districts.map((district) => ({
+                      value: district.code,
+                      label: district.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={districtName || "Select District"}
+                  className="w-full"
+                />
+              </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Taluka <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="talukaCode"
-                value={talukaCode}
-                onChange={handleTalukaChange}
-                required
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{talukaName || "Select Taluka"}</option>
-                {talukas.map((taluka) => (
-                  <option key={taluka.nameEnglish} value={taluka.code}>
-                    {taluka.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="talukaCode"
+                  value={talukaCode}
+                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                  options={[
+                    { value: 0, label: talukaName || "Select Taluka" },
+                    ...talukas.map((taluka) => ({
+                      value: taluka.code,
+                      label: taluka.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={talukaName || "Select Taluka"}
+                  className="w-full"
+                />
+              </div>
+
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Village
-              </label>
-              <select
-                name="villageCode"
-                value={villageCode}
-                onChange={handleVillageChange}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <option value={0}>{villageName || "Select Village"}</option>
-                {villages.map((village) => (
-                  <option key={village.code} value={village.code}>
-                    {village.nameEnglish}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="villageCode"
+                  value={villageCode}
+                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                  options={[
+                    { value: 0, label: villageName || "Select Village" },
+                    ...villages.map((village) => ({
+                      value: village.code,
+                      label: village.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={villageName || "Select Village"}
+                  className="w-full"
+                />
+              </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                PIN Code <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="pinCode"
-                value={formData.pinCode}
-                onChange={handlepinCodeChange}
-                placeholder="e.g. 416000"
-                title="Pincode must be exactly 6 digits (0-9)"
-                maxLength={6}
-                inputMode="numeric"
-                required
-                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              />
-            </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  id="pinCode"
+                  name="pinCode"
+                  value={formData.pinCode}
+                  onChange={handlepinCodeChange}
+                  placeholder="e.g. 416000"
+                  inputMode='numeric'
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">

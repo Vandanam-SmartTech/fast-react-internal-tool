@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, CreditCard, Info, Plus, X as CloseIcon } from "lucide-react";
-import {
-    BoltIcon,
-    HomeModernIcon,
-    CalendarDaysIcon,
-    ChatBubbleBottomCenterTextIcon,
-    WrenchIcon,
-    ArrowsPointingOutIcon
-} from "@heroicons/react/24/solid";
-import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemPackagesWithSpecs, getRunningCopySystemSpec, saveSystemSpecs, saveInverterSpecs, savePipeSpecs } from "../../services/quotationService";
+import { BoltIcon, HomeModernIcon, CalendarDaysIcon, ChatBubbleBottomCenterTextIcon, WrenchIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/solid";
+import { getSavedSystemSpecs, fetchSelectedPanelSpecs, getSystemSpecPackages, getSystemPackageById, getRunningCopySystemSpec, saveSystemSpecs, saveInverterSpecs, savePipeSpecs } from "../../services/quotationService";
 import { toast } from "react-toastify";
 import { getConnectionByConnectionId, getCustomerById } from "../../services/customerRequisitionService";
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
@@ -196,38 +189,36 @@ export const ViewSystemSpecifications = () => {
             if (orgId && isGharkulCustomer !== null) {
                 try {
                     setLoading(true);
-                    // Assuming isGharkulCustomer is boolean, default to false if null
                     const isGharkul = !!isGharkulCustomer;
 
-                    // Note: ensure phaseTypeId is passed if needed, otherwise ignore or pass 0/null
-                    // If selectedPanelSpecId is null, it will fetch all packages for the org
-                    const packages = await getSystemPackagesWithSpecs(isGharkul, orgId, selectedPanelSpecId || undefined);
-                    console.log("Params: ", isGharkul, orgId, selectedPanelSpecId);
+                    // Use the new POST API
+                    const packages = await getSystemSpecPackages(isGharkul, orgId, selectedPanelSpecId || undefined);
+                    console.log("Fetched packages:", packages);
 
                     // Map API response to SystemSpec interface
                     const mappedSpecs: SystemSpec[] = packages.map((pkg: any) => {
-                        const specs = pkg.systemSpecs || {};
+                        // The new API returns a flatter structure
                         return {
-                            id: pkg.id || specs.id || Math.random(), // Use package ID primarily
+                            id: pkg.id,
                             connectionId: Number(connectionId),
-                            isRunningCopy: false, // These are templates
-                            systemSpecsId: specs.id,
+                            isRunningCopy: false, // Templates
+                            systemSpecsId: pkg.id, // Using package ID as reference
 
                             title: pkg.title,
-                            panelBrandShortName: specs.panelBrandShortName,
-                            panelRatedWattageW: specs.panelRatedWattageW || specs.panelRatedWattage,
-                            systemCapacityKw: specs.systemCapacityKw,
-                            panelCount: specs.panelCount,
+                            panelBrandShortName: pkg.panelBrandName || pkg.panelBrandShortName,
+                            panelRatedWattageW: pkg.panelRatedWattage || pkg.panelRatedWattageW,
+                            systemCapacityKw: pkg.systemCapacityKw,
+                            panelCount: pkg.panelCount,
 
-                            systemCost: specs.systemCost,
-                            fabricationCost: specs.fabricationCost,
-                            totalCost: (specs.systemCost || 0) + (specs.fabricationCost || 0),
+                            systemCost: pkg.systemCost,
+                            fabricationCost: pkg.fabricationCost,
+                            totalCost: (Number(pkg.systemCost) || 0) + (Number(pkg.fabricationCost) || 0),
 
-                            batteryBrandName: specs.batteryBrandName,
-                            batteryCount: specs.batteryCount,
-                            batteryCapacityKw: specs.batteryCapacityKw,
+                            batteryBrandName: pkg.batteryBrandName,
+                            batteryCount: pkg.batteryCount,
+                            batteryCapacityKw: pkg.batteryCapacity || pkg.batteryCapacityKw,
 
-                            inverters: specs.inverters?.map((inv: any) => ({
+                            inverters: pkg.inverters?.map((inv: any) => ({
                                 inverterBrandName: inv.inverterBrandName,
                                 inverterCount: inv.inverterCount,
                                 inverterCapacity: inv.inverterCapacity || 0,
@@ -235,8 +226,8 @@ export const ViewSystemSpecifications = () => {
                                 productWarranty: inv.productWarranty
                             })) || [],
 
-                            pipes: specs.pipes?.map((p: any) => ({
-                                pipeBrandName: p.pipeBrandName,
+                            pipes: pkg.pipes?.map((p: any) => ({
+                                pipeBrandName: p.pipeBrandName || p.pipeBrandShortName,
                                 pipeCount: p.pipeCount,
                                 pipeWidth: p.pipeWidth,
                                 pipeHeight: p.pipeHeight,
@@ -244,24 +235,24 @@ export const ViewSystemSpecifications = () => {
                                 pipeLength: p.pipeLength
                             })) || [],
 
-                            installationStructureType: specs.installationStructureType,
-                            hasWaterSprinkler: specs.hasWaterSprinkler,
-                            hasHeavydutyRamp: specs.hasHeavydutyRamp,
-                            hasHeavydutyStairs: specs.hasHeavydutyStairs,
+                            installationStructureType: pkg.installationStructureType,
+                            hasWaterSprinkler: pkg.hasWaterSprinkler,
+                            hasHeavydutyRamp: pkg.hasHeavydutyRamp,
+                            hasHeavydutyStairs: pkg.hasHeavydutyStairs,
                             validFrom: pkg.validFrom,
-                            validThru: pkg.validThru,
+                            validThru: pkg.validThrough || pkg.validThru,
                             description: pkg.description,
-                            createdAt: specs.createdAt || new Date().toISOString(),
+                            createdAt: pkg.createdAt || new Date().toISOString(),
 
                             // IDs for Order Creation
-                            orgPanelSpecId: specs.orgPanelSpecId,
-                            orgBatterySpecId: specs.orgBatterySpecId,
-                            bosSpecsId: specs.bosSpecsId || 1, // Defaulting if not present
-                            specSourceId: specs.specSourceId || 1, // Defaulting if not present
+                            orgPanelSpecId: pkg.orgPanelSpecId,
+                            orgBatterySpecId: pkg.orgBatterySpecId,
+                            bosSpecsId: pkg.bosSpecsId || 1,
+                            specSourceId: pkg.specSourceId || 1,
 
-                            // Raw Inverters/Pipes for re-saving
-                            finalInverters: specs.inverters || [],
-                            finalPipes: specs.pipes || []
+                            // We'll need to fetch full details for confirmation if not all fields present
+                            finalInverters: pkg.inverters || [],
+                            finalPipes: pkg.pipes || []
                         };
                     });
 
@@ -270,11 +261,11 @@ export const ViewSystemSpecifications = () => {
                     try {
                         const runningCopy = await getRunningCopySystemSpec(Number(connectionId));
                         if (runningCopy) {
-                            const specs = runningCopy.systemSpecs || runningCopy; // Adjust based on API structure
+                            const specs = runningCopy.systemSpecs || runningCopy;
                             const customizedSpec: SystemSpec = {
                                 id: runningCopy.id || Math.random(),
                                 connectionId: Number(connectionId),
-                                isRunningCopy: true, // Mark as customized
+                                isRunningCopy: true,
                                 systemSpecsId: specs.id,
 
                                 title: "Your Customized Plan",
@@ -285,7 +276,7 @@ export const ViewSystemSpecifications = () => {
 
                                 systemCost: specs.systemCost,
                                 fabricationCost: specs.fabricationCost,
-                                totalCost: (specs.systemCost || 0) + (specs.fabricationCost || 0),
+                                totalCost: (Number(specs.systemCost) || 0) + (Number(specs.fabricationCost) || 0),
 
                                 batteryBrandName: specs.batteryBrandName,
                                 batteryCount: specs.batteryCount,
@@ -317,18 +308,15 @@ export const ViewSystemSpecifications = () => {
                                 description: "This is your customized system configuration.",
                                 createdAt: specs.createdAt || new Date().toISOString(),
 
-                                // IDs for Order Creation
                                 orgPanelSpecId: specs.orgPanelSpecId,
                                 orgBatterySpecId: specs.orgBatterySpecId,
                                 bosSpecsId: specs.bosSpecsId || 1,
                                 specSourceId: specs.specSourceId || 1,
 
-                                // Raw Inverters/Pipes for re-saving
                                 finalInverters: specs.inverters || [],
                                 finalPipes: specs.pipes || []
                             };
 
-                            // Remove duplicate if it was already in the list
                             finalSpecs = [customizedSpec, ...mappedSpecs.filter(s => s.systemSpecsId !== customizedSpec.systemSpecsId)];
                         }
                     } catch (err) {
@@ -367,24 +355,48 @@ export const ViewSystemSpecifications = () => {
 
         setIsSaving(true);
         try {
+            let specToSave = { ...selectedSpec };
+
+            // If it's a template (not a running copy), fetch full technical details
+            if (!selectedSpec.isRunningCopy) {
+                const fullPkg = await getSystemPackageById(selectedSpec.id);
+                if (fullPkg?.systemSpecs) {
+                    const s = fullPkg.systemSpecs;
+                    specToSave = {
+                        ...specToSave,
+                        installationSpaceType: s.installationSpaceType,
+                        installationStructureType: s.installationStructureType,
+                        hasWaterSprinkler: s.hasWaterSprinkler,
+                        hasHeavydutyRamp: s.hasHeavydutyRamp,
+                        hasHeavydutyStairs: s.hasHeavydutyStairs,
+                        orgPanelSpecId: s.orgPanelSpecId,
+                        orgBatterySpecId: s.orgBatterySpecId,
+                        batteryCount: s.batteryCount,
+                        systemCapacityKw: s.systemCapacityKw,
+                        finalInverters: s.inverters || [],
+                        finalPipes: s.pipes || []
+                    };
+                }
+            }
+
             // 1. Save System Spec
             const payload = {
-                installationSpaceType: selectedSpec.installationSpaceType || null,
-                installationStructureType: selectedSpec.installationStructureType || "Static",
-                systemCost: selectedSpec.systemCost || 0,
-                fabricationCost: selectedSpec.fabricationCost || 0,
+                installationSpaceType: specToSave.installationSpaceType || null,
+                installationStructureType: specToSave.installationStructureType || "Static",
+                systemCost: specToSave.systemCost || 0,
+                fabricationCost: specToSave.fabricationCost || 0,
                 connectionId: Number(connectionId),
-                hasWaterSprinkler: !!selectedSpec.hasWaterSprinkler,
-                hasHeavydutyRamp: !!selectedSpec.hasHeavydutyRamp,
-                hasHeavydutyStairs: !!selectedSpec.hasHeavydutyStairs,
-                orgPanelSpecId: selectedSpec.orgPanelSpecId,
-                orgBatterySpecId: selectedSpec.orgBatterySpecId,
-                batteryCount: selectedSpec.batteryCount || (selectedSpec.orgBatterySpecId ? 1 : null),
-                bosSpecsId: selectedSpec.bosSpecsId || 1,
-                specSourceId: selectedSpec.specSourceId || 1,
+                hasWaterSprinkler: !!specToSave.hasWaterSprinkler,
+                hasHeavydutyRamp: !!specToSave.hasHeavydutyRamp,
+                hasHeavydutyStairs: !!specToSave.hasHeavydutyStairs,
+                orgPanelSpecId: specToSave.orgPanelSpecId,
+                orgBatterySpecId: specToSave.orgBatterySpecId,
+                batteryCount: specToSave.batteryCount || (specToSave.orgBatterySpecId ? 1 : null),
+                bosSpecsId: specToSave.bosSpecsId || 1,
+                specSourceId: specToSave.specSourceId || 1,
                 userId: userClaims?.id,
                 orgId: orgId,
-                systemCapacityKw: selectedSpec.systemCapacityKw,
+                systemCapacityKw: specToSave.systemCapacityKw,
                 isRunningCopy: true
             };
 
@@ -392,18 +404,18 @@ export const ViewSystemSpecifications = () => {
             const newSystemSpecsId = systemResponse.id;
 
             // 2. Save Inverters if any
-            if (selectedSpec.finalInverters && selectedSpec.finalInverters.length > 0) {
-                const inverterList = selectedSpec.finalInverters.map((inv: any) => ({
+            if (specToSave.finalInverters && specToSave.finalInverters.length > 0) {
+                const inverterList = specToSave.finalInverters.map((inv: any) => ({
                     systemSpecsId: newSystemSpecsId,
-                    orgInverterSpecId: inv.orgInverterSpecId || inv.id, // Fallback if necessary
+                    orgInverterSpecId: inv.orgInverterSpecId || inv.id,
                     inverterCount: inv.inverterCount || 1,
                 }));
                 await saveInverterSpecs(inverterList);
             }
 
             // 3. Save Pipes if any
-            if (selectedSpec.finalPipes && selectedSpec.finalPipes.length > 0) {
-                const pipeList = selectedSpec.finalPipes.map((p: any) => ({
+            if (specToSave.finalPipes && specToSave.finalPipes.length > 0) {
+                const pipeList = specToSave.finalPipes.map((p: any) => ({
                     systemSpecsId: newSystemSpecsId,
                     orgPipeSpecId: p.orgPipeSpecId || p.id,
                     pipeCount: p.pipeCount || 1,
@@ -416,7 +428,7 @@ export const ViewSystemSpecifications = () => {
             // 4. Navigate to Checkout with the NEW ID
             navigate('/checkout-system-specification', {
                 state: {
-                    selectedSpec: { ...selectedSpec, id: newSystemSpecsId },
+                    selectedSpec: { ...specToSave, id: newSystemSpecsId },
                     connectionId,
                     consumerId,
                     customerId
@@ -432,7 +444,6 @@ export const ViewSystemSpecifications = () => {
     };
 
     const handleProceedToBuy = () => {
-        // This is now replaced by handleConfirmOrder
         handleConfirmOrder();
     };
 
