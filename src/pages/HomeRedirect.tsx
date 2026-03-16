@@ -120,6 +120,12 @@ const HomeRedirect: React.FC = () => {
         case 'ROLE_BDO':
           setRedirectPath('/bdo-dashboard');
           break;
+        case 'ROLE_HIRING_MANAGER':
+          setRedirectPath('/workforce-management');
+          break;
+        case 'ROLE_ORG_VIEWER':
+          setRedirectPath('/list-of-consumers');
+          break;
         default:
           forceLogout();
       }

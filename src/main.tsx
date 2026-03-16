@@ -20,10 +20,10 @@ loadConfig()
   })
   .catch((err) => {
     root.render(
-      <div style={{ 
-        fontFamily: 'sans-serif', 
-        padding: '40px', 
-        maxWidth: '600px', 
+      <div style={{
+        fontFamily: 'sans-serif',
+        padding: '40px',
+        maxWidth: '600px',
         margin: '0 auto',
         textAlign: 'center'
       }}>
@@ -34,9 +34,9 @@ loadConfig()
         <p style={{ color: '#6b7280', fontSize: '14px' }}>
           Please ensure config.json is accessible at /solarpro/config.json
         </p>
-        <pre style={{ 
-          background: '#f3f4f6', 
-          padding: '12px', 
+        <pre style={{
+          background: '#f3f4f6',
+          padding: '12px',
           borderRadius: '6px',
           fontSize: '12px',
           textAlign: 'left',
@@ -45,8 +45,8 @@ loadConfig()
         }}>
           {err?.message || String(err)}
         </pre>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           style={{
             marginTop: '24px',
             padding: '10px 20px',

@@ -49,6 +49,7 @@ interface SystemSpec {
 
   batteryBrandName?: string;
   batteryCapacityKw?: number;
+  batteryCount?: number;
 
   inverters?: Inverter[];
 
@@ -190,6 +191,7 @@ export const SystemSpecifications = () => {
     orgPanelSpecId: null,
     batteryBrandId: null,
     orgBatterySpecId: null,
+    batteryCount: 1,
     systemCapacityKw: null,
     inverters: [
       { inverterBrandId: null, orgInverterSpecId: null, inverterCount: 1 },
@@ -432,6 +434,7 @@ export const SystemSpecifications = () => {
               orgPanelSpecId: spec.orgPanelSpecId || null,
               batteryBrandId: spec.batteryBrandId || null,
               orgBatterySpecId: spec.orgBatterySpecId || null,
+              batteryCount: spec.batteryCount || 1,
               systemCapacityKw: spec.systemCapacityKw || null,
               inverters: spec.inverters?.map((inv: any) => ({
                 inverterBrandId: inv.inverterBrandId,
@@ -881,7 +884,7 @@ export const SystemSpecifications = () => {
           formData.installationSpaceType?.trim() === ""
             ? null
             : formData.installationSpaceType,
-        batteryCount: formData.orgBatterySpecId ? 1 : null,
+        batteryCount: formData.orgBatterySpecId ? formData.batteryCount : null,
         connectionId,
         orgPanelSpecId: formData.orgPanelSpecId,
         orgBatterySpecId: formData.orgBatterySpecId,
@@ -925,12 +928,19 @@ export const SystemSpecifications = () => {
       // ---------------------- REFRESH & SUCCESS ------------------------------
 
       // Navigate immediately to Preview System Specification
-      navigate("/view-system-specifications", {
-        state: {
-          consumerId,
-          connectionId,
-          customerId,
-        },
+      // navigate("/view-system-specifications", {
+      //   state: {
+      //     consumerId,
+      //     connectionId,
+      //     customerId,
+      //   },
+      // });
+
+      await fetchSavedSpecs();
+
+            toast.success("System Specification saved successfully!", {
+        autoClose: 1000,
+        hideProgressBar: true,
       });
 
     } catch (error) {
@@ -1038,6 +1048,7 @@ export const SystemSpecifications = () => {
       gridTypeId: initialGridTypeId,            // safe
       batteryBrandId: spec.batteryBrandId,
       orgBatterySpecId: spec.orgBatterySpecId,
+      batteryCount: spec.batteryCount || 1,
       systemCapacityKw: spec.systemCapacityKw,
       inverters: inverterList,
       pipes: pipeList.length > 0 ? pipeList : [{ orgPipeSpecId: null, pipeCount: 1 }],
@@ -1155,7 +1166,7 @@ export const SystemSpecifications = () => {
           systemCapacityKw: formData.systemCapacityKw,
           orgPanelSpecId: formData.orgPanelSpecId,
           orgBatterySpecId: formData.orgBatterySpecId,
-          batteryCount: hasValidBattery ? 1 : 0,
+          batteryCount: hasValidBattery ? formData.batteryCount : 0,
           inverters: validInverters.map((inv) => ({
             orgInverterSpecId: inv.orgInverterSpecId,
             inverterCount: inv.inverterCount,
@@ -1813,13 +1824,6 @@ export const SystemSpecifications = () => {
             className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200 w-full`}
           >
 
-            {/* <div
-            className={`bg-white shadow-lg rounded-lg p-4 border border-gray-200`}
-          > */}
-
-
-
-
             {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
 
             <div className="flex items-center gap-3">
@@ -2082,7 +2086,6 @@ export const SystemSpecifications = () => {
                   }))}
                   placeholder="Select Grid Type"
                   className="mt-1"
-                  disabled={isGharkulUser}
                 />
               </div>
 
@@ -2106,7 +2109,6 @@ export const SystemSpecifications = () => {
                   }))}
                   placeholder="Select Material Origin Type"
                   className="mt-1"
-                  disabled={isGharkulUser}
                 />
               </div>
 
@@ -2138,9 +2140,9 @@ export const SystemSpecifications = () => {
                       label,
                     };
                   })}
-                  disabled={isGharkulUser || !materialOriginId}
+                  disabled={!materialOriginId}
                   placeholder="Select PV System Brand"
-
+                  className="mt-1"
                 />
               </div>
 
@@ -2162,8 +2164,8 @@ export const SystemSpecifications = () => {
                     label: `${panelCapacity} kW`,
                   }))}
                   placeholder="Select PV System Capacity"
-                  disabled={!materialOriginId || !orgPanelSpecId || isGharkulUser}
-
+                  disabled={!materialOriginId || !orgPanelSpecId}
+                  className="mt-1"
                 />
               </div>
 
@@ -2180,11 +2182,10 @@ export const SystemSpecifications = () => {
                       type="button"
                       onClick={addNewInverter}
                       disabled={
-                        isGharkulUser || (formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false)
+                        (formData.inverters?.some((inv) => !inv.orgInverterSpecId) ?? false)
                       }
                       className={`px-4 py-2 text-sm font-medium rounded-md shadow-sm transition whitespace-nowrap border rounded-md shadow-sm
-      ${isGharkulUser ||
-                          formData.inverters?.some((inv) => !inv.orgInverterSpecId)
+      ${formData.inverters?.some((inv) => !inv.orgInverterSpecId)
                           ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
                           : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
@@ -2203,12 +2204,7 @@ export const SystemSpecifications = () => {
                         <button
                           type="button"
                           onClick={() => removeInverter(index)}
-                          disabled={isGharkulUser}
-                          className={`absolute top-2 right-2 transition
-    ${isGharkulUser
-                              ? "text-gray-400 cursor-not-allowed"
-                              : "text-red-600 hover:text-red-800"
-                            }`}
+                          className={`absolute top-2 right-2 transition text-red-600 hover:text-red-800`}
                         >
                           ✕
                         </button>
@@ -2230,7 +2226,6 @@ export const SystemSpecifications = () => {
                             label: inv.inverterBrandName,
                           }))}
                           placeholder="Select Inverter Brand"
-                          disabled={isGharkulUser}
                         />
                       </div>
 
@@ -2258,7 +2253,7 @@ export const SystemSpecifications = () => {
                               label,
                             };
                           })}
-                          disabled={!inv.inverterBrandId || isGharkulUser}
+                          disabled={!inv.inverterBrandId}
                           placeholder="Select Inverter Spec"
                           className="mt-1"
                         />
@@ -2270,12 +2265,12 @@ export const SystemSpecifications = () => {
                         <div className="flex items-center border rounded-md shadow-sm bg-white mt-1">
                           <button
                             type="button"
-                            disabled={isGharkulUser || ((inv.inverterCount ?? 1) <= 1)}
+                            disabled={ ((inv.inverterCount ?? 1) <= 1)}
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", Math.max((inv.inverterCount || 1) - 1, 1))
                             }
                             className={`px-3 py-1.5 text-base font-bold rounded-l-md border-gray-300 transition
-    ${isGharkulUser || (inv.inverterCount ?? 1) <= 1
+    ${(inv.inverterCount ?? 1) <= 1
                                 ? "text-gray-300 bg-gray-100 cursor-not-allowed"
                                 : "text-gray-600 hover:text-white hover:bg-red-500"
                               }`}
@@ -2297,15 +2292,11 @@ export const SystemSpecifications = () => {
 
                           <button
                             type="button"
-                            disabled={isGharkulUser}
+                            
                             onClick={() =>
                               handleInverterChange(index, "inverterCount", (inv.inverterCount || 1) + 1)
                             }
-                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300
-    ${isGharkulUser
-                                ? "text-gray-300 bg-gray-100 cursor-not-allowed "
-                                : "text-gray-600 hover:text-white hover:bg-green-500"
-                              }`}
+                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300 text-gray-600 hover:text-white hover:bg-green-500`}
                           >
                             +
                           </button>
@@ -2317,9 +2308,11 @@ export const SystemSpecifications = () => {
               </div>
 
 
+
               {(formData.gridTypeId === 2 || formData.gridTypeId === 3) && (
-                <>
-                  <div>
+                <div className="md:col-span-2 grid grid-cols-12 gap-4 relative">
+                  {/* Battery Brand */}
+                  <div className="col-span-12 md:col-span-5">
                     <label className="block text-sm font-medium text-gray-700">
                       Battery Brand
                     </label>
@@ -2331,7 +2324,7 @@ export const SystemSpecifications = () => {
                         setBatteryBrandId(selectedId);
                         handleChange({
                           target: { name: "batteryBrandId", value: selectedId },
-                        });
+                        } as any);
                       }}
                       options={batteryBrands.map((batteryBrand) => ({
                         value: batteryBrand.brandId,
@@ -2339,12 +2332,11 @@ export const SystemSpecifications = () => {
                       }))}
                       placeholder="Select Battery Brand"
                       className="mt-1"
-                      disabled={isGharkulUser}
                     />
-
                   </div>
 
-                  <div>
+                  {/* Battery Spec */}
+                  <div className="col-span-12 md:col-span-5">
                     <label className="block text-sm font-medium text-gray-700">Battery Specification</label>
                     <ReusableDropdown
                       name="orgBatterySpecId"
@@ -2354,12 +2346,8 @@ export const SystemSpecifications = () => {
                         setOrgBatterySpecId(selectedId);
                         handleChange({
                           target: { name: "orgBatterySpecId", value: selectedId },
-                        });
+                        } as any);
                       }}
-                      // options={batteryCapacities.map((batteryCapacity) => ({
-                      //   value: batteryCapacity.id,
-                      //   label: `${batteryCapacity.batteryCapacity} kW - ${batteryCapacity.voltage} V - ${batteryCapacity.modelNumber} (${batteryCapacity.warrantyMonths} months)`,
-                      // }))}
                       options={batteryCapacities.map((b) => {
                         const parts = [
                           b.batteryCapacity ? `${b.batteryCapacity} kW` : null,
@@ -2367,22 +2355,66 @@ export const SystemSpecifications = () => {
                           b.modelNumber || null,
                           b.productWarranty ? `(${b.productWarranty} )` : null
                         ];
-
-                        // Filter out null/empty values and join with " - "
                         const label = parts.filter(Boolean).join(" - ");
-
                         return {
                           value: b.id,
                           label,
                         };
                       })}
-                      disabled={isGharkulUser}
                       placeholder="Select Battery Capacity"
                       className="mt-1"
                     />
-
                   </div>
-                </>
+
+                  {/* Battery Count */}
+                  <div className="col-span-12 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">Count</label>
+                    <div className="flex items-center border rounded-md shadow-sm bg-white mt-1">
+                      <button
+                        type="button"
+                        disabled={(formData.batteryCount ?? 1) <= 1}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            batteryCount: Math.max((prev.batteryCount || 1) - 1, 1),
+                          }))
+                        }
+                        className={`px-3 py-1.5 text-base font-bold rounded-l-md transition border-gray-300 ${(formData.batteryCount ?? 1) <= 1
+                          ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                          : "text-gray-600 hover:text-white hover:bg-red-500"
+                          }`}
+                      >
+                        −
+                      </button>
+
+                      <input
+                        type="text"
+                        name="batteryCount"
+                        inputMode="numeric"
+                        value={formData.batteryCount ?? 1}
+                        onChange={(e) => {
+                          const value = Math.max(Number(e.target.value) || 1, 1);
+                          setFormData((prev) => ({ ...prev, batteryCount: value }));
+                        }}
+                        className="w-full text-center border-x p-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+
+                      <button
+                        type="button"
+                        
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            batteryCount: (prev.batteryCount || 1) + 1,
+                          }))
+                        }
+                        className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300 text-gray-600 hover:text-white hover:bg-green-500`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               <div className="md:col-span-2"><div className="border-b border-gray-200" /></div>
@@ -2395,9 +2427,9 @@ export const SystemSpecifications = () => {
                       type="button"
                       onClick={addNewPipe}
                       disabled={
-                        isGharkulUser || (formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false)
+                        (formData.pipes?.some((pipe) => !pipe.orgPipeSpecId) ?? false)
                       }
-                      className={`px-4 py-2 text-sm font-medium border rounded-md shadow-sm transition ${isGharkulUser || formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
+                      className={`px-4 py-2 text-sm font-medium border rounded-md shadow-sm transition ${formData.pipes?.some((pipe) => !pipe.orgPipeSpecId)
                         ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed"
                         : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
@@ -2415,12 +2447,7 @@ export const SystemSpecifications = () => {
                         <button
                           type="button"
                           onClick={() => removePipe(index)}
-                          disabled={isGharkulUser}
-                          className={`absolute top-2 right-2 transition
-    ${isGharkulUser
-                              ? "text-gray-400 cursor-not-allowed"
-                              : "text-red-600 hover:text-red-800"
-                            }`}
+                          className={`absolute top-2 right-2 transition text-red-600 hover:text-red-800`}
                         >
                           ✕
                         </button>
@@ -2444,7 +2471,6 @@ export const SystemSpecifications = () => {
                             value: p.id,
                             label: `${p.pipeBrandName} – ${p.widthMm}×${p.heightMm}×${p.thicknessMm} mm`,
                           }))}
-                          disabled={isGharkulUser}
                           placeholder="Select Pipe Specification"
                           className="mt-1"
                         />
@@ -2456,7 +2482,7 @@ export const SystemSpecifications = () => {
                         <div className="flex items-center border rounded-md shadow-sm bg-white mt-1">
                           <button
                             type="button"
-                            disabled={isGharkulUser || (pipe.pipeCount ?? 1) <= 1}
+                            disabled={(pipe.pipeCount ?? 1) <= 1}
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", Math.max((pipe.pipeCount || 1) - 1, 1))
                             }
@@ -2482,15 +2508,10 @@ export const SystemSpecifications = () => {
 
                           <button
                             type="button"
-                            disabled={isGharkulUser}
                             onClick={() =>
                               handlePipeChange(index, "pipeCount", (pipe.pipeCount || 1) + 1)
                             }
-                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300
-    ${isGharkulUser
-                                ? "text-gray-300 bg-gray-100 cursor-not-allowed "
-                                : "text-gray-600 hover:text-white hover:bg-green-500"
-                              }`}
+                            className={`px-3 py-1.5 text-base font-bold rounded-r-md transition border-gray-300 text-gray-600 hover:text-white hover:bg-green-500`}
                           >
                             +
                           </button>
@@ -2515,7 +2536,6 @@ export const SystemSpecifications = () => {
                       name="hasWaterSprinkler"
                       checked={formData.hasWaterSprinkler || false}
                       onChange={handleChange}
-                      disabled={isGharkulUser}
                       className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="text-base text-gray-800">Water Sprinkler System</span>
@@ -2527,7 +2547,6 @@ export const SystemSpecifications = () => {
                       name="hasHeavydutyRamp"
                       checked={formData.hasHeavydutyRamp || false}
                       onChange={handleChange}
-                      disabled={isGharkulUser}
                       className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="text-base text-gray-800">Heavy Duty Ramp</span>
@@ -2539,7 +2558,6 @@ export const SystemSpecifications = () => {
                       name="hasHeavydutyStairs"
                       checked={formData.hasHeavydutyStairs || false}
                       onChange={handleChange}
-                      disabled={isGharkulUser}
                       className="h-5 w-5 text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
 
                     />
@@ -2585,13 +2603,8 @@ export const SystemSpecifications = () => {
                           target: { name: "systemCost", value: numericValue },
                         } as any);
                       }}
-                      disabled={isGharkulUser}   // ✅ disable condition
-                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
-      ${isGharkulUser
-                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
-                          : "focus:border-blue-500 focus:ring-blue-500"
-                        }
-    `}
+                     
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500`}
                       placeholder="Solar System Cost"
                     />
                   </div>
@@ -2618,13 +2631,7 @@ export const SystemSpecifications = () => {
                           target: { name: "fabricationCost", value: numericValue },
                         } as any);
                       }}
-                      disabled={isGharkulUser}   // ✅ disable condition
-                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
-      ${isGharkulUser
-                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
-                          : "focus:border-blue-500 focus:ring-blue-500"
-                        }
-    `}
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500`}
                       placeholder="Fabrication Cost"
                     />
                   </div>
@@ -2638,12 +2645,7 @@ export const SystemSpecifications = () => {
                       name="totalCost"
                       value={formatIndianNumber(formData.totalCost)}
                       readOnly
-                      disabled={isGharkulUser}   // ✅ disable condition
-                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm
-      ${isGharkulUser
-                          ? "bg-gray-100 border-gray-300 cursor-not-allowed shadow-none"
-                          : "focus:border-blue-500 focus:ring-blue-500"
-                        }
+                      className={`mt-1 block w-full p-2 border rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500
     `}
                       placeholder="Total Cost"
                     />

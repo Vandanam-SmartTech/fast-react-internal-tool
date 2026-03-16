@@ -104,14 +104,14 @@ export const InstallationForm = () => {
       connectionId,
       consumerId,
       installationSpaceTypeId: formData.installationSpaceTypeId,
-      availableEastWestLengthFt: formData.availableEastWestLengthFt,
-      availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt,
-      arresterEarthDistanceFt: formData.arresterEarthDistanceFt,
-      inverterEarthDistanceFt: formData.inverterEarthDistanceFt,
-      inverterMeterDistanceFt: formData.inverterMeterDistanceFt,
-      descriptionOfInstallation: formData.descriptionOfInstallation,
-      structureInverterDistanceFt: formData.structureInverterDistanceFt,
-      minimumElevationFt: formData.minimumElevationFt,
+      availableEastWestLengthFt: formData.availableEastWestLengthFt || null,
+      availableSouthNorthLengthFt: formData.availableSouthNorthLengthFt || null,
+      arresterEarthDistanceFt: formData.arresterEarthDistanceFt || null,
+      inverterEarthDistanceFt: formData.inverterEarthDistanceFt || null,
+      inverterMeterDistanceFt: formData.inverterMeterDistanceFt || null,
+      descriptionOfInstallation: formData.descriptionOfInstallation || null,
+      structureInverterDistanceFt: formData.structureInverterDistanceFt || null,
+      minimumElevationFt: formData.minimumElevationFt || null,
       installationSpaceTitle:
         formData.installationSpaceTitle === 'Other'
           ? formData.customInstallationSpaceTitle
@@ -135,6 +135,7 @@ export const InstallationForm = () => {
             customerId: customerId, connectionId: connectionId, consumerId: consumerId, installationId: result.id
           },
         });
+        console.log("connectionId,consumerId,customerId,installationId:", connectionId, consumerId, customerId, result.id);
 
         setNavigateAfterClose(false);
         setCreatedInstallationId(null);
@@ -282,7 +283,7 @@ export const InstallationForm = () => {
                   Installation Space Title <span className="text-red-500">*</span>
                 </label>
 
-           
+
 
                 <ReusableDropdown
                   name="installationSpaceTitle"
@@ -315,7 +316,7 @@ export const InstallationForm = () => {
                     { value: "Other", label: "Other" },
                   ]}
                   placeholder="Select Installation Title"
-                  required
+                  required={true}
                   className="w-full"
                 />
 

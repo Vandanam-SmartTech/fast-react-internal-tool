@@ -311,9 +311,7 @@ const BDODashboard: React.FC = () => {
       </div>
 
 
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <div className="bg-white rounded-xl shadow-md p-4 sm:p-5">
 
@@ -335,7 +333,7 @@ const BDODashboard: React.FC = () => {
                   innerRadius={70}
                   outerRadius={110}
                   paddingAngle={4}
-                  isAnimationActive={false}   // 🔥 important
+                  isAnimationActive={false}   
                 >
 
                   {projectData.map((entry, index) => (
@@ -369,7 +367,7 @@ const BDODashboard: React.FC = () => {
                 layout="vertical"
                 margin={{ left: 20 }}
               >
-                {/* Define gradients */}
+
                 <defs>
                   <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.7} />
@@ -384,8 +382,8 @@ const BDODashboard: React.FC = () => {
 
                 <Bar
                   dataKey="value"
-                  fill="url(#barGradient)"  // use the gradient here
-                  radius={[0, 8, 8, 0]}     // rounded corners
+                  fill="url(#barGradient)" 
+                  radius={[0, 8, 8, 0]}     
                   barSize={28}
                   isAnimationActive={false}
                 />
@@ -399,9 +397,7 @@ const BDODashboard: React.FC = () => {
             </div>
           )}
         </div>
-
-
-      </div>
+      </div> */}
 
     </div>
   );

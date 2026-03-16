@@ -62,7 +62,7 @@ const Login = () => {
   }, []);
 
 
-const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -171,6 +171,12 @@ const handleLogin = async (e: React.FormEvent) => {
       case 'ROLE_GRAMSEVAK':
         navigate('/grampanchayat-dashboard');
         break;
+      case 'ROLE_HIRING_MANAGER':
+        navigate('/workforce-management');
+        break;
+      case 'ROLE_ORG_VIEWER':
+        navigate('/list-of-consumers');
+        break;
       default:
         navigate('/login');
     }
@@ -209,8 +215,8 @@ const handleLogin = async (e: React.FormEvent) => {
         ))}
       </div>
 
-     <div
-  className={`relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 ${showOrgSelection ? 'mt-12 sm:mt-0' : 'mt-0'}`}>
+      <div
+        className={`relative z-10 w-full max-w-md mx-auto px-4 sm:px-6 ${showOrgSelection ? 'mt-12 sm:mt-0' : 'mt-0'}`}>
         <Card className="relative glass-effect-enhanced border-0 shadow-2xl">
           <CardBody className="p-6 sm:p-8">
             {/* Logo and title */}

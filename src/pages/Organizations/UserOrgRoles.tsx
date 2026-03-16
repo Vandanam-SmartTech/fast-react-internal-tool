@@ -378,7 +378,7 @@ const UserOrgRoles: React.FC = () => {
                       }
 
                       if (userRole === "ROLE_AGENCY_ADMIN") {
-                        return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE"].includes(role.name);
+                         return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE","ROLE_AGENCY_ADMIN","ROLE_ORG_FABRICATOR","ROLE_ORG_ELECTRICIAN","ROLE_BDO","ROLE_GRAMSEVAK","ROLE_HIRING_MANAGER","ROLE_ORG_VIEWER"].includes(role.name);
                       }
 
                       return true; // for SUPER_ADMIN

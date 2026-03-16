@@ -93,7 +93,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
           ) : (
             <>
               {placeholder}
-              {required && <span className="text-red-500 ml-1">*</span>}
+              {required}
             </>
           )}
         </span>

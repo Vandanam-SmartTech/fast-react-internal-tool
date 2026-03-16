@@ -21,6 +21,11 @@ export const ViewInstallation = () => {
   const customerId = location.state?.customerId;
   const [spaceTypes, setSpaceTypes] = useState([]);
 
+  console.log("installationId", installationId);
+  console.log("connectionId", connectionId);
+  console.log("customerId", customerId);
+  console.log("consumerId", consumerId);
+
 
   const [activeTab, setActiveTab] = useState("Installation Details");
 
@@ -66,22 +71,22 @@ export const ViewInstallation = () => {
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() =>
-              navigate(`/view-connection`, {
-                state: { consumerId: consumerId, customerId: customerId, connectionId: connectionId },
-              })
-            }
-            className="p-2 rounded-full hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() =>
+                navigate(`/view-connection`, {
+                  state: { consumerId: consumerId, customerId: customerId, connectionId: connectionId },
+                })
+              }
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
-          {/* Heading - Adjusts Position on Small Screens */}
-          <h1 className="text-xl font-bold text-gray-700">View Installation Details</h1>
-        </div>
+            {/* Heading - Adjusts Position on Small Screens */}
+            <h1 className="text-xl font-bold text-gray-700">View Installation Details</h1>
+          </div>
         </div>
 
         {/* Progress Steps */}

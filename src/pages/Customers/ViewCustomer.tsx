@@ -234,7 +234,7 @@ export const ViewCustomer = () => {
                   </h3>
                 </div>
 
-                {/* Ref User */}
+                {userInfo.role !== "ROLE_ORG_VIEWER" && (
                 <div
                   className="
         ml-auto
@@ -252,6 +252,7 @@ export const ViewCustomer = () => {
                     </span>
                   </span>
                 </div>
+                )}
               </div>
             </div>
 
@@ -330,7 +331,7 @@ export const ViewCustomer = () => {
 
 
           <div className="flex flex-row flex-wrap gap-2 justify-start mt-4 max-w-4xl mx-auto">
-            <button
+            {userInfo.role !== "ROLE_ORG_VIEWER" && (<button
               onClick={() =>
                 navigate(`/edit-customer`, {
                   state: { customerId },
@@ -339,9 +340,9 @@ export const ViewCustomer = () => {
               className="py-2 px-4 sm:px-5 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition text-sm sm:text-sm md:text-base"
             >
               Edit Customer
-            </button>
+            </button>)}
 
-            {connections.length === 0 && !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && (
+            {connections.length === 0 && !(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK" || userInfo?.role == "ROLE_ORG_VIEWER") && (
               <button
                 onClick={() =>
                   navigate(`/connection-form`, {
@@ -379,7 +380,8 @@ export const ViewCustomer = () => {
 
 
                       <div className="flex items-center gap-3">
-                        <button
+                         {userInfo.role !== "ROLE_ORG_VIEWER" && (
+                          <button
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/view-connection`, {
@@ -394,7 +396,7 @@ export const ViewCustomer = () => {
                         >
                           <Eye size={16} className="text-gray-700" />
                           <span className="text-gray-700 text-sm font-medium">View</span>
-                        </button>
+                        </button>)}
 
                         <svg
                           className="w-3 h-3 text-gray-500 transition-transform duration-300 group-open/connection:rotate-180"
@@ -530,17 +532,18 @@ export const ViewCustomer = () => {
 
                       {/* View/Edit Buttons */}
                       <div className="w-full grid grid-cols-2 gap-2 md:flex md:justify-start md:gap-4">
-                        <button
-                          onClick={() =>
-                            navigate(`/edit-connection`, {
-                              state: {
-                                consumerId: connection.consumerId,
-                                connectionId: connection.id,
-                                customerId: customerId,
-                              },
-                            })
-                          }
-                          className="
+                        {userInfo.role !== "ROLE_ORG_VIEWER" && (
+                          <button
+                            onClick={() =>
+                              navigate(`/edit-connection`, {
+                                state: {
+                                  consumerId: connection.consumerId,
+                                  connectionId: connection.id,
+                                  customerId: customerId,
+                                },
+                              })
+                            }
+                            className="
       w-full md:w-auto 
       py-1.5 px-3.5 sm:py-2 sm:px-5 
       bg-blue-600 text-white font-semibold 
@@ -548,21 +551,22 @@ export const ViewCustomer = () => {
       flex items-center justify-center
       text-sm 
     "
-                        >
-                          Edit Connection
-                        </button>
+                          >
+                            Edit Connection
+                          </button>)}
 
-                        <button
-                          onClick={() =>
-                            navigate(`/view-system-specifications`, {
-                              state: {
-                                connectionId: connection.id,
-                                consumerId: connection.consumerId,
-                                customerId,
-                              },
-                            })
-                          }
-                          className="
+                        {userInfo.role !== "ROLE_ORG_VIEWER" && (
+                          <button
+                            onClick={() =>
+                              navigate(`/view-system-specifications`, {
+                                state: {
+                                  connectionId: connection.id,
+                                  consumerId: connection.consumerId,
+                                  customerId,
+                                },
+                              })
+                            }
+                            className="
       w-full md:w-auto 
       py-1.5 px-3.5 sm:py-2 sm:px-
       bg-green-600 text-white font-semibold 
@@ -570,9 +574,9 @@ export const ViewCustomer = () => {
       flex items-center justify-center
       text-sm 
     "
-                        >
-                          Get Sys Specs
-                        </button>
+                          >
+                            Get Sys Specs
+                          </button>)}
                       </div>
 
 
@@ -685,38 +689,37 @@ export const ViewCustomer = () => {
 
                               {/* Optional Edit Button */}
                               <div className="flex mt-4">
-                                <button
-                                  onClick={() =>
-                                    navigate(`/edit-installation`, {
-                                      state: {
-                                        installationId: installation.id,
-                                        connectionId: connection.id,
-                                        consumerId: connection.consumerId,
-                                        customerId,
-                                      }
-                                    })
-                                  }
-                                  className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                >
-                                  Edit Installation
-                                </button>
+                                {userInfo.role !== "ROLE_ORG_VIEWER" && (
+                                  <button
+                                    onClick={() =>
+                                      navigate(`/edit-installation`, {
+                                        state: {
+                                          installationId: installation.id,
+                                          connectionId: connection.id,
+                                          consumerId: connection.consumerId,
+                                          customerId,
+                                        }
+                                      })
+                                    }
+                                    className="py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                  >
+                                    Edit Installation
+                                  </button>)}
                               </div>
                             </div>
                           </div>
                         </details>
                       ))}
 
-                      <button
-                        onClick={() => {
-                          navigate(`/installation-form`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
-                        }}
-                        className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
-                      >
-                        Add New Installation
-                      </button>
-
-
-
+                      {userInfo.role !== "ROLE_ORG_VIEWER" && (
+                        <button
+                          onClick={() => {
+                            navigate(`/installation-form`, { state: { connectionId: connection.id, consumerId: connection.consumerId, customerId } });
+                          }}
+                          className="py-2 px-6 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                        >
+                          Add New Installation
+                        </button>)}
                     </div>
 
                   </details>
@@ -724,7 +727,7 @@ export const ViewCustomer = () => {
               </div>
 
               {/* Add New Connection button below the collapsibles */}
-              { !(userInfo?.role =="ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK") && <div className="flex justify-start mt-6">
+              {!(userInfo?.role == "ROLE_BDO" || userInfo?.role == "ROLE_GRAMSEVAK" || userInfo?.role == "ROLE_ORG_VIEWER") && <div className="flex justify-start mt-6">
                 <button
                   onClick={() =>
                     navigate(`/connection-form`, {

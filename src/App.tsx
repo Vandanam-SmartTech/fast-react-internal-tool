@@ -32,7 +32,7 @@ const AppContent: React.FC = () => {
       preloadDashboard(userRole);
       preloadCommonRoutes();
     }
-    
+
     const handleStorageChange = () => {
       const newState = localStorage.getItem('sidebarOpen');
       setSidebarOpen(newState === 'true');
@@ -53,18 +53,18 @@ const AppContent: React.FC = () => {
       <Suspense fallback={null}>
         <LazyRoutes.Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
         {showSidebar && <LazyRoutes.Header />}
-        <LazyRoutes.ToastContainer 
-        position="top-right" 
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        toastClassName="rounded-lg shadow-soft"
+        <LazyRoutes.ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          toastClassName="rounded-lg shadow-soft"
         />
         <LazyRoutes.EnvBanner />
       </Suspense>
@@ -74,221 +74,223 @@ const AppContent: React.FC = () => {
         }`}>
         <div className={`${showSidebar ? 'pt-16 md:pt-20' : ''}`}>
           <Suspense fallback={<Loader />}>
-          <Routes>
-            <Route path="/" element={<HomeRedirect />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/password-reset" element={<LazyRoutes.PasswordReset />} />
-            <Route path="/verification" element={<LazyRoutes.Verification />} />
-            <Route path="/change-password" element={<LazyRoutes.ChangePassword />} />
-            
-            
-            <Route
-              path="/profile"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.Profile />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
-            
-            <Route path="*" element={<LazyRoutes.PageNotFound />} />
-
-            {/* Customer Management Routes */}
-            <Route
-              path="/manage-customers"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.ManageCustomers />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/list-of-consumers"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.ListOfConsumers />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+            <Routes>
+              <Route path="/" element={<HomeRedirect />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/password-reset" element={<LazyRoutes.PasswordReset />} />
+              <Route path="/verification" element={<LazyRoutes.Verification />} />
+              <Route path="/change-password" element={<LazyRoutes.ChangePassword />} />
 
 
+              <Route
+                path="/profile"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.Profile />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
 
-            {/* Dashboard Routes */}
-            <Route
-              path="/org-admin-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
-                  <LazyRoutes.AdminDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
+              <Route path="*" element={<LazyRoutes.PageNotFound />} />
 
-            <Route
-              path="/bdo-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_BDO']}>
-                  <LazyRoutes.BDODashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
+              {/* Customer Management Routes */}
+              <Route
+                path="/manage-customers"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.ManageCustomers />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/grampanchayat-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_GRAMSEVAK']}>
-                  <LazyRoutes.GramPanchayatDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/super-admin-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
-                  <LazyRoutes.SuperAdminDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/representative-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE','ROLE_AGENCY_REPRESENTATIVE']}>
-                  <LazyRoutes.RepresentativeDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/agency-admin-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_AGENCY_ADMIN']}>
-                  <LazyRoutes.AgencyAdminDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/staff-dashboard"
-              element={
-                <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF','ROLE_AGENCY_STAFF']}>
-                  <LazyRoutes.StaffDashboard />
-                </LazyRoutes.RoleProtectedRoute>
-              }
-            />
-
-            {/* Document Routes */}
-            <Route
-              path="/generate-documents"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.GenerateDocuments />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/list-of-consumers"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.ListOfConsumers />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
 
 
-            {/* Customer Routes */}
-            <Route path="/view-customer" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewCustomer /></LazyRoutes.PrivateRoute>} />
-            <Route path="/edit-customer" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditCustomer /></LazyRoutes.PrivateRoute>} />
-            <Route path="/customer-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.CustomerForm /></LazyRoutes.PrivateRoute>} />
 
-            {/* Connection Routes */}
-            <Route path="/edit-connection" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditConnection /></LazyRoutes.PrivateRoute>} />
-            <Route path="/view-connection" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewConnection /></LazyRoutes.PrivateRoute>} />
-            <Route path="/connection-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.ConnectionForm /></LazyRoutes.PrivateRoute>} />
+              {/* Dashboard Routes */}
+              <Route
+                path="/org-admin-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}>
+                    <LazyRoutes.AdminDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            {/* Installation Routes */}
-            <Route path="/edit-installation" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditInstallation /></LazyRoutes.PrivateRoute>} />
-            <Route path="/view-installation" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewInstallation /></LazyRoutes.PrivateRoute>} />
-            <Route path="/installation-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.InstallationForm /></LazyRoutes.PrivateRoute>} />
+              <Route
+                path="/bdo-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_BDO']}>
+                    <LazyRoutes.BDODashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            {/* System Routes */}
-            <Route
-              path="/system-specifications"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.SystemSpecifications />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/grampanchayat-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_GRAMSEVAK']}>
+                    <LazyRoutes.GramPanchayatDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/view-system-specifications"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.ViewSystemSpecifications />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/super-admin-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}>
+                    <LazyRoutes.SuperAdminDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/payment"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.PaymentPlaceholder />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/representative-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_REPRESENTATIVE', 'ROLE_AGENCY_REPRESENTATIVE']}>
+                    <LazyRoutes.RepresentativeDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/preview-system-specification"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.PreviewSystemSpecification />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/agency-admin-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_AGENCY_ADMIN']}>
+                    <LazyRoutes.AgencyAdminDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/checkout-system-specification"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.CheckoutSystemSpecification />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
+              <Route
+                path="/staff-dashboard"
+                element={
+                  <LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_STAFF', 'ROLE_AGENCY_STAFF']}>
+                    <LazyRoutes.StaffDashboard />
+                  </LazyRoutes.RoleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/onboarded-consumers"
-              element={
-                <LazyRoutes.PrivateRoute>
-                  <LazyRoutes.OnboardedConsumers />
-                </LazyRoutes.PrivateRoute>
-              }
-            />
-            {/* <Route path="/system-specifications" element={<LazyRoutes.PrivateRoute><LazyRoutes.SystemSpecifications /></LazyRoutes.PrivateRoute>} />
+              {/* Document Routes */}
+              <Route
+                path="/generate-documents"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.GenerateDocuments />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route path="/worker-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.WorkerForm /></LazyRoutes.PrivateRoute>} />
+
+
+              {/* Customer Routes */}
+              <Route path="/view-customer" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewCustomer /></LazyRoutes.PrivateRoute>} />
+              <Route path="/edit-customer" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditCustomer /></LazyRoutes.PrivateRoute>} />
+              <Route path="/customer-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.CustomerForm /></LazyRoutes.PrivateRoute>} />
+
+              {/* Connection Routes */}
+              <Route path="/edit-connection" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditConnection /></LazyRoutes.PrivateRoute>} />
+              <Route path="/view-connection" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewConnection /></LazyRoutes.PrivateRoute>} />
+              <Route path="/connection-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.ConnectionForm /></LazyRoutes.PrivateRoute>} />
+
+              {/* Installation Routes */}
+              <Route path="/edit-installation" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditInstallation /></LazyRoutes.PrivateRoute>} />
+              <Route path="/view-installation" element={<LazyRoutes.PrivateRoute><LazyRoutes.ViewInstallation /></LazyRoutes.PrivateRoute>} />
+              <Route path="/installation-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.InstallationForm /></LazyRoutes.PrivateRoute>} />
+
+              {/* System Routes */}
+              <Route
+                path="/system-specifications"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.SystemSpecifications />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/view-system-specifications"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.ViewSystemSpecifications />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/payment"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.PaymentPlaceholder />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/preview-system-specification"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.PreviewSystemSpecification />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/checkout-system-specification"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.CheckoutSystemSpecification />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/onboarded-consumers"
+                element={
+                  <LazyRoutes.PrivateRoute>
+                    <LazyRoutes.OnboardedConsumers />
+                  </LazyRoutes.PrivateRoute>
+                }
+              />
+              {/* <Route path="/system-specifications" element={<LazyRoutes.PrivateRoute><LazyRoutes.SystemSpecifications /></LazyRoutes.PrivateRoute>} />
             <Route path="/onboarded-consumers" element={<LazyRoutes.PrivateRoute><LazyRoutes.OnboardedConsumers /></LazyRoutes.PrivateRoute>} /> */}
 
-            {/* Material Routes */}
-            <Route path="/material-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.MaterialDetails /></LazyRoutes.PrivateRoute>} />
+              {/* Material Routes */}
+              <Route path="/material-form" element={<LazyRoutes.PrivateRoute><LazyRoutes.MaterialDetails /></LazyRoutes.PrivateRoute>} />
 
-            {/* Organization Routes */}
-            <Route path="/organizations" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}><LazyRoutes.OrganizationList /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/organization-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}><LazyRoutes.OrganizationForm /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/edit-organization" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}><LazyRoutes.EditOrganization /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/edit-agency" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}><LazyRoutes.EditAgency /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/admin-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN','ROLE_ORG_ADMIN']}><LazyRoutes.AdminManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/agencies" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.AgencyList /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/agency-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.AgencyForm /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/organization-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.OrganizationView /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/agency-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.AgencyView /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/user-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/package-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.PackageManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/workforce-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.WorkforceManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/product-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.ProductManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/user-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserFormManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/edit-user" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditUser /></LazyRoutes.PrivateRoute>} />
-            <Route path="/user-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserView /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/role-management/:id" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.RoleManagement /></LazyRoutes.RoleProtectedRoute>} />
-            <Route path="/user-org-roles" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN','ROLE_AGENCY_ADMIN']}><LazyRoutes.UserOrgRoles /></LazyRoutes.RoleProtectedRoute>} />
-          </Routes>
+              {/* Organization Routes */}
+              <Route path="/organizations" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}><LazyRoutes.OrganizationList /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/organization-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN']}><LazyRoutes.OrganizationForm /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/edit-organization" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.EditOrganization /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/edit-agency" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.EditAgency /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/admin-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.AdminManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/agencies" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.AgencyList /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/agency-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.AgencyForm /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/organization-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.OrganizationView /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/agency-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.AgencyView /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/user-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/package-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.PackageManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/workforce-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_ORG_ADMIN']}><LazyRoutes.WorkforceManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/product-management" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.ProductManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/user-form" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserFormManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/edit-user" element={<LazyRoutes.PrivateRoute><LazyRoutes.EditUser /></LazyRoutes.PrivateRoute>} />
+              <Route path="/user-view" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserView /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/role-management/:id" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN']}><LazyRoutes.RoleManagement /></LazyRoutes.RoleProtectedRoute>} />
+              <Route path="/user-org-roles" element={<LazyRoutes.RoleProtectedRoute allowedRoles={['ROLE_SUPER_ADMIN', 'ROLE_ORG_ADMIN', 'ROLE_AGENCY_ADMIN']}><LazyRoutes.UserOrgRoles /></LazyRoutes.RoleProtectedRoute>} />
+            </Routes>
           </Suspense>
         </div>
       </main>
-      
-      
+
+
       {showSidebar && <LazyRoutes.Footer />}
     </div>
   );

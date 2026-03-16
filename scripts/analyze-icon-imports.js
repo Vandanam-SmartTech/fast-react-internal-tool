@@ -16,7 +16,7 @@ const issues = [];
 function analyzeFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const relativePath = path.relative(process.cwd(), filePath);
-  
+
   // Check for problematic patterns
   const patterns = [
     {
@@ -57,7 +57,7 @@ function analyzeFile(filePath) {
       matches.forEach(match => {
         const lines = content.substring(0, content.indexOf(match)).split('\n');
         const lineNumber = lines.length;
-        
+
         issues.push({
           file: relativePath,
           line: lineNumber,
@@ -73,11 +73,11 @@ function analyzeFile(filePath) {
 
 function walkDirectory(dir) {
   const files = fs.readdirSync(dir);
-  
+
   files.forEach(file => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
+
     if (stat.isDirectory()) {
       if (!file.startsWith('.') && file !== 'node_modules') {
         walkDirectory(filePath);

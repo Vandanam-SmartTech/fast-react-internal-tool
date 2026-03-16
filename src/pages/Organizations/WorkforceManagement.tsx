@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
     Search,
@@ -61,13 +62,22 @@ interface User {
     panNumber?: string;
 }
 
-const UserCard = ({ user, onViewDetails }: { user: User; onViewDetails: (id: number) => void }) => (
+const UserCard = ({ user, onViewDetails }: { user: User; onViewDetails: (id: number) => void; onEdit: (id: number) => void }) => (
     <Card
         className="relative cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-secondary-100 hover:border-primary-300 group bg-white rounded-2xl overflow-hidden active:scale-[0.98]"
         onClick={() => user.id && onViewDetails(user.id)}
     >
-        <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-50 text-primary-600 shadow-sm border border-primary-100 z-10 group-hover:bg-primary-500 group-hover:text-white transition-colors duration-300">
-            <Eye className="w-4 h-4" />
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
+
+            <button
+    onClick={(e) => {
+        e.stopPropagation();
+        user.id && onViewDetails(user.id);
+    }}
+    className="p-2 rounded-xl shadow-sm border border-primary-100 bg-primary-600 text-white transition-all transform hover:scale-105 active:scale-95"
+>
+    <Eye className="w-3.5 h-3.5" />
+</button>
         </div>
         <CardBody className="p-4">
             <div className="flex items-center gap-2">
@@ -104,6 +114,7 @@ const UserCard = ({ user, onViewDetails }: { user: User; onViewDetails: (id: num
 );
 
 const WorkforceManagement: React.FC = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -171,6 +182,10 @@ const WorkforceManagement: React.FC = () => {
         } finally {
             setFetchingUser(false);
         }
+    };
+
+    const handleEditUser = (userId: number) => {
+        navigate("/worker-form", { state: { userId } });
     };
 
     useEffect(() => {
@@ -312,7 +327,7 @@ const WorkforceManagement: React.FC = () => {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {currentUsers.map((user, index) => (
-                                <UserCard key={user.id || index} user={user} onViewDetails={handleViewDetails} />
+                                <UserCard key={user.id || index} user={user} onViewDetails={handleViewDetails} onEdit={handleEditUser} />
                             ))}
                         </div>
                     )}
@@ -406,7 +421,7 @@ const WorkforceManagement: React.FC = () => {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="text-xs text-secondary-400 font-bold mb-0.5">Email Address</p>
-                                                            <p className="text-sm font-bold text-secondary-900 truncate">{selectedUser.emailAddress || "Private"}</p>
+                                                            <p className="text-sm font-bold text-secondary-900 truncate">{selectedUser.emailAddress || "NA"}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3 group">

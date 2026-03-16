@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil } from 'lucide-react';
+import { Upload, X, Crop, RotateCcw, ZoomIn, ZoomOut, User, Camera, Key, Pencil, Shield, Building } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/ui/Button';
 import Card, { CardBody } from '../../components/ui/Card';
@@ -497,22 +497,6 @@ const Profile: React.FC = () => {
   }, [userId]);
 
 
-  // if (loadingClaims) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-  //         <p className="mt-4 text-gray-600">Loading profile...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  // if (loadingClaims) {
-  //   return <p>Loading...</p>;
-  // }
-
-
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -778,7 +762,7 @@ const Profile: React.FC = () => {
             </CardBody>
           </Card>
 
-          {/* <Card>
+          <Card>
             <CardBody className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -812,7 +796,7 @@ const Profile: React.FC = () => {
 
               </div>
             </CardBody>
-          </Card> */}
+          </Card>
 
 
 

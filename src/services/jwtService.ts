@@ -59,7 +59,7 @@ export const getAuthToken = (): string | null => {
 export const refreshToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
   if (!refreshToken) throw new Error("No refresh token found");
-  
+
   const response = await getJwtAPI().post("/auth/refresh-token", { refreshToken });
   return response.data;
 };
@@ -96,12 +96,12 @@ export const fetchClaims = async (forceRefresh = false) => {
     setAuthToken('', '');
     return null;
   }
-  
+
   // Return cached claims if valid
   if (!forceRefresh && claimsCache && Date.now() - claimsCacheTimestamp < CLAIMS_CACHE_TTL) {
     return claimsCache;
   }
-  
+
   try {
     const response = await getJwtAPI().get('/jwt/claims');
     claimsCache = response.data.claims || response.data;
@@ -112,7 +112,7 @@ export const fetchClaims = async (forceRefresh = false) => {
       setAuthToken('', '');
       return null;
     }
-    
+
     claimsCache = parseJwtClaims(token);
     claimsCacheTimestamp = Date.now();
     return claimsCache;
@@ -120,12 +120,12 @@ export const fetchClaims = async (forceRefresh = false) => {
 };
 
 // Cached fetch with TTL
-const cachedFetch = async <T>(key: string, fetcher: () => Promise<T>): Promise<T> => {
+const cachedFetch = async <T>(key: string, fetcher: () => Promise<T>, forceRefresh = false): Promise<T> => {
   const cached = dataCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
   }
-  
+
   const data = await fetcher();
   dataCache.set(key, { data, timestamp: Date.now() });
   return data;
@@ -217,14 +217,20 @@ export const checkUsernameExists = async (username: string): Promise<boolean> =>
   }
 };
 
-export const saveUser = async (data: Record<string, any>) => {
+export const saveUser = async (
+  data: Record<string, any>
+): Promise<{ id: number }> => {
+  const jwtAPI = getJwtAPI();
+
   try {
-    const response = await getJwtAPI().post('/api/users', data);
-    return response.data.id 
-      ? { id: response.data.id, message: 'User data saved successfully!' }
-      : { id: null, message: response.data.message || 'Failed to save user data.' };
-  } catch {
-    return { id: null, message: 'An error occurred while saving user data.' };
+    const response = await jwtAPI.post('/api/users', data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error details:', error);
+
+    throw new Error(
+      error?.response?.data?.message || 'An error occurred while saving user data.'
+    );
   }
 };
 
@@ -249,7 +255,7 @@ export const deleteUser = async (userId: number) => {
 export const getUserById = async (userId: number) => {
   try {
     const response = await getJwtAPI().get(`/api/users/${userId}`);
-    return response.data 
+    return response.data
       ? { data: response.data, message: 'User fetched successfully!' }
       : { data: null, message: 'User not found.' };
   } catch {
@@ -317,11 +323,11 @@ export const getVillageNameByCode = async (code: number): Promise<string> => {
   }
 };
 
-export const getAllRoles = async () => {
+export const getAllRoles = async (forceRefresh = false) => {
   return cachedFetch('roles', async () => {
     const response = await getJwtAPI().get('/api/roles');
     return response.data;
-  });
+  }, forceRefresh);
 };
 
 export const clearCache = () => {

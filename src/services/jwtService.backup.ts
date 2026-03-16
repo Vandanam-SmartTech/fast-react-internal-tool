@@ -29,7 +29,7 @@ export const login = async (credentials: { identifier: string; password: string;
 export const setAuthToken = (jwt: string, refreshToken: string) => {
   if (jwt) {
     localStorage.setItem('jwtToken', jwt);
-    localStorage.setItem('refreshToken',refreshToken);
+    localStorage.setItem('refreshToken', refreshToken);
   } else {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('refreshToken');
@@ -129,7 +129,7 @@ export const fetchAllUsers = async () => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get('/api/users/all');
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error('Error fetching users:', error);
     return [];
@@ -370,13 +370,13 @@ export const getDistrictNameByCode = async (code: number): Promise<string> => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/district/name/${code}`, {
-      responseType: 'text', 
+      responseType: 'text',
     });
 
     return response.data;
   } catch (error) {
     console.error('Error fetching district name:', error);
-    return 'Unknown District'; 
+    return 'Unknown District';
   }
 };
 
@@ -384,7 +384,7 @@ export const getTalukaNameByCode = async (code: number): Promise<string> => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/taluka/name/${code}`, {
-      responseType: 'text', 
+      responseType: 'text',
     });
 
     return response.data;
@@ -398,13 +398,13 @@ export const getVillageNameByCode = async (code: number): Promise<string> => {
   const jwtAPI = getJwtAPI();
   try {
     const response = await jwtAPI.get(`/api/village/name/${code}`, {
-      responseType: 'text', 
+      responseType: 'text',
     });
 
     return response.data;
   } catch (error) {
     console.error('Error fetching village name:', error);
-    return 'Unknown Village'; 
+    return 'Unknown Village';
   }
 };
 

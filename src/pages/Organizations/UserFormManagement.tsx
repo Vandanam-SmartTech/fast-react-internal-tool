@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft } from 'lucide-react';
-import { saveUser } from '../../services/jwtService';
-import { Organization } from '../../services/organizationService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages } from '../../services/jwtService';
+import { saveUser, getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles } from '../../services/jwtService';
+import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole } from '../../services/organizationService';
 import { toast } from 'react-toastify';
+import { useUser } from '../../contexts/UserContext';
 import ReusableDropdown from '../../components/ReusableDropdown';
 
 const UserFormManagement: React.FC = () => {
   const navigate = useNavigate();
   const [confirmEmailAddress, setConfirmEmailAddress] = useState("");
   const [confirmContactNumber, setConfirmContactNumber] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [formData, setFormData] = useState({
     username: '',
@@ -26,8 +27,21 @@ const UserFormManagement: React.FC = () => {
     addressLine1: '',
     addressLine2: '',
     isActive: true,
-    //roleIds: [4]
   });
+
+  const { userClaims } = useUser();
+  const [userRole, setUserRole] = useState("");
+  const [roles, setRoles] = useState<any[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [agencies, setAgencies] = useState<any[]>([]);
+  const [selectedRoleName, setSelectedRoleName] = useState<string>("");
+  const [newAssignment, setNewAssignment] = useState({
+    organizationId: '',
+    roleId: '',
+    agencyId: ''
+  });
+
+  const userInfo = JSON.parse(localStorage.getItem("selectedOrg") || "{}");
 
   interface District {
     code: number;
@@ -62,6 +76,43 @@ const UserFormManagement: React.FC = () => {
   const [districtName, setDistrictName] = useState<string>("");
   const [talukaName, setTalukaName] = useState<string>("");
   const [villageName, setVillageName] = useState<string>("");
+
+  useEffect(() => {
+    if (userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN")) {
+      setUserRole("ROLE_SUPER_ADMIN");
+    } else if (userInfo?.role === "ROLE_ORG_ADMIN") {
+      setUserRole("ROLE_ORG_ADMIN");
+    } else if (userInfo?.role === "ROLE_AGENCY_ADMIN") {
+      setUserRole("ROLE_AGENCY_ADMIN");
+    }
+  }, [userClaims, userInfo]);
+
+  useEffect(() => {
+    const isSuperAdmin = userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN");
+
+    if (isSuperAdmin) {
+      const loadOrganizations = async () => {
+        try {
+          const data = await fetchOrganizations();
+          setOrganizations(data);
+        } catch (error) {
+          toast.error('Failed to load organizations');
+        }
+      };
+      loadOrganizations();
+    }
+
+    const loadRoles = async () => {
+      try {
+        const rolesData = await getAllRoles();
+        setRoles(rolesData);
+      } catch (error) {
+        console.error("Failed to load roles", error);
+      }
+    };
+
+    loadRoles();
+  }, [userClaims]);
 
 
   useEffect(() => {
@@ -181,26 +232,128 @@ const UserFormManagement: React.FC = () => {
     setConfirmContactNumber(value);
   };
 
+    const handleConfirmNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmNewPassword(value);
+  };
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const roleId = e.target.value;
+    const roleName = roles.find(r => r.id.toString() === roleId)?.name || "";
+
+    setSelectedRoleName(roleName);
+    setNewAssignment({ roleId, organizationId: "", agencyId: "" });
+    setAgencies([]);
+
+    if (userRole === "ROLE_ORG_ADMIN" && userInfo?.orgId) {
+      getChildOrganizations(parseInt(userInfo.orgId))
+        .then((res) => setAgencies(res))
+        .catch((err) => {
+          console.error("Failed to fetch agencies for ORG_ADMIN role", err);
+          setAgencies([]);
+        });
+    }
+  };
+
+  const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const orgId = e.target.value;
+    setNewAssignment((prev) => ({
+      ...prev,
+      organizationId: orgId,
+      agencyId: "",
+    }));
+
+    if (orgId && !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF", "ROLE_ORG_ELECTRICIAN", "ROLE_ORG_FABRICATOR", "ROLE_BDO", "ROLE_GRAMSEVAK"].includes(selectedRoleName)) {
+      getChildOrganizations(parseInt(orgId))
+        .then((res) => setAgencies(res))
+        .catch((err) => {
+          console.error("Failed to fetch agencies", err);
+          setAgencies([]);
+        });
+    } else {
+      setAgencies([]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const userData = {
-        ...formData,
-      };
+    if (!districtCode || !talukaCode || !villageCode) {
+      toast.error("Please select District, Taluka, and Village");
+      setLoading(false);
+      return;
+    }
 
-      await saveUser(userData);
-      toast.success(`User added successfully`, {
+       if (formData.password !== confirmNewPassword) {
+      toast.error('Passwords do not match', { autoClose: 2000, hideProgressBar: true });
+      return;
+    }
+
+    if (formData.emailAddress && formData.emailAddress !== confirmEmailAddress) {
+      toast.error('Email Addresses do not match', { autoClose: 2000, hideProgressBar: true });
+      return;
+    }
+
+    if (formData.contactNumber && formData.contactNumber !== confirmContactNumber) {
+      toast.error('Contact Numbers do not match', { autoClose: 2000, hideProgressBar: true });
+      return;
+    }
+
+    try {
+      // Step 1: Save the user
+      const userData = { ...formData };
+      const response = await saveUser(userData);
+
+      const userId = response?.id;
+
+      if (!userId) {
+        toast.error("Error while saving user details");
+        setLoading(false);
+        return;
+      }
+
+      if (userRole === "ROLE_SUPER_ADMIN") {
+        toast.success("User added successfully", {
+          autoClose: 1000,
+          hideProgressBar: true
+        });
+        navigate("/user-management");
+        return;
+      }
+
+      // Step 2: Determine organizationIdToSend
+      let organizationIdToSend: string | undefined;
+
+      if (userRole === "ROLE_ORG_ADMIN") {
+        organizationIdToSend = newAssignment.agencyId || userInfo?.orgId;
+      } else if (userRole === "ROLE_AGENCY_ADMIN") {
+        organizationIdToSend = userInfo?.orgId;
+      }
+
+      if (!organizationIdToSend) {
+        toast.error("Please select a valid organization or agency before adding user");
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Assign role
+      await assignUserOrgRole(
+        Number(userId),
+        Number(organizationIdToSend),
+        Number(newAssignment.roleId),
+        null
+      );
+
+      toast.success("User added and role assigned successfully", {
         autoClose: 1000,
         hideProgressBar: true
       });
-      navigate('/user-management');
+      navigate("/user-management");
+
     } catch (error) {
-      toast.error(`Failed to add user`, {
-        autoClose: 1000,
-        hideProgressBar: true
-      });
+      console.error("Error adding user and assigning role:", error);
+      toast.error("Failed to add user or assign role");
     } finally {
       setLoading(false);
     }
@@ -228,6 +381,16 @@ const UserFormManagement: React.FC = () => {
 
       }
 
+    }
+
+    if (name === 'password' && value === '') {
+      setConfirmNewPassword('');
+    }
+
+    if (name === 'password') {
+      if (value !== confirmNewPassword) {
+        setConfirmNewPassword('');
+      }
     }
 
     if (name === 'emailAddress') {
@@ -598,6 +761,7 @@ const UserFormManagement: React.FC = () => {
                     })),
                   ]}
                   placeholder={districtName || "Select District"}
+                  required={true}
                   className="w-full"
                 />
               </div>
@@ -618,6 +782,7 @@ const UserFormManagement: React.FC = () => {
                     })),
                   ]}
                   placeholder={talukaName || "Select Taluka"}
+                  required={true}
                   className="w-full"
                 />
               </div>
@@ -638,6 +803,7 @@ const UserFormManagement: React.FC = () => {
                     })),
                   ]}
                   placeholder={villageName || "Select Village"}
+                  required={true}
                   className="w-full"
                 />
               </div>
@@ -694,8 +860,145 @@ const UserFormManagement: React.FC = () => {
                   className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  placeholder="Password"
+                  onChange={handleChange}
+                  required
+                  maxLength={30}
+                  pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"
+                  title="Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+                {formData.password && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(formData.password) && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="confirmNewPassword"
+                  value={confirmNewPassword}
+                  onChange={handleConfirmNewPasswordChange}
+                  placeholder="Confirm Password"
+                  required
+                  maxLength={30}
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  disabled={!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(formData.password))}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                />
+                {confirmNewPassword && confirmNewPassword !== formData.password && (
+                  <p className="text-red-600 text-sm mt-1">Passwords do not match</p>
+                )}
+              </div>
             </div>
           </div>
+
+          {userRole !== "ROLE_SUPER_ADMIN" && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Assign Role</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Role Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newAssignment.roleId}
+                    onChange={handleRoleChange}
+                    required
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Role</option>
+                    {roles
+                      .filter((role) => {
+                        if (role.name === "ROLE_SUPER_ADMIN") return false;
+
+                        if (userRole === "ROLE_ORG_ADMIN") {
+                          return role.name !== "ROLE_ORG_ADMIN";
+                        }
+
+                        if (userRole === "ROLE_AGENCY_ADMIN") {
+                          return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_ELECTRICIAN", "ROLE_ORG_FABRICATOR", "ROLE_BDO", "ROLE_GRAMSEVAK","ROLE_AGENCY_ADMIN","ROLE_ORG_VIEWER","ROLE_HIRING_MANAGER"].includes(role.name);
+                        }
+
+                        return true;
+                      })
+                      .map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Organization Dropdown */}
+                {userRole === "ROLE_SUPER_ADMIN" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organization <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newAssignment.organizationId}
+                      onChange={handleOrganizationChange}
+                      required
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Organization</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Agency Dropdown */}
+                {userRole !== "ROLE_AGENCY_ADMIN" &&
+                  ["ROLE_AGENCY_REPRESENTATIVE", "ROLE_AGENCY_STAFF", "ROLE_AGENCY_ELECTRICIAN", "ROLE_AGENCY_FABRICATOR"].includes(selectedRoleName) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Agency <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={newAssignment.agencyId}
+                        onChange={(e) =>
+                          setNewAssignment((prev) => ({
+                            ...prev,
+                            agencyId: e.target.value,
+                          }))
+                        }
+                        required
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Agency</option>
+                        {agencies.map((agency) => (
+                          <option key={agency.id} value={agency.id}>
+                            {agency.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-center gap-4 mt-8">
             <button
@@ -708,7 +1011,7 @@ const UserFormManagement: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-               className="
+              className="
       w-full sm:w-auto inline-flex items-center justify-center gap-2
       px-3 py-2.5 sm:px-5 sm:py-2.5
       bg-blue-600 text-white font-semibold

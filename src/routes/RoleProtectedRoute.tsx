@@ -20,7 +20,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
     const checkAccess = () => {
       const token = localStorage.getItem('jwtToken');
 
-      if(loading) return null;
+      if (loading) return null;
 
       if (!token) {
         setRedirectPath('/login');
@@ -103,6 +103,12 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
           break;
         case 'ROLE_BDO':
           setRedirectPath('/bdo-dashboard');
+          break;
+        case 'ROLE_HIRING_MANAGER':
+          setRedirectPath('/workforce-management');
+          break;
+        case 'ROLE_ORG_VIEWER':
+          setRedirectPath('/list-of-consumers');
           break;
         default:
           forceLogout();

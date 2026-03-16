@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserPlus, Shield, Eye, Plus } from 'lucide-react';
 import { fetchOrganizations, Organization, getChildOrganizations, assignUserOrgRole, fetchAllUsersByOrgIdNonPaginated } from '../../services/organizationService';
 import { createRole, RoleDto } from '../../services/roleService';
-import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers, assignUserRole } from '../../services/jwtService';
+import { getDistrictNameByCode, fetchDistricts, fetchTalukas, fetchVillages, getAllRoles, saveUser, fetchAllUsers } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import { useUser } from '../../contexts/UserContext';
 import ReusableDropdown from '../../components/ReusableDropdown';
@@ -15,7 +15,7 @@ const AdminManagement: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
   const [, setAllRoles] = useState([]);
-  const [roles, setRoles] = useState<any[]>([]);
+  const [roles, setRoles] = useState<RoleDto[]>([]);
   const [newRole, setNewRole] = useState({ name: '' });
   const [editingRole, setEditingRole] = useState<RoleDto | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,7 @@ const AdminManagement: React.FC = () => {
 
   const [showAlternateContact, setShowAlternateContact] = useState(false);
   const [alternateContactNumber, setAlternateContactNumber] = useState("");
+
 
   const [showMobile, setShowMobile] = useState(false);
   const handleToggleMobile = () => setShowMobile(!showMobile);
@@ -94,7 +95,7 @@ const AdminManagement: React.FC = () => {
   });
 
 
-  const [agencies, setAgencies] = useState([]);
+  const [agencies, setAgencies] = useState<Organization[]>([]);
 
   interface District {
     code: number;
@@ -234,6 +235,15 @@ const AdminManagement: React.FC = () => {
     }
   }, [userRole]);
 
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  const loadRoles = async () => {
+    const data = await getAllRoles();
+    setRoles(data);
+  };
+
 
   useEffect(() => {
     const isSuperAdmin = userClaims?.global_roles?.includes("ROLE_SUPER_ADMIN");
@@ -311,6 +321,12 @@ const AdminManagement: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (!districtCode || !talukaCode || !villageCode) {
+      toast.error("Please select District, Taluka, and Village");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Step 1: Save the user
       const userData = { ...formData };
@@ -320,7 +336,7 @@ const AdminManagement: React.FC = () => {
       const userId = response?.id;
 
       if (!userId) {
-        toast.error("User ID not returned from saveUser API");
+        toast.error("Error while saving user details");
         setLoading(false);
         return;
       }
@@ -368,7 +384,7 @@ const AdminManagement: React.FC = () => {
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleId = e.target.value;
-    const roleName = roles.find(r => r.id.toString() === roleId)?.name || "";
+    const roleName = roles.find(r => r.id?.toString() === roleId)?.name || "";
 
     setSelectedRoleName(roleName);
     setPromoteData(prev => ({
@@ -490,10 +506,7 @@ const AdminManagement: React.FC = () => {
     try {
       const { userId, organizationId, agencyId, roleId } = promoteData;
 
-      const selectedRole = roles.find(r => r.id.toString() === roleId);
-      const isAgencyAdmin = selectedRole?.name === "ROLE_AGENCY_ADMIN";
-
-      const targetOrgId = isAgencyAdmin && agencyId ? agencyId : organizationId;
+      const targetOrgId = agencyId || organizationId;
 
       if (!userId || !targetOrgId || !roleId) {
         toast.error("Please select all required fields", {
@@ -504,7 +517,12 @@ const AdminManagement: React.FC = () => {
         return;
       }
 
-      await assignUserRole(userId, targetOrgId, roleId);
+      await assignUserOrgRole(
+        Number(userId),
+        Number(targetOrgId),
+        Number(roleId),
+        null
+      );
 
       toast.success("Role assigned successfully", {
         autoClose: 1000,
@@ -523,6 +541,8 @@ const AdminManagement: React.FC = () => {
       setLoading(false);
     }
   };
+
+
 
 
   const handlePromoteChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -547,19 +567,6 @@ const AdminManagement: React.FC = () => {
       setPromoteData(prev => ({ ...prev, agencyId: '' }));
     }
 
-  };
-
-
-  const loadAgencies = async (parentId: number) => {
-    try {
-      console.log('Loading agencies for parent org:', parentId);
-      const data = await getChildOrganizations(parentId);
-      console.log('Loaded agencies:', data);
-      setAgencies(data);
-    } catch (error) {
-      console.error('Failed to load agencies:', error);
-      setAgencies([]);
-    }
   };
 
 
@@ -619,23 +626,29 @@ const AdminManagement: React.FC = () => {
           {/* Create New Role */}
           <div className="bg-white rounded-lg shadow p-3 sm:p-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Create New Role</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await createRole(newRole);
-                toast.success('Role created successfully', {
-                  autoClose: 1000,
-                  hideProgressBar: true,
-                });
-                setNewRole({ name: '' });
-                await getAllRoles();
-              } catch (error) {
-                toast.error('Failed to create role', {
-                  autoClose: 1000,
-                  hideProgressBar: true,
-                });
-              }
-            }} className="flex flex-col sm:flex-row gap-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await createRole(newRole);
+
+                  toast.success("Role created successfully", {
+                    autoClose: 1000,
+                    hideProgressBar: true,
+                  });
+
+                  setNewRole({ name: "" });
+
+                  const data = await getAllRoles(true);
+                  setRoles(data);   // ⭐ THIS IS IMPORTANT
+
+                } catch (error) {
+                  toast.error("Failed to create role", {
+                    autoClose: 1000,
+                    hideProgressBar: true,
+                  });
+                }
+              }} className="flex flex-col sm:flex-row gap-4">
               <input
                 type="text"
                 value={newRole.name}
@@ -1039,7 +1052,6 @@ const AdminManagement: React.FC = () => {
                   )}
                 </div>
               )}
-
           </div>
 
           {['ROLE_AGENCY_ADMIN', 'ROLE_AGENCY_STAFF', 'ROLE_AGENCY_REPRESENTATIVE'].includes(
@@ -1053,15 +1065,6 @@ const AdminManagement: React.FC = () => {
                 </p>
               </div>
             )}
-
-
-          {roles.find(r => r.id?.toString() === promoteData.roleId)?.name && !['ROLE_ORG_ADMIN', 'ROLE_ORG_STAFF', 'ROLE_ORG_REPRESENTATIVE'].includes(roles.find(r => r.id?.toString() === promoteData.roleId)?.name || '') && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Info:</strong> This role will be assigned to the selected organization.
-              </p>
-            </div>
-          )}
 
           <div className="flex justify-center gap-4 mt-4 sm:mt-6">
             <button
@@ -1240,73 +1243,6 @@ const AdminManagement: React.FC = () => {
                 )}
             </div>
 
-            {/* <div className="mt-3">
-  {!showAlternateContact ? (
-    <button
-      type="button"
-      onClick={() => setShowAlternateContact(true)}
-      className="text-blue-600 text-sm hover:underline"
-    >
-      + Add Alternate Contact Number
-    </button>
-  ) : (
-    <button
-      type="button"
-      onClick={() => {
-        setShowAlternateContact(false);
-        setAlternateContactNumber("");
-      }}
-      className="text-red-600 text-sm hover:underline"
-    >
-      - Remove Alternate Contact Number
-    </button>
-  )}
-</div>
-
-{showAlternateContact && (
-  <div className="mt-3">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Alternate Contact Number (Optional)
-    </label>
-
-    <div className="relative flex mt-1">
-      <span className="inline-flex items-center px-3 border border-r-0 rounded-l-md bg-gray-200 text-gray-700 text-sm">
-        +91
-      </span>
-
-      <input
-        type="text"
-        inputMode="numeric"
-        maxLength={10}
-        value={formData.alternateContactNumber}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (/^[6-9][0-9]*$/.test(value) || value === "") {
-            if (value.length <= 10) {
-              setAlternateContactNumber(value);
-            }
-          }
-        }}
-        placeholder="Optional number"
-        className="w-full px-3 py-2.5 border rounded-r-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-        title="Enter a valid 10-digit mobile number starting with 6-9"
-        onCopy={(e) => e.preventDefault()}
-        onCut={(e) => e.preventDefault()}
-        onPaste={(e) => e.preventDefault()}
-      />
-    </div>
-
-    {alternateContactNumber &&
-      !/^[6-9]{1}[0-9]{0,9}$/.test(alternateContactNumber) && (
-        <p className="text-red-600 text-sm mt-1">
-          Enter a valid 10-digit mobile number starting with 6-9
-        </p>
-      )}
-  </div>
-)} */}
-
-
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address <span className="text-red-500">*</span>
@@ -1396,75 +1332,78 @@ const AdminManagement: React.FC = () => {
                 )}
             </div>
 
-             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
-                <ReusableDropdown
-                  name="district"
-                  value={districtCode}
-                  onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
-                  options={[
-                    { value: 0, label: districtName || "Select District" },
-                    ...districts.map((district) => ({
-                      value: district.code,
-                      label: district.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={districtName || "Select District"}
-                  className="w-full"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
+              <ReusableDropdown
+                name="district"
+                value={districtCode}
+                onChange={(val) => handleDistrictChange({ target: { name: "district", value: val } })}
+                options={[
+                  { value: 0, label: districtName || "Select District" },
+                  ...districts.map((district) => ({
+                    value: district.code,
+                    label: district.nameEnglish,
+                  })),
+                ]}
+                placeholder={districtName || "Select District"}
+                required={true}
+                className="w-full"
+              />
+            </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
-                <ReusableDropdown
-                  name="talukaCode"
-                  value={talukaCode}
-                  onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
-                  options={[
-                    { value: 0, label: talukaName || "Select Taluka" },
-                    ...talukas.map((taluka) => ({
-                      value: taluka.code,
-                      label: taluka.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={talukaName || "Select Taluka"}
-                  className="w-full"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
+              <ReusableDropdown
+                name="talukaCode"
+                value={talukaCode}
+                onChange={(val) => handleTalukaChange({ target: { name: "talukaCode", value: val } })}
+                options={[
+                  { value: 0, label: talukaName || "Select Taluka" },
+                  ...talukas.map((taluka) => ({
+                    value: taluka.code,
+                    label: taluka.nameEnglish,
+                  })),
+                ]}
+                placeholder={talukaName || "Select Taluka"}
+                required={true}
+                className="w-full"
+              />
+            </div>
 
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
-                <ReusableDropdown
-                  name="villageCode"
-                  value={villageCode}
-                  onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
-                  options={[
-                    { value: 0, label: villageName || "Select Village" },
-                    ...villages.map((village) => ({
-                      value: village.code,
-                      label: village.nameEnglish,
-                    })),
-                  ]}
-                  placeholder={villageName || "Select Village"}
-                  className="w-full"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
+              <ReusableDropdown
+                name="villageCode"
+                value={villageCode}
+                onChange={(val) => handleVillageChange({ target: { name: "villageCode", value: val } })}
+                options={[
+                  { value: 0, label: villageName || "Select Village" },
+                  ...villages.map((village) => ({
+                    value: village.code,
+                    label: village.nameEnglish,
+                  })),
+                ]}
+                placeholder={villageName || "Select Village"}
+                required={true}
+                className="w-full"
+              />
+            </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  id="pinCode"
-                  name="pinCode"
-                  value={formData.pinCode}
-                  onChange={handlepinCodeChange}
-                  placeholder="e.g. 416000"
-                  inputMode='numeric'
-                  required
-                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                id="pinCode"
+                name="pinCode"
+                value={formData.pinCode}
+                onChange={handlepinCodeChange}
+                placeholder="e.g. 416000"
+                inputMode='numeric'
+                required
+                className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+              />
+            </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1525,7 +1464,7 @@ const AdminManagement: React.FC = () => {
                         }
 
                         if (userRole === "ROLE_AGENCY_ADMIN") {
-                          return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE"].includes(role.name);
+                          return !["ROLE_ORG_ADMIN", "ROLE_ORG_STAFF", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_ELECTRICIAN", "ROLE_ORG_FABRICATOR", "ROLE_BDO", "ROLE_GRAMSEVAK"].includes(role.name);
                         }
 
                         return true; // for SUPER_ADMIN
@@ -1561,10 +1500,9 @@ const AdminManagement: React.FC = () => {
                   </div>
                 )}
 
-
                 {/* Agency Dropdown */}
                 {userRole !== "ROLE_AGENCY_ADMIN" &&
-                  !["ROLE_ORG_ADMIN", "ROLE_ORG_REPRESENTATIVE", "ROLE_ORG_STAFF"].includes(selectedRoleName) && (
+                  ["ROLE_AGENCY_REPRESENTATIVE", "ROLE_AGENCY_STAFF", "ROLE_AGENCY_ELECTRICIAN", "ROLE_AGENCY_FABRICATOR"].includes(selectedRoleName) && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Agency
@@ -1607,28 +1545,6 @@ const AdminManagement: React.FC = () => {
         </form>
       )}
 
-      {/* 
-      {activeTab === 'create' && organizations.length > 0 && (
-        <div className="mt-6 sm:mt-8 bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Available Organizations
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-            {organizations.map((org) => (
-              <div key={org.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{org.name}</h3>
-                {org.displayName && (
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{org.displayName}</p>
-                )}
-                {org.contactNumber && (
-                  <p className="text-xs text-gray-500 mt-1 truncate">{org.contactNumber}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

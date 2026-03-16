@@ -54,6 +54,7 @@ export const ViewInstallation = lazy(() => import('../pages/Installations/ViewIn
 export const InstallationForm = lazy(() => import('../pages/Installations/InstallationForm').then(m => ({ default: m.InstallationForm })));
 
 // Others
+export const WorkerForm = lazy(() => import('../pages/Organizations/WorkerForm'));
 export const Profile = lazy(() => import('../pages/Profile/Profile'));
 export const ListOfConsumers = lazy(() => import('../pages/ConsumerList/ListOfConsumers').then(m => ({ default: m.ListOfConsumers })));
 export const OnboardedConsumers = lazy(() => import('../pages/ConsumerList/OnboardedConsumers'));

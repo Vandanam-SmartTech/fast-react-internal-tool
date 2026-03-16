@@ -260,7 +260,7 @@ const AgencyForm: React.FC = () => {
       });
 
       navigate("/agencies", {
-        state: { orgId: orgId, gstNumber:gstNumber },
+        state: { orgId: orgId, gstNumber: gstNumber },
       });
 
     } catch (error) {
@@ -300,325 +300,325 @@ const AgencyForm: React.FC = () => {
   };
 
   return (
-     <div className="min-h-screen bg-gray-50 py-4">
-       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-             <div className="flex items-center gap-2">
-         <button
-           onClick={() => navigate(-1)}
-           className="p-2 rounded-full hover:bg-gray-200 transition"
-         >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
-         </button>
-         <h1 className="text-xl font-bold text-gray-700">
-           Add New Agency
-         </h1>
-       </div>
-       </div>
-
-     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Legal Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="legalName"
-              value={formData.legalName}
-              onChange={handleChange}
-              placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Display Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="displayName"
-              value={formData.displayName}
-              onChange={handleChange}
-              placeholder="e.g. EcoVolt Solar Solutions"
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (Short Name) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="e.g. SunTech, EcoVolt, SolarMax"
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contact Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^[6-9][0-9]*$/.test(value) || value === "") {
-                  if (value.length <= 10) {
-                    handleChange(e);
-                  }
-                }
-              }}
-              placeholder="e.g. 9567023456"
-              maxLength={10}
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-              title="Enter a valid 10-digit mobile number starting with 6-9"
-              onCopy={(e) => e.preventDefault()}
-              onCut={(e) => e.preventDefault()}
-              onPaste={(e) => e.preventDefault()}
-            />
-            {formData.contactNumber?.length > 0 &&
-              !/^[6-9]{1}[0-9]{0,9}$/.test(formData.contactNumber) && (
-                <p className="text-red-600 text-sm mt-1">
-                  Enter a valid 10-digit mobile number starting with 6-9
-                </p>
-              )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              type="text"
-              name="emailAddress"
-              value={formData.emailAddress}
-              onChange={(e) => {
-                const value = e.target.value;
-
-                if (
-                  value === "" ||
-                  /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
-                    value
-                  )
-                ) {
-                  handleChange(e);
-                } else {
-                  handleChange(e);
-                }
-              }}
-              placeholder="e.g. johndoe@example.com"
-              maxLength={50}
-              onCopy={(e) => e.preventDefault()}
-              onCut={(e) => e.preventDefault()}
-              onPaste={(e) => e.preventDefault()}
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-
-            {/* Error messages */}
-            {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
-              <p className="text-red-600 text-sm mt-1">
-                Email must start with a letter or number
-              </p>
-            )}
-
-            {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
-              <p className="text-red-600 text-sm mt-1">
-                Email cannot contain consecutive dots
-              </p>
-            )}
-
-            {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
-              <p className="text-red-600 text-sm mt-1">
-                Email cannot end with a dot before @
-              </p>
-            )}
-
-            {formData.emailAddress &&
-              !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
-                formData.emailAddress
-              ) &&
-              !/\.\./.test(formData.emailAddress) &&
-              !/\.@/.test(formData.emailAddress) &&
-              /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
-                <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
-              )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              GST Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="gstNumber"
-              value={formData.gstNumber}
-              onChange={(e) =>
-                handleChange({
-                  target: {
-                    name: "gstNumber",
-                    value: e.target.value.toUpperCase()
-                  }
-                } as React.ChangeEvent<HTMLInputElement>)
-              }
-              maxLength={15}
-              placeholder="e.g. 22AAAAA0000A1Z6"
-              className={`w-full px-3 py-1.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
-                }`}
-            />
-
-            {fieldErrors.gstNumber && (
-              <p className="text-red-600 text-sm mt-1">{fieldErrors.gstNumber}</p>
-            )}
-
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Government Registration Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="govtRegNumber"
-              value={formData.govtRegNumber || ''}
-              onChange={handleChange}
-              maxLength={50}
-              placeholder="e.g. L01631KA2010PTC096843"
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
-            <ReusableDropdown
-              name="district"
-              value={districtCode}
-              onChange={(val) => handleDistrictChange(Number(val))}
-              options={[
-                { value: 0, label: districtName || "Select District" },
-                ...districts.map((district) => ({
-                  value: district.code,
-                  label: district.nameEnglish,
-                })),
-              ]}
-              placeholder={districtName || "Select District"}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
-            <ReusableDropdown
-              name="talukaCode"
-              value={talukaCode}
-              onChange={(val) => handleTalukaChange(Number(val))}
-              options={[
-                { value: 0, label: talukaName || "Select Taluka" },
-                ...talukas.map((taluka) => ({
-                  value: taluka.code,
-                  label: taluka.nameEnglish,
-                })),
-              ]}
-              placeholder={talukaName || "Select Taluka"}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
-            <ReusableDropdown
-              name="villageCode"
-              value={villageCode}
-              onChange={(val) => handleVillageChange(Number(val))}
-              options={[
-                { value: 0, label: villageName || "Select Village" },
-                ...villages.map((village) => ({
-                  value: village.code,
-                  label: village.nameEnglish,
-                })),
-              ]}
-              placeholder={villageName || "Select Village"}
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              id="pinCode"
-              name="pinCode"
-              value={formData.pinCode}
-              onChange={handlepinCodeChange}
-              placeholder="e.g. 416000"
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address Line 1 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="addressLine1"
-              value={formData.addressLine1 || ''}
-              onChange={handleChange}
-              placeholder="e.g. Flat No, House No, Street Name"
-              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-              maxLength={100}
-              required
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address Line 2
-            </label>
-            <input
-              type="text"
-              name="addressLine2"
-              value={formData.addressLine2 || ''}
-              onChange={handleChange}
-              placeholder="e.g. Apartment, Suite, Unit, Building"
-              pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
-              title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
-              className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
-            />
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-700">
+              Add New Agency
+            </h1>
           </div>
         </div>
-        </div>
 
-        <div className="flex justify-center gap-4 mt-8">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-           className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-           className="
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Legal Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="legalName"
+                  value={formData.legalName}
+                  onChange={handleChange}
+                  placeholder="e.g. EcoVolt Renewable Energy Pvt. Ltd."
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="displayName"
+                  value={formData.displayName}
+                  onChange={handleChange}
+                  placeholder="e.g. EcoVolt Solar Solutions"
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name (Short Name) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="e.g. SunTech, EcoVolt, SolarMax"
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contact Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[6-9][0-9]*$/.test(value) || value === "") {
+                      if (value.length <= 10) {
+                        handleChange(e);
+                      }
+                    }
+                  }}
+                  placeholder="e.g. 9567023456"
+                  maxLength={10}
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                  title="Enter a valid 10-digit mobile number starting with 6-9"
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                />
+                {formData.contactNumber?.length > 0 &&
+                  !/^[6-9]{1}[0-9]{0,9}$/.test(formData.contactNumber) && (
+                    <p className="text-red-600 text-sm mt-1">
+                      Enter a valid 10-digit mobile number starting with 6-9
+                    </p>
+                  )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="emailAddress"
+                  value={formData.emailAddress}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    if (
+                      value === "" ||
+                      /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                        value
+                      )
+                    ) {
+                      handleChange(e);
+                    } else {
+                      handleChange(e);
+                    }
+                  }}
+                  placeholder="e.g. johndoe@example.com"
+                  maxLength={50}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+
+                {/* Error messages */}
+                {formData.emailAddress && !/^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Email must start with a letter or number
+                  </p>
+                )}
+
+                {formData.emailAddress && /\.\./.test(formData.emailAddress) && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Email cannot contain consecutive dots
+                  </p>
+                )}
+
+                {formData.emailAddress && /\.@/.test(formData.emailAddress) && (
+                  <p className="text-red-600 text-sm mt-1">
+                    Email cannot end with a dot before @
+                  </p>
+                )}
+
+                {formData.emailAddress &&
+                  !/^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/.test(
+                    formData.emailAddress
+                  ) &&
+                  !/\.\./.test(formData.emailAddress) &&
+                  !/\.@/.test(formData.emailAddress) &&
+                  /^[a-zA-Z0-9]/.test(formData.emailAddress) && (
+                    <p className="text-red-600 text-sm mt-1">Enter a valid email address</p>
+                  )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  GST Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="gstNumber"
+                  value={formData.gstNumber}
+                  onChange={(e) =>
+                    handleChange({
+                      target: {
+                        name: "gstNumber",
+                        value: e.target.value.toUpperCase()
+                      }
+                    } as React.ChangeEvent<HTMLInputElement>)
+                  }
+                  maxLength={15}
+                  placeholder="e.g. 22AAAAA0000A1Z6"
+                  className={`w-full px-3 py-1.5 border rounded-md ${fieldErrors.gstNumber ? "border-red-500" : "border-gray-300"
+                    }`}
+                />
+
+                {fieldErrors.gstNumber && (
+                  <p className="text-red-600 text-sm mt-1">{fieldErrors.gstNumber}</p>
+                )}
+
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Government Registration Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="govtRegNumber"
+                  value={formData.govtRegNumber || ''}
+                  onChange={handleChange}
+                  maxLength={50}
+                  placeholder="e.g. L01631KA2010PTC096843"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="district"
+                  value={districtCode}
+                  onChange={(val) => handleDistrictChange(Number(val))}
+                  options={[
+                    { value: 0, label: districtName || "Select District" },
+                    ...districts.map((district) => ({
+                      value: district.code,
+                      label: district.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={districtName || "Select District"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Taluka <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="talukaCode"
+                  value={talukaCode}
+                  onChange={(val) => handleTalukaChange(Number(val))}
+                  options={[
+                    { value: 0, label: talukaName || "Select Taluka" },
+                    ...talukas.map((taluka) => ({
+                      value: taluka.code,
+                      label: taluka.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={talukaName || "Select Taluka"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Village <span className="text-red-500">*</span></label>
+                <ReusableDropdown
+                  name="villageCode"
+                  value={villageCode}
+                  onChange={(val) => handleVillageChange(Number(val))}
+                  options={[
+                    { value: 0, label: villageName || "Select Village" },
+                    ...villages.map((village) => ({
+                      value: village.code,
+                      label: village.nameEnglish,
+                    })),
+                  ]}
+                  placeholder={villageName || "Select Village"}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  id="pinCode"
+                  name="pinCode"
+                  value={formData.pinCode}
+                  onChange={handlepinCodeChange}
+                  placeholder="e.g. 416000"
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address Line 1 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="addressLine1"
+                  value={formData.addressLine1 || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Flat No, House No, Street Name"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  maxLength={100}
+                  required
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address Line 2
+                </label>
+                <input
+                  type="text"
+                  name="addressLine2"
+                  value={formData.addressLine2 || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Apartment, Suite, Unit, Building"
+                  pattern="^[A-Za-z0-9\s,.\/#-]{5,100}$"
+                  title="Address must be 5-100 characters, alphanumeric with spaces, commas, dots, slashes, and hyphens"
+                  className="w-full px-3 py-1.5 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors border-gray-300"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 mt-8">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="py-2.5 px-8 sm:py-2.5 sm:px-5 w-auto inline-flex justify-center bg-gray-300 text-gray-800 font-semibold text-sm sm:text-base rounded-md hover:bg-gray-400 transition-colors shadow-sm hover:shadow-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="
       w-full sm:w-auto inline-flex items-center justify-center gap-2
       px-3 py-2.5 sm:px-5 sm:py-2.5
       bg-blue-600 text-white font-semibold
@@ -626,12 +626,12 @@ const AgencyForm: React.FC = () => {
       rounded-md hover:bg-blue-700
       transition-colors shadow-sm hover:shadow-md
       disabled:opacity-50">
-            <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save Agency'}
-          </button>
-        </div>
-      </form>
-    </div>
+              <Save className="h-4 w-4" />
+              {loading ? 'Saving...' : 'Save Agency'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

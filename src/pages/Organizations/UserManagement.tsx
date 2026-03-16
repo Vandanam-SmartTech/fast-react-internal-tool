@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Users, Eye, Search, Shield, Filter, Mail, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { deleteUser } from '../../services/jwtService';
@@ -134,37 +134,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-
-  // const getFilteredRoles = () => {
-  //   const allRoles = [...roles];
-  //   console.log('All roles before filtering:', allRoles);
-  //   console.log('Current userRole:', userRole);
-
-  //   if (userRole === "ROLE_SUPER_ADMIN") {
-  //     return allRoles; 
-  //   } else if (userRole === "ROLE_ORG_ADMIN") {
-
-  //     const filtered = allRoles.filter((r) => r.name !== "ROLE_SUPER_ADMIN");
-  //     console.log('Filtered roles for ORG_ADMIN:', filtered);
-  //     return filtered;
-  //   } else if (userRole === "ROLE_AGENCY_ADMIN") {
-
-  //     return allRoles.filter(
-  //       (r) =>
-  //         ![
-  //           "ROLE_SUPER_ADMIN",
-  //           "ROLE_ORG_ADMIN",
-  //           "ROLE_ORG_STAFF",
-  //           "ROLE_ORG_REPRESENTATIVE",
-  //           "ROLE_ORG_ELECTRICIAN",
-  //           "ROLE_ORG_FABRICATOR"
-  //         ].includes(r.name)
-  //     );
-  //   } else {
-  //     return [];
-  //   }
-  // };
-
   const getFilteredRoles = () => {
     if (userRole === "ROLE_SUPER_ADMIN") {
       return roles; // show all roles
@@ -179,7 +148,11 @@ const UserManagement: React.FC = () => {
             "ROLE_ORG_STAFF",
             "ROLE_ORG_REPRESENTATIVE",
             "ROLE_ORG_ELECTRICIAN",
-            "ROLE_ORG_FABRICATOR"
+            "ROLE_ORG_FABRICATOR",
+            "ROLE_BDO",
+            "ROLE_GRAMSEVAK",
+            "ROLE_ORG_VIEWER",
+            "ROLE_HIRING_MANAGER"
           ].includes(r.name)
       );
     } else {
@@ -535,125 +508,7 @@ const UserManagement: React.FC = () => {
         </Card>
       </div>
 
-      {/* Content */}
-      {/* {viewMode === 'table' ? (
-        <Card>
-          <CardHeader className="px-6 py-4 border-b border-secondary-200">
-            <h2 className="text-lg font-semibold text-secondary-900">Users List</h2>
-          </CardHeader>
-          <div className="overflow-x-auto">
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Contact</th>
-                  <th>Roles</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-secondary-50">
-                    <td className="font-medium text-secondary-900">
-                      {user.nameAsPerGovId || user.preferredName || '-'}
-                    </td>
-                    <td className="text-secondary-600">@{user.username}</td>
-                    <td className="text-secondary-600">
-                      {user.emailAddress ? (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {user.emailAddress}
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td className="text-secondary-600">
-                      {user.contactNumber ? (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          +91 {user.contactNumber}
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td>
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles?.map((role: any, index: number) => (
-                          <span key={`global-${index}`} className={`badge ${getRoleBadgeColor(role.name)} text-xs`}>
-                            {role.name.replace('ROLE_', '')} (Global)
-                          </span>
-                        ))}
-                        {user.organizationRoles?.map((orgRole: any, index: number) => (
-                          <span key={`org-${index}`} className={`badge ${getRoleBadgeColor(orgRole.roleName)} text-xs`}>
-                            {orgRole.roleName.replace('ROLE_', '')} ({orgRole.organizationName})
-                          </span>
-                        ))}
-                        {(!user.roles?.length && !user.organizationRoles?.length) && (
-                          <span className="text-xs text-secondary-600 dark:text-secondary-300">No roles assigned</span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`badge ${user.isActive ? 'badge-success' : 'badge-error'}`}>
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title='View User'
-                          onClick={() => navigate("/user-view", { state: { userId: user.id } })}
-                          className="p-1 h-8 w-8"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title="Edit User"
-                          onClick={() => navigate("/edit-user", { state: { userId: user.id } })}
-                          className="p-1 h-8 w-8"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate("/user-org-roles", { state: { userId: user.id } })}
-                          className="p-1 h-8 w-8"
-                        >
-                          <Shield className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(user.id)}
-                          className="p-1 h-8 w-8 text-error-600 hover:text-error-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user) => (
-            <UserCard key={user.id} user={user} />
-          ))}
-        </div>
-      )} */}
-
-      {/*-------Showing users in card view only---------*/}
       {fetching ? (
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-3">

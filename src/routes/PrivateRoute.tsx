@@ -18,7 +18,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   } = useUser();
 
   useEffect(() => {
-    
+
     if (loading) return;
 
     const token = localStorage.getItem('jwtToken');

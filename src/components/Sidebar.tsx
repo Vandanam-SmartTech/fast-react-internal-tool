@@ -85,11 +85,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const goToProductManagement = () =>
     navigateWithSidebarClose("/product-management");
 
-    const goToPackageManagement = () =>
+  const goToPackageManagement = () =>
     navigateWithSidebarClose("/package-management");
 
-    const goToWorkforceManagement = () =>
-      navigateWithSidebarClose("/workforce-management");
+  const goToWorkforceManagement = () =>
+    navigateWithSidebarClose("/workforce-management");
 
 
 
@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       if (!userClaims) {
         navigate("/login");
         closeSidebarOnMobile();
-      return;
+        return;
 
       }
 
@@ -169,6 +169,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         case "ROLE_AGENCY_REPRESENTATIVE":
           navigate("/representative-dashboard");
           break;
+        case "ROLE_HIRING_MANAGER":
+          navigate("/workforce-management");
+          break;
+        case "ROLE_ORG_VIEWER":
+          navigate("/list-of-consumers");
+          break;
         default:
           alert("Unauthorized role.");
           localStorage.removeItem("selectedOrg");
@@ -184,100 +190,104 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   };
 
 
- useEffect(() => {
-  if (!userClaims) return;
+  useEffect(() => {
+    if (!userClaims) return;
 
-  const allRoles: string[] = [];
+    const allRoles: string[] = [];
 
-  // Global roles
-  if (Array.isArray(userClaims.global_roles)) {
-    allRoles.push(...userClaims.global_roles);
-  }
+    // Global roles
+    if (Array.isArray(userClaims.global_roles)) {
+      allRoles.push(...userClaims.global_roles);
+    }
 
-  // Org role from selectedOrg
-  const selectedOrgStr = localStorage.getItem("selectedOrg");
+    // Org role from selectedOrg
+    const selectedOrgStr = localStorage.getItem("selectedOrg");
 
-  if (selectedOrgStr) {
-    try {
-      const selectedOrg = JSON.parse(selectedOrgStr);
-      const orgData = userClaims.org_roles?.[selectedOrg.orgId];
+    if (selectedOrgStr) {
+      try {
+        const selectedOrg = JSON.parse(selectedOrgStr);
+        const orgData = userClaims.org_roles?.[selectedOrg.orgId];
 
-      if (selectedOrg.role) {
-        allRoles.push(selectedOrg.role);
-      } else if (orgData?.roles?.length) {
-        allRoles.push(orgData.roles[0]);
+        if (selectedOrg.role) {
+          allRoles.push(selectedOrg.role);
+        } else if (orgData?.roles?.length) {
+          allRoles.push(orgData.roles[0]);
+        }
+      } catch {
+        console.error("Invalid selectedOrg format in localStorage");
       }
-    } catch {
-      console.error("Invalid selectedOrg format in localStorage");
     }
-  }
 
-  setRoles(allRoles);
+    setRoles(allRoles);
 
-  // 🔥 Optional: redirect if page access invalid
-  const currentPath = location.pathname;
+    // 🔥 Optional: redirect if page access invalid
+    const currentPath = location.pathname;
 
-  const restrictedPages = [
-    "/admin-management",
-    "/user-management",
-    "/product-management",
-    "/package-management",
-    "/workforce-management",
-  ];
+    const restrictedPages = [
+      "/admin-management",
+      "/user-management",
+      "/product-management",
+      "/package-management",
+      "/workforce-management",
+    ];
 
-  const dashboardPages = [
-    "/org-admin-dashboard",
-    "/super-admin-dashboard",
-    "/representative-dashboard",
-    "/agency-admin-dashboard",
-    "/staff-dashboard",
-    "/grampanchayat-dashboard",
-    "/bdo-dashboard",
-  ];
+    const dashboardPages = [
+      "/org-admin-dashboard",
+      "/super-admin-dashboard",
+      "/representative-dashboard",
+      "/agency-admin-dashboard",
+      "/staff-dashboard",
+      "/grampanchayat-dashboard",
+      "/bdo-dashboard",
+    ];
 
-  const redirectToDashboard = () => {
-    if (allRoles.includes("ROLE_SUPER_ADMIN")) {
-      navigate("/super-admin-dashboard");
-    } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
-      navigate("/org-admin-dashboard");
-    } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
-      navigate("/agency-admin-dashboard");
-    } else if (
-      allRoles.includes("ROLE_ORG_REPRESENTATIVE") ||
-      allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")
+    const redirectToDashboard = () => {
+      if (allRoles.includes("ROLE_SUPER_ADMIN")) {
+        navigate("/super-admin-dashboard");
+      } else if (allRoles.includes("ROLE_ORG_ADMIN")) {
+        navigate("/org-admin-dashboard");
+      } else if (allRoles.includes("ROLE_AGENCY_ADMIN")) {
+        navigate("/agency-admin-dashboard");
+      } else if (
+        allRoles.includes("ROLE_ORG_REPRESENTATIVE") ||
+        allRoles.includes("ROLE_AGENCY_REPRESENTATIVE")
+      ) {
+        navigate("/representative-dashboard");
+      } else if (
+        allRoles.includes("ROLE_ORG_STAFF") ||
+        allRoles.includes("ROLE_AGENCY_STAFF")
+      ) {
+        navigate("/staff-dashboard");
+      } else if (allRoles.includes("ROLE_GRAMSEVAK")) {
+        navigate("/grampanchayat-dashboard");
+      } else if (allRoles.includes("ROLE_BDO")) {
+        navigate("/bdo-dashboard");
+      } else if (allRoles.includes("ROLE_HIRING_MANAGER")){
+        navigate("/workforce-management");
+      } else if (allRoles.includes("ROLE_ORG_VIEWER")){
+        navigate("/list-of-consumers");
+      }else {
+        navigate("/login");
+      }
+    };
+
+    // Restriction validation
+    if (
+      restrictedPages.includes(currentPath) &&
+      !(
+        allRoles.includes("ROLE_SUPER_ADMIN") ||
+        allRoles.includes("ROLE_ORG_ADMIN") ||
+        allRoles.includes("ROLE_AGENCY_ADMIN")
+      )
     ) {
-      navigate("/representative-dashboard");
-    } else if (
-      allRoles.includes("ROLE_ORG_STAFF") ||
-      allRoles.includes("ROLE_AGENCY_STAFF")
-    ) {
-      navigate("/staff-dashboard");
-    } else if (allRoles.includes("ROLE_GRAMSEVAK")) {
-      navigate("/grampanchayat-dashboard");
-    } else if (allRoles.includes("ROLE_BDO")) {
-      navigate("/bdo-dashboard");
-    } else {
-      navigate("/login");
+      redirectToDashboard();
     }
-  };
 
-  // Restriction validation
-  if (
-    restrictedPages.includes(currentPath) &&
-    !(
-      allRoles.includes("ROLE_SUPER_ADMIN") ||
-      allRoles.includes("ROLE_ORG_ADMIN") ||
-      allRoles.includes("ROLE_AGENCY_ADMIN")
-    )
-  ) {
-    redirectToDashboard();
-  }
+    if (dashboardPages.includes(currentPath)) {
+      redirectToDashboard();
+    }
 
-  if (dashboardPages.includes(currentPath)) {
-    redirectToDashboard();
-  }
-
-}, [userClaims, location.pathname, navigate]);
+  }, [userClaims, location.pathname, navigate]);
 
 
 
@@ -331,7 +341,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           <div className="flex flex-col h-full">
             <nav className="flex-1 px-4 py-6 space-y-2">
               {/* Dashboard */}
-              <button
+              {!(roles.includes("ROLE_HIRING_MANAGER") || roles.includes("ROLE_ORG_VIEWER")) &&<button
                 onClick={handleHomeClick}
                 className={`nav-link w-full justify-start ${isActive([
                   "/org-admin-dashboard",
@@ -348,13 +358,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               >
                 <LayoutDashboard size={20} />
                 <span>Dashboard</span>
-              </button>
+              </button>}
 
 
 
               <div className="space-y-1">
 
-                <button
+                 {!roles.includes("ROLE_HIRING_MANAGER") &&<button
                   onClick={() => setCustomersExpanded(!customersExpanded)}
                   className={`nav-link w-full justify-between ${[
                     "/customer-form",
@@ -370,12 +380,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     <span>Manage Customers</span>
                   </div>
                   {customersExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </button>
+                </button>}
 
-                {customersExpanded && (
+                {customersExpanded && !roles.includes("ROLE_HIRING_MANAGER") &&(
                   <div className="ml-6 space-y-1 mt-2">
 
-                    {!(roles.includes("ROLE_BDO") || roles.includes("ROLE_GRAMSEVAK")) && (<button
+                    {!(roles.includes("ROLE_BDO") || roles.includes("ROLE_GRAMSEVAK") || roles.includes("ROLE_ORG_VIEWER")) && (<button
                       onClick={goToCustomerForm}
                       className={`nav-link w-full justify-start ${location.pathname === "/customer-form"
                         ? "nav-link-active"
@@ -399,7 +409,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     </button>
 
 
-                    <button
+                    {!roles.includes("ROLE_ORG_VIEWER") &&<button
                       onClick={goToOnboardedConsumers}
                       className={`nav-link w-full justify-start ${location.pathname === "/onboarded-consumers"
                         ? "nav-link-active"
@@ -408,7 +418,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                     >
                       <UserRoundCheck size={18} />
                       <span>Onboarded</span>
-                    </button>
+                    </button>}
                   </div>
                 )}
               </div>
@@ -449,7 +459,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_AGENCY_ADMIN")) && (
+              {(roles.includes("ROLE_SUPER_ADMIN") || roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToProductManagement}
                   className={`nav-link w-full justify-start ${isActive("/product-management") ? "nav-link-active" : "nav-link-inactive"
@@ -460,7 +470,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-               {(roles.includes("ROLE_ORG_ADMIN")) && (
+              {(roles.includes("ROLE_ORG_ADMIN")) && (
                 <button
                   onClick={goToPackageManagement}
                   className={`nav-link w-full justify-start ${isActive("/package-management") ? "nav-link-active" : "nav-link-inactive"
@@ -471,7 +481,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 </button>
               )}
 
-               {(roles.includes("ROLE_ORG_ADMIN")) && (
+              {(roles.includes("ROLE_ORG_ADMIN") || roles.includes("ROLE_HIRING_MANAGER")) && (
                 <button
                   onClick={goToWorkforceManagement}
                   className={`nav-link w-full justify-start ${isActive("/workforce-management") ? "nav-link-active" : "nav-link-inactive"
