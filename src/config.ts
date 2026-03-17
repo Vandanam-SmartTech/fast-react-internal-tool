@@ -13,15 +13,23 @@ export interface AppConfig {
 
 let config: AppConfig | null = null;
 
+declare const __CONFIG_FILE__: string;
+
 export const loadConfig = async (): Promise<void> => {
   try {
-    const response = await fetch(`${import.meta.env.BASE_URL}config.json`);
+    console.log("Loading config file:", __CONFIG_FILE__);
+
+    const response = await fetch(
+      `${import.meta.env.BASE_URL}${__CONFIG_FILE__}`
+    );
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     config = await response.json();
   } catch (error) {
-    console.error('Error loading config.json:', error);
+    console.error('Error loading config:', error);
     throw error;
   }
 };

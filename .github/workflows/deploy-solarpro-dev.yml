@@ -27,7 +27,7 @@ jobs:
         working-directory: ./   # 👈 change if your Vite app is in a subfolder (e.g. ./frontend)
 
       - name: Build Vite app
-        run: npm run build
+        run: npm run build:dev
         working-directory: ./   # 👈 adjust if needed
 
       - name: Debug - Show dist output
