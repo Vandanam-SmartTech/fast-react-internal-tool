@@ -7,21 +7,12 @@ import {
 import { useUser } from "../../contexts/UserContext";
 import ReusableDropdown from "../../components/ReusableDropdown";
 import { useNavigate } from "react-router-dom";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Users, UserCheck, Percent, Clock } from 'lucide-react';
 interface Village {
   code: string;
   nameEnglish: string;
 }
 
-const COLORS = [
-  "#3B82F6",
-  "#10B981",
-  "#8B5CF6",
-  "#F59E0B",
-  "#EF4444",
-  "#6366F1",
-];
 
 const BDODashboard: React.FC = () => {
   const { userClaims } = useUser();
@@ -309,95 +300,6 @@ const BDODashboard: React.FC = () => {
         </div>
 
       </div>
-
-
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <div className="bg-white rounded-xl shadow-md p-4 sm:p-5">
-
-          <h2 className="text-lg font-semibold mb-4">
-            Project Status Overview
-          </h2>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center h-[280px] text-gray-400">
-              Loading...
-            </div>
-          ) : hasProjectData ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={projectData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={70}
-                  outerRadius={110}
-                  paddingAngle={4}
-                  isAnimationActive={false}   
-                >
-
-                  {projectData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[280px] text-gray-400">
-              <p className="text-sm font-medium">No Project Data Available</p>
-              <p className="text-xs mt-1">
-                Data will appear once customers get onboarded
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md p-4 sm:p-5">
-
-          <h2 className="text-lg font-semibold mb-4">
-            Loan Status Overview
-          </h2>
-
-          {hasLoanData ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={loanData}
-                layout="vertical"
-                margin={{ left: 20 }}
-              >
-
-                <defs>
-                  <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="#3B82F6" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" />
-                <Tooltip />
-
-                <Bar
-                  dataKey="value"
-                  fill="url(#barGradient)" 
-                  radius={[0, 8, 8, 0]}     
-                  barSize={28}
-                  isAnimationActive={false}
-                />
-              </BarChart>
-
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[280px] text-gray-400">
-              <p className="text-sm font-medium">No Loan Data Available</p>
-              <p className="text-xs mt-1">Data will appear once applications are received</p>
-            </div>
-          )}
-        </div>
-      </div> */}
 
     </div>
   );
