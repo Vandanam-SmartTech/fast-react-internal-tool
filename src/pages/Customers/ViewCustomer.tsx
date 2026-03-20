@@ -558,7 +558,7 @@ export const ViewCustomer = () => {
                         {userInfo.role !== "ROLE_ORG_VIEWER" && (
                           <button
                             onClick={() =>
-                              navigate(`/view-system-specifications`, {
+                              navigate(`/system-specifications`, {
                                 state: {
                                   connectionId: connection.id,
                                   consumerId: connection.consumerId,

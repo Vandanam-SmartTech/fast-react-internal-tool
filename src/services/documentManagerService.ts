@@ -155,7 +155,6 @@ export const getUserSignature = async (
     if (error.response?.status === 404 || error.response?.status === 500) {
       return null;
     }
-    console.error("Failed to fetch signature:", error);
     return null;
   }
 };
@@ -247,12 +246,10 @@ export const getUserProfilePhoto = async (
 
     return URL.createObjectURL(res.data);
   } catch (error: any) {
-    // Silently handle 404/500 errors - user may not have a profile photo
+    
     if (error.response?.status === 404 || error.response?.status === 500) {
       return null;
     }
-    // Only log unexpected errors
-    console.error("Failed to fetch profile photo:", error);
     return null;
   }
 };

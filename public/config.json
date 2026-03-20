@@ -1,10 +1,10 @@
 {
-  "VITE_JWT_API": "https://dev.vandanam.co.in/auth",
+  "VITE_JWT_API": "http://localhost:8247",
   "VITE_OTP_API": "https://dev.vandanam.co.in/otp",
   "VITE_CRS_API": "https://dev.vandanam.co.in/crs",
   "VITE_QUOTATION_API": "https://dev.vandanam.co.in/quotation",
   "VITE_DOCGENERATOR_API": "https://dev.vandanam.co.in/document-generator",
-  "VITE_DOCMANAGER_API": "https://dev.vandanam.co.in/document-manager",
+  "VITE_DOCMANAGER_API": "http://localhost:8192",
   "VITE_HIRING_API": "https://dev.vandanam.co.in/hiring-portal",
   "BASE_PATH": "/solarpro/",
   "VITE_MODE": "development",

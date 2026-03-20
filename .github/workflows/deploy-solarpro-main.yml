@@ -1,0 +1,77 @@
+name: Build & Deploy React App (Prod)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '#$%!!@@**7788^^&&1234')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Use prod config
+        run: cp public/config.prod.json public/config.json
+
+      - name: Show selected config
+        run: cat public/config.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Vite app
+        run: npm run build:prod
+
+      - name: Debug - Show dist output
+        run: ls -R ./dist || echo "⚠️ Dist folder missing!"
+
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Check SSH reachability
+        run: |
+          nc -vz ${{ secrets.SERVER_HOST }} 6022 || true
+
+      - name: Upload build to server temp
+        run: |
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            rm -rf ~/solarpro-temp
+            mkdir -p ~/solarpro-temp
+          "
+
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./dist/* \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/solarpro-temp/
+
+      - name: Backup and switch production
+        run: |
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            set -e
+            TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+            sudo mkdir -p /var/www/backup
+            sudo mkdir -p /var/www/solarpro
+
+            if [ -d /var/www/solarpro ] && [ \"\$(ls -A /var/www/solarpro 2>/dev/null)\" ]; then
+              echo '📦 Backing up existing production...'
+              sudo cp -a /var/www/solarpro /var/www/backup/solarpro-\$TIMESTAMP
+            fi
+
+            sudo rm -rf /var/www/solarpro/*
+            sudo mv ~/solarpro-temp/* /var/www/solarpro/
+            rm -rf ~/solarpro-temp
+            sudo chown -R www-data:www-data /var/www/solarpro
+            sudo systemctl reload nginx
+          "

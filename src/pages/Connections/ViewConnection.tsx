@@ -149,7 +149,7 @@ export const ViewConnection = () => {
 
 
   const handleSaveSpecs = () => {
-    navigate(`/view-system-specifications`, {
+    navigate(`/system-specifications`, {
       state: {
         connectionId: connectionId,
         consumerId: consumerId,
@@ -580,7 +580,7 @@ export const ViewConnection = () => {
 
             <button
               onClick={() =>
-                navigate(`/view-system-specifications`, {
+                navigate(`/system-specifications`, {
                   state: {
                     connectionId: connectionId,
                     consumerId: consumerId,

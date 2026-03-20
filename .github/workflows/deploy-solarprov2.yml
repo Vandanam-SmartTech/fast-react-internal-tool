@@ -1,0 +1,51 @@
+name: Build & Deploy React App (solarprov2)
+
+on:
+  push:
+    branches: [ solarprov2 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    if: contains(github.event.head_commit.message, 'deploy-solarprov2')   # Run only on specific commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./   # Change if your project folder is different
+
+      - name: Build Vite app
+        run: npm run build:stage
+        working-directory: ./   # Same as above
+
+      - name: Debug - Show dist output
+        run: ls -R ./dist || echo "⚠️ Dist folder missing!"
+        working-directory: ./ 
+
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Deploy Vite app to server (solarprov2)
+        run: |
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo mkdir -p /var/www/solarprov2 && sudo rm -rf /var/www/solarprov2/*"
+
+          scp -P 6022 -r -o StrictHostKeyChecking=no ./dist/* \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/solarprov2/
+
+          ssh -p 6022 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl reload nginx"
