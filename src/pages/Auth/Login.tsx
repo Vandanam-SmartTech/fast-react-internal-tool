@@ -476,7 +476,7 @@ const Login = () => {
                       setError('');
                     }
                   }}
-                  placeholder={loginMode === 'otp' ? 'Enter registered email or mobile number' : 'Enter username, email, or mobile'}
+                  placeholder={loginMode === 'otp' ? 'Registered email/mobile' : 'Enter username/email/mobile'}
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
@@ -532,7 +532,7 @@ const Login = () => {
                             ? 'OTP will be sent to your email address.'
                             : detectedOtpChannel === 'SMS'
                               ? 'OTP will be sent to your mobile number by SMS.'
-                              : 'Enter a valid email address or 10-digit mobile number to continue with OTP login.'}
+                              : 'Enter a valid email or 10-digit mobile number to continue with OTP login.'}
                         </span>
                       </div>
                     </div>
