@@ -23,9 +23,26 @@ export const getJwtAPI = (): AxiosInstance => {
   });
 
   jwtAPIInstance.interceptors.request.use((config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const url = config.url || '';
+    const isPublicAuthEndpoint = [
+      '/auth/login',
+      '/auth/login-otp/send',
+      '/auth/login-otp/verify',
+      '/auth/reset-password-otp/resolve',
+      '/auth/reset-password-otp/send',
+      '/auth/reset-password-otp/verify',
+      '/auth/update-password',
+      '/auth/valid-user',
+      '/auth/refresh-token',
+    ].some((publicPath) => url.startsWith(publicPath));
+
+    if (!isPublicAuthEndpoint) {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } else if (config.headers?.Authorization) {
+      delete config.headers.Authorization;
     }
     return config;
   });
