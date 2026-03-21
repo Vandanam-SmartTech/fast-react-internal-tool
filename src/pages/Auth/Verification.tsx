@@ -3,13 +3,28 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import bgImage from '../../assets/Solar_Image.webp';
 import { Logo } from '../../components/ui';
-import { verifyOtp, sendOtpToEmail } from '../../services/otpService';
-import { validateUser } from '../../services/jwtService';
+import { detectOtpChannel, sendOtpToIdentifier, verifyOtpForIdentifier } from '../../services/otpService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const MAX_ATTEMPTS = 3;
 
+const maskIdentifier = (value: string) => {
+  const channel = detectOtpChannel(value);
+  if (channel === 'EMAIL') {
+    const [name, domain] = value.split('@');
+    if (!domain) return value;
+    const visible = name.slice(0, 2);
+    return `${visible}${'*'.repeat(Math.max(0, name.length - visible.length))}@${domain}`;
+  }
+
+  const digits = value.replace(/\D/g, '');
+  if (digits.length >= 4) {
+    return `${'*'.repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`;
+  }
+
+  return value;
+};
 
 const Verification: React.FC = () => {
   const [otp, setOtp] = useState('');
@@ -20,40 +35,22 @@ const Verification: React.FC = () => {
   const [resendCountdown, setResendCountdown] = useState<number>(0);
   const [countdown, setCountdown] = useState<number>(0);
   const [resending, setResending] = useState(false);
-  const [emailToVerify, setEmailToVerify] = useState<string>('');
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { email, msg, expiryTime, resendTime } = location.state || {};
-
+  const { identifier, resetEmail, msg, expiryTime, resendTime, channel } = location.state || {};
   const countdownInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const tooManyAttemptsMessage = emailToVerify
+  const tooManyAttemptsMessage = identifier
     ? 'Too many attempts. Please try again by resending the OTP.'
     : 'Too many attempts. Please try again later.';
 
-
   useEffect(() => {
-    if (!email && !msg) {
+    if (!identifier || !resetEmail) {
       navigate('/password-reset');
     }
-  }, [email, msg, navigate]);
-
-  useEffect(() => {
-    const resolveEmail = async () => {
-      try {
-        const resolvedEmail = await validateUser(email);
-        setEmailToVerify(resolvedEmail);
-      } catch (err) {
-
-      }
-    };
-
-    if (email) resolveEmail();
-  }, [email]);
-
-
+  }, [identifier, resetEmail, navigate]);
 
   useEffect(() => {
     if (!expiryTime || !resendTime) return;
@@ -72,8 +69,6 @@ const Verification: React.FC = () => {
     };
   }, [expiryTime, resendTime]);
 
-
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -90,55 +85,49 @@ const Verification: React.FC = () => {
     }
 
     try {
-      await verifyOtp(emailToVerify, otp);
-      toast.success('OTP Verified!', { autoClose: 1000, hideProgressBar: true });
+      await verifyOtpForIdentifier(identifier, otp);
+      toast.success('OTP verified.', { autoClose: 1000, hideProgressBar: true });
 
       setTimeout(() => {
         navigate('/change-password', {
-          state: { emailToVerify, msg, msg1: 'Otp verified successfully' },
+          state: { emailToVerify: resetEmail, msg, msg1: 'Otp verified successfully' },
         });
       }, 1000);
-    } catch {
+    } catch (err: any) {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
+      const backendMessage = err?.response?.data?.message || err?.response?.data;
 
       if (newAttempts >= MAX_ATTEMPTS) {
         setIsLocked(true);
-        setError(tooManyAttemptsMessage);
+        setError(typeof backendMessage === 'string' ? backendMessage : tooManyAttemptsMessage);
       } else {
-        setError(`Invalid OTP. ${MAX_ATTEMPTS - newAttempts} attempt(s) left.`);
+        setError(typeof backendMessage === 'string' ? backendMessage : `Invalid OTP. ${MAX_ATTEMPTS - newAttempts} attempt(s) left.`);
       }
     }
   };
 
-
   const handleResend = async () => {
     setResending(true);
     try {
-      await sendOtpToEmail(emailToVerify);
-    } catch (err) {
-
+      await sendOtpToIdentifier(identifier);
+      setMessage(`OTP resent via ${channel === 'SMS' ? 'SMS' : 'email'}.`);
+      toast.success('OTP resent successfully!', {
+        autoClose: 1000,
+        hideProgressBar: true,
+      });
+    } catch (err: any) {
+      const backendMessage = err?.response?.data?.message || err?.response?.data;
+      setError(typeof backendMessage === 'string' ? backendMessage : 'Failed to resend OTP.');
     } finally {
-      // const now = Date.now();
-      // const newExpiry = now + 3 * 60 * 1000;
-      // const newResend = now + 60 * 1000;
-
       setCountdown(180);
       setResendCountdown(60);
       setAttempts(0);
       setIsLocked(false);
       setOtp('');
-      setError('');
-
-      toast.success('OTP resent successfully!', {
-        autoClose: 1000,
-        hideProgressBar: true,
-      });
-
       setResending(false);
     }
   };
-
 
   const formatCountdown = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -146,24 +135,16 @@ const Verification: React.FC = () => {
     return `${m}:${s}`;
   };
 
-
   return (
     <div
       className="fixed top-0 left-0 w-full h-full bg-cover bg-center flex justify-center items-center px-4"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-md p-5 sm:p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
-        {/* <div className="flex items-center justify-center mb-2 sm:mb-1">
-          <img src={logo1} alt="Vandanam SmartTech Logo" className="h-16 w-auto mb-1" />
-        </div> */}
-
         <div className="flex justify-center mb-4">
           <div className="relative">
             <div className="absolute -inset-2 bg-gradient-to-r from-primary-400 to-solar-400 rounded-full blur-lg opacity-30 animate-pulse-slow"></div>
-            <Logo
-              size="xl"
-              className="relative drop-shadow-lg"
-            />
+            <Logo size="xl" className="relative drop-shadow-lg" />
           </div>
         </div>
 
@@ -181,15 +162,20 @@ const Verification: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4 text-center">
-            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-4">
+            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
               Enter Verification Code
             </label>
+            {identifier && (
+              <p className="text-xs text-gray-600 mb-4">
+                We sent the code to {maskIdentifier(identifier)} via {channel === 'SMS' ? 'SMS' : 'email'}.
+              </p>
+            )}
             <div className="flex justify-center gap-x-4">
               <OtpInput
                 value={otp}
                 onChange={setOtp}
                 numInputs={6}
-                inputType="password"  // <-- use this instead of isInputNum
+                inputType="password"
                 shouldAutoFocus
                 renderInput={(props) => (
                   <input
@@ -201,26 +187,19 @@ const Verification: React.FC = () => {
                 )}
               />
             </div>
-
           </div>
 
           <button
             type="submit"
             disabled={isLocked}
-            className={`w-full py-1 sm:py-2 rounded-lg font-semibold transition ${isLocked ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+            className={`w-full py-1 sm:py-2 rounded-lg font-semibold transition ${isLocked ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
             Verify OTP
           </button>
 
           <p className="text-center my-2 text-sm text-gray-600">
-            {countdown > 0 && !isLocked ? (
-              `OTP expires in: ${formatCountdown(countdown)}`
-            ) : (
-              'OTP expired. Please resend OTP.'
-            )}
+            {countdown > 0 && !isLocked ? `OTP expires in: ${formatCountdown(countdown)}` : 'OTP expired. Please resend OTP.'}
           </p>
-
 
           <div className="flex justify-between items-center flex-wrap gap-2 mt-2 mb-3 text-sm text-blue-600 font-medium">
             <button
@@ -231,28 +210,21 @@ const Verification: React.FC = () => {
               Back to Login
             </button>
 
-            {emailToVerify && (
+            {identifier && (
               <button
                 type="button"
                 onClick={handleResend}
-                className={`hover:underline ${resendCountdown > 0 || resending ? 'text-gray-400 pointer-events-none' : 'text-blue-600'
-                  }`}
+                className={`hover:underline ${resendCountdown > 0 || resending ? 'text-gray-400 pointer-events-none' : 'text-blue-600'}`}
                 disabled={resendCountdown > 0 || resending}
               >
-                {resending
-                  ? 'Sending...'
-                  : resendCountdown > 0
-                    ? `Resend in ${resendCountdown}s`
-                    : 'Resend OTP'}
+                {resending ? 'Sending...' : resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend OTP'}
               </button>
             )}
-
           </div>
         </form>
       </div>
     </div>
   );
 };
-
 
 export default Verification;
