@@ -527,13 +527,6 @@ const Login = () => {
                         ) : (
                           <KeyRound className="h-4 w-4 text-primary-600" />
                         )}
-                        <span>
-                          {detectedOtpChannel === 'EMAIL'
-                            ? 'OTP will be sent to your email address.'
-                            : detectedOtpChannel === 'SMS'
-                              ? 'OTP will be sent to your mobile number by SMS.'
-                              : 'Enter a valid email or 10-digit mobile number to continue with OTP login.'}
-                        </span>
                       </div>
                     </div>
 
