@@ -34,6 +34,26 @@ interface UserClaims {
   [key: string]: any;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^(?:\+91|91)?[6-9]\d{9}$/;
+
+const normalizeOtpIdentifier = (value: string): string => value.trim();
+
+const detectOtpChannel = (value: string): LoginOtpChannel | null => {
+  const trimmed = normalizeOtpIdentifier(value);
+  const digitsOnly = trimmed.replace(/\D/g, '');
+
+  if (EMAIL_REGEX.test(trimmed)) {
+    return 'EMAIL';
+  }
+
+  if (PHONE_REGEX.test(digitsOnly)) {
+    return 'SMS';
+  }
+
+  return null;
+};
+
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +61,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
-  const [otpChannel, setOtpChannel] = useState<LoginOtpChannel>('EMAIL');
   const [otpSent, setOtpSent] = useState(false);
   const [showOrgSelection, setShowOrgSelection] = useState(false);
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
@@ -49,6 +68,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { refreshUserClaims } = useUser();
+  const detectedOtpChannel = detectOtpChannel(identifier);
 
   useEffect(() => {
     const checkAlreadyLoggedIn = async () => {
@@ -97,21 +117,29 @@ const Login = () => {
     setError('');
     setInfoMessage('');
 
-    if (!identifier.trim()) {
-      setError('Enter your username, email, or mobile number first.');
+    const normalizedIdentifier = normalizeOtpIdentifier(identifier);
+
+    if (!normalizedIdentifier) {
+      setError('Enter your email address or mobile number first.');
+      return;
+    }
+
+    const channel = detectOtpChannel(normalizedIdentifier);
+    if (!channel) {
+      setError('For OTP login, enter a valid email address or 10-digit mobile number.');
       return;
     }
 
     setLoading(true);
     try {
       const payload = {
-        identifier: identifier.trim(),
-        channel: otpChannel,
+        identifier: normalizedIdentifier,
+        channel,
         clientRequestId: `login-${Date.now()}`,
       };
       const response = await sendLoginOtp(payload);
       setOtpSent(true);
-      setInfoMessage(response?.message || `OTP sent successfully via ${otpChannel}.`);
+      setInfoMessage(response?.message || `OTP sent successfully via ${channel}.`);
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.response?.data || 'Failed to send OTP.';
       setError(typeof message === 'string' ? message : 'Failed to send OTP.');
@@ -125,8 +153,16 @@ const Login = () => {
     setError('');
     setInfoMessage('');
 
-    if (!identifier.trim()) {
-      setError('Enter your username, email, or mobile number first.');
+    const normalizedIdentifier = normalizeOtpIdentifier(identifier);
+
+    if (!normalizedIdentifier) {
+      setError('Enter your email address or mobile number first.');
+      return;
+    }
+
+    const channel = detectOtpChannel(normalizedIdentifier);
+    if (!channel) {
+      setError('For OTP login, enter a valid email address or 10-digit mobile number.');
       return;
     }
 
@@ -138,8 +174,8 @@ const Login = () => {
     setLoading(true);
     try {
       const { jwt, refreshToken } = await verifyLoginOtp({
-        identifier: identifier.trim(),
-        channel: otpChannel,
+        identifier: normalizedIdentifier,
+        channel,
         otp: otp.trim(),
       });
       await completeAuthenticatedLogin(jwt, refreshToken);
@@ -416,6 +452,7 @@ const Login = () => {
                     onClick={() => {
                       setLoginMode('otp');
                       setPassword('');
+                      resetOtpState();
                       setError('');
                       setInfoMessage('');
                     }}
@@ -429,11 +466,17 @@ const Login = () => {
                 </div>
 
                 <Input
-                  label="Username / Email / Mobile"
+                  label={loginMode === 'otp' ? 'Email / Mobile' : 'Username / Email / Mobile'}
                   type="text"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Enter username, email, or mobile"
+                  onChange={(e) => {
+                    setIdentifier(e.target.value);
+                    if (loginMode === 'otp') {
+                      resetOtpState();
+                      setError('');
+                    }
+                  }}
+                  placeholder={loginMode === 'otp' ? 'Enter registered email or mobile number' : 'Enter username, email, or mobile'}
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
@@ -475,31 +518,23 @@ const Login = () => {
                   </form>
                 ) : (
                   <form onSubmit={handleVerifyOtpLogin} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        type="button"
-                        variant={otpChannel === 'EMAIL' ? 'primary' : 'outline'}
-                        onClick={() => {
-                          setOtpChannel('EMAIL');
-                          resetOtpState();
-                          setError('');
-                        }}
-                        leftIcon={<Mail className="h-4 w-4" />}
-                      >
-                        Email OTP
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={otpChannel === 'SMS' ? 'primary' : 'outline'}
-                        onClick={() => {
-                          setOtpChannel('SMS');
-                          resetOtpState();
-                          setError('');
-                        }}
-                        leftIcon={<Smartphone className="h-4 w-4" />}
-                      >
-                        SMS OTP
-                      </Button>
+                    <div className="rounded-xl border border-secondary-200 bg-secondary-50/80 px-4 py-3 dark:border-secondary-700 dark:bg-secondary-800/60">
+                      <div className="flex items-center gap-2 text-sm font-medium text-secondary-700 dark:text-secondary-200">
+                        {detectedOtpChannel === 'EMAIL' ? (
+                          <Mail className="h-4 w-4 text-primary-600" />
+                        ) : detectedOtpChannel === 'SMS' ? (
+                          <Smartphone className="h-4 w-4 text-primary-600" />
+                        ) : (
+                          <KeyRound className="h-4 w-4 text-primary-600" />
+                        )}
+                        <span>
+                          {detectedOtpChannel === 'EMAIL'
+                            ? 'OTP will be sent to your email address.'
+                            : detectedOtpChannel === 'SMS'
+                              ? 'OTP will be sent to your mobile number by SMS.'
+                              : 'Enter a valid email address or 10-digit mobile number to continue with OTP login.'}
+                        </span>
+                      </div>
                     </div>
 
                     <Button
