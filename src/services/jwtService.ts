@@ -38,6 +38,31 @@ export const login = async (credentials: { identifier: string; password: string 
   return response.data;
 };
 
+
+export type LoginOtpChannel = "EMAIL" | "SMS";
+
+export interface LoginOtpSendRequest {
+  identifier: string;
+  channel?: LoginOtpChannel;
+  clientRequestId?: string;
+}
+
+export interface LoginOtpVerifyRequest {
+  identifier: string;
+  channel?: LoginOtpChannel;
+  otp: string;
+}
+
+export const sendLoginOtp = async (request: LoginOtpSendRequest) => {
+  const response = await getJwtAPI().post('/auth/login-otp/send', request);
+  return response.data;
+};
+
+export const verifyLoginOtp = async (request: LoginOtpVerifyRequest) => {
+  const response = await getJwtAPI().post('/auth/login-otp/verify', request);
+  return response.data;
+};
+
 export const setAuthToken = (jwt: string, refreshToken: string) => {
   tokenCache = jwt || null;
   claimsCache = null;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, setAuthToken } from '../../services/jwtService';
-import { User, Lock, Sun, Shield, Zap, Sparkles, ArrowLeft } from 'lucide-react';
+import { login, sendLoginOtp, setAuthToken, verifyLoginOtp, type LoginOtpChannel } from '../../services/jwtService';
+import { User, Lock, Sun, Shield, Zap, Sparkles, ArrowLeft, Mail, Smartphone, KeyRound } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardBody } from '../../components/ui/Card';
@@ -37,7 +37,12 @@ interface UserClaims {
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
+  const [otpChannel, setOtpChannel] = useState<LoginOtpChannel>('EMAIL');
+  const [otpSent, setOtpSent] = useState(false);
   const [showOrgSelection, setShowOrgSelection] = useState(false);
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
@@ -62,6 +67,90 @@ const Login = () => {
   }, []);
 
 
+  const completeAuthenticatedLogin = async (jwt: string, refreshToken: string) => {
+    localStorage.setItem('jwtToken', jwt);
+    localStorage.setItem('refreshToken', refreshToken);
+    setAuthToken(jwt, refreshToken);
+
+    const claims = await refreshUserClaims();
+
+    if (!claims) {
+      setError('Unable to load user details. Please try again.');
+      return;
+    }
+
+    if (!claims.has_password_changed) {
+      navigate('/password-reset');
+      return;
+    }
+
+    handleRoleRouting(claims);
+  };
+
+  const resetOtpState = () => {
+    setOtp('');
+    setOtpSent(false);
+    setInfoMessage('');
+  };
+
+  const handleSendOtp = async () => {
+    setError('');
+    setInfoMessage('');
+
+    if (!identifier.trim()) {
+      setError('Enter your username, email, or mobile number first.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        identifier: identifier.trim(),
+        channel: otpChannel,
+        clientRequestId: `login-${Date.now()}`,
+      };
+      const response = await sendLoginOtp(payload);
+      setOtpSent(true);
+      setInfoMessage(response?.message || `OTP sent successfully via ${otpChannel}.`);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.response?.data || 'Failed to send OTP.';
+      setError(typeof message === 'string' ? message : 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtpLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setInfoMessage('');
+
+    if (!identifier.trim()) {
+      setError('Enter your username, email, or mobile number first.');
+      return;
+    }
+
+    if (!otp.trim()) {
+      setError('Enter the OTP to continue.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { jwt, refreshToken } = await verifyLoginOtp({
+        identifier: identifier.trim(),
+        channel: otpChannel,
+        otp: otp.trim(),
+      });
+      await completeAuthenticatedLogin(jwt, refreshToken);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.response?.data || 'Invalid OTP.';
+      setError(typeof message === 'string' ? message : 'Invalid OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -69,28 +158,11 @@ const Login = () => {
 
     try {
       const { jwt, refreshToken } = await login({ identifier, password });
-      localStorage.setItem('jwtToken', jwt);
-      localStorage.setItem('refreshToken', refreshToken);
-      setAuthToken(jwt, refreshToken);
+      await completeAuthenticatedLogin(jwt, refreshToken);
 
-      const claims = await refreshUserClaims();
-
-      if (!claims) {
-        setError("Unable to load user details. Please try again.");
-        return;
-      }
-
-
-      if (!claims.has_password_changed) {
-        navigate('/password-reset');
-        return;
-      }
-
-
-      handleRoleRouting(claims);
-
-    } catch (err) {
-      setError('Invalid login credentials.');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.response?.data || 'Invalid login credentials.';
+      setError(typeof message === 'string' ? message : 'Invalid login credentials.');
     } finally {
       setLoading(false);
     }
@@ -266,6 +338,14 @@ const Login = () => {
               </div>
             )}
 
+            {infoMessage && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-success-50 to-emerald-100 border border-success-200 rounded-xl">
+                <p className="text-success-700 text-sm text-center font-medium">
+                  {infoMessage}
+                </p>
+              </div>
+            )}
+
             {/* Role selection */}
             {showOrgSelection ? (
               <div className="space-y-6 animate-fade-in">
@@ -315,50 +395,149 @@ const Login = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary-100/80 p-1 dark:bg-secondary-800/80">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginMode('password');
+                      setError('');
+                      setInfoMessage('');
+                    }}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${loginMode === 'password'
+                      ? 'bg-white text-primary-700 shadow-sm dark:bg-secondary-700 dark:text-white'
+                      : 'text-secondary-600 dark:text-secondary-300'
+                      }`}
+                  >
+                    Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginMode('otp');
+                      setPassword('');
+                      setError('');
+                      setInfoMessage('');
+                    }}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${loginMode === 'otp'
+                      ? 'bg-white text-primary-700 shadow-sm dark:bg-secondary-700 dark:text-white'
+                      : 'text-secondary-600 dark:text-secondary-300'
+                      }`}
+                  >
+                    OTP
+                  </button>
+                </div>
+
                 <Input
-                  label="Username"
+                  label="Username / Email / Mobile"
                   type="text"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value.trim())}
-                  placeholder="Enter username"
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Enter username, email, or mobile"
                   leftIcon={<User className="h-4 w-4" />}
                   required
                 />
 
-                <Input
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  leftIcon={<Lock className="h-4 w-4" />}
-                  showPasswordToggle
-                  autoComplete="current-password"
-                  required
-                />
+                {loginMode === 'password' ? (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <Input
+                      label="Password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter password"
+                      leftIcon={<Lock className="h-4 w-4" />}
+                      showPasswordToggle
+                      autoComplete="current-password"
+                      required
+                    />
 
-                <div className="text-right">
-                  <button
-                    onClick={() => navigate("/password-reset")}
-                    className="text-sm text-blue-600 font-medium hover:underline"
-                  >
-                    Forgot your password?
-                  </button>
-                </div>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/password-reset')}
+                        className="text-sm text-blue-600 font-medium hover:underline"
+                      >
+                        Forgot your password?
+                      </button>
+                    </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full justify-center"
-                  size="lg"
-                  loading={loading}
-                  leftIcon={!loading && <Sun className="h-4 w-4" />}
-                >
-                  {!loading && 'Log In'}
-                </Button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-full justify-center"
+                      size="lg"
+                      loading={loading}
+                      leftIcon={!loading && <Sun className="h-4 w-4" />}
+                    >
+                      {!loading && 'Log In'}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtpLogin} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        type="button"
+                        variant={otpChannel === 'EMAIL' ? 'primary' : 'outline'}
+                        onClick={() => {
+                          setOtpChannel('EMAIL');
+                          resetOtpState();
+                          setError('');
+                        }}
+                        leftIcon={<Mail className="h-4 w-4" />}
+                      >
+                        Email OTP
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={otpChannel === 'SMS' ? 'primary' : 'outline'}
+                        onClick={() => {
+                          setOtpChannel('SMS');
+                          resetOtpState();
+                          setError('');
+                        }}
+                        leftIcon={<Smartphone className="h-4 w-4" />}
+                      >
+                        SMS OTP
+                      </Button>
+                    </div>
 
-              </form>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-full justify-center"
+                      loading={loading && !otpSent}
+                      onClick={handleSendOtp}
+                      leftIcon={!loading && <KeyRound className="h-4 w-4" />}
+                    >
+                      {!loading && (otpSent ? 'Resend OTP' : 'Send OTP')}
+                    </Button>
+
+                    <Input
+                      label="OTP"
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Enter 6-digit OTP"
+                      leftIcon={<KeyRound className="h-4 w-4" />}
+                      maxLength={6}
+                      inputMode="numeric"
+                      required
+                    />
+
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-full justify-center"
+                      size="lg"
+                      loading={loading && otpSent}
+                      leftIcon={!(loading && otpSent) && <Sun className="h-4 w-4" />}
+                    >
+                      {!(loading && otpSent) && 'Verify OTP & Log In'}
+                    </Button>
+                  </form>
+                )}
+              </div>
             )}
           </CardBody>
         </Card>
