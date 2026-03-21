@@ -518,18 +518,6 @@ const Login = () => {
                   </form>
                 ) : (
                   <form onSubmit={handleVerifyOtpLogin} className="space-y-4">
-                    <div className="rounded-xl border border-secondary-200 bg-secondary-50/80 px-4 py-3 dark:border-secondary-700 dark:bg-secondary-800/60">
-                      <div className="flex items-center gap-2 text-sm font-medium text-secondary-700 dark:text-secondary-200">
-                        {detectedOtpChannel === 'EMAIL' ? (
-                          <Mail className="h-4 w-4 text-primary-600" />
-                        ) : detectedOtpChannel === 'SMS' ? (
-                          <Smartphone className="h-4 w-4 text-primary-600" />
-                        ) : (
-                          <KeyRound className="h-4 w-4 text-primary-600" />
-                        )}
-                      </div>
-                    </div>
-
                     <Button
                       type="button"
                       variant="secondary"
