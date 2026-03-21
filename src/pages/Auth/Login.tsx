@@ -54,6 +54,12 @@ const detectOtpChannel = (value: string): LoginOtpChannel | null => {
   return null;
 };
 
+const getOtpTargetLabel = (channel: LoginOtpChannel | null): string => {
+  if (channel === 'EMAIL') return 'email';
+  if (channel === 'SMS') return 'mobile';
+  return 'registered email/mobile';
+};
+
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -120,28 +126,24 @@ const Login = () => {
     const normalizedIdentifier = normalizeOtpIdentifier(identifier);
 
     if (!normalizedIdentifier) {
-      setError('Enter your email address or mobile number first.');
+      setError('Enter your username, email address, or mobile number first.');
       return;
     }
 
     const channel = detectOtpChannel(normalizedIdentifier);
-    if (!channel) {
-      setError('For OTP login, enter a valid email address or 10-digit mobile number.');
-      return;
-    }
 
     setLoading(true);
     try {
       const payload = {
         identifier: normalizedIdentifier,
-        channel,
+        ...(channel ? { channel } : {}),
         clientRequestId: `login-${Date.now()}`,
       };
       const response = await sendLoginOtp(payload);
       setOtpSent(true);
-      setInfoMessage(response?.message || `OTP sent successfully via ${channel}.`);
+      setInfoMessage(response?.message || `OTP sent successfully to your ${getOtpTargetLabel(channel)}.`);
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.response?.data || 'Failed to send OTP.';
+      const message = err?.response?.data?.message || err?.response?.data?.error || err?.response?.data || 'Failed to send OTP.';
       setError(typeof message === 'string' ? message : 'Failed to send OTP.');
     } finally {
       setLoading(false);
@@ -156,15 +158,11 @@ const Login = () => {
     const normalizedIdentifier = normalizeOtpIdentifier(identifier);
 
     if (!normalizedIdentifier) {
-      setError('Enter your email address or mobile number first.');
+      setError('Enter your username, email address, or mobile number first.');
       return;
     }
 
     const channel = detectOtpChannel(normalizedIdentifier);
-    if (!channel) {
-      setError('For OTP login, enter a valid email address or 10-digit mobile number.');
-      return;
-    }
 
     if (!otp.trim()) {
       setError('Enter the OTP to continue.');
@@ -175,12 +173,12 @@ const Login = () => {
     try {
       const { jwt, refreshToken } = await verifyLoginOtp({
         identifier: normalizedIdentifier,
-        channel,
+        ...(channel ? { channel } : {}),
         otp: otp.trim(),
       });
       await completeAuthenticatedLogin(jwt, refreshToken);
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.response?.data || 'Invalid OTP.';
+      const message = err?.response?.data?.message || err?.response?.data?.error || err?.response?.data || 'Invalid OTP.';
       setError(typeof message === 'string' ? message : 'Invalid OTP.');
     } finally {
       setLoading(false);
