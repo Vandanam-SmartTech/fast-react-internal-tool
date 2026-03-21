@@ -15,7 +15,7 @@ const Verification: React.FC = () => {
   const location = useLocation();
   const email = (location.state as { emailToVerify: string })?.emailToVerify || '';
   const msg = (location.state as { msg: string })?.msg || '';
-  const msg1 = (location.state as { msg: string })?.msg || '';
+  const msg1 = (location.state as { msg1: string })?.msg1 || '';
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -59,7 +59,7 @@ const Verification: React.FC = () => {
       setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
       console.error('Password change failed:', error);
-      setError('Failed to change password. Try again.');
+      setError((error as any)?.response?.data?.message || (error as any)?.response?.data || 'Failed to change password. Try again.');
     }
   };
 

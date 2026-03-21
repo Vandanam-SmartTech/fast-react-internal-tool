@@ -63,6 +63,28 @@ export const verifyLoginOtp = async (request: LoginOtpVerifyRequest) => {
   return response.data;
 };
 
+export interface PasswordResetOtpSendRequest {
+  identifier: string;
+  channel?: LoginOtpChannel;
+  clientRequestId?: string;
+}
+
+export interface PasswordResetOtpVerifyRequest {
+  identifier: string;
+  channel?: LoginOtpChannel;
+  otp: string;
+}
+
+export const sendPasswordResetOtp = async (request: PasswordResetOtpSendRequest) => {
+  const response = await getJwtAPI().post('/auth/reset-password-otp/send', request);
+  return response.data;
+};
+
+export const verifyPasswordResetOtp = async (request: PasswordResetOtpVerifyRequest) => {
+  const response = await getJwtAPI().post('/auth/reset-password-otp/verify', request);
+  return response.data;
+};
+
 export const setAuthToken = (jwt: string, refreshToken: string) => {
   tokenCache = jwt || null;
   claimsCache = null;

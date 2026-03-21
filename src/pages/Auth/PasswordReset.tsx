@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bgImage from '../../assets/Solar_Image.webp';
-import { validateUser } from '../../services/jwtService';
-import { detectOtpChannel, sendOtpToIdentifier } from '../../services/otpService';
+import { validateUser, sendPasswordResetOtp } from '../../services/jwtService';
+import { detectOtpChannel, normalizeMobileNumber } from '../../services/otpService';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '../../contexts/UserContext';
 import { Logo } from '../../components/ui';
@@ -26,23 +26,21 @@ const PasswordReset: React.FC = () => {
     }
   }, [userClaims]);
 
-  const resolveOtpDestination = async (input: string): Promise<{ otpIdentifier: string; resetEmail: string; channel: 'EMAIL' | 'SMS' }> => {
+  const buildResetRequest = async (input: string): Promise<{ identifier: string; channel?: 'EMAIL' | 'SMS'; resetEmail: string }> => {
     const trimmed = input.trim();
-    const directChannel = detectOtpChannel(trimmed);
-    const resetEmail = await validateUser(trimmed);
-
-    if (!resetEmail) {
-      throw new Error('Unable to verify this account.');
+    if (!trimmed) {
+      throw new Error('Enter your registered email, mobile number, or username.');
     }
 
-    const otpIdentifier = directChannel ? trimmed : resetEmail;
-    const channel = detectOtpChannel(otpIdentifier);
+    const detectedChannel = detectOtpChannel(trimmed);
+    const identifier = detectedChannel === 'SMS' ? normalizeMobileNumber(trimmed) : trimmed;
+    const resetEmail = await validateUser(identifier);
 
-    if (!channel) {
-      throw new Error('Enter a valid email address, mobile number, or username linked to an email address.');
-    }
-
-    return { otpIdentifier, resetEmail, channel };
+    return {
+      identifier,
+      channel: detectedChannel ?? undefined,
+      resetEmail,
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -52,27 +50,33 @@ const PasswordReset: React.FC = () => {
     setMessage('');
 
     try {
-      const { otpIdentifier, resetEmail, channel } = await resolveOtpDestination(emailInput);
-      const expiryTime = Date.now() + 3 * 60 * 1000;
-      const resendTime = Date.now() + 60 * 1000;
-
-      navigate('/verification', {
-        state: {
-          identifier: otpIdentifier,
-          resetEmail,
-          channel,
-          msg: `If the user is registered, an OTP has been sent via ${channel === 'EMAIL' ? 'email' : 'SMS'}.`,
-          expiryTime,
-          resendTime,
-        },
+      const { identifier, resetEmail, channel } = await buildResetRequest(emailInput);
+      await sendPasswordResetOtp({
+        identifier,
+        channel,
+        clientRequestId: `forgot-password-${Date.now()}`,
       });
 
-      toast.success(`If the user is registered, an OTP has been sent via ${channel === 'EMAIL' ? 'email' : 'SMS'}.`, {
+      const expiryTime = Date.now() + 3 * 60 * 1000;
+      const resendTime = Date.now() + 60 * 1000;
+      const successMessage = `OTP sent via ${channel === 'SMS' ? 'SMS' : 'email'}.`;
+
+      setMessage(successMessage);
+      toast.success(successMessage, {
         autoClose: 1000,
         hideProgressBar: true,
       });
 
-      await sendOtpToIdentifier(otpIdentifier);
+      navigate('/verification', {
+        state: {
+          identifier,
+          resetEmail,
+          channel: channel ?? 'EMAIL',
+          msg: successMessage,
+          expiryTime,
+          resendTime,
+        },
+      });
     } catch (err: any) {
       const backendMessage = err?.response?.data?.message || err?.response?.data;
       const friendlyMessage = typeof backendMessage === 'string' ? backendMessage : err?.message || 'Failed to send OTP.';
@@ -117,12 +121,12 @@ const PasswordReset: React.FC = () => {
           <div>
             <h3 className="text-xl font-semibold text-gray-700 mb-1">Reset Password</h3>
             <p className="text-sm text-gray-600 mb-2">
-              Enter your email, mobile number, or username. We&apos;ll send a one-time password to your registered email or phone.
+              Enter your registered email, registered mobile number, or username. OTP will be sent only for an account that already exists in the database.
             </p>
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-3">
-              Email, Mobile, or Username
+              Registered Email, Registered Mobile, or Username
             </label>
             <input
               id="email"
@@ -132,7 +136,7 @@ const PasswordReset: React.FC = () => {
               required
               disabled={loading}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition mb-3"
-              placeholder="Email, mobile number, or username"
+              placeholder="Registered email, mobile number, or username"
             />
           </div>
 

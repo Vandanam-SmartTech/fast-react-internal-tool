@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import OtpInput from 'react-otp-input';
 import bgImage from '../../assets/Solar_Image.webp';
 import { Logo } from '../../components/ui';
-import { detectOtpChannel, sendOtpToIdentifier, verifyOtpForIdentifier } from '../../services/otpService';
+import { detectOtpChannel } from '../../services/otpService';
+import { sendPasswordResetOtp, verifyPasswordResetOtp } from '../../services/jwtService';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -85,7 +86,7 @@ const Verification: React.FC = () => {
     }
 
     try {
-      await verifyOtpForIdentifier(identifier, otp);
+      await verifyPasswordResetOtp({ identifier, channel, otp });
       toast.success('OTP verified.', { autoClose: 1000, hideProgressBar: true });
 
       setTimeout(() => {
@@ -109,8 +110,14 @@ const Verification: React.FC = () => {
 
   const handleResend = async () => {
     setResending(true);
+    setError('');
+    setMessage('');
     try {
-      await sendOtpToIdentifier(identifier);
+      await sendPasswordResetOtp({
+        identifier,
+        channel,
+        clientRequestId: `forgot-password-resend-${Date.now()}`,
+      });
       setMessage(`OTP resent via ${channel === 'SMS' ? 'SMS' : 'email'}.`);
       toast.success('OTP resent successfully!', {
         autoClose: 1000,
