@@ -75,6 +75,19 @@ export interface PasswordResetOtpVerifyRequest {
   otp: string;
 }
 
+export interface ResetPasswordResolvedUser {
+  identifier: string;
+  otpIdentifier: string;
+  channel: LoginOtpChannel;
+  emailAddress: string;
+  username: string;
+}
+
+export const resolvePasswordResetUser = async (identifier: string): Promise<ResetPasswordResolvedUser> => {
+  const response = await getJwtAPI().post('/auth/reset-password-otp/resolve', { identifier });
+  return response.data;
+};
+
 export const sendPasswordResetOtp = async (request: PasswordResetOtpSendRequest) => {
   const response = await getJwtAPI().post('/auth/reset-password-otp/send', request);
   return response.data;
@@ -221,10 +234,11 @@ export const validateUser = async (query: string): Promise<string> => {
 };
 
 export const verifyAndChangePassword = async (
-  emailAddress: string,
-  newPassword: string
+  identifier: string,
+  newPassword: string,
+  emailAddress?: string
 ): Promise<void> => {
-  await getJwtAPI().post('/auth/update-password', { emailAddress, newPassword });
+  await getJwtAPI().post('/auth/update-password', { identifier, emailAddress, newPassword });
 };
 
 export const validateJwtToken = (): string[] | null => {
