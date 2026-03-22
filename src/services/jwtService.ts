@@ -13,6 +13,18 @@ const CLAIMS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const dataCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
+const normalizeBaseUrl = (baseUrl?: string | null): string => (baseUrl || '').replace(/\/+$/, '');
+
+const resolveJwtPath = (path: string): string => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const baseUrl = normalizeBaseUrl(getConfig().VITE_JWT_API);
+  if (baseUrl.endsWith('/auth') && normalizedPath.startsWith('/auth/')) {
+    return normalizedPath.substring('/auth'.length) || '/';
+  }
+  return normalizedPath;
+};
+
+
 export const getJwtAPI = (): AxiosInstance => {
   if (jwtAPIInstance) return jwtAPIInstance;
 
@@ -23,7 +35,8 @@ export const getJwtAPI = (): AxiosInstance => {
   });
 
   jwtAPIInstance.interceptors.request.use((config) => {
-    const url = config.url || '';
+    const url = resolveJwtPath(config.url || '');
+    config.url = url;
     const isPublicAuthEndpoint = [
       '/auth/login',
       '/auth/login-otp/send',
@@ -34,6 +47,15 @@ export const getJwtAPI = (): AxiosInstance => {
       '/auth/update-password',
       '/auth/valid-user',
       '/auth/refresh-token',
+      '/login',
+      '/login-otp/send',
+      '/login-otp/verify',
+      '/reset-password-otp/resolve',
+      '/reset-password-otp/send',
+      '/reset-password-otp/verify',
+      '/update-password',
+      '/valid-user',
+      '/refresh-token',
     ].some((publicPath) => url.startsWith(publicPath));
 
     if (!isPublicAuthEndpoint) {
